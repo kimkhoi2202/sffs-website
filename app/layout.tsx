@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { DM_Sans, Anton, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { SmoothScroll } from "@/components/quiz/smooth-scroll";
+import { MusicToggle } from "@/components/quiz/music-toggle";
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -22,8 +24,27 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Closer",
-  description: "Built with Next.js, Base UI and Tailwind CSS.",
+  metadataBase: new URL("https://sffs-website.vercel.app"),
+  title: {
+    default: "Smart Fella or Fart Smella?",
+    template: "%s · Smart Fella or Fart Smella",
+  },
+  description:
+    "A brutally honest 60-second diagnostic that scores your fella-ness and reveals whether you're a Smart Fella or a Fart Smella. Backed by vibes and questionable science.",
+  openGraph: {
+    type: "website",
+    siteName: "Smart Fella or Fart Smella",
+    title: "Smart Fella or Fart Smella?",
+    description:
+      "Take the 60-second Fella Test and find out whether you're a Smart Fella or a Fart Smella.",
+    url: "/",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Smart Fella or Fart Smella?",
+    description:
+      "Take the 60-second Fella Test and find out whether you're a Smart Fella or a Fart Smella.",
+  },
 };
 
 export default function RootLayout({
@@ -43,7 +64,10 @@ export default function RootLayout({
         >
           Skip to content
         </a>
-        {children}
+        <SmoothScroll>
+          {children}
+          <MusicToggle />
+        </SmoothScroll>
       </body>
     </html>
   );

@@ -1,6 +1,6 @@
 # Smart Fella or Fart Smella — Website
 
-Marketing site and interactive `/smart-or-fart` quiz for **Smart Fella or Fart Smella**, built with the Next.js App Router and a neo-brutalist design system.
+The **Smart Fella or Fart Smella** quiz site — a game-show-style *Fella Test* with an animated hero, smooth scrolling, and a full-viewport pricing section. The quiz is the homepage (`/`); the old `/smart-or-fart` path permanently redirects to `/`.
 
 > The AI **video pipeline** (Remotion project, renders, and voice generation) lives in a **separate repository** (`sffs-ai-video-pipeline`). The `video/` folder is intentionally excluded from this repo.
 
