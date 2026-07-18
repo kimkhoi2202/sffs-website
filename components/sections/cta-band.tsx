@@ -60,6 +60,7 @@ const bandTheme: Record<
   cream: { primary: "ink", secondary: "coral", badge: "blue" },
   blue: { primary: "ink", secondary: "paper", badge: "yellow" },
   mint: { primary: "ink", secondary: "paper", badge: "coral" },
+  green: { primary: "paper", secondary: "yellow", badge: "coral" },
   coral: { primary: "ink", secondary: "paper", badge: "yellow" },
   yellow: { primary: "ink", secondary: "paper", badge: "coral" },
   gray: { primary: "ink", secondary: "paper", badge: "yellow" },

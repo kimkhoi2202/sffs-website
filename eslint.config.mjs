@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // The AI video pipeline is a SEPARATE, gitignored project (see .gitignore /video/)
+    // — it isn't part of this website and is linted in its own repo.
+    "video/**",
   ]),
 ]);
 

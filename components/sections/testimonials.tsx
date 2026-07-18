@@ -15,6 +15,14 @@ import { cn } from "@/lib/utils";
 /* -------------------------------------------------------------------------- */
 
 type AvatarColor = "blue" | "mint" | "coral" | "yellow" | "gray" | "ink";
+/**
+ * Fill colors the avatar CIRCLE can use behind a (transparent) brain PNG. This
+ * is the "bread" half of the sandwich — deliberately a DIFFERENT color from the
+ * card/brain so the brain reads clearly. Superset of `AvatarColor` (adds the
+ * brand "green" and the light "paper" so any card's brain gets a contrasting
+ * disc).
+ */
+type CircleColor = "blue" | "mint" | "coral" | "yellow" | "gray" | "ink" | "green" | "paper";
 /** Colors the shared `<Card>` primitive renders natively. */
 type CardBaseColor = "paper" | "cream" | "blue" | "mint" | "coral" | "yellow" | "ink";
 /**
@@ -50,14 +58,21 @@ export interface Testimonial {
   rating?: number;
   /** Avatar initials. Derived from `name` when omitted. */
   initials?: string;
-  /** Avatar fill. Defaults to `ink` (reads on any card color). */
+  /** Avatar fill for the initials fallback. Defaults to `ink`. */
   avatarColor?: AvatarColor;
   /**
    * Public path to a photo/illustration (e.g. "/testimonials/greg.png"). When
    * set, it fills the avatar circle instead of the initials; `avatarColor` and
-   * `initials` are ignored.
+   * `initials` are ignored. Use a TRANSPARENT PNG so `circleColor` shows behind
+   * it (the sandwich: card = brain color, circle = a contrasting color).
    */
   avatarImage?: string;
+  /**
+   * Fill color of the avatar circle sitting behind `avatarImage`. Pick a color
+   * DIFFERENT from `cardColor` (the brain's color) so the brain pops. Defaults
+   * to `ink`.
+   */
+  circleColor?: CircleColor;
   /** Pin a card color. Otherwise rotates through a bright palette by index. */
   cardColor?: CardColor;
 }
@@ -247,8 +262,26 @@ const AVATAR_IMAGE_SIZE: Record<"sm" | "md", string> = {
 };
 
 /**
- * Renders a testimonial's avatar: the person's photo when `avatarImage` is set
- * (filling the same bordered circle), otherwise the initials `<Avatar>`.
+ * Solid fills for the avatar circle behind a transparent brain PNG. Every value
+ * maps to a brand token so the "circle" half of the sandwich always contrasts
+ * with the card/brain color painted on top of the disc.
+ */
+const CIRCLE_BG: Record<CircleColor, string> = {
+  blue: "bg-blue",
+  mint: "bg-mint",
+  coral: "bg-coral",
+  yellow: "bg-yellow",
+  gray: "bg-gray-100",
+  ink: "bg-ink",
+  green: "bg-green",
+  paper: "bg-paper",
+};
+
+/**
+ * Renders a testimonial's avatar. When `avatarImage` is set, the (transparent)
+ * brain PNG sits on top of a solid `circleColor` disc — the sandwich: the card
+ * behind is the brain's color, the disc is a different, contrasting color, so
+ * the brain reads crisply. Otherwise falls back to the initials `<Avatar>`.
  */
 function TestimonialAvatar({
   testimonial: t,
@@ -259,15 +292,16 @@ function TestimonialAvatar({
 }) {
   if (t.avatarImage) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element -- local /public asset; plain <img> keeps the bordered circle simple
-      <img
-        src={t.avatarImage}
-        alt={t.name}
+      <span
         className={cn(
-          "shrink-0 rounded-full border-[2.5px] border-ink object-cover",
+          "relative grid shrink-0 place-items-center overflow-hidden rounded-full border-[2.5px] border-ink",
+          CIRCLE_BG[t.circleColor ?? "ink"],
           AVATAR_IMAGE_SIZE[size],
         )}
-      />
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element -- local /public asset; transparent PNG lets the disc color show through */}
+        <img src={t.avatarImage} alt={t.name} className="h-full w-full object-cover" />
+      </span>
     );
   }
   return <Avatar initials={resolveInitials(t)} color={t.avatarColor ?? "ink"} size={size} />;

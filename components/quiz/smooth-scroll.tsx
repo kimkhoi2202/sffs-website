@@ -84,12 +84,45 @@ export function getQuizScrollOffset(): number {
 }
 
 /**
+ * Scroll the page by `delta` px immediately (no smoothing), routed through the
+ * live Lenis instance so it composes with the smooth-scroll engine (falls back
+ * to native scrolling). Used by the page-level shape field to auto-scroll while a
+ * shape is dragged near a viewport edge, so a shape can be dragged across
+ * sections in one continuous gesture.
+ */
+export function scrollQuizBy(delta: number): void {
+  if (typeof window === "undefined" || delta === 0) return;
+  if (activeLenis) {
+    activeLenis.scrollTo(activeLenis.scroll + delta, { immediate: true, force: true });
+  } else {
+    window.scrollBy(0, delta);
+  }
+}
+
+/**
+ * Move keyboard / assistive-tech focus to a section we just scrolled to, WITHOUT
+ * moving the page (Lenis / the smooth scroll owns the scroll position). The
+ * sections aren't natively focusable, so add a one-off tabindex=-1; our
+ * :focus-visible ring is keyboard-only, so this programmatic focus shows no
+ * visible outline. This is the a11y counterpart to a real #hash navigation now
+ * that we deliberately keep the URL clean.
+ */
+function moveFocusToTarget(target: HTMLElement) {
+  if (!target.hasAttribute("tabindex")) target.setAttribute("tabindex", "-1");
+  target.focus({ preventScroll: true });
+}
+
+/**
  * Smooth-scroll so `target`'s top lands flush under the fixed nav (the live
  * measured nav height, pulled up by NAV_OVERLAP so the section tucks a hair
  * under the bar and no previous-section color peeks through). Routes through the
  * live Lenis instance when present so it composes with the page's dampened
  * scroll; otherwise falls back to native scrolling (reduced motion / Lenis not
- * mounted). Reflects `hash` in the URL when given, mirroring an anchor click.
+ * mounted).
+ *
+ * Deliberately does NOT touch the URL: in-page navigation stays "clean" (no
+ * #top / #pricing in the address bar). Focus is moved to the section once the
+ * scroll settles, so keyboard/AT users still land in the right place.
  *
  * Note: Lenis.scrollTo already subtracts the target's OWN scroll-margin-top
  * (the quiz sections set .scroll-mt-nav to the SAME measured-nav-minus-overlap
@@ -98,29 +131,30 @@ export function getQuizScrollOffset(): number {
  * WITHOUT a scroll-margin (e.g. #top) still clear the nav. The native fallback
  * applies the offset directly (native scrolling ignores scroll-margin).
  */
-function smoothScrollToTarget(target: HTMLElement, hash?: string) {
+function smoothScrollToTarget(target: HTMLElement) {
   const offset = getQuizScrollOffset();
   if (activeLenis) {
     const scrollMargin =
       Number.parseFloat(window.getComputedStyle(target).scrollMarginTop) || 0;
-    activeLenis.scrollTo(target, { offset: scrollMargin - offset });
+    activeLenis.scrollTo(target, {
+      offset: scrollMargin - offset,
+      onComplete: () => moveFocusToTarget(target),
+    });
   } else if (typeof window !== "undefined") {
     const top = window.scrollY + target.getBoundingClientRect().top - offset;
     window.scrollTo({
       top: Math.max(0, top),
       behavior: prefersReducedMotion() ? "auto" : "smooth",
     });
-  }
-  if (hash && typeof window !== "undefined") {
-    window.history.replaceState(window.history.state, "", hash);
+    moveFocusToTarget(target);
   }
 }
 
 /**
  * Scroll to an in-page hash (e.g. "#pricing") using the exact SAME nav-aware
- * offset as an anchor click. Exported for triggers outside this provider —
- * currently the hero's global "T" shortcut — so the CTA click, the keyboard
- * shortcut, and native #hash jumps all land identically.
+ * offset as an anchor click — but WITHOUT writing the hash to the URL. Exported
+ * for triggers outside this provider (the hero's global "T" shortcut) so the CTA
+ * click and the keyboard shortcut land identically and both keep the URL clean.
  */
 export function scrollToQuizHash(hash: string) {
   if (typeof document === "undefined") return;
@@ -128,7 +162,7 @@ export function scrollToQuizHash(hash: string) {
   if (!id) return;
   const target = document.getElementById(decodeURIComponent(id));
   if (!target) return;
-  smoothScrollToTarget(target, `#${id}`);
+  smoothScrollToTarget(target);
 }
 
 /**
@@ -204,10 +238,26 @@ export function SmoothScroll({ children }: { children: ReactNode }) {
     // that Lenis owns the scroll.
     ScrollTrigger.refresh();
 
-    // Same-page hash links (#top, #how, #pricing) run through Lenis so they
-    // animate with the page and clear the sticky nav. Listening in the capture
-    // phase and stopping propagation lets us win over Next.js <Link>'s own hash
-    // handling.
+    return () => {
+      lenis.off("scroll", ScrollTrigger.update);
+      gsap.ticker.remove(tick);
+      // Restore GSAP's default lag smoothing (500ms / 33ms) so leaving the quiz
+      // for the marketing site doesn't inherit our disabled setting.
+      gsap.ticker.lagSmoothing(500, 33);
+      lenis.destroy();
+      activeLenis = null;
+    };
+  }, [reducedMotion]);
+
+  // Clean in-page navigation. Always on (not gated by reduced motion), so EVERY
+  // path — nav links, the logo (#top), the "Take the test" CTA (#pricing) — is
+  // intercepted and scrolled programmatically WITHOUT ever writing a #hash to
+  // the URL. Runs through smoothScrollToTarget, which uses Lenis when present
+  // and falls back to native scroll under reduced motion. Capture phase +
+  // stopPropagation wins over Next.js <Link>'s own hash handling. On first load
+  // an incoming deep link (e.g. /#pricing) is honored ONCE and then stripped, so
+  // shared deep links still work but the address bar ends up clean.
+  useEffect(() => {
     const handleAnchorClick = (event: MouseEvent) => {
       if (
         event.defaultPrevented ||
@@ -229,28 +279,40 @@ export function SmoothScroll({ children }: { children: ReactNode }) {
 
       event.preventDefault();
       event.stopPropagation();
-
-      // Land flush under the fixed nav using its live measured height (minus a
-      // small overlap) — the SAME offset the hero's "T" shortcut and the
-      // sections' CSS scroll-margin use, so every path is identical and correct
-      // at any viewport. Also reflects the hash in the URL without a native
-      // jump, keeping Next's router history state intact.
-      smoothScrollToTarget(target, href);
+      smoothScrollToTarget(target);
     };
 
     document.addEventListener("click", handleAnchorClick, true);
 
+    // Honor an incoming #hash — on initial load (a shared deep link) AND if one
+    // later appears (e.g. typed into the address bar, firing `hashchange`) — by
+    // smooth-scrolling under the nav, then immediately strip it so the URL stays
+    // clean. Because we never WRITE hashes ourselves, this only ever reacts to
+    // external hashes, never our own in-page navigation.
+    let deepLinkTimer: ReturnType<typeof setTimeout> | undefined;
+    const consumeHash = () => {
+      const { hash } = window.location;
+      if (!hash || hash === "#") return;
+      const target = document.getElementById(decodeURIComponent(hash.slice(1)));
+      window.history.replaceState(
+        window.history.state,
+        "",
+        window.location.pathname + window.location.search,
+      );
+      if (target) {
+        if (deepLinkTimer) clearTimeout(deepLinkTimer);
+        deepLinkTimer = setTimeout(() => smoothScrollToTarget(target), 400);
+      }
+    };
+    consumeHash();
+    window.addEventListener("hashchange", consumeHash);
+
     return () => {
       document.removeEventListener("click", handleAnchorClick, true);
-      lenis.off("scroll", ScrollTrigger.update);
-      gsap.ticker.remove(tick);
-      // Restore GSAP's default lag smoothing (500ms / 33ms) so leaving the quiz
-      // for the marketing site doesn't inherit our disabled setting.
-      gsap.ticker.lagSmoothing(500, 33);
-      lenis.destroy();
-      activeLenis = null;
+      window.removeEventListener("hashchange", consumeHash);
+      if (deepLinkTimer) clearTimeout(deepLinkTimer);
     };
-  }, [reducedMotion]);
+  }, []);
 
   return <>{children}</>;
 }

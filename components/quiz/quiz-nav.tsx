@@ -64,31 +64,49 @@ export function QuizNav() {
           : "pointer-events-none -translate-y-full opacity-0",
       )}
     >
+      {/*
+        Three-zone layout: brain logo LEFT (the #top home link), wordmark
+        CENTERED across the full bar, CTA RIGHT. A `1fr auto 1fr` grid keeps the
+        side columns equal width, so the middle (wordmark) column is truly
+        centered on the nav regardless of the logo/button widths — and because
+        each zone owns its own column they can never overlap. The wordmark is
+        hidden below `md` (where the bar is too tight) so it never collides with
+        the logo or button on small screens.
+      */}
       <nav
         aria-label="The Fella Test"
-        className="mx-auto flex max-w-page items-center justify-between gap-4 px-4 py-3 md:px-8"
+        className="mx-auto grid max-w-page grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 py-3 md:px-8"
       >
-        <a href="#top" className="inline-flex items-center gap-2">
+        <a
+          href="#top"
+          aria-label="Smart Fella or Fart Smella — home"
+          className="col-start-1 inline-flex items-center justify-self-start"
+        >
           {/* eslint-disable-next-line @next/next/no-img-element -- brand mark is a static public asset */}
           <img
             src="/logo.png"
-            alt="Smart Fella or Fart Smella"
-            className="h-12 w-auto select-none"
-            draggable={false}
-          />
-          {/* eslint-disable-next-line @next/next/no-img-element -- brand wordmark is a static public asset */}
-          <img
-            src="/wordmark.png"
             alt=""
-            className="hidden h-12 w-auto select-none object-contain sm:block"
+            className="h-11 w-auto select-none md:h-12"
             draggable={false}
           />
         </a>
+        {/* eslint-disable-next-line @next/next/no-img-element -- brand wordmark is a static public asset */}
+        <img
+          src="/wordmark.png"
+          alt="Smart Fella or Fart Smella"
+          className="col-start-2 pointer-events-none hidden h-12 w-auto max-w-full select-none justify-self-center object-contain md:block lg:h-14"
+          draggable={false}
+        />
+        {/*
+          Explicit `col-start-3` (not auto-placement) so the CTA always stays in
+          the RIGHT column even when the wordmark is display:none on small
+          screens — otherwise the button would collapse into the empty middle.
+        */}
         <Button
           href="#pricing"
           variant="coral"
           size="sm"
-          className="font-sans font-bold text-lg uppercase leading-none tracking-[-0.01em]"
+          className="col-start-3 justify-self-end font-sans font-bold text-lg uppercase leading-none tracking-[-0.01em]"
         >
           Take the test
         </Button>

@@ -10,8 +10,28 @@ The **Smart Fella or Fart Smella** quiz site — a game-show-style *Fella Test* 
 - **React 19**
 - **Tailwind CSS v4** (via `@tailwindcss/postcss`)
 - **Base UI** (`@base-ui-components/react`)
-- **GSAP** + **Lenis** for motion and smooth scrolling
+- **GSAP** + **Lenis** for scroll-driven animation and smooth scrolling
+- **Motion** (`motion/react`) for the interactive, physics-driven page shapes
 - **TypeScript 5**
+
+## Project structure
+
+```
+app/                 # App Router: the quiz homepage (/), root layout + metadata,
+                     #   and the social share images (opengraph-image / twitter-image,
+                     #   with _og/ render + _fonts/ assets)
+components/
+  quiz/              # Hero, 3-zone nav, smooth-scroll provider, music toggle, and
+                     #   the page-level interactive shape field (page-shapes.tsx)
+  sections/          # Stacked page sections (steps, testimonials, follow-us, footer, …)
+  social/            # Social icon buttons
+  ui/                # Shared primitives (button, container, section, …)
+lib/                 # Small utilities (cn, socials, …)
+public/              # Static assets (logo, wordmark, music, images, social/)
+```
+
+> `video/` (Remotion pipeline) and `design-reference/` are supporting folders; the
+> video pipeline is deployed from its own separate repo.
 
 ## Getting started
 

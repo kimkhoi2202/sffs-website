@@ -94,10 +94,10 @@
       rubber-band chaining on every edge, and overflow-x:clip prevents any
       horizontal scroll WITHOUT creating a scroll container (so it won't break
       the sticky navbar or Lenis smooth-scroll, unlike overflow:hidden).
-      The ink canvas is an on-brand, non-white fallback so no white gutter can
-      show on any residual overscroll (and it matches the page's dark footer).
+      The blue canvas is an on-brand, non-white fallback so no white gutter can
+      show on any residual overscroll (and it matches the page's blue footer).
     */
-    background-color: var(--color-ink);
+    background-color: var(--color-blue);
     overscroll-behavior: none;
     overflow-x: clip;
   }
@@ -123,8 +123,15 @@
 
   p { text-wrap: pretty; }
 
+  /*
+    On-brand text highlight. A brand-blue tint with ink text reads clearly on
+    every surface INCLUDING the yellow hero (where a yellow highlight would be
+    invisible and a solid-ink one was a black slab over the headline). Ink text
+    keeps it legible over the blue/coral display type. Surfaces where blue would
+    clash (blue cards, etc.) override this locally via selection:* utilities.
+  */
   ::selection {
-    background-color: var(--color-yellow);
+    background-color: var(--color-blue);
     color: var(--color-ink);
   }
 
@@ -277,41 +284,15 @@
 }
 
 /*
-  Decorative floating/rotating shapes that frame the Fella hero (see
-  components/quiz/smart-fart-hero.tsx). The motion is split across two nested
-  layers so it stays compositor-only and never conflicts: `.fella-shape` gently
-  FLOATS (a looping translate whose distance/direction come from per-shape
-  custom properties) and its child `.fella-shape-spin` continuously ROTATES.
-  Only `transform` animates (no layout/paint), and each shape sets its own
-  durations/delays so they never move in unison.
+  The hero shapes are a page-level, JS-driven field (components/quiz/page-shapes.tsx):
+  Motion drives their transforms directly per frame, so there are no CSS keyframes
+  for them here. (The `.fella-floor` grid drift above is still pure CSS.)
 */
-@keyframes fella-float {
-  0%, 100% { transform: translate3d(0, 0, 0); }
-  50% {
-    transform: translate3d(var(--fella-float-x, 0px), var(--fella-float-y, -16px), 0);
-  }
-}
-
-@keyframes fella-spin {
-  to { transform: rotate(360deg); }
-}
-
-.fella-shape {
-  animation: fella-float var(--fella-float-duration, 9s) ease-in-out infinite;
-  will-change: transform;
-}
-
-.fella-shape-spin {
-  animation: fella-spin var(--fella-spin-duration, 22s) linear infinite;
-}
 
 @media (prefers-reduced-motion: reduce) {
   .marquee-track { animation: none; }
   /* Keep the static tilted grid, but stop the continuous drift. */
   .fella-floor { animation: none; will-change: auto; }
-  /* Freeze the decorative hero shapes into a static, tilted arrangement. */
-  .fella-shape,
-  .fella-shape-spin { animation: none; will-change: auto; }
   html { scroll-behavior: auto; }
   /* Buttons keep their shadow feedback but drop the lift/press travel. */
   .btn-press:hover,

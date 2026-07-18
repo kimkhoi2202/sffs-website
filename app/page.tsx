@@ -17,6 +17,7 @@ import { Testimonials, type Testimonial } from "@/components/sections/testimonia
 import { Pricing, type Tier } from "@/components/sections/pricing";
 import { Faq, type FaqItem } from "@/components/sections/faq";
 import { CtaBand } from "@/components/sections/cta-band";
+import { FollowUs } from "@/components/sections/follow-us";
 
 export const metadata: Metadata = {
   title: { absolute: "The Fella Test - Smart Fella or Fart Smella?" },
@@ -77,60 +78,72 @@ const REPORT: Feature[] = [
 
 // Order matters: the grid uses CSS multi-columns (fill top→bottom, then across),
 // so with 3 columns the array reads Leo/Dana | Marcus/Priya | Greg/Sam, i.e.
-// top row = Leo · Marcus · Greg, bottom row = Dana · Priya · Sam. Each card
-// pins a distinct brand color (no repeats), balanced so no two similar hues
-// (mint/green) sit adjacent.
+// top row = Leo · Marcus · Greg, bottom row = Dana · Priya · Sam.
+//
+// SANDWICH color scheme (see the light-gray section below): every card pins a
+// distinct brand color that is ALSO its brain avatar's body color (cardColor ==
+// the brain PNG's fill), and the avatar CIRCLE behind the transparent brain
+// uses a contrasting color (circleColor) chosen to differ from the card/brain
+// in BOTH hue AND lightness so the brain always pops — never a near-equal-
+// lightness pairing (e.g. coral-on-green) that would read by hue alone. The
+// green-family cards (Dana green / Marcus mint) get a dark ink disc; the medium
+// coral/blue/green brains get a light disc; the light mint/yellow/white brains
+// get a dark disc. All six card colors differ from each other AND from the
+// section's neutral `gray` background (incl. the white `paper` card), so no card
+// blends in; the two greens (Dana green / Marcus mint) are kept non-adjacent.
 const TESTIMONIALS: Testimonial[] = [
   {
     quote: "I put 'Smart Fella, verified' on my résumé and got two callbacks.",
     name: "Leo M.",
     role: "Job seeker",
-    avatarColor: "mint",
     avatarImage: "/testimonials/leo.png",
     cardColor: "blue",
+    circleColor: "yellow",
   },
   {
     quote:
       "I made my whole team take it. Morale is at an all-time low and I've never been happier.",
     name: "Dana R.",
     role: "Manager",
-    avatarColor: "blue",
     avatarImage: "/testimonials/dana.png",
-    cardColor: "yellow",
+    cardColor: "green",
+    // Green brain on a black disc: ~9.5:1 vs coral's ~1.17:1 — the brain pops.
+    circleColor: "ink",
   },
   {
     quote: "Finally, science confirms what my wife has been saying for years.",
     name: "Marcus T.",
     role: "Smart Fella (barely)",
-    avatarColor: "yellow",
     avatarImage: "/testimonials/marcus.png",
-    cardColor: "green",
+    cardColor: "mint",
+    circleColor: "ink",
   },
   {
     quote:
       "The red-flag detector called me out for microwaving fish at the office. Accurate and cruel.",
     name: "Priya S.",
     role: "Reformed",
-    avatarColor: "blue",
     avatarImage: "/testimonials/priya.png",
-    cardColor: "paper",
+    cardColor: "yellow",
+    circleColor: "blue",
   },
   {
     quote: "Scored a 12. Absolutely devastating. I hate this quiz",
     name: "Greg P.",
     role: "Certified Fart Smella",
     rating: 1,
-    avatarColor: "coral",
     avatarImage: "/testimonials/greg.png",
     cardColor: "coral",
+    // Coral brain on a white disc: ~2.6:1 vs green's ~1.17:1 — the brain pops.
+    circleColor: "paper",
   },
   {
     quote: "Took it six times hoping for a better score. The engine is incorruptible.",
     name: "Sam K.",
     role: "Persistent",
-    avatarColor: "coral",
     avatarImage: "/testimonials/sam.png",
-    cardColor: "mint",
+    cardColor: "paper",
+    circleColor: "coral",
   },
 ];
 
@@ -228,7 +241,7 @@ export default function SmartOrFartPage() {
 
       <Testimonials
         revealContent
-        background="mint"
+        background="gray"
         eyebrow=""
         title="Lives have been changed"
         testimonials={TESTIMONIALS}
@@ -255,15 +268,18 @@ export default function SmartOrFartPage() {
 
       <CtaBand
         revealContent
-        background="ink"
+        background="green"
         align="center"
         badge="Takes 5 minutes"
         title="So… smart fella or fart smella?"
         subtitle="There's only one way to find out, and your friends are already placing bets."
         primaryCta={{ label: "Take the test", href: "#pricing" }}
-        primaryVariant="green"
         secondaryCta={null}
       />
+
+      {/* Standalone "follow us" moment, sat between the green CTA band and the blue
+          footer as a bright yellow beacon (green → yellow → blue rhythm). */}
+      <FollowUs revealContent background="yellow" />
     </main>
   );
 }

@@ -71,6 +71,7 @@ const CTA_VARIANT: Record<SectionBackground, ButtonVariant> = {
   cream: "ink",
   blue: "ink",
   mint: "ink",
+  green: "paper",
   coral: "ink",
   yellow: "ink",
   gray: "ink",

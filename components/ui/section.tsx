@@ -8,6 +8,7 @@ type SectionBg =
   | "ink"
   | "blue"
   | "mint"
+  | "green"
   | "coral"
   | "yellow"
   | "gray";
@@ -18,6 +19,7 @@ const bgMap: Record<SectionBg, string> = {
   ink: "bg-ink text-paper",
   blue: "bg-blue text-ink",
   mint: "bg-mint text-ink",
+  green: "bg-green text-ink",
   coral: "bg-coral text-ink",
   yellow: "bg-yellow text-ink",
   gray: "bg-gray-100 text-ink",
