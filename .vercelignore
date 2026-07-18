@@ -1,0 +1,26 @@
+# Defense-in-depth for `vercel` CLI deploys (uploads from the local filesystem).
+# Git-integration builds already exclude these because they are gitignored,
+# but this guarantees a CLI deploy never uploads secrets, the video pipeline,
+# dependencies, or build output.
+
+# Separate video pipeline repo — never deploy with the website
+video/
+
+# Dependencies & build output (Vercel installs/builds fresh)
+node_modules/
+.next/
+out/
+build/
+dist/
+
+# VCS
+.git/
+
+# Secrets — never upload real env files (only .env.example is safe)
+.env
+.env.*
+!.env.example
+
+# Logs / OS cruft
+*.log
+.DS_Store

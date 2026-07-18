@@ -1,0 +1,327 @@
+@import "tailwindcss";
+
+/*
+  30MPC-style design system (cloned tokens).
+  See design-reference/design-tokens.md for the source-of-truth values.
+  Signature: thick black borders + hard offset shadows (zero blur) + Anton
+  display type + DM Sans body + bright pastel color-blocking.
+*/
+
+@theme {
+  /* ---- Fonts ---- */
+  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display: var(--font-anton), "Arial Narrow", Impact, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  /* ---- Colors ---- */
+  --color-ink: #000000;
+  --color-paper: #ffffff;
+  --color-blue: #839aff;
+  --color-mint: #c6fcd0;
+  --color-coral: #fd7962;
+  --color-yellow: #fce552;
+  /* Brand "smart-brain" green from the logo: a medium spring/emerald green
+     (distinct from the light pastel --color-mint). Used for primary
+     conversion CTAs, which sit on a plain black hard shadow. */
+  --color-green: #63c088;
+
+  --color-cream: #f6f4ee; /* soft off-white surface */
+  --color-gray-100: #ebebeb;
+  --color-gray-200: #d9d9d9;
+  --color-gray-300: #c4c4c4;
+  --color-gray-400: #a5a5a5;
+  --color-gray-500: #9b9b9b;
+  --color-gray-600: #7a7a7a;
+
+  /* semantic aliases */
+  --color-background: var(--color-paper);
+  --color-foreground: var(--color-ink);
+
+  /* ---- Radii ---- */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
+  --radius-3xl: 2.5rem;
+  --radius-4xl: 3rem;
+
+  /* ---- Hard offset shadows (SIGNATURE, no blur) ---- */
+  --shadow-hard-xs: 2px 2px 0 0 #000;
+  --shadow-hard-sm: 4px 4px 0 0 #000;
+  --shadow-hard: 6px 6px 0 0 #000;
+  --shadow-hard-lg: 8px 8px 0 0 #000;
+  --shadow-hard-xl: 12px 12px 0 0 #000;
+  --shadow-lip: 0 4px 0 0 #000;
+  --shadow-lip-lg: 0 8px 0 0 #000;
+
+  /* colored hard shadows */
+  --shadow-hard-blue: 6px 6px 0 0 #839aff;
+  --shadow-hard-coral: 6px 6px 0 0 #fd7962;
+  --shadow-hard-yellow: 6px 6px 0 0 #fce552;
+  --shadow-hard-mint: 6px 6px 0 0 #c6fcd0;
+
+  /* ---- Breakpoints (match Webflow source) ---- */
+  --breakpoint-sm: 480px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 992px;
+  --breakpoint-xl: 1440px;
+  --breakpoint-2xl: 1920px;
+
+  /* ---- Container sizes ---- */
+  --container-page: 75rem;   /* 1200px wide content */
+  --container-prose: 44rem;  /* 700px text column */
+  --container-form: 31rem;   /* 500px forms */
+
+  /* ---- Easings ---- */
+  --ease-press: cubic-bezier(0.215, 0.61, 0.355, 1);
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
+    /*
+      Live height of the /smart-or-fart fixed nav, published from JS
+      (components/quiz/smooth-scroll.tsx) and consumed by .scroll-mt-nav so
+      NATIVE #hash jumps clear the bar by the same amount the Lenis / keyboard
+      scrolls do. This default (~72px) only applies before hydration.
+    */
+    --nav-h: 4.5rem;
+    /*
+      No scrolling "outside" the page: overscroll-behavior:none kills the
+      rubber-band chaining on every edge, and overflow-x:clip prevents any
+      horizontal scroll WITHOUT creating a scroll container (so it won't break
+      the sticky navbar or Lenis smooth-scroll, unlike overflow:hidden).
+      The ink canvas is an on-brand, non-white fallback so no white gutter can
+      show on any residual overscroll (and it matches the page's dark footer).
+    */
+    background-color: var(--color-ink);
+    overscroll-behavior: none;
+    overflow-x: clip;
+  }
+
+  body {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-weight: 500;
+    line-height: 1.5;
+    font-size: 1rem;
+    overscroll-behavior: none;
+    overflow-x: clip;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+
+  p { text-wrap: pretty; }
+
+  ::selection {
+    background-color: var(--color-yellow);
+    color: var(--color-ink);
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--color-ink);
+    outline-offset: 2px;
+  }
+}
+
+/*
+  Utilities every component can rely on.
+*/
+
+/* Big fluid display heading (Anton, uppercase). */
+@utility text-display {
+  font-family: var(--font-display);
+  font-size: clamp(2.75rem, 6vw, 6.2rem);
+  line-height: 0.98;
+  letter-spacing: -0.01em;
+}
+
+/* Small uppercase tracked label. */
+@utility eyebrow {
+  font-family: var(--font-sans);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 800;
+  font-size: 0.8rem;
+  line-height: 1.2;
+}
+
+/*
+  Scroll-margin for in-page anchor targets that sit under the /smart-or-fart
+  fixed nav. Driven by the live --nav-h var (set from the measured nav height)
+  minus the same 2px overlap the JS smooth-scroll uses, so a native #hash jump
+  lands flush under the bar — a hair into the target so no previous-section
+  color peeks through at the color boundary — exactly where a "Take the test"
+  click / the T shortcut land, at any viewport.
+*/
+@utility scroll-mt-nav {
+  scroll-margin-top: calc(var(--nav-h, 4.5rem) - 2px);
+}
+
+/*
+  The signature "press" interaction for buttons/cards.
+  Element must set its own base box-shadow (e.g. shadow-hard-sm).
+  On hover it nudges toward the shadow; on active it fully presses in.
+*/
+@utility press {
+  transition: transform 0.15s var(--ease-press), box-shadow 0.15s var(--ease-press);
+  &:hover {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0 0 #000;
+  }
+  &:active {
+    transform: translate(4px, 4px);
+    box-shadow: 0 0 0 0 #000;
+  }
+}
+
+/* Same press, larger travel (for elements using shadow-hard-lg). */
+@utility press-lg {
+  transition: transform 0.15s var(--ease-press), box-shadow 0.15s var(--ease-press);
+  &:hover {
+    transform: translate(3px, 3px);
+    box-shadow: 5px 5px 0 0 #000;
+  }
+  &:active {
+    transform: translate(8px, 8px);
+    box-shadow: 0 0 0 0 #000;
+  }
+}
+
+/*
+  Display-card hover (non-clickable surfaces: feature/testimonial/pricing/etc.).
+  The signature hard-shadow "lift" — the opposite of .press: the card nudges
+  up-left while its offset shadow GROWS, so it appears to peel off the page.
+  Hover-gated (touch taps never get a stuck state), and scoped to transform +
+  box-shadow only (never `all`, so it can't cause layout shift). Buttons keep
+  btn-press; clickable cards keep .press / .press-lg — this is additive.
+  The lift shadow is a var so a card can tune it (e.g. bigger base shadows).
+*/
+@utility card-hover {
+  @media (hover: hover) {
+    transition: transform 0.2s var(--ease-press), box-shadow 0.2s var(--ease-press);
+    &:hover {
+      transform: translate(-3px, -3px);
+      box-shadow: var(--card-lift-shadow, 9px 9px 0 0 #000);
+    }
+  }
+}
+
+/*
+  The canonical <Button> interaction (buttons only — the shared .press above is
+  left untouched so cards/pills keep pressing "down").
+  - The hard offset shadow COLOR is driven by --btn-shadow-color (defaults to
+    ink); dark/colored surfaces set --btn-shadow-color:#fff so the button reads
+    on them. Only elements using this utility follow the var, so card/badge
+    shadows are unaffected.
+  - Rest = neutral. Hover LIFTS the button (up-left + bigger shadow); active
+    PRESSES it down onto the shadow (shadow shrinks to 0) — classic lift/press.
+  - Transition is scoped to transform + box-shadow (never `all`); the hover-lift
+    is gated to real hover devices so touch taps only get the press.
+*/
+@utility btn-press {
+  box-shadow: 4px 4px 0 0 var(--btn-shadow-color, var(--color-ink));
+  transition: transform 0.15s var(--ease-press), box-shadow 0.15s var(--ease-press);
+
+  @media (hover: hover) {
+    &:hover {
+      transform: translate(-2px, -2px);
+      box-shadow: 6px 6px 0 0 var(--btn-shadow-color, var(--color-ink));
+    }
+  }
+
+  &:active {
+    transform: translate(4px, 4px);
+    box-shadow: 0 0 0 0 var(--btn-shadow-color, var(--color-ink));
+  }
+}
+
+/* Horizontal marquee track (logo strips). Wrap two copies of children. */
+@utility marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee var(--marquee-duration, 30s) linear infinite;
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+/*
+  Perspective "receding floor" grid backdrop for the Fella hero.
+  A repeating grid sits on a plane tilted with rotateX (inside a perspective
+  wrapper), so the cells foreshorten into trapezoids; the pattern then drifts
+  slowly toward the viewer. Compositor-only (transform), and the loop is
+  seamless because the travel is a whole number of grid cells (7 x 48px).
+  See components/quiz/smart-fart-hero.tsx.
+*/
+@keyframes fella-floor-drift {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(0, var(--fella-floor-travel, 336px), 0); }
+}
+
+.fella-floor {
+  animation: fella-floor-drift var(--fella-floor-duration, 30s) linear infinite;
+  will-change: transform;
+}
+
+/*
+  Decorative floating/rotating shapes that frame the Fella hero (see
+  components/quiz/smart-fart-hero.tsx). The motion is split across two nested
+  layers so it stays compositor-only and never conflicts: `.fella-shape` gently
+  FLOATS (a looping translate whose distance/direction come from per-shape
+  custom properties) and its child `.fella-shape-spin` continuously ROTATES.
+  Only `transform` animates (no layout/paint), and each shape sets its own
+  durations/delays so they never move in unison.
+*/
+@keyframes fella-float {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% {
+    transform: translate3d(var(--fella-float-x, 0px), var(--fella-float-y, -16px), 0);
+  }
+}
+
+@keyframes fella-spin {
+  to { transform: rotate(360deg); }
+}
+
+.fella-shape {
+  animation: fella-float var(--fella-float-duration, 9s) ease-in-out infinite;
+  will-change: transform;
+}
+
+.fella-shape-spin {
+  animation: fella-spin var(--fella-spin-duration, 22s) linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track { animation: none; }
+  /* Keep the static tilted grid, but stop the continuous drift. */
+  .fella-floor { animation: none; will-change: auto; }
+  /* Freeze the decorative hero shapes into a static, tilted arrangement. */
+  .fella-shape,
+  .fella-shape-spin { animation: none; will-change: auto; }
+  html { scroll-behavior: auto; }
+  /* Buttons keep their shadow feedback but drop the lift/press travel. */
+  .btn-press:hover,
+  .btn-press:active { transform: none; }
+  /*
+    Motion layer additions: no animated hover glide. Card hover feedback
+    becomes an instant, non-animated state change (the GSAP <Reveal> entrances
+    are already gated behind (prefers-reduced-motion: no-preference), so under
+    reduce they never run and all content stays fully visible).
+  */
+  .card-hover { transition: none; }
+  .card-hover:hover { transform: none; }
+}
