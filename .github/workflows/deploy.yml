@@ -1,0 +1,55 @@
+# Optional Vercel deploy via GitHub Actions.
+#
+# PRIMARY CD for this repo is Vercel's native Git integration (Preview on every
+# PR, Production on merge to `main`). That is the recommended setup, so you
+# normally do NOT need this workflow. It is intentionally set to manual
+# (workflow_dispatch) so it never double-deploys alongside the Git integration.
+#
+# Use this only if you prefer CI-driven deploys instead of the Git integration
+# (disconnect the Git integration first). Add these repository secrets:
+#   VERCEL_TOKEN       - a Vercel access token (Vercel → Account Settings → Tokens)
+#   VERCEL_ORG_ID      - from .vercel/project.json after running `vercel link`
+#   VERCEL_PROJECT_ID  - from .vercel/project.json after running `vercel link`
+name: Deploy (Vercel · manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Deploy target"
+        type: choice
+        options: [preview, production]
+        default: preview
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to Vercel (${{ inputs.environment }})
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install Vercel CLI
+        run: npm i -g vercel@latest
+
+      - name: Pull Vercel environment information
+        run: vercel pull --yes --environment=${{ inputs.environment == 'production' && 'production' || 'preview' }} --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build project artifacts
+        run: vercel build ${{ inputs.environment == 'production' && '--prod' || '' }} --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy to Vercel
+        run: vercel deploy --prebuilt ${{ inputs.environment == 'production' && '--prod' || '' }} --token=${{ secrets.VERCEL_TOKEN }}
