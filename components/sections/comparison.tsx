@@ -122,9 +122,13 @@ export function Comparison({
                 key={`their-${index}`}
                 className="flex items-start gap-3 text-base font-medium leading-snug text-ink/80"
               >
-                <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full border-[2.5px] border-ink bg-coral text-ink">
-                  <span className="sr-only">Drawback: </span>
-                  <X className="size-3.5" strokeWidth={3} aria-hidden="true" />
+                {/* Icon sits in a one-line-tall box so its center aligns with the
+                    text's FIRST line (stays put when the text wraps to 2 lines). */}
+                <span className="flex h-[1lh] shrink-0 items-center">
+                  <span className="flex size-6 items-center justify-center rounded-full border-[2.5px] border-ink bg-coral text-ink">
+                    <span className="sr-only">Drawback: </span>
+                    <X className="size-3.5" strokeWidth={3} aria-hidden="true" />
+                  </span>
                 </span>
                 <span>{point}</span>
               </li>
@@ -159,9 +163,13 @@ export function Comparison({
                 key={`our-${index}`}
                 className="flex items-start gap-3 text-base font-medium leading-snug"
               >
-                <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full border-[2.5px] border-ink bg-ink text-mint">
-                  <span className="sr-only">Better with Closer: </span>
-                  <Check className="size-3.5" strokeWidth={3} aria-hidden="true" />
+                {/* Icon sits in a one-line-tall box so its center aligns with the
+                    text's FIRST line (stays put when the text wraps to 2 lines). */}
+                <span className="flex h-[1lh] shrink-0 items-center">
+                  <span className="flex size-6 items-center justify-center rounded-full border-[2.5px] border-ink bg-ink text-mint">
+                    <span className="sr-only">Better with Closer: </span>
+                    <Check className="size-3.5" strokeWidth={3} aria-hidden="true" />
+                  </span>
                 </span>
                 <span>{point}</span>
               </li>

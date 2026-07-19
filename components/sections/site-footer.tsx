@@ -14,9 +14,9 @@ import { SOCIALS } from "@/lib/socials";
 export function SiteFooter() {
   return (
     <footer className="border-t-[2.5px] border-ink bg-blue text-ink">
-      {/* Extra bottom padding keeps the copyright clear of the fixed music
-          toggle (bottom-right puck) at every breakpoint — no overlap. */}
-      <Container className="flex flex-col items-center gap-6 pt-10 pb-24 text-center sm:flex-row sm:justify-between sm:text-left">
+      {/* Balanced (equal) top/bottom padding, kept tall enough that the copyright
+          clears the fixed music toggle (bottom-right puck) at every breakpoint. */}
+      <Container className="flex flex-col items-center gap-6 py-24 text-center sm:flex-row sm:justify-between sm:text-left">
         <a
           href="#top"
           aria-label="Smart Fella or Fart Smella — home"

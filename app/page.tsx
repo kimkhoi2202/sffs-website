@@ -250,6 +250,7 @@ export default function SmartOrFartPage() {
       <Pricing
         revealContent
         fullViewport
+        staticCards
         id="pricing"
         className="scroll-mt-nav"
         background="coral"
@@ -272,7 +273,7 @@ export default function SmartOrFartPage() {
         align="center"
         badge="Takes 5 minutes"
         title="So… smart fella or fart smella?"
-        subtitle="There's only one way to find out, and your friends are already placing bets."
+        subtitle=""
         primaryCta={{ label: "Take the test", href: "#pricing" }}
         secondaryCta={null}
       />

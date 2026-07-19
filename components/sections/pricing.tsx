@@ -76,6 +76,12 @@ export interface PricingProps {
   /** Fade + rise the inner content on scroll while the section bg stays static. */
   revealContent?: boolean;
   /**
+   * Render the plan cards completely static — no hover-lift. Only affects
+   * non-highlighted cards (the highlighted card's lift is a persistent, not
+   * hover, transform). Off by default so other Pricing usages keep their hover.
+   */
+  staticCards?: boolean;
+  /**
    * Render the section as a full-viewport-height panel (like the hero): the
    * section grows to `100svh` and the heading + card sit in the UPPER portion
    * (a ~2:3 top-to-bottom whitespace ratio) rather than dead-center. Spacing and
@@ -149,6 +155,7 @@ export function Pricing({
   id,
   className,
   revealContent = true,
+  staticCards = false,
   fullViewport = false,
 }: PricingProps) {
   const columns = columnsMap[Math.min(tiers.length, 3)] ?? "lg:grid-cols-3";
@@ -204,7 +211,9 @@ export function Pricing({
                 "flex h-full flex-col",
                 highlighted
                   ? "relative z-10 lg:-translate-y-4 lg:scale-[1.03]"
-                  : "card-hover",
+                  : staticCards
+                    ? undefined
+                    : "card-hover",
               )}
             >
               <div className="flex items-center justify-between gap-3">
