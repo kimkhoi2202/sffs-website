@@ -86,9 +86,10 @@ const REPORT: Feature[] = [
 // uses a contrasting color (circleColor) chosen to differ from the card/brain
 // in BOTH hue AND lightness so the brain always pops — never a near-equal-
 // lightness pairing (e.g. coral-on-green) that would read by hue alone. The
-// green-family cards (Dana green / Marcus mint) get a dark ink disc; the medium
-// coral/blue/green brains get a light disc; the light mint/yellow/white brains
-// get a dark disc. All six card colors differ from each other AND from the
+// green-family cards use a clearly NON-green disc (Dana green -> paper, Marcus
+// mint -> coral) so the brain pops off the circle and the circle off the card;
+// the other brains pair with a disc chosen for hue + lightness contrast. All
+// six card colors differ from each other AND from the
 // section's neutral `gray` background (incl. the white `paper` card), so no card
 // blends in; the two greens (Dana green / Marcus mint) are kept non-adjacent.
 const TESTIMONIALS: Testimonial[] = [
@@ -107,8 +108,9 @@ const TESTIMONIALS: Testimonial[] = [
     role: "Manager",
     avatarImage: "/testimonials/dana.png",
     cardColor: "green",
-    // Green brain on a black disc: ~9.5:1 vs coral's ~1.17:1 — the brain pops.
-    circleColor: "ink",
+    // Green brain + green card: a light PAPER disc makes the brain (and its black
+    // outline) pop off the circle, and the circle pop off the green card.
+    circleColor: "paper",
   },
   {
     quote: "Finally, science confirms what my wife has been saying for years.",
@@ -116,7 +118,9 @@ const TESTIMONIALS: Testimonial[] = [
     role: "Smart Fella (barely)",
     avatarImage: "/testimonials/marcus.png",
     cardColor: "mint",
-    circleColor: "ink",
+    // Light-mint brain + mint card: a coral disc separates the brain from the
+    // circle and the circle from the mint card (no green-on-green).
+    circleColor: "coral",
   },
   {
     quote:
