@@ -3,6 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ChangeEvent, FormEvent, ReactNode } from "react";
 
+import { Select } from "@base-ui-components/react/select";
+import { Check, ChevronDown, Lock } from "lucide-react";
+
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -49,6 +52,25 @@ const PRIVACY_LABELS: Record<string, string> = {
 function privacyLabel(code: string): string {
   return PRIVACY_LABELS[code] ?? code;
 }
+
+// Canonical display order for TikTok's privacy levels (most public → most
+// private). Public, Friends, and Private are ALWAYS listed so the account's
+// posting permissions stay legible; any other level (e.g. Followers) appears
+// only when the connected account actually offers it. Levels the account does
+// not allow render disabled/locked — that's how the "unaudited apps can only
+// post privately" rule stays visible while Private remains the forced choice.
+const PRIVACY_DISPLAY_ORDER = [
+  "PUBLIC_TO_EVERYONE",
+  "MUTUAL_FOLLOW_FRIENDS",
+  "FOLLOWER_OF_CREATOR",
+  "SELF_ONLY",
+];
+
+const ALWAYS_SHOWN_PRIVACY = new Set([
+  "PUBLIC_TO_EVERYONE",
+  "MUTUAL_FOLLOW_FRIENDS",
+  "SELF_ONLY",
+]);
 
 export function TikTokStudio({
   connected,
@@ -474,9 +496,16 @@ export function TikTokStudio({
                   onChange={(e) => setCaption(e.target.value.slice(0, 2200))}
                   rows={3}
                   placeholder="Smart Fella or Fart Smella? Take the test 🧠 #fellatest"
-                  className="w-full resize-y rounded-xl border-[2.5px] border-ink bg-paper px-4 py-3 text-base outline-none focus-visible:ring-4 focus-visible:ring-blue/60"
+                  className="w-full resize-y rounded-xl border-[2.5px] border-ink bg-paper px-4 py-3 text-base leading-relaxed shadow-hard-xs outline-none transition-shadow placeholder:text-ink/40 focus-visible:ring-4 focus-visible:ring-blue/60"
                 />
-                <p className="mt-1 text-right text-xs text-ink/50">
+                <p
+                  className={cn(
+                    "mt-1.5 text-right font-mono text-xs tabular-nums",
+                    caption.length >= 2000
+                      ? "font-semibold text-ink"
+                      : "text-ink/50",
+                  )}
+                >
                   {caption.length}/2200
                 </p>
               </div>
@@ -488,19 +517,17 @@ export function TikTokStudio({
                 >
                   Who can see this
                 </label>
-                <select
-                  id="tiktok-privacy"
+                <PrivacySelect
                   value={privacyLevel}
-                  onChange={(e) => setPrivacyLevel(e.target.value)}
-                  className="w-full rounded-xl border-[2.5px] border-ink bg-paper px-4 py-3 text-base font-semibold outline-none focus-visible:ring-4 focus-visible:ring-blue/60"
+                  options={privacyOptions}
+                  onValueChange={setPrivacyLevel}
+                />
+                <p
+                  className={cn(
+                    "mt-2 text-sm",
+                    creatorError ? "font-semibold text-ink" : "text-ink/60",
+                  )}
                 >
-                  {privacyOptions.map((code) => (
-                    <option key={code} value={code}>
-                      {privacyLabel(code)}
-                    </option>
-                  ))}
-                </select>
-                <p className="mt-2 text-sm text-ink/60">
                   {loadingCreator
                     ? "Loading your account's allowed privacy options…"
                     : creatorError
@@ -670,6 +697,115 @@ function Toggle({
         )}
       </span>
     </label>
+  );
+}
+
+/**
+ * On-brand privacy dropdown (Base UI Select) replacing the native <select>, so
+ * the option list can carry the site's neo-brutalist styling.
+ *
+ * Selectable rows are exactly the levels the connected account allows
+ * (`options`, pulled live from creator_info). Well-known levels the account does
+ * NOT allow are still listed but rendered disabled/locked, so the "unaudited
+ * apps can only post privately" rule stays visible and Private (SELF_ONLY)
+ * remains the forced selection — a disabled row can never become the value.
+ * Base UI supplies full keyboard support (arrows / Enter / Esc / typeahead) and
+ * the combobox/listbox ARIA wiring.
+ */
+function PrivacySelect({
+  value,
+  options,
+  onValueChange,
+}: {
+  value: string;
+  options: string[];
+  onValueChange: (value: string) => void;
+}) {
+  const allowed = new Set(options);
+  const codes = [
+    ...PRIVACY_DISPLAY_ORDER.filter(
+      (code) => ALWAYS_SHOWN_PRIVACY.has(code) || allowed.has(code),
+    ),
+    ...options.filter((code) => !PRIVACY_DISPLAY_ORDER.includes(code)),
+  ];
+
+  return (
+    <Select.Root
+      value={value}
+      onValueChange={(next) => {
+        if (typeof next === "string") onValueChange(next);
+      }}
+    >
+      <Select.Trigger
+        id="tiktok-privacy"
+        className={cn(
+          "press group flex w-full cursor-pointer select-none items-center justify-between gap-3 rounded-xl border-[2.5px] border-ink bg-paper px-4 py-3 text-left text-base font-semibold text-ink shadow-hard-sm outline-none",
+          "focus-visible:ring-4 focus-visible:ring-blue/60",
+          "data-[popup-open]:bg-blue",
+        )}
+      >
+        <Select.Value className="min-w-0 truncate">
+          {(val: string | null) =>
+            val ? privacyLabel(val) : "Choose who can see this"
+          }
+        </Select.Value>
+        <Select.Icon className="shrink-0 transition-[transform,rotate] duration-200 ease-press group-data-[popup-open]:rotate-180 motion-reduce:transition-none">
+          <ChevronDown strokeWidth={3} className="h-5 w-5" aria-hidden />
+        </Select.Icon>
+      </Select.Trigger>
+
+      <Select.Portal>
+        <Select.Positioner
+          sideOffset={10}
+          alignItemWithTrigger={false}
+          className="z-50 outline-none"
+        >
+          <Select.Popup
+            className={cn(
+              "max-h-[min(20rem,var(--available-height))] w-[var(--anchor-width)] origin-[var(--transform-origin)] overflow-y-auto rounded-xl border-[2.5px] border-ink bg-paper p-1.5 text-ink shadow-hard",
+              "transition-[opacity,transform,scale] duration-150 ease-press",
+              "data-[starting-style]:scale-95 data-[starting-style]:opacity-0",
+              "data-[ending-style]:scale-95 data-[ending-style]:opacity-0",
+              "motion-reduce:transition-none",
+            )}
+          >
+            <Select.List>
+              {codes.map((code) => {
+                const isDisabled = !allowed.has(code);
+                return (
+                  <Select.Item
+                    key={code}
+                    value={code}
+                    disabled={isDisabled}
+                    className={cn(
+                      "flex cursor-pointer select-none items-center justify-between gap-3 rounded-lg border-[2px] border-transparent px-3 py-2.5 text-sm font-semibold outline-none transition-colors",
+                      "data-[highlighted]:border-ink data-[highlighted]:bg-yellow",
+                      "data-[selected]:border-ink data-[selected]:bg-mint",
+                      "data-[disabled]:cursor-not-allowed data-[disabled]:opacity-45",
+                    )}
+                  >
+                    <Select.ItemText className="truncate">
+                      {privacyLabel(code)}
+                    </Select.ItemText>
+                    {isDisabled ? (
+                      <Lock
+                        strokeWidth={3}
+                        className="h-4 w-4 shrink-0 text-ink/50"
+                        aria-hidden
+                      />
+                    ) : (
+                      <Select.ItemIndicator className="shrink-0">
+                        <Check strokeWidth={3} className="h-4 w-4" aria-hidden />
+                      </Select.ItemIndicator>
+                    )}
+                  </Select.Item>
+                );
+              })}
+            </Select.List>
+          </Select.Popup>
+        </Select.Positioner>
+      </Select.Portal>
+    </Select.Root>
   );
 }
 
