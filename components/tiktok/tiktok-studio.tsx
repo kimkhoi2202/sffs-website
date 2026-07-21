@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { ChangeEvent, FormEvent, ReactNode } from "react";
+import type { ChangeEvent, DragEvent, FormEvent, ReactNode } from "react";
 
 import { Select } from "@base-ui-components/react/select";
 import { Check, ChevronDown, Lock } from "lucide-react";
@@ -98,6 +98,7 @@ export function TikTokStudio({
   const [file, setFile] = useState<File | null>(null);
   const [sample, setSample] = useState<SampleVideo | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   const [caption, setCaption] = useState("");
   const [privacyLevel, setPrivacyLevel] = useState("SELF_ONLY");
@@ -181,9 +182,9 @@ export function TikTokStudio({
   // Revoke any outstanding blob: URL when the component unmounts.
   useEffect(() => releaseObjectUrl, [releaseObjectUrl]);
 
-  const onPickFile = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => {
-      const picked = e.target.files?.[0] ?? null;
+  // Core video-accept logic shared by the click picker and drag-and-drop.
+  const applyPickedFile = useCallback(
+    (picked: File | null) => {
       setResult(null);
       setPostError(null);
       setSample(null);
@@ -199,6 +200,48 @@ export function TikTokStudio({
       }
     },
     [releaseObjectUrl],
+  );
+
+  const onPickFile = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      applyPickedFile(e.target.files?.[0] ?? null);
+    },
+    [applyPickedFile],
+  );
+
+  // Drag-and-drop onto the dropzone: same accept + handler as the click picker.
+  // The file input's accept="…" only filters the click dialog, so the dropped
+  // file is validated here and non-videos are rejected gracefully.
+  const onDragOverVideo = useCallback(
+    (e: DragEvent<HTMLLabelElement>) => {
+      if (posting) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "copy";
+      setIsDragging(true);
+    },
+    [posting],
+  );
+
+  const onDragLeaveVideo = useCallback((e: DragEvent<HTMLLabelElement>) => {
+    // Ignore leaves that only move onto a child element of the dropzone.
+    if (e.currentTarget.contains(e.relatedTarget as Node | null)) return;
+    setIsDragging(false);
+  }, []);
+
+  const onDropVideo = useCallback(
+    (e: DragEvent<HTMLLabelElement>) => {
+      e.preventDefault();
+      setIsDragging(false);
+      if (posting) return;
+      const picked = e.dataTransfer.files?.[0] ?? null;
+      if (!picked) return;
+      if (!isAcceptedVideoFile(picked)) {
+        setPostError("That file isn't a supported video. Use MP4, MOV, or WebM.");
+        return;
+      }
+      applyPickedFile(picked);
+    },
+    [applyPickedFile, posting],
   );
 
   const onPickSample = useCallback(
@@ -418,8 +461,15 @@ export function TikTokStudio({
           <StudioCard step={2} title="Choose a rendered short">
             <div className="space-y-5">
               <label
+                onDragEnter={onDragOverVideo}
+                onDragOver={onDragOverVideo}
+                onDragLeave={onDragLeaveVideo}
+                onDrop={onDropVideo}
                 className={cn(
-                  "flex cursor-pointer flex-col items-center justify-center rounded-2xl border-[2.5px] border-dashed border-ink/60 bg-cream px-6 py-10 text-center transition-colors hover:border-ink hover:bg-cream/70",
+                  "flex cursor-pointer flex-col items-center justify-center rounded-2xl border-[2.5px] px-6 py-10 text-center transition-colors",
+                  isDragging
+                    ? "border-solid border-ink bg-blue shadow-hard-sm"
+                    : "border-dashed border-ink/60 bg-cream hover:border-ink hover:bg-cream/70",
                 )}
               >
                 <input
@@ -430,9 +480,18 @@ export function TikTokStudio({
                   onChange={onPickFile}
                 />
                 <span className="text-lg font-bold">
-                  {file ? file.name : "Click to pick an .mp4 from your computer"}
+                  {isDragging
+                    ? "Drop your video here"
+                    : file
+                      ? file.name
+                      : "Click to pick an .mp4 from your computer"}
                 </span>
-                <span className="mt-1 text-sm text-ink/60">
+                <span
+                  className={cn(
+                    "mt-1 text-sm",
+                    isDragging ? "text-ink/80" : "text-ink/60",
+                  )}
+                >
                   MP4, MOV, or WebM · vertical 9:16 recommended
                 </span>
               </label>
@@ -681,13 +740,20 @@ function Toggle({
         disabled && "opacity-50",
       )}
     >
-      <input
-        type="checkbox"
-        checked={disabled ? false : checked}
-        disabled={disabled}
-        onChange={(e) => onChange(e.target.checked)}
-        className="h-5 w-5 shrink-0 accent-green"
-      />
+      <span className="relative inline-flex h-5 w-5 shrink-0">
+        <input
+          type="checkbox"
+          checked={disabled ? false : checked}
+          disabled={disabled}
+          onChange={(e) => onChange(e.target.checked)}
+          className="peer h-5 w-5 shrink-0 cursor-pointer appearance-none rounded-sm border-[2.5px] border-ink bg-paper outline-none transition-colors checked:bg-green focus-visible:ring-4 focus-visible:ring-blue/60 disabled:cursor-not-allowed"
+        />
+        <Check
+          strokeWidth={3.5}
+          aria-hidden
+          className="pointer-events-none absolute inset-0 m-auto hidden h-3.5 w-3.5 text-ink peer-checked:block"
+        />
+      </span>
       <span>
         {label}
         {disabled && (
@@ -807,6 +873,21 @@ function PrivacySelect({
       </Select.Portal>
     </Select.Root>
   );
+}
+
+// Mirrors the file input's accept="video/mp4,video/quicktime,video/webm" for the
+// drag-and-drop path, which the accept attribute doesn't cover.
+const ACCEPTED_VIDEO_TYPES = new Set([
+  "video/mp4",
+  "video/quicktime",
+  "video/webm",
+]);
+
+function isAcceptedVideoFile(file: File): boolean {
+  if (ACCEPTED_VIDEO_TYPES.has(file.type)) return true;
+  // Some browsers report an empty/unknown MIME type for dragged files; fall back
+  // to the extension so MP4/MOV/WebM still pass and anything else is rejected.
+  return /\.(mp4|mov|webm)$/i.test(file.name);
 }
 
 function stripExtension(name: string): string {
