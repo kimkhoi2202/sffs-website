@@ -10,6 +10,7 @@ import {
 
 import { SmartFartHero } from "@/components/quiz/smart-fart-hero";
 import { QuizNav } from "@/components/quiz/quiz-nav";
+import { GetAccessForm } from "@/components/quiz/get-access-form";
 import { Steps, type StepItem } from "@/components/sections/steps";
 import { Comparison } from "@/components/sections/comparison";
 import { FeatureGrid, type Feature } from "@/components/sections/feature-grid";
@@ -163,8 +164,10 @@ const TIERS: Tier[] = [
       "Shareable result card",
       "Personal improvement plan",
     ],
-    cta: "Take the test",
-    href: "#pricing",
+    // The CTA is now the email lead-capture entry point ("Enter your email to
+    // get access"). Price + value props above stay; payment/delivery is a later
+    // step. Replaces the old "Take the test" self-link on this tier only.
+    ctaSlot: <GetAccessForm />,
   },
 ];
 
