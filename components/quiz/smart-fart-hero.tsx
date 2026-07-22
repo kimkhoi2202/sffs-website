@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -13,27 +13,14 @@ import { cn } from "@/lib/utils";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
-/**
- * Split text into per-character `.char` spans (so GSAP can stagger them), but
- * GROUP each word in an inline-block `whitespace-nowrap` wrapper so a word can
- * never break mid-way (e.g. "SMELLA?" splitting into "S" / "MELLA?"). Lines may
- * only break BETWEEN words, at the plain space rendered between wrappers.
- */
+/** Split a word into per-character spans so GSAP can stagger them. */
 function Chars({ text, className }: { text: string; className?: string }) {
-  const words = text.split(" ");
   return (
     <span aria-label={text} className={cn("inline-block", className)}>
-      {words.map((word, wi) => (
-        <Fragment key={`${word}-${wi}`}>
-          {wi > 0 ? " " : null}
-          <span className="inline-block whitespace-nowrap">
-            {Array.from(word).map((ch, ci) => (
-              <span key={`${ch}-${ci}`} aria-hidden className="char inline-block">
-                {ch}
-              </span>
-            ))}
-          </span>
-        </Fragment>
+      {text.split("").map((ch, i) => (
+        <span key={`${ch}-${i}`} aria-hidden className="char inline-block">
+          {ch === " " ? "\u00A0" : ch}
+        </span>
       ))}
     </span>
   );
@@ -69,7 +56,7 @@ export function SmartFartHero({
   smartWord = "Smart Fella",
   orWord = "or",
   fartWord = "Fart Smella?",
-  subtitle = "The dumb little game that knows exactly how smart you are. Beat the puzzles, climb the ranks, and flex on every fart smella you know.",
+  subtitle = "The dumb little game that knows exactly how smart you are. Get ranked, climb the leaderboard, and flex on every fart smella you know.",
   primaryCta = { label: "Join the waitlist", href: "#waitlist" },
 }: SmartFartHeroProps = {}) {
   const root = useRef<HTMLElement>(null);

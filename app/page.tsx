@@ -9,8 +9,8 @@ import { FeatureGrid, type Feature } from "@/components/sections/feature-grid";
 import { TestimonialMarquee, type Testimonial } from "@/components/sections/testimonials";
 import { Faq, type FaqItem } from "@/components/sections/faq";
 import { CtaBand } from "@/components/sections/cta-band";
-import { VideoShowcase } from "@/components/sections/video-showcase";
 import { Waitlist } from "@/components/sections/waitlist";
+import { VideoShowcase } from "@/components/sections/video-showcase";
 import { Section } from "@/components/ui/section";
 import { Heading } from "@/components/ui/heading";
 import { SectionDivider } from "@/components/ui/section-divider";
@@ -18,7 +18,7 @@ import { SectionDivider } from "@/components/ui/section-divider";
 export const metadata: Metadata = {
   title: { absolute: "Smart Fella or Fart Smella? — the dumb little brain game" },
   description:
-    "A dumb little brain game that knows exactly how smart you are. Play memory + puzzle games, climb the ranks, keep a streak, and flex on your friends. Join the waitlist.",
+    "A dumb little brain game that knows exactly how smart you are. Get ranked, climb the leaderboard, keep a streak, and flex on your friends. Join the waitlist.",
 };
 
 const STEPS: StepItem[] = [
@@ -62,21 +62,11 @@ const FEATURES: Feature[] = [
   },
 ];
 
-// Layout: an equal-height CSS grid (row-major), so with 3 columns the array
-// reads across — top row = Leo · Dana · Marcus, bottom row = Priya · Greg · Sam.
-//
-// SANDWICH color scheme (see the light-gray section below): every card pins a
-// distinct brand color that is ALSO its brain avatar's body color (cardColor ==
-// the brain PNG's fill), and the avatar CIRCLE behind the transparent brain
-// uses a contrasting color (circleColor) chosen to differ from the card/brain
-// in BOTH hue AND lightness so the brain always pops — never a near-equal-
-// lightness pairing (e.g. coral-on-green) that would read by hue alone. The
-// green-family cards use a clearly NON-green disc (Dana green -> paper, Marcus
-// mint -> coral) so the brain pops off the circle and the circle off the card;
-// the other brains pair with a disc chosen for hue + lightness contrast. All
-// six card colors differ from each other AND from the
-// section's neutral `gray` background (incl. the white `paper` card), so no card
-// blends in; the two greens (Dana green / Marcus mint) are kept non-adjacent.
+// SANDWICH color scheme (gray section): every card pins a distinct brand color
+// that is ALSO its brain avatar's body color (cardColor == the brain PNG fill),
+// and the avatar CIRCLE (circleColor) contrasts in BOTH hue and lightness so the
+// brain always pops. Green-family cards use a non-green disc (Dana green→paper,
+// Marcus mint→coral); the two greens are kept non-adjacent.
 const TESTIMONIALS: Testimonial[] = [
   {
     quote: "Beat my whole friend group and I will NOT let them forget it.",
@@ -92,8 +82,6 @@ const TESTIMONIALS: Testimonial[] = [
     name: "Dana R.",
     role: "Parent",
     avatarImage: "/testimonials/dana.png",
-    // Green brain + green card: a light PAPER disc makes the brain (and its black
-    // outline) pop off the circle, and the circle pop off the green card.
     cardColor: "green",
     circleColor: "paper",
   },
@@ -102,8 +90,6 @@ const TESTIMONIALS: Testimonial[] = [
     name: "Marcus T.",
     role: "Smart Fella (barely)",
     avatarImage: "/testimonials/marcus.png",
-    // Light-mint brain + mint card: a coral disc separates the brain from the
-    // circle and the circle from the mint card (no green-on-green).
     cardColor: "mint",
     circleColor: "coral",
   },
@@ -121,7 +107,6 @@ const TESTIMONIALS: Testimonial[] = [
     role: "Certified Fart Smella",
     rating: 1,
     avatarImage: "/testimonials/greg.png",
-    // Coral brain on a white disc: ~2.6:1 vs green's ~1.17:1 — the brain pops.
     cardColor: "coral",
     circleColor: "paper",
   },
@@ -166,14 +151,10 @@ export default function SmartOrFartPage() {
 
       <div id="top" className="relative">
         <SmartFartHero />
-        {/* The hero's draggable shapes are spawned + drifted by the PageShapes
-            overlay — see components/quiz/page-shapes.tsx. The hero → paper seam
-            (the swoop wave) is now FOLDED INTO the hero itself as its `.fella-wave`
-            bottom apron, so the yellow + synthwave grid fill all the way down to
-            the wavy ink line (no more grid-less band) and the shapes bounce at
-            that same wavy edge. Hence there is NO standalone <SectionDivider>
-            here anymore — the hero ends in white below the wave and flows
-            straight into the (also-white) Steps section. */}
+        {/* The hero's draggable shapes are a PAGE-LEVEL overlay (page-shapes.tsx)
+            confined to this hero. The hero → paper seam (the swoop wave) is FOLDED
+            INTO the hero as its `.fella-wave` bottom apron, so it flows straight
+            into the (also-white) Steps section — no standalone divider here. */}
       </div>
 
       <Steps
@@ -191,31 +172,29 @@ export default function SmartOrFartPage() {
       <SectionDivider top="paper" bottom="gray" variant="curve" />
 
       <div className="relative">
-      <Comparison
-        revealContent
-        background="gray"
-        eyebrow=""
-        title="Which one are you, really?"
-        theirLabel="Fart Smella"
-        ourLabel="Smart Fella"
-        theirPoints={[
-          "Doomscrolls until the phone dies",
-          "Rage quits at level 3",
-          "Taps randomly and prays",
-          "Screenshots someone else's high score",
-        ]}
-        ourPoints={[
-          "Beats their own high score for fun",
-          "Spots the pattern three moves ahead",
-          "Keeps a streak alive for weeks",
-          "Actually earns the rank",
-        ]}
-      />
+        <Comparison
+          revealContent
+          background="gray"
+          eyebrow=""
+          title="Which one are you, really?"
+          theirLabel="Fart Smella"
+          ourLabel="Smart Fella"
+          theirPoints={[
+            "Doomscrolls until the phone dies",
+            "Rage quits at level 3",
+            "Taps randomly and prays",
+            "Screenshots someone else's high score",
+          ]}
+          ourPoints={[
+            "Beats their own high score for fun",
+            "Spots the pattern three moves ahead",
+            "Keeps a streak alive for weeks",
+            "Actually earns the rank",
+          ]}
+        />
       </div>
 
-      {/* No divider here: comparison + what-you-get share one gray fill and read
-          as a single merged section. Extra top padding gives the "WHAT YOU
-          ACTUALLY GET" heading breathing room from the checklist cards above. */}
+      {/* No divider: comparison + what-you-get share one gray fill as a merged block. */}
       <FeatureGrid
         revealContent
         background="gray"
@@ -227,9 +206,8 @@ export default function SmartOrFartPage() {
         features={FEATURES}
       />
 
-      {/* Social proof as a scrolling MARQUEE, not a second card grid — otherwise
-          it reads as "grid stacked on grid" right after the feature grid. Stays on
-          the same gray block; the motion + single row break the visual rhythm. */}
+      {/* Social proof as a scrolling MARQUEE (not a second card grid) so it doesn't
+          read as "grid stacked on grid" after the feature grid. Same gray block. */}
       <Section background="gray" container={false} padding="md">
         <div className="mx-auto max-w-page px-4 text-center md:px-8">
           <Heading as={2} size="xl">
@@ -243,32 +221,23 @@ export default function SmartOrFartPage() {
 
       <SectionDivider top="gray" bottom="coral" variant="scallopBig" size="lg" />
 
-      {/* Waitlist — a colorful coral pop, placed AFTER the games are shown (not at
-          the very top, so the page doesn't lead with "not launched yet"). */}
+      {/* Waitlist — the coral pop (where the old pricing block sat), after the games. */}
       <Waitlist id="waitlist" className="scroll-mt-nav" background="coral" />
 
       <SectionDivider top="coral" bottom="paper" variant="blob" />
 
       <div className="relative">
-      <Faq
-        revealContent
-        background="paper"
-        eyebrow=""
-        title="Questions from concerned fellas"
-        items={FAQ}
-      />
+        <Faq
+          revealContent
+          background="paper"
+          eyebrow=""
+          title="Questions from concerned fellas"
+          items={FAQ}
+        />
       </div>
 
-      <SectionDivider top="paper" bottom="cream" variant="arch" />
+      <SectionDivider top="paper" bottom="green" variant="arch" />
 
-      {/* Full-bleed TikTok video embeds + the merged social-follow moment (IG +
-          TikTok icons). Neutral cream bg so the bright video cards pop. */}
-      <VideoShowcase id="videos" background="cream" />
-
-      <SectionDivider top="cream" bottom="green" variant="stepped" size="lg" />
-
-      {/* Final call to action — the LAST section before the footer. The footer's
-          own animated water wave is the green→blue seam (no divider needed). */}
       <CtaBand
         revealContent
         background="green"
@@ -279,6 +248,13 @@ export default function SmartOrFartPage() {
         primaryCta={{ label: "Join the waitlist", href: "#waitlist" }}
         secondaryCta={null}
       />
+
+      <SectionDivider top="green" bottom="cream" variant="stepped" size="lg" />
+
+      {/* "Follow the fellas" — social links + a looping carousel of TikTok video
+          covers. Neutral cream so the bright covers pop; replaces the old FollowUs.
+          The footer's animated water wave is the cream→blue seam. */}
+      <VideoShowcase id="videos" background="cream" />
     </main>
   );
 }
