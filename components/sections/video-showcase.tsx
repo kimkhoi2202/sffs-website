@@ -5,7 +5,8 @@ import { useEffect } from "react";
 import { Section } from "@/components/ui/section";
 import { Heading } from "@/components/ui/heading";
 import { Eyebrow } from "@/components/ui/eyebrow";
-import { Button } from "@/components/ui/button";
+import { SocialButton } from "@/components/social/social-button";
+import { SOCIALS } from "@/lib/socials";
 
 type SectionBackground = NonNullable<React.ComponentProps<typeof Section>["background"]>;
 
@@ -97,10 +98,19 @@ export function VideoShowcase({
         ))}
       </ul>
 
-      <div className="mx-auto mt-8 max-w-page px-4 text-center md:px-8">
-        <Button href={PROFILE_URL} variant="ink" size="lg">
-          Follow on TikTok
-        </Button>
+      {/* Merged "follow us" moment: the social icons live with the videos rather
+          than in a separate section. Renders every network from SOCIALS. */}
+      <div className="mx-auto mt-10 flex max-w-page flex-col items-center gap-5 px-4 text-center md:mt-12 md:px-8">
+        <p className="font-display text-xl uppercase leading-none tracking-[-0.01em] sm:text-2xl">
+          Follow the fellas
+        </p>
+        <ul className="flex list-none items-center justify-center gap-5 md:gap-6">
+          {SOCIALS.map((social) => (
+            <li key={social.label}>
+              <SocialButton social={social} size="lg" surface="light" />
+            </li>
+          ))}
+        </ul>
       </div>
     </Section>
   );

@@ -10,7 +10,6 @@ import { TestimonialMarquee, type Testimonial } from "@/components/sections/test
 import { Faq, type FaqItem } from "@/components/sections/faq";
 import { CtaBand } from "@/components/sections/cta-band";
 import { VideoShowcase } from "@/components/sections/video-showcase";
-import { FollowUs } from "@/components/sections/follow-us";
 import { Waitlist } from "@/components/sections/waitlist";
 import { Section } from "@/components/ui/section";
 import { Heading } from "@/components/ui/heading";
@@ -281,20 +280,13 @@ export default function SmartOrFartPage() {
         secondaryCta={null}
       />
 
-      <SectionDivider top="green" bottom="cream" variant="stepped" size="lg" />
+      <SectionDivider top="green" bottom="yellow" variant="stepped" size="lg" />
 
-      {/* Full-bleed video slideshow (self-hosted shorts from the tiktok-samples
-          manifest) — big vertical cards spanning the whole width. */}
-      <VideoShowcase id="videos" background="cream" />
-
-      <SectionDivider top="cream" bottom="yellow" variant="curve" />
-
-      {/* Standalone "follow us" moment before the footer, as a bright yellow beacon
-          (cream → yellow → blue rhythm). The yellow→blue transition is NOT a
-          divider: the footer's own animated water wave (see site-footer.tsx) is
-          the sole seam — it overlaps this section and lets the yellow show above
-          its crests. */}
-      <FollowUs revealContent background="yellow" />
+      {/* Full-bleed TikTok video embeds + the merged social-follow moment (IG +
+          TikTok icons), as a bright yellow beacon (green → yellow → blue). The
+          yellow→blue transition is NOT a divider: the footer's own animated water
+          wave (see site-footer.tsx) is the sole seam. */}
+      <VideoShowcase id="videos" background="yellow" />
     </main>
   );
 }
