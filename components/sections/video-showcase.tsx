@@ -90,8 +90,8 @@ export function VideoShowcase({
                 the inner negative margin nudges the embed up so the top chrome
                 strip (TikTok logo + pink seek bar) is cropped too — leaving just
                 the video. Width stays 325 (TikTok's embed minimum). */}
-            <div className="h-[512px] w-[325px] overflow-hidden rounded-2xl border-[2.5px] border-ink bg-paper shadow-hard">
-              <div className="-mt-[46px]">
+            <div className="h-[470px] w-[325px] overflow-hidden rounded-2xl border-[2.5px] border-ink bg-paper shadow-hard">
+              <div className="-mt-[92px]">
                 <blockquote
                   className="tiktok-embed !m-0"
                   cite={`${PROFILE_URL}/video/${videoId}`}
