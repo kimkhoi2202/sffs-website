@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { Fragment, useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -13,14 +13,27 @@ import { cn } from "@/lib/utils";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
-/** Split a word into per-character spans so GSAP can stagger them. */
+/**
+ * Split text into per-character `.char` spans (so GSAP can stagger them), but
+ * GROUP each word in an inline-block `whitespace-nowrap` wrapper so a word can
+ * never break mid-way (e.g. "SMELLA?" splitting into "S" / "MELLA?"). Lines may
+ * only break BETWEEN words, at the plain space rendered between wrappers.
+ */
 function Chars({ text, className }: { text: string; className?: string }) {
+  const words = text.split(" ");
   return (
     <span aria-label={text} className={cn("inline-block", className)}>
-      {text.split("").map((ch, i) => (
-        <span key={`${ch}-${i}`} aria-hidden className="char inline-block">
-          {ch === " " ? "\u00A0" : ch}
-        </span>
+      {words.map((word, wi) => (
+        <Fragment key={`${word}-${wi}`}>
+          {wi > 0 ? " " : null}
+          <span className="inline-block whitespace-nowrap">
+            {Array.from(word).map((ch, ci) => (
+              <span key={`${ch}-${ci}`} aria-hidden className="char inline-block">
+                {ch}
+              </span>
+            ))}
+          </span>
+        </Fragment>
       ))}
     </span>
   );
@@ -51,12 +64,12 @@ export interface SmartFartHeroProps {
  * bottom bounce bound, so the shapes and the yellow+grid share one wavy edge.
  */
 export function SmartFartHero({
-  eyebrow = "The 60-second fella diagnostic",
+  eyebrow = "a dumb little brain game",
   lead = "Are you a",
   smartWord = "Smart Fella",
   orWord = "or",
   fartWord = "Fart Smella?",
-  subtitle = "A brutally honest 27-question diagnostic that scores your fella-ness and tells you exactly which one you are. Backed by vibes, peer pressure, and questionable science.",
+  subtitle = "The dumb little game that knows exactly how smart you are. Beat the puzzles, climb the ranks, and flex on every fart smella you know.",
   primaryCta = { label: "Join the waitlist", href: "#waitlist" },
 }: SmartFartHeroProps = {}) {
   const root = useRef<HTMLElement>(null);

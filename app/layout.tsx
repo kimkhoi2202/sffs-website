@@ -35,20 +35,20 @@ export const metadata: Metadata = {
     template: "%s · Smart Fella or Fart Smella",
   },
   description:
-    "A brutally honest 60-second diagnostic that scores your fella-ness and reveals whether you're a Smart Fella or a Fart Smella. Backed by vibes and questionable science.",
+    "A dumb little brain game that knows exactly how smart you are. Play memory + puzzle games, climb the ranks, and flex on your friends. Join the waitlist.",
   openGraph: {
     type: "website",
     siteName: "Smart Fella or Fart Smella",
     title: "Smart Fella or Fart Smella?",
     description:
-      "Take the 60-second Fella Test and find out whether you're a Smart Fella or a Fart Smella.",
+      "The dumb little brain game that knows exactly how smart you are. Join the waitlist.",
     url: "/",
   },
   twitter: {
     card: "summary_large_image",
     title: "Smart Fella or Fart Smella?",
     description:
-      "Take the 60-second Fella Test and find out whether you're a Smart Fella or a Fart Smella.",
+      "The dumb little brain game that knows exactly how smart you are. Join the waitlist.",
   },
 };
 

@@ -1,12 +1,5 @@
 import type { Metadata } from "next";
-import {
-  Award,
-  Flame,
-  Gauge,
-  PieChart,
-  Share2,
-  TrendingUp,
-} from "lucide-react";
+import { Flame, Gamepad2, Share2, TrendingUp, Trophy, Users } from "lucide-react";
 
 import { SmartFartHero } from "@/components/quiz/smart-fart-hero";
 import { QuizNav } from "@/components/quiz/quiz-nav";
@@ -16,64 +9,65 @@ import { FeatureGrid, type Feature } from "@/components/sections/feature-grid";
 import { Testimonials, type Testimonial } from "@/components/sections/testimonials";
 import { Faq, type FaqItem } from "@/components/sections/faq";
 import { CtaBand } from "@/components/sections/cta-band";
+import { TikTokFeed } from "@/components/sections/tiktok-feed";
 import { FollowUs } from "@/components/sections/follow-us";
 import { Waitlist } from "@/components/sections/waitlist";
 import { SectionDivider } from "@/components/ui/section-divider";
 
 export const metadata: Metadata = {
-  title: { absolute: "The Fella Test - Smart Fella or Fart Smella?" },
+  title: { absolute: "Smart Fella or Fart Smella? — the dumb little brain game" },
   description:
-    "A brutally honest 60-second diagnostic that scores your fella-ness and reveals whether you're a Smart Fella or a Fart Smella. Backed by vibes and questionable science.",
+    "A dumb little brain game that knows exactly how smart you are. Play memory + puzzle games, climb the ranks, keep a streak, and flex on your friends. Join the waitlist.",
 };
 
 const STEPS: StepItem[] = [
   {
     label: "Step 1",
-    title: "Answer 27 questions",
-    body: "Rapid-fire scenarios about your daily choices, group-chat conduct, and snack ethics. Takes about five minutes and roughly zero brain cells.",
+    title: "Pick a dumb little game",
+    body: "2048, block blast, memory challenges — quick rounds that actually make you think, not zone out.",
   },
   {
     label: "Step 2",
-    title: "The Fella Engine scores you",
-    body: "Our deeply unscientific algorithm weighs your answers across six fella dimensions and computes your official Fella Score.",
+    title: "Get ranked",
+    body: "Every round scores you and moves your brain rank. The better you play, the higher you climb.",
   },
   {
     label: "Step 3",
-    title: "Get your diagnosis",
-    body: "Receive the verdict, Smart Fella or Fart Smella, plus a shareable report you can wave triumphantly in your friends' faces.",
+    title: "Flex on your friends",
+    body: "Keep a daily streak, share your rank, and tag a fart smella to settle who's really smart.",
   },
 ];
 
-const REPORT: Feature[] = [
+const FEATURES: Feature[] = [
   {
-    icon: Gauge,
-    title: "Your Fella Score",
-    body: "A single 0–100 number that settles the debate once and for all. No appeals.",
-  },
-  {
-    icon: PieChart,
-    title: "Six-dimension breakdown",
-    body: "See exactly where you lean smart, and where you lean, regrettably, fart.",
-  },
-  {
-    icon: Flame,
-    title: "Red-flag detector",
-    body: "The three habits quietly dragging your score into the danger zone.",
-  },
-  {
-    icon: Share2,
-    title: "Shareable result card",
-    body: "A bordered, brag-worthy card engineered specifically for the group chat.",
+    icon: Gamepad2,
+    title: "Real brain games",
+    body: "2048, block blast, and memory challenges — not mindless tap-to-win.",
   },
   {
     icon: TrendingUp,
-    title: "Improvement plan",
-    body: "Five concrete moves to climb from certified fart to respectable smart.",
+    title: "Your brain rank",
+    body: "Every game scores you and ranks your brain against everyone else playing.",
   },
   {
-    icon: Award,
-    title: "Official certificate",
-    body: "Frame-ready proof of your fella status. Mostly a joke. Mostly.",
+    icon: Flame,
+    title: "Daily streak",
+    body: "A fresh challenge every day. Miss one and watch the streak die.",
+  },
+  {
+    icon: Trophy,
+    title: "Leaderboards",
+    body: "Climb past your friends, your class, and total strangers.",
+  },
+  {
+    icon: Share2,
+    title: "Shareable rank card",
+    body: "A bordered, brag-worthy card engineered for the group chat.",
+  },
+  {
+    icon: Users,
+    title: "Tag a fart smella",
+    body: "Challenge anyone head to head and prove who's really smart.",
   },
 ];
 
@@ -94,57 +88,56 @@ const REPORT: Feature[] = [
 // blends in; the two greens (Dana green / Marcus mint) are kept non-adjacent.
 const TESTIMONIALS: Testimonial[] = [
   {
-    quote: "I put 'Smart Fella, verified' on my résumé and got two callbacks.",
+    quote: "Beat my whole friend group and I will NOT let them forget it.",
     name: "Leo M.",
-    role: "Job seeker",
+    role: "Ranked #3 in his class",
     avatarImage: "/testimonials/leo.png",
     cardColor: "blue",
     circleColor: "yellow",
   },
   {
     quote:
-      "I made my whole team take it. Morale is at an all-time low and I've never been happier.",
+      "My kid asked to play a memory game instead of watching slime videos. Actual witchcraft.",
     name: "Dana R.",
-    role: "Manager",
+    role: "Parent",
     avatarImage: "/testimonials/dana.png",
-    cardColor: "green",
     // Green brain + green card: a light PAPER disc makes the brain (and its black
     // outline) pop off the circle, and the circle pop off the green card.
+    cardColor: "green",
     circleColor: "paper",
   },
   {
-    quote: "Finally, science confirms what my wife has been saying for years.",
+    quote: "Makes me feel like a genius and an idiot in the same round. Can't stop.",
     name: "Marcus T.",
     role: "Smart Fella (barely)",
     avatarImage: "/testimonials/marcus.png",
-    cardColor: "mint",
     // Light-mint brain + mint card: a coral disc separates the brain from the
     // circle and the circle from the mint card (no green-on-green).
+    cardColor: "mint",
     circleColor: "coral",
   },
   {
-    quote:
-      "The red-flag detector called me out for microwaving fish at the office. Accurate and cruel.",
+    quote: "Haven't missed a daily challenge since March. This is my whole personality now.",
     name: "Priya S.",
-    role: "Reformed",
+    role: "Streak: 63 days",
     avatarImage: "/testimonials/priya.png",
     cardColor: "yellow",
     circleColor: "blue",
   },
   {
-    quote: "Scored a 12. Absolutely devastating. I hate this quiz",
+    quote: "Scored a 2. Absolutely devastating. I'm training and coming back for blood.",
     name: "Greg P.",
     role: "Certified Fart Smella",
     rating: 1,
     avatarImage: "/testimonials/greg.png",
-    cardColor: "coral",
     // Coral brain on a white disc: ~2.6:1 vs green's ~1.17:1 — the brain pops.
+    cardColor: "coral",
     circleColor: "paper",
   },
   {
-    quote: "Took it six times hoping for a better score. The engine is incorruptible.",
+    quote: "Replaced my 2am doomscroll with block blast. My brain said thank you.",
     name: "Sam K.",
-    role: "Persistent",
+    role: "Reformed doomscroller",
     avatarImage: "/testimonials/sam.png",
     cardColor: "paper",
     circleColor: "coral",
@@ -153,24 +146,24 @@ const TESTIMONIALS: Testimonial[] = [
 
 const FAQ: FaqItem[] = [
   {
-    q: "Is this scientifically valid?",
-    a: "Absolutely not. The Fella Engine runs on vibes, stereotypes, and one very opinionated spreadsheet. It's for entertainment only.",
+    q: "What is this, exactly?",
+    a: "A dumb little game that knows exactly how smart you are. Quick memory and puzzle rounds (think 2048 and block blast) that score your brain and rank you against everyone else.",
   },
   {
-    q: "Is it rigged to call me a Fart Smella?",
-    a: "It is not, but the questions are designed to expose your worst habits, so a low score is entirely your own doing.",
+    q: "Is it actually fun, or is it secretly homework?",
+    a: "Game first. It's genuinely hard, genuinely dumb, and built to be flexed about — not studied.",
   },
   {
-    q: "How long does it take?",
-    a: "About five minutes. Twenty-seven quick questions, no essays, and no account required to start.",
+    q: "How much will it cost?",
+    a: "We'll sort that out at launch. Right now it's free to join the waitlist and be first in.",
   },
   {
-    q: "Can I get a refund if I hate my score?",
-    a: "You can get a refund if the test won't load. You cannot get a refund simply because the truth stings.",
+    q: "Who's it for?",
+    a: "Anyone who wants to out-think their friends. Built for sharp kids — but honestly addictive for everyone.",
   },
   {
-    q: "Can my whole team take it?",
-    a: "Please do — everyone grabs their own test and compares Fella Scores. Nothing bonds a team like collective public humiliation.",
+    q: "When does it launch?",
+    a: "Soon. Join the waitlist and you'll be first to know — and first up the ranks.",
   },
 ];
 
@@ -198,7 +191,7 @@ export default function SmartOrFartPage() {
         className="scroll-mt-nav"
         background="paper"
         eyebrow=""
-        title="Three steps to the truth"
+        title="Three steps to the flex"
         steps={STEPS}
         cta={{ label: "Join the waitlist", href: "#waitlist", variant: "green" }}
       />
@@ -215,16 +208,16 @@ export default function SmartOrFartPage() {
         theirLabel="Fart Smella"
         ourLabel="Smart Fella"
         theirPoints={[
-          "Replies “lol” to genuinely serious questions",
-          "Microwaves fish in a shared office kitchen",
-          "Has 47 unread “urgent” emails and zero concern",
-          "Confidently, cheerfully wrong about everything",
+          "Doomscrolls until the phone dies",
+          "Rage quits at level 3",
+          "Taps randomly and prays",
+          "Screenshots someone else's high score",
         ]}
         ourPoints={[
-          "Reads the whole thread before replying",
-          "Owns a water bottle and, crucially, uses it",
-          "Inbox at zero, mind mysteriously clear",
-          "Says “I don't know” like an absolute legend",
+          "Beats their own high score for fun",
+          "Spots the pattern three moves ahead",
+          "Keeps a streak alive for weeks",
+          "Actually earns the rank",
         ]}
       />
       </div>
@@ -238,9 +231,9 @@ export default function SmartOrFartPage() {
         className="pt-2 md:pt-6"
         eyebrow=""
         title="What you actually get"
-        intro="Every test unlocks a full breakdown you can screenshot, share, and argue about for weeks."
+        intro="It's all built to make thinking a flex — get ranked, keep a streak, and drag your friends in."
         columns={3}
-        features={REPORT}
+        features={FEATURES}
       />
 
       {/* No divider: the merged gray "what you get" block flows straight into the
@@ -283,13 +276,18 @@ export default function SmartOrFartPage() {
         secondaryCta={null}
       />
 
-      <SectionDivider top="green" bottom="yellow" variant="stepped" size="lg" />
+      <SectionDivider top="green" bottom="cream" variant="stepped" size="lg" />
 
-      {/* Standalone "follow us" moment, sat between the green CTA band and the blue
-          footer as a bright yellow beacon (green → yellow → blue rhythm). The
-          yellow→blue transition is NOT a divider here: the footer's own animated
-          water wave (see components/sections/site-footer.tsx) is the sole seam —
-          it overlaps this section and lets the yellow show above its crests. */}
+      {/* TikTok profile feed — a slideshow of recent videos near the bottom. */}
+      <TikTokFeed background="cream" />
+
+      <SectionDivider top="cream" bottom="yellow" variant="curve" />
+
+      {/* Standalone "follow us" moment before the footer, as a bright yellow beacon
+          (cream → yellow → blue rhythm). The yellow→blue transition is NOT a
+          divider: the footer's own animated water wave (see site-footer.tsx) is
+          the sole seam — it overlaps this section and lets the yellow show above
+          its crests. */}
       <FollowUs revealContent background="yellow" />
     </main>
   );
