@@ -90,8 +90,7 @@ export function GetAccessForm({ className }: { className?: string }) {
           You&apos;re in! <span aria-hidden="true">🧠</span>
         </p>
         <p className="mt-3 text-sm font-medium leading-relaxed text-ink/80">
-          Nice move, smart fella. Keep an eye on your inbox — your Fella Test
-          access is on the way.
+          Certified smart move. That&apos;s exactly what a smart fella would do.
         </p>
       </div>
     );
