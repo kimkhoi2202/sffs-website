@@ -155,3 +155,10 @@ User feedback: "too much text — address the simplest concerns; mention the lea
 - **NEW §ordered "The (boring) science" section** (paper): working memory framed as a *measured* predictor of learning, "lightly cited" (decades of cognitive-science research) per user's choice. Holds the guardrail — explicitly refuses the "boosts IQ" claim; uses the approved "workout" (exercise) framing, not a durable-improvement claim.
 - **NEW "Why it costs money" section** (coral): pricing *rationale, no number* (undecided) — "you pay so advertisers don't; free = attention-farming + ads."
 - New section order/rhythm: Hero(blue) → Manifesto(ink) → Comparison(cream) → Science(paper) → Features(mint) → Pricing(coral) → Mission(yellow) → FAQ(paper) → CTA(green).
+
+## Revision — 2026-07-22 (match homepage polish)
+
+Brought the parents page in line with Khoi's latest homepage treatments:
+- **Wavy section dividers** (`SectionDivider`) between every seam, varied variants (swoop off the hero, then doubleWave / peaks / scallopBig / blob / arch / stepped / torn). Removed the now-redundant `bordered` from the custom sections (the wave is the edge).
+- **Hero shape bounce:** marked the hero `.fella-hero` so `page-shapes` confines the draggable shapes to it and bounces them off its edges (roomy side margins on the short hero keep them clear of the headline).
+- **Animated water footer:** already inherited from the root layout (`SiteFooter`); the green CTA → footer seam is the footer's own water wave (no divider).
