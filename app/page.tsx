@@ -259,13 +259,13 @@ export default function SmartOrFartPage() {
       />
       </div>
 
-      <SectionDivider top="paper" bottom="yellow" variant="arch" />
+      <SectionDivider top="paper" bottom="cream" variant="arch" />
 
       {/* Full-bleed TikTok video embeds + the merged social-follow moment (IG +
-          TikTok icons), as a bright yellow beacon. */}
-      <VideoShowcase id="videos" background="yellow" />
+          TikTok icons). Neutral cream bg so the bright video cards pop. */}
+      <VideoShowcase id="videos" background="cream" />
 
-      <SectionDivider top="yellow" bottom="green" variant="stepped" size="lg" />
+      <SectionDivider top="cream" bottom="green" variant="stepped" size="lg" />
 
       {/* Final call to action — the LAST section before the footer. The footer's
           own animated water wave is the green→blue seam (no divider needed). */}
