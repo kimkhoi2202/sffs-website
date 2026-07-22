@@ -8,7 +8,6 @@ import { Comparison } from "@/components/sections/comparison";
 import { FeatureGrid, type Feature } from "@/components/sections/feature-grid";
 import { TestimonialMarquee, type Testimonial } from "@/components/sections/testimonials";
 import { Faq, type FaqItem } from "@/components/sections/faq";
-import { CtaBand } from "@/components/sections/cta-band";
 import { Waitlist } from "@/components/sections/waitlist";
 import { VideoShowcase } from "@/components/sections/video-showcase";
 import { Section } from "@/components/ui/section";
@@ -238,16 +237,13 @@ export default function SmartOrFartPage() {
 
       <SectionDivider top="paper" bottom="green" variant="arch" />
 
-      <CtaBand
-        revealContent
-        background="green"
-        align="center"
-        badge="Launching soon"
-        title="So… smart fella or fart smella?"
-        subtitle=""
-        primaryCta={{ label: "Join the waitlist", href: "#waitlist" }}
-        secondaryCta={null}
-      />
+      {/* Plain brand closer — NO second waitlist form (the single waitlist lives
+          above). Just the rhetorical sign-off. */}
+      <Section background="green" padding="lg" container="prose" containerClassName="text-center">
+        <Heading as={2} size="display">
+          So… smart fella or fart smella?
+        </Heading>
+      </Section>
 
       <SectionDivider top="green" bottom="cream" variant="stepped" size="lg" />
 

@@ -33,9 +33,9 @@ export function Waitlist({
   id,
   className,
   background = "coral",
-  eyebrow = "Launching soon",
+  eyebrow = "You've seen us on TikTok",
   title = "Get in before everyone else",
-  subtitle = "Drop your email and we'll tell you the moment it's ready — plus a first crack at the leaderboard.",
+  subtitle = "We're the fellas behind the brain quizzes. The game itself drops soon — drop your email and you're first in line, with a head start on the leaderboard.",
   cta = "Join the waitlist",
 }: WaitlistProps = {}) {
   const [email, setEmail] = useState("");
@@ -117,6 +117,10 @@ export function Waitlist({
               {error}
             </p>
           ) : null}
+          {/* Honest trust line — the biggest lever against "this looks fake." */}
+          <p className="mt-4 text-sm font-medium text-ink/70">
+            One email when it launches. No spam, no selling your info.
+          </p>
         </>
       )}
     </Section>
