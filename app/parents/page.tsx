@@ -143,12 +143,13 @@ export default function ParentsPage() {
         items={FAQ}
       />
 
-      <SectionDivider top="cream" bottom="blue" variant="curve" size="sm" />
+      <SectionDivider top="cream" bottom="yellow" variant="curve" size="sm" />
 
-      {/* 6. Closing CTA (no form) — the page's single soft color accent. */}
+      {/* 6. Closing CTA (no form) — yellow "sand" above the footer's blue water
+          wave, for a little beach effect at the bottom of the page. */}
       <CtaBand
         revealContent
-        background="blue"
+        background="yellow"
         align="center"
         title="See what they'll actually be playing"
         subtitle=""
