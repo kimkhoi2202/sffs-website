@@ -77,8 +77,8 @@ export default function RootLayout({
           <MusicToggle />
         </SmoothScroll>
         {/* Page-level draggable shape field — a document-glued overlay mounted
-            OUTSIDE the hero, so shapes scroll with the page (a shape dropped in a
-            section stays parked there) and are never clipped by the hero. */}
+            OUTSIDE the hero so it's never clipped by it; the shapes confine
+            themselves to the hero and bounce off its wavy divider edge. */}
         <PageShapes />
       </body>
     </html>

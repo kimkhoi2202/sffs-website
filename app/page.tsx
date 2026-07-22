@@ -18,6 +18,7 @@ import { Pricing, type Tier } from "@/components/sections/pricing";
 import { Faq, type FaqItem } from "@/components/sections/faq";
 import { CtaBand } from "@/components/sections/cta-band";
 import { FollowUs } from "@/components/sections/follow-us";
+import { SectionDivider } from "@/components/ui/section-divider";
 
 export const metadata: Metadata = {
   title: { absolute: "The Fella Test - Smart Fella or Fart Smella?" },
@@ -76,9 +77,8 @@ const REPORT: Feature[] = [
   },
 ];
 
-// Order matters: the grid uses CSS multi-columns (fill top→bottom, then across),
-// so with 3 columns the array reads Leo/Dana | Marcus/Priya | Greg/Sam, i.e.
-// top row = Leo · Marcus · Greg, bottom row = Dana · Priya · Sam.
+// Layout: an equal-height CSS grid (row-major), so with 3 columns the array
+// reads across — top row = Leo · Dana · Marcus, bottom row = Priya · Greg · Sam.
 //
 // SANDWICH color scheme (see the light-gray section below): every card pins a
 // distinct brand color that is ALSO its brain avatar's body color (cardColor ==
@@ -197,8 +197,16 @@ export default function SmartOrFartPage() {
       {/* Slim landing bar (this route opts out of the Closer site chrome) */}
       <QuizNav />
 
-      <div id="top">
+      <div id="top" className="relative">
         <SmartFartHero />
+        {/* The hero's draggable shapes are spawned + drifted by the PageShapes
+            overlay — see components/quiz/page-shapes.tsx. The hero → paper seam
+            (the swoop wave) is now FOLDED INTO the hero itself as its `.fella-wave`
+            bottom apron, so the yellow + synthwave grid fill all the way down to
+            the wavy ink line (no more grid-less band) and the shapes bounce at
+            that same wavy edge. Hence there is NO standalone <SectionDivider>
+            here anymore — the hero ends in white below the wave and flows
+            straight into the (also-white) Steps section. */}
       </div>
 
       <Steps
@@ -212,9 +220,13 @@ export default function SmartOrFartPage() {
         cta={{ label: "Take the test", href: "#pricing", variant: "green" }}
       />
 
+      {/* Outer TOP edge of the merged gray block (comparison + what-you-get). */}
+      <SectionDivider top="paper" bottom="gray" variant="curve" />
+
+      <div className="relative">
       <Comparison
         revealContent
-        background="cream"
+        background="gray"
         eyebrow=""
         title="Which one are you, really?"
         theirLabel="Fart Smella"
@@ -232,10 +244,15 @@ export default function SmartOrFartPage() {
           "Says “I don't know” like an absolute legend",
         ]}
       />
+      </div>
 
+      {/* No divider here: comparison + what-you-get share one gray fill and read
+          as a single merged section. Extra top padding gives the "WHAT YOU
+          ACTUALLY GET" heading breathing room from the checklist cards above. */}
       <FeatureGrid
         revealContent
-        background="paper"
+        background="gray"
+        className="pt-2 md:pt-6"
         eyebrow=""
         title="What you actually get"
         intro="Every test unlocks a full breakdown you can screenshot, share, and argue about for weeks."
@@ -243,6 +260,9 @@ export default function SmartOrFartPage() {
         features={REPORT}
       />
 
+      {/* No divider: the merged gray "what you get" block flows straight into the
+          (also-gray) testimonials as ONE continuous gray area. The two sections'
+          own vertical padding keeps "LIVES HAVE BEEN CHANGED" from cramping. */}
       <Testimonials
         revealContent
         background="gray"
@@ -250,6 +270,8 @@ export default function SmartOrFartPage() {
         title="Lives have been changed"
         testimonials={TESTIMONIALS}
       />
+
+      <SectionDivider top="gray" bottom="coral" variant="scallopBig" size="lg" />
 
       <Pricing
         revealContent
@@ -263,6 +285,9 @@ export default function SmartOrFartPage() {
         tiers={TIERS}
       />
 
+      <SectionDivider top="coral" bottom="paper" variant="blob" />
+
+      <div className="relative">
       <Faq
         revealContent
         background="paper"
@@ -270,6 +295,9 @@ export default function SmartOrFartPage() {
         title="Questions from concerned fellas"
         items={FAQ}
       />
+      </div>
+
+      <SectionDivider top="paper" bottom="green" variant="arch" />
 
       <CtaBand
         revealContent
@@ -282,8 +310,13 @@ export default function SmartOrFartPage() {
         secondaryCta={null}
       />
 
+      <SectionDivider top="green" bottom="yellow" variant="stepped" size="lg" />
+
       {/* Standalone "follow us" moment, sat between the green CTA band and the blue
-          footer as a bright yellow beacon (green → yellow → blue rhythm). */}
+          footer as a bright yellow beacon (green → yellow → blue rhythm). The
+          yellow→blue transition is NOT a divider here: the footer's own animated
+          water wave (see components/sections/site-footer.tsx) is the sole seam —
+          it overlaps this section and lets the yellow show above its crests. */}
       <FollowUs revealContent background="yellow" />
     </main>
   );

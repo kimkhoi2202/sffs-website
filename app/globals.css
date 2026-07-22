@@ -284,6 +284,19 @@
 }
 
 /*
+  Brain-mascot idle motion — subtle, transform-only (GPU), slow ease-in-out loops
+  so the little fella feels alive without demanding attention. Disabled under
+  reduced motion (below). The one-time scroll-in reveal lives in the Motion-driven
+  components/quiz/mascot.tsx (a separate wrapper element, so the two never fight).
+*/
+@keyframes mascot-float { 0%, 100% { transform: translate3d(0, 0, 0); } 50% { transform: translate3d(0, -7px, 0); } }
+@keyframes mascot-sway { 0%, 100% { transform: translate3d(0, 0, 0) rotate(-2.5deg); } 50% { transform: translate3d(0, -4px, 0) rotate(2.5deg); } }
+@keyframes mascot-swim { 0%, 100% { transform: translate3d(0, 0, 0) rotate(-2deg); } 50% { transform: translate3d(-7px, -4px, 0) rotate(2deg); } }
+.mascot-float { animation: mascot-float 4.5s ease-in-out infinite; will-change: transform; }
+.mascot-sway { animation: mascot-sway 5.5s ease-in-out infinite; will-change: transform; }
+.mascot-swim { animation: mascot-swim 3.8s ease-in-out infinite; will-change: transform; }
+
+/*
   The hero shapes are a page-level, JS-driven field (components/quiz/page-shapes.tsx):
   Motion drives their transforms directly per frame, so there are no CSS keyframes
   for them here. (The `.fella-floor` grid drift above is still pure CSS.)
@@ -293,6 +306,10 @@
   .marquee-track { animation: none; }
   /* Keep the static tilted grid, but stop the continuous drift. */
   .fella-floor { animation: none; will-change: auto; }
+  /* Brain mascots freeze into their static pose. */
+  .mascot-float,
+  .mascot-sway,
+  .mascot-swim { animation: none; will-change: auto; }
   html { scroll-behavior: auto; }
   /* Buttons keep their shadow feedback but drop the lift/press travel. */
   .btn-press:hover,

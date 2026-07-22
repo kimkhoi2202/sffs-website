@@ -91,6 +91,13 @@ export interface PricingProps {
    * Off by default, so every other use of <Pricing> is unaffected.
    */
   fullViewport?: boolean;
+  /**
+   * Decorative node perched at each plan card's TOP-RIGHT corner (the card's
+   * wrapper becomes `relative`), overlapping the edge and layered on top. Used
+   * to sit the thumbs-up brain mascot on the card; the caller's node is
+   * responsible for being aria-hidden / pointer-events-none.
+   */
+  cardCornerAccessory?: React.ReactNode;
 }
 
 const DEFAULT_TIERS: Tier[] = [
@@ -157,6 +164,7 @@ export function Pricing({
   revealContent = true,
   staticCards = false,
   fullViewport = false,
+  cardCornerAccessory,
 }: PricingProps) {
   const columns = columnsMap[Math.min(tiers.length, 3)] ?? "lg:grid-cols-3";
 
@@ -202,7 +210,9 @@ export function Pricing({
           return (
             // Wrapper is the stagger target so the featured card keeps its own
             // persistent lift/scale transform without fighting the entrance tween.
-            <div key={tier.name} className="h-full">
+            // `relative` so an optional corner accessory can perch on the card.
+            <div key={tier.name} className="relative h-full">
+            {cardCornerAccessory}
             <Card
               color={cardColor}
               shadow={highlighted ? "lg" : "md"}

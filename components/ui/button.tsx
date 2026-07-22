@@ -10,20 +10,19 @@ import { cn } from "@/lib/utils";
   color is driven by --btn-shadow-color (ink by default; dark/colored surfaces
   set it to #fff), so the same offset animation composes with any surface.
 
-  Keyboard focus (focus-visible only): a bespoke three-tone ring — paper halo →
-  brand-blue band → ink keyline — painted as a box-shadow on the ::after
+  Keyboard focus (focus-visible only): a two-tone ring — a bold brand-blue band
+  wrapped in a thin ink keyline — painted as a box-shadow on the ::after
   pseudo-element (a SEPARATE element, so the button's own btn-press box-shadow is
-  never overwritten). It's needed because every brand pastel only reaches ~2.6:1
-  contrast on paper (fails WCAG 1.4.11's 3:1), so a single-color ring can't stay
-  visible on paper AND coral AND the black CTA band: the ink keyline carries
-  contrast on light surfaces, the paper halo/blue band carry it on dark ones, and
-  the blue band keeps it reading as an intentional brand highlight (not a doubled
-  black border). We still override the global bare :focus-visible outline with a
-  transparent real outline so a focus ring survives forced-colors / Windows High
-  Contrast, where box-shadows are dropped.
+  never overwritten). Blue is the visible brand indicator; the outer ink keyline
+  keeps the ring at WCAG 1.4.11's 3:1 on light/pastel page surfaces (where the
+  blue alone only reaches ~2.6:1 and would wash out), while the blue itself
+  carries the contrast on dark/ink surfaces — so at least one band always stands
+  out, with no white halo. We still override the global bare :focus-visible
+  outline with a transparent real outline so a focus ring survives forced-colors
+  / Windows High Contrast, where box-shadows are dropped.
 */
 export const buttonVariants = cva(
-  "btn-press relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full border-[2.5px] border-ink font-sans font-bold uppercase tracking-wide leading-none select-none cursor-pointer disabled:pointer-events-none disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-transparent focus-visible:after:pointer-events-none focus-visible:after:absolute focus-visible:after:content-[''] focus-visible:after:-inset-[2.5px] focus-visible:after:rounded-full focus-visible:after:[box-shadow:0_0_0_2px_var(--color-paper),0_0_0_5px_var(--color-blue),0_0_0_7px_var(--color-ink)]",
+  "btn-press relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full border-[2.5px] border-ink font-sans font-bold uppercase tracking-wide leading-none select-none cursor-pointer disabled:pointer-events-none disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-transparent focus-visible:after:pointer-events-none focus-visible:after:absolute focus-visible:after:content-[''] focus-visible:after:-inset-[2.5px] focus-visible:after:rounded-full focus-visible:after:[box-shadow:0_0_0_4px_var(--color-blue),0_0_0_6px_var(--color-ink)]",
   {
     variants: {
       variant: {

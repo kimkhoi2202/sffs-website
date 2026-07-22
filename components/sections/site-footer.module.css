@@ -1,0 +1,94 @@
+/*
+  Component-scoped "body of water" motion for the site footer.
+  Every animation is transform/opacity only (compositor, off-main-thread), so
+  nothing reflows and there is zero layout shift. Under prefers-reduced-motion
+  everything freezes into its static pose (see the media query at the bottom).
+*/
+
+/* Gentle vertical undulation of the whole surface band. */
+.waveBob {
+  animation: sffWaveBob 8s ease-in-out infinite;
+  will-change: transform;
+}
+@keyframes sffWaveBob {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50%      { transform: translate3d(0, 3px, 0); }
+}
+
+/*
+  Rolling crests: each wave SVG is 200% wide with the crest pattern duplicated,
+  so translating by exactly -50% of its own width lands one full repeat later —
+  a perfectly seamless loop. The back sheen rolls the opposite way (reverse) and
+  slower, so the two crest fields drift across each other (living undulation).
+*/
+.waveRoll {
+  animation: sffWaveRoll 16s linear infinite;
+  will-change: transform;
+}
+.waveRollBack {
+  animation: sffWaveRoll 24s linear infinite reverse;
+  will-change: transform;
+}
+@keyframes sffWaveRoll {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-50%, 0, 0); }
+}
+
+/*
+  Scattered ripple "~~~" marks: a gentle drift + soft opacity swell, each one
+  staggered via its own --r-delay / --r-dur so they never pulse in unison.
+*/
+.ripple {
+  animation: sffRipple var(--r-dur, 6s) ease-in-out var(--r-delay, 0s) infinite;
+  will-change: transform, opacity;
+}
+@keyframes sffRipple {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) rotate(var(--r-rot, 0deg));
+    opacity: var(--r-op, 0.35);
+  }
+  50% {
+    transform: translate3d(var(--r-rx, 3px), var(--r-ry, -5px), 0) rotate(var(--r-rot, 0deg));
+    opacity: calc(var(--r-op, 0.35) + 0.18);
+  }
+}
+
+/*
+  Swim mascot idle = one breaststroke cycle: a quick "pull" (forward surge +
+  slight rise, nose up to breathe), then a slow "recover/glide" that settles
+  back with a small sink and a subtle tilt. Forward = up-left, matching the
+  mascot's facing.
+*/
+.swim {
+  animation: sffSwim 4.6s ease-in-out infinite;
+  will-change: transform;
+}
+@keyframes sffSwim {
+  0%   { transform: translate3d(0, 1px, 0) rotate(1.5deg); }   /* glide, slightly sunk */
+  28%  { transform: translate3d(-5px, -4px, 0) rotate(-2deg); } /* pull: surge + rise */
+  44%  { transform: translate3d(-6px, -5px, 0) rotate(-2.5deg); } /* breath peak */
+  70%  { transform: translate3d(-2px, 0, 0) rotate(0deg); }    /* recover: settle */
+  100% { transform: translate3d(0, 1px, 0) rotate(1.5deg); }   /* glide again */
+}
+
+/* Copyright gently bobs on the surface. */
+.copy {
+  animation: sffCopyBob 5.4s ease-in-out infinite;
+  will-change: transform;
+}
+@keyframes sffCopyBob {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50%      { transform: translate3d(0, -4px, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .waveBob,
+  .waveRoll,
+  .waveRollBack,
+  .ripple,
+  .swim,
+  .copy {
+    animation: none !important;
+    will-change: auto;
+  }
+}

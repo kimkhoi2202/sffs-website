@@ -44,9 +44,11 @@ export interface SmartFartHeroProps {
  *
  * The decorative draggable shapes are NOT here — they're a PAGE-LEVEL overlay
  * (components/quiz/page-shapes.tsx, mounted in app/layout.tsx) that sits ON TOP
- * of this content so they can be dragged out of the hero into any section. This
- * hero only provides the `.fella-hero` element the overlay measures to place the
- * shapes' home positions.
+ * of this content. The shapes are CONFINED TO this hero section and bounce off
+ * its edges. This hero provides the `.fella-hero` element the overlay measures
+ * to place the shapes' fixed home positions, plus the `.fella-wave` bottom apron
+ * (the swoop divider folded IN — see the JSX below) whose baseline is the shapes'
+ * bottom bounce bound, so the shapes and the yellow+grid share one wavy edge.
  */
 export function SmartFartHero({
   eyebrow = "The 60-second fella diagnostic",
@@ -145,7 +147,7 @@ export function SmartFartHero({
   return (
     <section
       ref={root}
-      className="fella-hero relative isolate flex min-h-[100svh] flex-col items-center overflow-hidden border-b-[5px] border-ink bg-yellow px-4 py-8 sm:py-12 text-center"
+      className="fella-hero relative isolate flex min-h-[calc(100svh_+_56px)] flex-col items-center overflow-hidden bg-yellow px-4 py-8 text-center sm:min-h-[calc(100svh_+_78px)] sm:py-12 md:min-h-[calc(100svh_+_100px)]"
     >
       {/*
         BASE background layer — perspective "synthwave floor" grid backdrop.
@@ -162,7 +164,7 @@ export function SmartFartHero({
         className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
         style={{ perspective: "560px", perspectiveOrigin: "50% 34%" }}
       >
-        <div className="absolute inset-x-[-50%] top-[34%] bottom-[-45%] overflow-hidden [transform:rotateX(70deg)] [transform-origin:50%_0%]">
+        <div className="absolute inset-x-[-50%] top-[34%] bottom-[-12%] overflow-hidden [transform:rotateX(70deg)] [transform-origin:50%_0%]">
           <div
             className="fella-floor absolute inset-[-120%] opacity-[0.09]"
             style={{
@@ -180,6 +182,51 @@ export function SmartFartHero({
               "linear-gradient(to bottom, var(--color-yellow) 0%, var(--color-yellow) 24%, rgba(252,229,82,0) 100%)",
           }}
         />
+      </div>
+
+      {/*
+        BOTTOM WAVE APRON — the hero's REAL visible bottom edge.
+
+        This FOLDS the old standalone swoop <SectionDivider> (which used to sit
+        AFTER the hero in app/page.tsx) INTO the hero. The section's min-height is
+        grown by exactly this apron's height, so the apron pins to the hero's
+        bottom edge in the SAME place the divider used to be — but now the hero's
+        yellow + perspective grid (which fill the whole section, clipped by the
+        section's overflow-hidden) continue DOWN into it, killing the grid-less
+        yellow band that used to float between the straight rect and the wave.
+
+        It is TRANSPARENT above the wave (hero yellow + grid show through) and
+        solid white (paper) below it, with the ink stroke tracing the swoop — the
+        mirror image of the divider's fill (which was yellow-above / white-below
+        on a white block). Same swoop path + stroke as SectionDivider variant
+        "swoop" (components/ui/section-divider.tsx), so the seam into the white
+        section below is visually identical to the old divider. z-[1] keeps it
+        above the grid (z-0) but below the content + scroll cue (z-10); the shape
+        overlay (page-level, z-30) still floats above everything.
+
+        page-shapes.tsx measures THIS element (.fella-wave) to set the shapes'
+        bottom bounce bound to the wave, so shapes and background share one edge.
+      */}
+      <div
+        aria-hidden
+        className="fella-wave pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-[56px] leading-[0] sm:h-[78px] md:h-[100px]"
+      >
+        <svg viewBox="0 0 1440 100" preserveAspectRatio="none" className="block size-full">
+          <path
+            d="M0,26 C520,26 560,90 880,90 C1150,90 1250,34 1440,30 L1440,100 L0,100 Z"
+            fill="#ffffff"
+            shapeRendering="geometricPrecision"
+          />
+          <path
+            d="M0,26 C520,26 560,90 880,90 C1150,90 1250,34 1440,30"
+            fill="none"
+            stroke="#000000"
+            strokeWidth={4}
+            strokeLinejoin="round"
+            strokeLinecap="round"
+            shapeRendering="geometricPrecision"
+          />
+        </svg>
       </div>
 
       <div className="fella-inner relative z-10 mx-auto flex w-full max-w-5xl flex-1 flex-col items-center justify-center">

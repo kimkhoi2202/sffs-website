@@ -11,53 +11,92 @@ import {
 } from "react";
 import { motion, motionValue, useAnimationFrame } from "motion/react";
 
-import { cn } from "@/lib/utils";
-import { scrollQuizBy } from "@/components/quiz/smooth-scroll";
-
 /*
-  PAGE-LEVEL draggable, self-recoloring neo-brutalist shape field.
+  Draggable, self-recoloring neo-brutalist shape field, mounted once in
+  app/layout.tsx.
 
-  DOCUMENT-GLUED: this is an `absolute inset-0` overlay on the (relative) <body>,
-  so it spans the whole document and SCROLLS WITH THE PAGE. Shapes are positioned
-  in DOCUMENT coordinates — scrolling does NOT move a shape relative to the page:
-  a hero shape scrolls up out of view, and a shape dropped in the footer stays
-  parked in the footer. Shapes only move when DRAGGED (or their small idle drift).
+  DOCUMENT-GLUED overlay: an `absolute inset-0` layer on the (relative) <body>
+  so it spans the whole document and scrolls with the page. Every item holds
+  DOCUMENT coordinates. The items are CONFINED TO THE HERO SECTION on BOTH axes
+  (the hero sits at the document top): each is clamped to the hero's rect and
+  BOUNCES off all four hero edges — nothing can be dragged or thrown out of the
+  hero anymore.
 
-  NO scrollbars: the overlay's `overflow-hidden` (height = document content) clips
-  any shape dragged/flung past the edges, and `cy` is clamped to the document
-  height — a shape can never grow the page. (Horizontal is also covered by the
-  page's `overflow-x: clip`.)
+  ITEMS: 6 draggable shapes sharing one ambient-drift + drag/throw system.
 
-  Shapes are the TOP layer (z-30 — above the hero text/CTA and all page content;
-  the fixed nav/music chrome stay above). Container is pointer-events:none and
-  each shape is pointer-events:auto, so gaps pass clicks/selection through.
+  INITIAL LAYOUT — FIXED + deterministic (identical every page load): each item
+  has a fractional home anchor (fx, fy) placed along the hero's sides, spaced
+  out and clear of the centered headline/CTA. `homeOf` converts the fraction to
+  document coords inside a small safe band from the hero edges. Placed client-
+  side in a layout effect (motion values start at 0 / invisible so SSR and the
+  first client render agree — no hydration mismatch). Shapes MAY OVERLAP — there
+  is no min-distance / no-overlap rule.
 
-  Behaviour: idle local drift around a home; drag anywhere (mouse+touch); release
-  visible → stays (home = drop spot); throw off-screen → eases back to the hero
-  safe-edge home after a delay ∝ throw (cap ~1.8s), no snap; recolor-on-blend
-  happens DURING THE DRAG (smooth 200ms fill fade to a contrasting brand color,
-  kept afterward). Reduced motion → static.
+  MOTION:
+    - Continuous AMBIENT drift + slow rotation at all times (Emil-calm). Off-
+      screen items pause their drift (perf). Shapes spin slowly.
+    - Drag (mouse + touch) any shape — clamped to the hero rect.
+    - Release with velocity → THROW: momentum + friction glide with a SPRINGY
+      bounce off ALL FOUR HERO edges, energy decaying until it settles — then it
+      RESUMES ambient drift from wherever it landed inside the hero.
+    - Recolor when a shape drifts/drags over a same-color background.
+
+  Reduced motion: items still get the fixed layout and shapes stay draggable
+  (clamped to the hero), but there is NO ambient drift / throw glide (release
+  settles where dropped); the loop idles while nothing is dragged.
+
+  NO scrollbars: overlay `overflow-hidden` + positions clamped to the hero box.
+  Items are the top layer (z-30) with container pointer-events:none / shape
+  pointer-events:auto, so gaps pass clicks + the CTA and "T" shortcut through.
 */
 
-// --- tuning (px, px/s, deg/s, ms) ---
-const DRIFT_AMP = 26;
-const FOLLOW_STIFF = 9;
-const FOLLOW_DAMP = 5;
-const IDLE_MAX_SPEED = 240;
-const GENTLE_RELEASE = 0.12;
-const THROW_MIN = 320;
-const FLY_DAMP = 1.6;
-const FLY_MAX_SPEED = 2600;
-const DELAY_PER_SPEED = 1.0;
-const MAX_RETURN_DELAY = 1800; // ~max 2s; harder throw → nearer this
-const RETURN_TAU = 0.26; // s — ease-back time constant (smooth, no snap)
-const SAFE_MARGIN = 14; // px kept inside the hero edges for homes (fully visible)
-const BLEND_DIST = 100; // RGB distance under which a fill "blends" into a bg
-const DRAG_RECOLOR_MS = 100; // throttle for live (mid-drag) recolor checks
-const DOCH_REFRESH_FRAMES = 45; // how often to re-read the document height
-const AUTOSCROLL_EDGE = 90; // px from a viewport edge where drag auto-scroll starts
-const AUTOSCROLL_SPEED = 1500; // px/s auto-scroll at full edge proximity
+// --- ambient drift (idle) ---
+const DRIFT_AMP = 28; // px — gentle wander radius around home
+const FOLLOW_STIFF = 7; // spring pulling a shape toward its drifting home
+const FOLLOW_DAMP = 4.5; // idle damping
+const IDLE_MAX_SPEED = 200; // px/s cap on idle speed
+const OFFSCREEN_MARGIN = 140; // px past the viewport where idle drift pauses (perf)
 
+// --- throw / bounce (off the hero edges) ---
+const FRICTION = 1.5; // throw glide decay: v *= max(0, 1 - FRICTION*dt)
+const RESTITUTION = 0.7; // fraction of speed kept per edge bounce (springy, decays)
+const REST_SPEED = 46; // px/s below which a thrown shape settles back into drift
+const REST_SPIN = 16; // deg/s below which throw-spin settles
+const THROW_MIN = 190; // release speed (px/s) that counts as a throw
+const GENTLE_RELEASE = 0.14; // residual velocity for a slow (non-throw) release
+const SPIN_FROM_VX = 0.16; // throw spin (deg/s) per px/s of horizontal release velocity
+const MAX_SPIN = 240; // cap throw spin (deg/s)
+const FLY_MAX_SPEED = 3200; // cap throw speed (px/s) — plenty inside a single hero
+
+// --- drag / recolor ---
+const DRAG_RECOLOR_MS = 100; // throttle for live recolor checks
+const BLEND_DIST = 100; // RGB distance under which a fill "blends" into a bg
+
+// --- fixed layout ---
+const SAFE_MARGIN = 16; // px kept inside the hero edges for homes (fully visible)
+
+// --- bottom bound = the WAVY divider edge (the ACTUAL per-x swoop curve) ---
+// The hero folds the swoop wave into its bottom as the `.fella-wave` apron (see
+// components/quiz/smart-fart-hero.tsx). Every shape collides against that REAL
+// curve, not a flat line: measure() samples the apron's swoop <path> into a
+// per-x wave function (`waveDocYAt`, document coords) and the loop keeps each
+// shape's bounding-circle bottom above `waveY(centerX)` — a clamp while dragging/
+// drifting, a springy reflect when thrown. Falls back to the hero's straight
+// bottom if the apron is absent.
+//
+// WAVE_MARGIN — safety gap (document px) between a shape's bounding-circle bottom
+// and the ink line; the knob to nudge on localhost if shapes rest slightly off:
+//   • Shapes DIP onto/under the ink line?     → RAISE WAVE_MARGIN (e.g. 6–12).
+//   • Shapes FLOAT in yellow above the line?  → LOWER it (toward 0, even negative).
+// (Per-shape bounding radii already seat each shape near the ink — this shifts all
+// six together. The shapes' 5px drop-shadow is intentionally ignored, so it falls
+// past the line onto the white below; add ~5 to WAVE_MARGIN to lift it clear too.)
+const WAVE_MARGIN = 2;
+// Samples taken along the swoop path to build waveY(x) (once per measure). The
+// swoop is smooth so few are needed; this is cheap and keeps interp sub-pixel.
+const WAVE_SAMPLES = 160;
+
+const PI2 = Math.PI * 2;
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 
 type ShapeType =
@@ -85,24 +124,22 @@ const COLOR_RGB: Record<ShapeColor, [number, number, number]> = {
   paper: [255, 255, 255],
   ink: [0, 0, 0],
 };
-// Auto-recolor picks a VIVID brand color that pops on the section bg. `ink`
-// (black) is intentionally excluded (as pure max-contrast it would win on every
-// vivid section → black blobs), keeping shapes colorful and the pick varied.
 const RECOLOR_TARGETS: ShapeColor[] = ["blue", "coral", "mint", "green", "paper"];
 
-interface ShapeDef {
+interface Item {
   id: string;
-  type: ShapeType;
-  color: ShapeColor;
+  type?: ShapeType;
+  color?: ShapeColor;
   w: number;
   h: number;
-  fx: number; // home anchor as a fraction of the hero (pulled into the safe band)
+  fx: number; // fixed home anchor as a fraction of the hero (pulled into the safe band)
   fy: number;
-  spin: number; // deg/s
+  spin: number; // deg/s continuous ambient rotation
 }
 
-// 6 distinct shapes anchored around the hero perimeter, non-yellow, varied.
-const SHAPES: ShapeDef[] = [
+// 6 shapes anchored along the hero's sides (3 left, 3 right), spaced out and
+// clear of the centered copy — the ORIGINAL fixed positions (deterministic).
+const SHAPE_ITEMS: Item[] = [
   { id: "circle", type: "circle", color: "blue", w: 128, h: 128, fx: 0.11, fy: 0.2, spin: 4 },
   { id: "roundsq", type: "roundSquare", color: "mint", w: 104, h: 104, fx: 0.89, fy: 0.18, spin: 6 },
   { id: "hexagon", type: "hexagon", color: "green", w: 116, h: 116, fx: 0.93, fy: 0.52, spin: -4 },
@@ -110,6 +147,7 @@ const SHAPES: ShapeDef[] = [
   { id: "triangle", type: "triangle", color: "blue", w: 102, h: 102, fx: 0.12, fy: 0.82, spin: -6 },
   { id: "diamond", type: "diamond", color: "coral", w: 112, h: 112, fx: 0.08, fy: 0.5, spin: 5 },
 ];
+const ITEMS: Item[] = [...SHAPE_ITEMS];
 
 /** SSR-safe `prefers-reduced-motion` (server snapshot false → no hydration mismatch). */
 function usePrefersReducedMotion(): boolean {
@@ -127,13 +165,23 @@ function usePrefersReducedMotion(): boolean {
 const useIsomorphicLayoutEffect =
   typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
-/** One shape's visual. Fill fades smoothly (200ms) on recolor; the black
- * border/shadow never changes and the transition is color-only (never transform). */
-function ShapeVisual({ type, color }: { type: ShapeType; color: ShapeColor }) {
+/** One shape's visual. Fill fades smoothly (200ms) on recolor; the border/shadow
+ * never changes and the transition is color-only. Reduced motion → instant recolor. */
+function ShapeVisual({
+  type,
+  color,
+  reduced,
+}: {
+  type: ShapeType;
+  color: ShapeColor;
+  reduced: boolean;
+}) {
   const fill = COLOR_VAR[color];
-  const divStyle: CSSProperties = { backgroundColor: fill, transition: "background-color 200ms ease" };
+  const colorTx = reduced ? undefined : "background-color 200ms ease";
+  const fillTx = reduced ? undefined : "fill 200ms ease";
+  const divStyle: CSSProperties = { backgroundColor: fill, transition: colorTx };
   const svgStyle: CSSProperties = { filter: "drop-shadow(5px 5px 0 #000)", overflow: "visible" };
-  const polyStyle: CSSProperties = { fill, transition: "fill 200ms ease" };
+  const polyStyle: CSSProperties = { fill, transition: fillTx };
   switch (type) {
     case "circle":
       return <div className="size-full rounded-full border-[3px] border-ink shadow-hard" style={divStyle} />;
@@ -162,17 +210,18 @@ function ShapeVisual({ type, color }: { type: ShapeType; color: ShapeColor }) {
   }
 }
 
-type Mode = "idle" | "drag" | "fly" | "return";
+type Mode = "idle" | "drag" | "fly";
 
 interface Body {
-  homeX0: number; // hero safe-edge home (document coords) — the return target
-  homeY0: number;
-  hx: number; // current home (document coords)
-  hy: number;
   cx: number; // current center (document coords)
   cy: number;
-  vx: number;
+  vx: number; // px/s
   vy: number;
+  hx: number; // drift home (document coords) — follows wherever the shape settles
+  hy: number;
+  rot: number; // deg
+  vrot: number; // deg/s (throw spin; decays)
+  spin: number; // deg/s continuous ambient rotation
   f1: number;
   f2: number;
   f3: number;
@@ -181,12 +230,10 @@ interface Body {
   p2: number;
   p3: number;
   p4: number;
-  rot: number;
-  vrot: number;
   baseW: number;
   baseH: number;
+  radius: number; // unscaled, rotation-invariant bounding-circle radius (wavy bottom collision)
   mode: Mode;
-  decideAt: number;
   lastBg: number;
 }
 
@@ -199,8 +246,7 @@ function parseRgb(s: string): [number, number, number, number] | null {
 const dist2 = (a: [number, number, number], b: [number, number, number]) =>
   (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2;
 
-/** Effective (non-transparent) background painted under a VIEWPORT point,
- * ignoring the shapes overlay. */
+/** Effective (non-transparent) background painted under a VIEWPORT point. */
 function bgUnder(x: number, y: number, overlay: Element): [number, number, number] | null {
   const stack = document.elementsFromPoint(x, y);
   for (const el of stack) {
@@ -216,27 +262,121 @@ function bgUnder(x: number, y: number, overlay: Element): [number, number, numbe
   return body ? [body[0], body[1], body[2]] : null;
 }
 
+/** Per-x wave geometry: the apron's swoop path sampled into SVG-viewBox space
+ *  (`xs`/`ys`, ascending x) plus the linear mapping from that viewBox to DOCUMENT
+ *  coords. Built once per measure(); consumed by `waveDocYAt`. */
+interface WaveGeom {
+  left: number; // document x for viewBox x = 0 (apron left edge)
+  width: number; // document width spanning viewBox x [0..viewW]
+  top: number; // document y for viewBox y = 0 (apron top edge)
+  height: number; // document height spanning viewBox y [0..viewH]
+  viewW: number; // viewBox width  (swoop authored in 0..1440)
+  viewH: number; // viewBox height (swoop authored in 0..100)
+  xs: number[]; // sample x's in viewBox space, ascending (swoop x is monotonic)
+  ys: number[]; // matching sample y's in viewBox space
+}
+
+/** Sample the apron's OPEN swoop stroke — the path whose `d` has no close (`Z`)
+ *  command, i.e. just the curve, NOT the filled path that closes down to the
+ *  apron bottom — into ascending-x viewBox-space samples via the browser's own
+ *  path geometry (getPointAtLength), so waveY always matches whatever `d=` is
+ *  actually rendered (the swoop lives in smart-fart-hero.tsx's `.fella-wave` and
+ *  mirrors the `swoop` variant in components/ui/section-divider.tsx — this reads
+ *  the real DOM path so the two can never drift apart). null if no usable path. */
+function sampleWavePath(wave: Element): { xs: number[]; ys: number[] } | null {
+  const paths = Array.from(wave.querySelectorAll<SVGPathElement>("path"));
+  if (paths.length === 0) return null;
+  const swoop =
+    paths.find((p) => !/z/i.test(p.getAttribute("d") ?? "")) ?? paths[paths.length - 1];
+  let total = 0;
+  try {
+    total = swoop.getTotalLength();
+  } catch {
+    return null; // getTotalLength can throw on a detached/empty path
+  }
+  if (!(total > 0)) return null;
+  const pts: { x: number; y: number }[] = [];
+  for (let i = 0; i <= WAVE_SAMPLES; i++) {
+    const p = swoop.getPointAtLength((i / WAVE_SAMPLES) * total);
+    pts.push({ x: p.x, y: p.y });
+  }
+  pts.sort((a, b) => a.x - b.x); // swoop x is monotonic; guards FP jitter
+  return { xs: pts.map((p) => p.x), ys: pts.map((p) => p.y) };
+}
+
+/** Document-Y of the wavy ink line at a document-X — the per-x bottom bound.
+ *  Maps document x → viewBox x, linearly interpolates the sampled swoop y at that
+ *  x (binary search over ascending `xs`), then maps viewBox y → document y.
+ *  Returns `fallbackY` (the hero's straight bottom) when there's no wave geometry. */
+function waveDocYAt(g: WaveGeom | null, fallbackY: number, docX: number): number {
+  if (!g || g.width <= 0 || g.xs.length === 0) return fallbackY;
+  const { xs, ys, viewW, viewH } = g;
+  const svgX = clamp((docX - g.left) / g.width, 0, 1) * viewW;
+  const toDocY = (svgY: number) => g.top + (svgY / viewH) * g.height;
+  const last = xs.length - 1;
+  if (svgX <= xs[0]) return toDocY(ys[0]);
+  if (svgX >= xs[last]) return toDocY(ys[last]);
+  let lo = 0;
+  let hi = last;
+  while (hi - lo > 1) {
+    const mid = (lo + hi) >> 1;
+    if (xs[mid] <= svgX) lo = mid;
+    else hi = mid;
+  }
+  const span = xs[hi] - xs[lo];
+  const f = span > 1e-6 ? (svgX - xs[lo]) / span : 0;
+  return toDocY(ys[lo] + (ys[hi] - ys[lo]) * f);
+}
+
+/** Rotation-invariant bounding-circle radius (unscaled px) per shape, so ONE
+ *  radius holds at EVERY rotation (a circle is rotation-invariant). Kept tight to
+ *  each shape's real reach (not the loose box half-diagonal) so pointy shapes rest
+ *  near the ink instead of floating far above it; exact for circle & pill. Values
+ *  cover the polygon vertex + its 8px round-join stroke. */
+function boundingRadius(type: ShapeType, w: number, h: number): number {
+  switch (type) {
+    case "circle":
+      return w / 2; // the circle itself
+    case "pill":
+      return w / 2; // stadium end-cap reach (w > h)
+    case "roundSquare":
+      return 0.62 * Math.max(w, h); // rounded-corner reach
+    case "triangle":
+      return 0.64 * Math.max(w, h); // farthest vertex + stroke
+    case "diamond":
+      return 0.5 * Math.max(w, h); // box mid-edge vertex + stroke
+    case "hexagon":
+      return 0.52 * Math.max(w, h); // flat-top hex vertex + stroke
+  }
+}
+
 export function PageShapes() {
   const reduced = usePrefersReducedMotion();
   const overlayRef = useRef<HTMLDivElement>(null);
-  const dimsRef = useRef({ heroLeft: 0, heroTop: 0, heroW: 1200, heroH: 800, scale: 1, docH: 4000 });
+  const dimsRef = useRef({
+    heroLeft: 0,
+    heroTop: 0,
+    heroW: 1200,
+    heroH: 800,
+    scale: 1,
+    // Per-x bottom bound = the wavy `.fella-wave` swoop, sampled into DOCUMENT
+    // space by measure(). `waveGeom` null → fall back to the hero's straight
+    // bottom (`bottomFallbackY`), preserving the old flat behavior.
+    waveGeom: null as WaveGeom | null,
+    bottomFallbackY: 800,
+  });
   const bodiesRef = useRef<Body[] | null>(null);
   const timeRef = useRef(0);
-  const frameRef = useRef(0);
-  // Manual pointer drag (so it composes with Lenis auto-scroll — Motion's own
-  // drag can't be offset by a mid-drag page scroll).
   const dragRef = useRef<{ i: number; pointerId: number; ox: number; oy: number } | null>(null);
   const pointerRef = useRef({ x: 0, y: 0 });
   const samplesRef = useRef<{ t: number; x: number; y: number }[]>([]);
-  // Handlers only WRITE these refs; the animation-frame loop (the single owner of
-  // body mutations) reads them and applies the drag / release physics.
   const releaseRef = useRef<{ i: number; vx: number; vy: number } | null>(null);
 
-  const [colors, setColors] = useState<ShapeColor[]>(() => SHAPES.map((s) => s.color));
-  const colorsRef = useRef<ShapeColor[]>(SHAPES.map((s) => s.color));
+  const [colors, setColors] = useState<ShapeColor[]>(() => ITEMS.map((it) => it.color ?? "blue"));
+  const colorsRef = useRef<ShapeColor[]>(ITEMS.map((it) => it.color ?? "blue"));
 
   const [mvs] = useState(() =>
-    SHAPES.map(() => ({
+    ITEMS.map(() => ({
       x: motionValue(0),
       y: motionValue(0),
       r: motionValue(0),
@@ -255,8 +395,6 @@ export function PageShapes() {
     });
   };
 
-  // Recolor a shape if its fill would blend into the section beneath it. Uses the
-  // shape's VIEWPORT position (document center minus scroll) for the hit-test.
   const maybeRecolor = (i: number, b: Body) => {
     const overlay = overlayRef.current;
     if (!overlay) return;
@@ -266,7 +404,7 @@ export function PageShapes() {
     const bg = bgUnder(vx, vy, overlay);
     if (!bg) return;
     const cur = colorsRef.current[i];
-    if (dist2(bg, COLOR_RGB[cur]) >= BLEND_DIST * BLEND_DIST) return; // not blending
+    if (dist2(bg, COLOR_RGB[cur]) >= BLEND_DIST * BLEND_DIST) return;
     let best = cur;
     let bestD = -1;
     for (const name of RECOLOR_TARGETS) {
@@ -280,80 +418,119 @@ export function PageShapes() {
     setColorAt(i, best);
   };
 
-  // Measure the hero → seed homes in the safe edge band (document coords).
-  // Re-anchor on resize. Layout effect so shapes are placed before first paint.
+  // Measure the hero + place every item at its FIXED home (fraction of the hero,
+  // pulled into a safe edge band). Deterministic — identical each load. Client-
+  // only (layout effect; motion values start at 0/invisible so SSR agrees).
+  // Resize re-measures scale/bounds and re-anchors idle homes; it never
+  // reshuffles (there is nothing random left to reshuffle).
   useIsomorphicLayoutEffect(() => {
     const measure = () => {
       const hero = document.querySelector<HTMLElement>(".fella-hero");
       const r = hero?.getBoundingClientRect();
       const w = r?.width || window.innerWidth;
+      const heroTop = (r?.top ?? 0) + window.scrollY;
+      const heroH = r?.height || window.innerHeight;
+      // Bottom bound = the folded swoop wave. Sample the `.fella-wave` apron's
+      // swoop <path> into a per-x waveY(x) in DOCUMENT coords so shapes bounce/
+      // settle at the ACTUAL curve. The apron's SVG (viewBox 0..viewW × 0..viewH,
+      // preserveAspectRatio="none") stretches to the apron's on-screen rect, so
+      // viewBox x/y map LINEARLY onto [rect.left..right] / [rect.top..bottom]
+      // (document coords once scroll is added). Falls back to the hero's straight
+      // bottom if the apron is absent.
+      const wave = document.querySelector<HTMLElement>(".fella-wave");
+      let waveGeom: WaveGeom | null = null;
+      if (wave) {
+        const wr = wave.getBoundingClientRect();
+        const vb = wave.querySelector("svg")?.viewBox.baseVal;
+        const viewW = vb && vb.width > 0 ? vb.width : 1440;
+        const viewH = vb && vb.height > 0 ? vb.height : 100;
+        const samples = sampleWavePath(wave);
+        if (samples && wr.width > 0 && wr.height > 0) {
+          waveGeom = {
+            left: wr.left + window.scrollX,
+            width: wr.width,
+            top: wr.top + window.scrollY,
+            height: wr.height,
+            viewW,
+            viewH,
+            xs: samples.xs,
+            ys: samples.ys,
+          };
+        }
+      }
       dimsRef.current = {
         heroLeft: (r?.left ?? 0) + window.scrollX,
-        heroTop: (r?.top ?? 0) + window.scrollY,
+        heroTop,
         heroW: w,
-        heroH: r?.height || window.innerHeight,
+        heroH,
         scale: clamp(w / 1280, 0.55, 1),
-        docH: document.documentElement.scrollHeight,
+        waveGeom,
+        bottomFallbackY: heroTop + heroH,
       };
     };
     measure();
-    const homeOf = (s: ShapeDef) => {
+
+    // Fixed home for an item: its (fx, fy) fraction of the hero, clamped so the
+    // whole item stays inside the hero edges (document coords).
+    const homeOf = (it: Item) => {
       const { heroLeft, heroTop, heroW, heroH, scale } = dimsRef.current;
-      const halfW = (s.w * scale) / 2;
-      const halfH = (s.h * scale) / 2;
+      const halfW = (it.w * scale) / 2;
+      const halfH = (it.h * scale) / 2;
       return {
-        x: heroLeft + clamp(s.fx * heroW, halfW + SAFE_MARGIN, heroW - halfW - SAFE_MARGIN),
-        y: heroTop + clamp(s.fy * heroH, halfH + SAFE_MARGIN, heroH - halfH - SAFE_MARGIN),
+        x: heroLeft + clamp(it.fx * heroW, halfW + SAFE_MARGIN, heroW - halfW - SAFE_MARGIN),
+        y: heroTop + clamp(it.fy * heroH, halfH + SAFE_MARGIN, heroH - halfH - SAFE_MARGIN),
       };
     };
+
     if (!bodiesRef.current) {
       const rand = (a: number, b: number) => a + Math.random() * (b - a);
       const scale = dimsRef.current.scale;
-      bodiesRef.current = SHAPES.map((s, i) => {
-        const home = homeOf(s);
+      bodiesRef.current = ITEMS.map((it, i) => {
+        const home = homeOf(it);
+        // Fixed positions; only the tiny idle-wobble phases + a small initial tilt
+        // stay random (as in the original) so the drift still reads as organic.
         const rot = rand(-12, 12);
-        mvs[i].x.set(home.x - s.w / 2);
-        mvs[i].y.set(home.y - s.h / 2);
+        mvs[i].x.set(home.x - it.w / 2);
+        mvs[i].y.set(home.y - it.h / 2);
         mvs[i].r.set(rot);
         mvs[i].s.set(scale);
         mvs[i].o.set(1);
         return {
-          homeX0: home.x,
-          homeY0: home.y,
-          hx: home.x,
-          hy: home.y,
           cx: home.x,
           cy: home.y,
           vx: 0,
           vy: 0,
-          f1: rand(0.18, 0.4),
-          f2: rand(0.24, 0.5),
-          f3: rand(0.18, 0.4),
-          f4: rand(0.24, 0.5),
-          p1: rand(0, Math.PI * 2),
-          p2: rand(0, Math.PI * 2),
-          p3: rand(0, Math.PI * 2),
-          p4: rand(0, Math.PI * 2),
+          hx: home.x,
+          hy: home.y,
           rot,
-          vrot: s.spin,
-          baseW: s.w,
-          baseH: s.h,
+          vrot: 0,
+          spin: it.spin,
+          f1: rand(0.2, 0.46),
+          f2: rand(0.28, 0.56),
+          f3: rand(0.2, 0.46),
+          f4: rand(0.28, 0.56),
+          p1: rand(0, PI2),
+          p2: rand(0, PI2),
+          p3: rand(0, PI2),
+          p4: rand(0, PI2),
+          baseW: it.w,
+          baseH: it.h,
+          radius: boundingRadius(it.type ?? "circle", it.w, it.h),
           mode: "idle" as Mode,
-          decideAt: 0,
           lastBg: 0,
         };
       });
     }
+
     const onResize = () => {
       measure();
-      mvs.forEach((mv) => mv.s.set(dimsRef.current.scale));
+      const { scale } = dimsRef.current;
+      mvs.forEach((mv) => mv.s.set(scale));
       const bodies = bodiesRef.current;
       if (bodies) {
         bodies.forEach((b, i) => {
-          const home = homeOf(SHAPES[i]);
-          b.homeX0 = home.x;
-          b.homeY0 = home.y;
           if (b.mode === "idle") {
+            const home = homeOf(ITEMS[i]);
             b.hx = home.x;
             b.hy = home.y;
           }
@@ -362,50 +539,54 @@ export function PageShapes() {
     };
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
-  }, [reduced, mvs]);
+  }, [mvs]);
 
+  // Physics loop. Normal motion: continuous ambient drift + drag + throw/bounce,
+  // all confined to the hero rect. Reduced motion: nothing runs unless a shape is
+  // actively being dragged (static otherwise).
   useAnimationFrame((_t, deltaMs) => {
-    if (reduced) return;
     const bodies = bodiesRef.current;
     if (!bodies || !overlayRef.current) return;
+    if (reduced && !dragRef.current && releaseRef.current === null) return;
+
     const dt = clamp(deltaMs / 1000, 0, 0.05);
     timeRef.current += dt;
     const t = timeRef.current;
-    const idleDamp = Math.max(0, 1 - FOLLOW_DAMP * dt);
-    const flyDamp = Math.max(0, 1 - FLY_DAMP * dt);
     const now = performance.now();
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     const sx = window.scrollX;
     const sy = window.scrollY;
-
-    // Re-read the document height occasionally (content can settle after load) so
-    // the cy clamp keeps a thrown shape from ever growing the page.
-    if (frameRef.current++ % DOCH_REFRESH_FRAMES === 0) {
-      dimsRef.current.docH = document.documentElement.scrollHeight;
-    }
-    const docH = dimsRef.current.docH;
+    const idleDamp = Math.max(0, 1 - FOLLOW_DAMP * dt);
+    const { heroLeft, heroTop, heroW, scale, waveGeom, bottomFallbackY } = dimsRef.current;
 
     for (let i = 0; i < bodies.length; i++) {
       const b = bodies[i];
       const mv = mvs[i];
+      const halfW = (b.baseW * scale) / 2;
+      const halfH = (b.baseH * scale) / 2;
+      const rad = b.radius * scale; // bounding-circle radius for the wavy bottom
+      // Hero bounds for this item's CENTER (document coords). Left/right/top are
+      // the straight hero rect (UNCHANGED — still use the box half-extents). The
+      // BOTTOM is the ACTUAL swoop curve: `bottomLimitAt(cx)` = the wavy ink
+      // line's document-Y at the shape's center x, lifted by the bounding-circle
+      // radius (+ WAVE_MARGIN) so the circle rests just above the ink at that x.
+      // `Math.max(minY, …)` keeps it sane if a very tall shape can't fit above
+      // the wave. Recomputed per mode from the shape's live center x below.
+      const minX = heroLeft + halfW;
+      const maxX = heroLeft + heroW - halfW;
+      const minY = heroTop + halfH;
+      const bottomLimitAt = (cx: number) =>
+        Math.max(minY, waveDocYAt(waveGeom, bottomFallbackY, cx) - rad - WAVE_MARGIN);
 
       const d = dragRef.current;
       if (d && d.i === i) {
         b.mode = "drag";
-        // Auto-scroll when the pointer nears a viewport edge, so a shape can be
-        // dragged across sections in one continuous gesture (Lenis-integrated).
-        const py = pointerRef.current.y;
-        if (py > vh - AUTOSCROLL_EDGE) {
-          scrollQuizBy(AUTOSCROLL_SPEED * dt * Math.min(1, (py - (vh - AUTOSCROLL_EDGE)) / AUTOSCROLL_EDGE));
-        } else if (py < AUTOSCROLL_EDGE) {
-          scrollQuizBy(-AUTOSCROLL_SPEED * dt * Math.min(1, (AUTOSCROLL_EDGE - py) / AUTOSCROLL_EDGE));
-        }
-        // Keep the shape under the pointer in DOCUMENT coords (re-reads the live
-        // scroll, so it follows the page as it auto-scrolls).
-        b.cx = pointerRef.current.x + window.scrollX + d.ox;
-        b.cy = clamp(pointerRef.current.y + window.scrollY + d.oy, 0, docH);
-        b.rot += b.vrot * dt;
+        // Follow the pointer, clamped to the hero rect (can't be dragged out);
+        // the bottom clamp is the per-x wave at the dragged center x.
+        b.cx = clamp(pointerRef.current.x + window.scrollX + d.ox, minX, maxX);
+        b.cy = clamp(pointerRef.current.y + window.scrollY + d.oy, minY, bottomLimitAt(b.cx));
+        b.rot += b.spin * dt;
         mv.x.set(b.cx - b.baseW / 2);
         mv.y.set(b.cy - b.baseH / 2);
         mv.r.set(b.rot);
@@ -416,77 +597,71 @@ export function PageShapes() {
         continue;
       }
 
-      // Just released (pointerup/cancel): turn the recorded release velocity into
-      // a throw (fly) or a gentle place (idle) / off-screen return.
       const rel = releaseRef.current;
       if (rel && rel.i === i) {
         releaseRef.current = null;
-        const speed = Math.hypot(rel.vx, rel.vy);
-        if (speed >= THROW_MIN) {
-          b.vx = rel.vx;
-          b.vy = rel.vy;
-          b.mode = "fly";
-          b.decideAt = now + clamp(speed * DELAY_PER_SPEED, 0, MAX_RETURN_DELAY);
+        if (reduced) {
+          b.mode = "idle";
+          b.hx = b.cx;
+          b.hy = b.cy;
+          b.vx = 0;
+          b.vy = 0;
         } else {
-          b.vx = rel.vx * GENTLE_RELEASE;
-          b.vy = rel.vy * GENTLE_RELEASE;
-          const vpx = b.cx - sx;
-          const vpy = b.cy - sy;
-          const visible = vpx >= 0 && vpx <= vw && vpy >= 0 && vpy <= vh;
-          if (visible) {
-            b.mode = "idle";
-            b.hx = b.cx;
-            b.hy = b.cy;
+          const speed = Math.hypot(rel.vx, rel.vy);
+          if (speed >= THROW_MIN) {
+            b.vx = rel.vx;
+            b.vy = rel.vy;
+            b.vrot = clamp(rel.vx * SPIN_FROM_VX, -MAX_SPIN, MAX_SPIN);
           } else {
-            b.mode = "return";
+            b.vx = rel.vx * GENTLE_RELEASE;
+            b.vy = rel.vy * GENTLE_RELEASE;
+            b.vrot = 0;
           }
-          maybeRecolor(i, b);
+          b.mode = "fly";
         }
+        maybeRecolor(i, b);
       }
 
       if (b.mode === "fly") {
-        b.vx *= flyDamp;
-        b.vy *= flyDamp;
+        const f = Math.max(0, 1 - FRICTION * dt);
+        b.vx *= f;
+        b.vy *= f;
+        b.vrot *= f;
         const sp = Math.hypot(b.vx, b.vy);
         if (sp > FLY_MAX_SPEED) {
           b.vx = (b.vx / sp) * FLY_MAX_SPEED;
           b.vy = (b.vy / sp) * FLY_MAX_SPEED;
         }
         b.cx += b.vx * dt;
-        b.cy = clamp(b.cy + b.vy * dt, 0, docH); // never grow the document
-        b.rot += b.vrot * dt;
-        if (now >= b.decideAt) {
-          const vx = b.cx - sx;
-          const vy = b.cy - sy;
-          const centerVisible = vx >= 0 && vx <= vw && vy >= 0 && vy <= vh;
-          if (centerVisible) {
-            b.mode = "idle"; // stays where it landed (idle spring absorbs residual velocity)
-            b.hx = b.cx;
-            b.hy = b.cy;
-            maybeRecolor(i, b);
-          } else {
-            b.mode = "return"; // flung off-screen → ease back to the hero safe edge
-          }
+        b.cy += b.vy * dt;
+        // Springy bounce off the hero's left/right + top edges and the WAVY
+        // bottom (velocity reflects, energy decays via restitution, then it
+        // settles back into drift). The bottom uses the per-x wave evaluated at
+        // the now-in-bounds center x, so the reflect happens ON the curve.
+        if (b.cx < minX) {
+          b.cx = minX;
+          b.vx = Math.abs(b.vx) * RESTITUTION;
+        } else if (b.cx > maxX) {
+          b.cx = maxX;
+          b.vx = -Math.abs(b.vx) * RESTITUTION;
         }
-        mv.x.set(b.cx - b.baseW / 2);
-        mv.y.set(b.cy - b.baseH / 2);
-        mv.r.set(b.rot);
-        continue;
-      }
-
-      if (b.mode === "return") {
-        const k = 1 - Math.exp(-dt / RETURN_TAU);
-        b.cx += (b.homeX0 - b.cx) * k;
-        b.cy += (b.homeY0 - b.cy) * k;
+        const bottomLimit = bottomLimitAt(b.cx);
+        if (b.cy < minY) {
+          b.cy = minY;
+          b.vy = Math.abs(b.vy) * RESTITUTION;
+        } else if (b.cy > bottomLimit) {
+          b.cy = bottomLimit;
+          b.vy = -Math.abs(b.vy) * RESTITUTION;
+        }
         b.rot += b.vrot * dt;
-        if (Math.hypot(b.homeX0 - b.cx, b.homeY0 - b.cy) < 1.5) {
-          b.cx = b.homeX0;
-          b.cy = b.homeY0;
-          b.hx = b.homeX0;
-          b.hy = b.homeY0;
+        if (Math.hypot(b.vx, b.vy) < REST_SPEED && Math.abs(b.vrot) < REST_SPIN) {
+          // Settle → resume ambient drift from wherever it landed in the hero.
+          b.mode = "idle";
+          b.hx = b.cx;
+          b.hy = b.cy;
           b.vx = 0;
           b.vy = 0;
-          b.mode = "idle";
+          b.vrot = 0;
           maybeRecolor(i, b);
         }
         mv.x.set(b.cx - b.baseW / 2);
@@ -495,11 +670,16 @@ export function PageShapes() {
         continue;
       }
 
-      // idle: gentle bounded local drift around home (document coords)
-      const offX =
-        DRIFT_AMP * (0.65 * Math.sin(t * b.f1 + b.p1) + 0.35 * Math.sin(t * b.f2 + b.p2));
-      const offY =
-        DRIFT_AMP * (0.65 * Math.sin(t * b.f3 + b.p3) + 0.35 * Math.sin(t * b.f4 + b.p4));
+      // idle: continuous ambient drift + slow rotation (normal motion only).
+      if (reduced) continue;
+      // Pause drift while off-screen (perf) — e.g. the hero scrolled out of view.
+      const vpx = b.cx - sx;
+      const vpy = b.cy - sy;
+      if (vpx < -OFFSCREEN_MARGIN || vpy < -OFFSCREEN_MARGIN || vpx > vw + OFFSCREEN_MARGIN || vpy > vh + OFFSCREEN_MARGIN) {
+        continue;
+      }
+      const offX = DRIFT_AMP * (0.65 * Math.sin(t * b.f1 + b.p1) + 0.35 * Math.sin(t * b.f2 + b.p2));
+      const offY = DRIFT_AMP * (0.65 * Math.sin(t * b.f3 + b.p3) + 0.35 * Math.sin(t * b.f4 + b.p4));
       b.vx = (b.vx + (b.hx + offX - b.cx) * FOLLOW_STIFF * dt) * idleDamp;
       b.vy = (b.vy + (b.hy + offY - b.cy) * FOLLOW_STIFF * dt) * idleDamp;
       const isp = Math.hypot(b.vx, b.vy);
@@ -507,26 +687,23 @@ export function PageShapes() {
         b.vx = (b.vx / isp) * IDLE_MAX_SPEED;
         b.vy = (b.vy / isp) * IDLE_MAX_SPEED;
       }
-      b.cx += b.vx * dt;
-      b.cy = clamp(b.cy + b.vy * dt, 0, docH);
-      b.rot += b.vrot * dt;
+      // Clamp drift to the hero rect too (a side home can wander to the edge);
+      // the bottom follows the per-x wave (gentle clamp) at the drifted center x.
+      b.cx = clamp(b.cx + b.vx * dt, minX, maxX);
+      b.cy = clamp(b.cy + b.vy * dt, minY, bottomLimitAt(b.cx));
+      b.rot += b.spin * dt;
       mv.x.set(b.cx - b.baseW / 2);
       mv.y.set(b.cy - b.baseH / 2);
       mv.r.set(b.rot);
     }
   });
 
-  // These pointer handlers are passed DIRECTLY to the shape's on* props so the
-  // React compiler treats them as event handlers (side effects on the physics
-  // bodies are expected here). The shape index rides on a data attribute.
+  // Pointer handlers write ONLY refs (the loop owns all body mutations).
   const onShapePointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
-    if (reduced) return;
     const i = Number(e.currentTarget.dataset.shapeIndex);
     const b = bodiesRef.current?.[i];
     if (!b) return;
     e.currentTarget.setPointerCapture(e.pointerId);
-    // Grab offset: keep the shape where it was grabbed relative to the pointer
-    // (no jump-to-center), in document coords. The loop flips this body to "drag".
     dragRef.current = {
       i,
       pointerId: e.pointerId,
@@ -550,10 +727,6 @@ export function PageShapes() {
     const d = dragRef.current;
     if (!d || e.pointerId !== d.pointerId) return;
     dragRef.current = null;
-    // Release velocity (viewport px/s) from ONLY the most recent pointer samples
-    // (last ~120ms). If the pointer was held still (e.g. parked at the edge while
-    // auto-scrolling), there are no recent samples → velocity 0 → a gentle place,
-    // not a stale throw. The loop turns this into a throw or a place.
     const nowT = performance.now();
     const recent = samplesRef.current.filter((p) => nowT - p.t <= 120);
     let vx = 0;
@@ -576,16 +749,13 @@ export function PageShapes() {
       aria-hidden
       className="pointer-events-none absolute inset-0 z-30 overflow-hidden"
     >
-      {SHAPES.map((s, i) => (
+      {ITEMS.map((it, i) => (
         <motion.div
-          key={s.id}
-          className={cn(
-            "absolute left-0 top-0 select-none",
-            !reduced && "pointer-events-auto cursor-grab touch-none active:cursor-grabbing",
-          )}
+          key={it.id}
+          className="pointer-events-auto absolute left-0 top-0 cursor-grab touch-none select-none active:cursor-grabbing"
           style={{
-            width: s.w,
-            height: s.h,
+            width: it.w,
+            height: it.h,
             x: mvs[i].x,
             y: mvs[i].y,
             rotate: mvs[i].r,
@@ -599,7 +769,7 @@ export function PageShapes() {
           onPointerUp={endDrag}
           onPointerCancel={endDrag}
         >
-          <ShapeVisual type={s.type} color={colors[i]} />
+          <ShapeVisual type={it.type!} color={colors[i]} reduced={reduced} />
         </motion.div>
       ))}
     </div>

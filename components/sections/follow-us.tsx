@@ -37,7 +37,7 @@ export function FollowUs({
   revealContent = true,
 }: FollowUsProps = {}) {
   return (
-    <Section background={background} padding="lg" bordered id={id} className={className}>
+    <Section background={background} padding="lg" id={id} className={className}>
       <Reveal
         stagger
         enabled={revealContent}

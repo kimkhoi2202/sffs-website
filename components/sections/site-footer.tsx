@@ -1,73 +1,190 @@
-import Link from "next/link";
+import type { CSSProperties } from "react";
 
-import { Container } from "@/components/ui/container";
-import { SocialButton } from "@/components/social/social-button";
-import { SOCIALS } from "@/lib/socials";
+import styles from "./site-footer.module.css";
 
 /**
- * Slim, on-brand footer that grounds the bottom of the page: the brain mark
- * (a #top home link), the social icon buttons, the legal links (Terms /
- * Privacy, so they stay crawlable + discoverable on every page), and a
- * copyright line, on a bold brand-BLUE block — never black (honoring the "no
- * black-filled surfaces" rule) and set off from the yellow "Follow us" section
- * directly above by a 2.5px ink rule. Blue reads the multicolor brain logo, the
- * white social chips, and the ink copyright clearly, and it's bright enough that
- * the chips keep the default black hard shadow (surface="light").
+ * The footer as a living body of WATER (preview-only — nothing here pushes
+ * page layout; every effect is an absolutely-positioned, aria-hidden overlay).
+ *
+ * The top seam is the SOLE boundary between the previous (yellow) section and
+ * the blue footer: a smooth multi-crest water surface rolls across it. The strip
+ * ABOVE the wave is transparent — the footer overlaps the section above (a
+ * negative top margin, cancelled by matching padding so the content doesn't
+ * move), so that section's color shows through above the crests — and everything
+ * from the ink surface line DOWN is filled brand-blue. A sunlit sheen rides
+ * locked to the very same surface line (shared crest path + roll, no independent
+ * drift). Small "~~~" ripple marks scatter and drift over the water, the swim
+ * brain mascot idles through a breaststroke, and the bottom-right copyright bobs
+ * on the surface. All motion is transform/opacity only (no layout shift) and freezes
+ * to a static pose under prefers-reduced-motion (see site-footer.module.css).
  */
+
+/** One smooth sine-ish crest field, duplicated across a 2880-wide viewBox so a
+ *  -50% roll loops seamlessly. Baseline 60, gentle amplitude, ~6 crests. */
+const WAVE_FRONT =
+  "M0,60 Q120,40 240,60 Q360,80 480,60 Q600,40 720,60 Q840,80 960,60 Q1080,40 1200,60 Q1320,80 1440,60 Q1560,40 1680,60 Q1800,80 1920,60 Q2040,40 2160,60 Q2280,80 2400,60 Q2520,40 2640,60 Q2760,80 2880,60";
+
+/** Short curved "~~~" ripple stroke (a smooth tilde in a 48×14 box). */
+const RIPPLE_PATH = "M1,9 Q7,3 13,9 T25,9 T37,9 T47,9";
+
+/**
+ * Deterministic ripple field (fixed values → stable SSR, no hydration drift).
+ * Varied size / position / drift / timing so the surface reads alive but calm.
+ */
+type Ripple = {
+  top: string;
+  left: string;
+  w: number;
+  op: number;
+  stroke: string;
+  rx: string;
+  ry: string;
+  rot: string;
+  dur: string;
+  delay: string;
+};
+
+const RIPPLES: Ripple[] = [
+  { top: "36%", left: "15%", w: 46, op: 0.34, stroke: "#000000", rx: "4px", ry: "-6px", rot: "-4deg", dur: "6.5s", delay: "0s" },
+  { top: "54%", left: "29%", w: 34, op: 0.26, stroke: "#000000", rx: "-3px", ry: "-5px", rot: "3deg", dur: "7.2s", delay: "-1.2s" },
+  { top: "70%", left: "19%", w: 40, op: 0.3, stroke: "#000000", rx: "3px", ry: "-4px", rot: "-2deg", dur: "6.0s", delay: "-2.4s" },
+  { top: "44%", left: "52%", w: 30, op: 0.24, stroke: "#ffffff", rx: "4px", ry: "-5px", rot: "2deg", dur: "7.8s", delay: "-0.6s" },
+  { top: "62%", left: "67%", w: 52, op: 0.3, stroke: "#000000", rx: "-4px", ry: "-6px", rot: "-3deg", dur: "8.2s", delay: "-3.0s" },
+  { top: "38%", left: "80%", w: 36, op: 0.26, stroke: "#000000", rx: "3px", ry: "-5px", rot: "4deg", dur: "6.8s", delay: "-1.8s" },
+  { top: "74%", left: "83%", w: 28, op: 0.22, stroke: "#ffffff", rx: "-3px", ry: "-4px", rot: "-2deg", dur: "7.0s", delay: "-2.0s" },
+  { top: "56%", left: "43%", w: 44, op: 0.3, stroke: "#000000", rx: "4px", ry: "-6px", rot: "3deg", dur: "7.6s", delay: "-4.0s" },
+  { top: "82%", left: "49%", w: 32, op: 0.24, stroke: "#000000", rx: "-3px", ry: "-5px", rot: "-3deg", dur: "6.3s", delay: "-1.0s" },
+];
+
 export function SiteFooter() {
   return (
-    <footer className="border-t-[2.5px] border-ink bg-blue text-ink">
-      {/* Balanced (equal) top/bottom padding, kept tall enough that the copyright
-          clears the fixed music toggle (bottom-right puck) at every breakpoint. */}
-      <Container className="flex flex-col items-center gap-6 py-24 text-center sm:flex-row sm:justify-between sm:text-left">
-        <a
-          href="#top"
-          aria-label="Smart Fella or Fart Smella — home"
-          className="inline-flex shrink-0 items-center"
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element -- brand mark is a static /public asset */}
-          <img
-            src="/logo.png"
-            alt=""
-            draggable={false}
-            className="h-10 w-auto select-none md:h-12"
-          />
-        </a>
+    <footer className="relative -mt-[60px] overflow-hidden pt-[60px] text-ink sm:-mt-[80px] sm:pt-[80px] md:-mt-[96px] md:pt-[96px]">
+      {/* Brand-blue water body. Its top is offset BELOW the wave troughs so the
+          strip above the rolling crests stays transparent and the previous
+          section's color shows through the footer's negative-margin overlap. */}
+      <div
+        aria-hidden
+        className="absolute inset-x-0 bottom-0 top-[44px] z-0 bg-blue sm:top-[58px] md:top-[68px]"
+      />
 
-        <ul className="flex list-none items-center gap-4">
-          {SOCIALS.map((social) => (
-            <li key={social.label}>
-              <SocialButton social={social} size="md" surface="light" />
-            </li>
-          ))}
-        </ul>
-
-        <div className="flex flex-col items-center gap-2 sm:items-end">
-          <nav
-            aria-label="Legal"
-            className="flex items-center gap-3 text-sm font-semibold"
+      {/*
+        TOP SEAM — the SOLE yellow→blue boundary. A rolling multi-crest water
+        surface: transparent above the wave (the overlapped section shows through),
+        brand-blue from the ink surface line down. Full-bleed, 200%-wide with a
+        -50% roll so the crest pattern wraps with no visible seam. aria-hidden +
+        pointer-events-none so it's inert to AT and never intercepts clicks.
+      */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[60px] overflow-hidden sm:h-[80px] md:h-[96px]"
+      >
+        <div className={`${styles.waveBob} h-full w-full`}>
+          {/*
+            ONE rolling group so the blue fill, the sunlit sheen, and the ink
+            surface line share the EXACT same crest path, phase, direction and
+            speed — they can never desync (the sheen rides locked just under the
+            line). The stroke is a continuous SCALING stroke (deliberately NOT
+            `vector-effect="non-scaling-stroke"`, which trips a Chromium
+            rasterizer bug that fragments the line under this
+            `preserveAspectRatio="none"` stretch); `shape-rendering:geometricPrecision`
+            keeps it crisp and strokeWidth is bumped so the scaled line stays bold.
+          */}
+          <svg
+            className={`${styles.waveRoll} absolute inset-0 h-full`}
+            style={{ width: "200%" }}
+            viewBox="0 0 2880 120"
+            preserveAspectRatio="none"
           >
-            <Link
-              href="/terms"
-              className="text-ink underline decoration-2 underline-offset-2 transition-colors hover:text-ink/60"
-            >
-              Terms
-            </Link>
-            <span aria-hidden className="text-ink/40">
-              ·
-            </span>
-            <Link
-              href="/privacy"
-              className="text-ink underline decoration-2 underline-offset-2 transition-colors hover:text-ink/60"
-            >
-              Privacy
-            </Link>
-          </nav>
-          <p className="text-sm font-medium text-ink/70">
-            © 2026 Smart Fella or Fart Smella
-          </p>
+            <defs>
+              <linearGradient id="sffSheen" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stopColor="#ffffff" stopOpacity="0.22" />
+                <stop offset="0.72" stopColor="#ffffff" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            {/* Brand-blue water below the surface line. */}
+            <path d={`${WAVE_FRONT} L2880,120 L0,120 Z`} fill="var(--color-blue)" />
+            {/* Sunlit sheen on the SAME path (locked to the ink crest), fading
+                down into the water for depth. */}
+            <path d={`${WAVE_FRONT} L2880,120 L0,120 Z`} fill="url(#sffSheen)" />
+            {/* The ink surface line, drawn on top so it stays crisp. */}
+            <path
+              d={WAVE_FRONT}
+              fill="none"
+              stroke="#000000"
+              strokeWidth={4}
+              strokeLinejoin="round"
+              strokeLinecap="round"
+              shapeRendering="geometricPrecision"
+            />
+          </svg>
         </div>
-      </Container>
+      </div>
+
+      {/* Scattered, drifting ripple marks across the water. */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 z-0">
+        {RIPPLES.map((r, i) => (
+          <span
+            key={i}
+            className={`${styles.ripple} absolute block`}
+            style={
+              {
+                top: r.top,
+                left: r.left,
+                width: r.w,
+                "--r-op": r.op,
+                "--r-rx": r.rx,
+                "--r-ry": r.ry,
+                "--r-rot": r.rot,
+                "--r-dur": r.dur,
+                "--r-delay": r.delay,
+              } as CSSProperties
+            }
+          >
+            <svg viewBox="0 0 48 14" fill="none" className="block h-auto w-full">
+              <path
+                d={RIPPLE_PATH}
+                stroke={r.stroke}
+                strokeWidth={2.4}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </span>
+        ))}
+      </div>
+
+      {/* Swim brain mascot, mid-breaststroke in the lower-left water — well
+          clear of the bottom-right copyright and the fixed bottom-right music
+          toggle, so it never collides at any width. */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute bottom-[14%] left-[9%] z-20 block h-12 select-none sm:h-14"
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element -- decorative mascot /public asset */}
+        <img
+          src="/decor/mascot/swim.png"
+          alt=""
+          draggable={false}
+          className={`${styles.swim} block h-full w-auto select-none`}
+        />
+      </span>
+
+      {/* Copyright, gently bobbing on the surface, seated in the footer's
+          BOTTOM-RIGHT corner (right-aligned, near the bottom) rather than
+          centered. Full-bleed (NOT the max-w Container) so its right edge is
+          measured from the true page edge; pr-[6.5rem] (104px) clears the fixed
+          bottom-right music toggle — a 56px puck inset 24px from the edge (left
+          edge ~80px in) — with a ~24px gap, so text and puck never overlap at
+          any breakpoint. On the narrowest screens the single line can't fit in
+          the gap between the lower-left mascot and the toggle, so a max-width
+          lets it wrap to two right-aligned lines that stay clear of BOTH the
+          mascot and the puck; the cap is dropped at sm+ where there's room for
+          one line. min-height preserves the water body's height. */}
+      <div className="relative z-10 flex min-h-[13rem] items-end justify-end pb-6 pl-6 pr-[6.5rem]">
+        <p className={`${styles.copy} max-w-[8.5rem] text-right text-sm font-medium text-ink/70 sm:max-w-none`}>
+          © 2026 Smart Fella or Fart Smella
+        </p>
+      </div>
     </footer>
   );
 }

@@ -102,6 +102,12 @@ export interface TestimonialsProps {
   cta?: TestimonialsCta;
   /** Fade + rise the inner content on scroll while the section bg stays static. */
   revealContent?: boolean;
+  /**
+   * Decorative node anchored to the FIRST glyph of the title (rendered inside a
+   * `relative inline-block` wrapper around that letter, behind it at `z-0`). Used
+   * to peek the brain mascot out from behind the first "L" of the heading.
+   */
+  firstLetterAccessory?: React.ReactNode;
   className?: string;
 }
 
@@ -319,14 +325,16 @@ function QuoteCard({ testimonial: t, color }: { testimonial: Testimonial; color:
       color={fill.base}
       shadow="md"
       padding="md"
-      className={cn("break-inside-avoid card-hover", fill.className)}
+      className={cn("flex h-full flex-col card-hover", fill.className)}
     >
-      <div className="flex flex-col gap-4">
+      {/* Quote grows to fill, pushing the star row + author footer to the bottom
+          so, in an equal-height grid row, all footers align across cards. */}
+      <blockquote className="flex-1 text-pretty text-lg font-medium leading-snug">
+        {`“${t.quote}”`}
+      </blockquote>
+      <div className="mt-5 flex flex-col gap-4 border-t-[2.5px] border-ink pt-4">
         <StarRating rating={t.rating} />
-        <blockquote className="text-pretty text-lg font-medium leading-snug">
-          {`“${t.quote}”`}
-        </blockquote>
-        <div className="flex items-center gap-3 border-t-[2.5px] border-ink pt-4">
+        <div className="flex items-center gap-3">
           <TestimonialAvatar testimonial={t} size="md" />
           <div className="min-w-0 leading-tight">
             <p className="truncate font-bold">{t.name}</p>
@@ -386,6 +394,7 @@ export function Testimonials({
   background = "cream",
   cta,
   revealContent = true,
+  firstLetterAccessory,
   className,
 }: TestimonialsProps = {}) {
   const items = testimonials.length > 0 ? testimonials : DEFAULT_TESTIMONIALS;
@@ -401,7 +410,17 @@ export function Testimonials({
       <Reveal stagger enabled={revealContent} className="mb-10 max-w-2xl md:mb-14">
         {eyebrow ? <Eyebrow>{eyebrow}</Eyebrow> : null}
         <Heading as={2} size="xl" className={cn(eyebrow && "mt-4")}>
-          {title}
+          {firstLetterAccessory ? (
+            <>
+              <span className="relative inline-block">
+                <span className="relative z-10">{title.slice(0, 1)}</span>
+                {firstLetterAccessory}
+              </span>
+              {title.slice(1)}
+            </>
+          ) : (
+            title
+          )}
         </Heading>
       </Reveal>
 
@@ -409,10 +428,10 @@ export function Testimonials({
         as="ul"
         stagger
         enabled={revealContent}
-        className="columns-1 list-none gap-6 sm:columns-2 lg:columns-3"
+        className="grid list-none grid-cols-1 items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3"
       >
         {items.map((t, i) => (
-          <li key={`${t.name}-${i}`} className="mb-6 break-inside-avoid">
+          <li key={`${t.name}-${i}`} className="h-full">
             <QuoteCard testimonial={t} color={cardColorFor(t, i, cardCycle)} />
           </li>
         ))}

@@ -119,7 +119,7 @@ export function CtaBand({
 
   if (align === "split") {
     return (
-      <Section id={id} background={background} padding="lg" bordered className={className}>
+      <Section id={id} background={background} padding="lg" className={className}>
         <Reveal
           stagger
           enabled={revealContent}
@@ -145,7 +145,7 @@ export function CtaBand({
   }
 
   return (
-    <Section id={id} background={background} padding="lg" bordered className={className}>
+    <Section id={id} background={background} padding="lg" className={className}>
       <Reveal
         stagger
         enabled={revealContent}
