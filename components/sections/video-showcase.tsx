@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { Section } from "@/components/ui/section";
 import { Heading } from "@/components/ui/heading";
 import { Eyebrow } from "@/components/ui/eyebrow";
+import { Marquee } from "@/components/ui/marquee";
 import { SocialButton } from "@/components/social/social-button";
 import { SOCIALS } from "@/lib/socials";
 
@@ -79,10 +80,12 @@ export function VideoShowcase({
         ) : null}
       </div>
 
-      {/* Full-bleed, snap-scrolling row of live TikTok embeds. */}
-      <ul className="mt-10 flex snap-x snap-mandatory list-none justify-start gap-4 overflow-x-auto px-4 pb-4 [-ms-overflow-style:none] [scrollbar-width:none] md:mt-12 md:justify-center md:gap-6 md:px-8 [&::-webkit-scrollbar]:hidden">
+      {/* Full-bleed marquee: the embeds auto-scroll continuously, same as the
+          testimonials strip. Marquee duplicates its children for a seamless loop,
+          so each video renders twice (~16 iframes total — fine for this count). */}
+      <Marquee speed={60} gap="1.25rem" className="mt-10 md:mt-12">
         {VIDEO_IDS.map((videoId) => (
-          <li key={videoId} className="shrink-0 snap-center">
+          <div key={videoId} className="shrink-0">
             <div className="overflow-hidden rounded-2xl border-[2.5px] border-ink bg-paper shadow-hard">
               <blockquote
                 className="tiktok-embed"
@@ -97,9 +100,9 @@ export function VideoShowcase({
                 </section>
               </blockquote>
             </div>
-          </li>
+          </div>
         ))}
-      </ul>
+      </Marquee>
 
       {/* Merged "follow us" moment: the social icons live with the videos rather
           than in a separate section. Renders every network from SOCIALS. */}
