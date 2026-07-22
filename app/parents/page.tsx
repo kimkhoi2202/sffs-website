@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Gamepad2, Brain, Sparkles, ShieldCheck } from "lucide-react";
+import { Gamepad2, Sparkles, ShieldCheck } from "lucide-react";
 
 import { QuizNav } from "@/components/quiz/quiz-nav";
 import { Section } from "@/components/ui/section";
@@ -14,40 +14,31 @@ import { CtaBand } from "@/components/sections/cta-band";
 export const metadata: Metadata = {
   title: { absolute: "For Parents — Smart Fella or Fart Smella" },
   description:
-    "The good kind of screen time. Smart Fella or Fart Smella is a dumb little game that makes thinking feel like a flex — a real challenge, not a bottomless feed. Our mission, for parents.",
+    "The good kind of screen time. A dumb little game that makes thinking a flex — built on real working-memory science, with no ads and no bottomless feed.",
 };
 
 const FEATURES: Feature[] = [
   {
     icon: Gamepad2,
     title: "A game, not a feed",
-    body: "It has a finish line. No infinite scroll, no autoplay, no rabbit hole.",
-  },
-  {
-    icon: Brain,
-    title: "An actual challenge",
-    body: "Memory and pattern puzzles that make kids lean in, not zone out.",
+    body: "Rounds end. No infinite scroll, no autoplay.",
   },
   {
     icon: Sparkles,
     title: "Speaks their language",
-    body: "Goofy on purpose. They play because they want to, not because you made them.",
+    body: "Goofy on purpose, so they choose it themselves.",
   },
   {
     icon: ShieldCheck,
-    title: "No ads, no dark patterns",
-    body: "We don't sell your kid's attention. No ads pointed at them, ever.",
+    title: "No ads, ever",
+    body: "We don't sell your kid's attention to anyone.",
   },
 ];
 
 const FAQ: FaqItem[] = [
   {
     q: "Is this just another addictive game?",
-    a: "No bottomless feed, no autoplay. Rounds end. It's built to be put down — the opposite of the apps fighting for your kid's every waking second.",
-  },
-  {
-    q: "Does it make my kid smarter?",
-    a: "“Smarter” is a fuzzy word, so here's the straight version: the games give working memory a real workout — a genuine mental challenge, not mindless tap-to-win. What we'll never tell you is that a game raises your kid's IQ or grades. No game does that, and the company that promised it paid a $2M FTC fine. Our pitch is simpler and true — we make thinking fun enough to beat the feed.",
+    a: "No feed, no autoplay — rounds end. It's built to be put down, the opposite of the apps fighting for your kid's every waking second.",
   },
   {
     q: "What's the right amount of time?",
@@ -55,15 +46,11 @@ const FAQ: FaqItem[] = [
   },
   {
     q: "What ages is it for?",
-    a: "Built for kids old enough to want to beat their friends — roughly 8 to 14. Younger kids can absolutely play; the ranking just means more the older they get.",
+    a: "Roughly 8 to 14. Younger kids can play too; the ranking just means more as they grow.",
   },
   {
     q: "Is my kid's data safe?",
-    a: "We don't collect kids' data. If we ever email anyone, it's a parent — never your child. No child names, ages, or profiles.",
-  },
-  {
-    q: "Do you have ads?",
-    a: "None aimed at your kid. We're not in the business of renting out their attention.",
+    a: "We don't collect kids' data. If we ever email anyone, it's a parent — never your child.",
   },
 ];
 
@@ -85,9 +72,8 @@ export default function ParentsPage() {
           Brains, not brain rot.
         </Heading>
         <p className="mx-auto mt-6 max-w-2xl text-pretty text-lg font-medium leading-snug sm:text-xl">
-          The internet is a machine built to turn your kid&apos;s brain to mush. Smart
-          Fella or Fart Smella is the opposite — a dumb little game that makes thinking
-          feel like a flex.
+          Everything online is built to turn your kid&apos;s brain to mush. We built the
+          opposite — a dumb little game that makes thinking feel like a flex.
         </p>
         <div className="mt-8">
           <Button href="/" variant="paper" size="lg">
@@ -109,7 +95,7 @@ export default function ParentsPage() {
         </Heading>
       </Section>
 
-      {/* 3. Comparison */}
+      {/* 3. Comparison — the single scannable "is it just more screen time?" answer */}
       <Comparison
         revealContent
         background="cream"
@@ -131,39 +117,67 @@ export default function ParentsPage() {
         ]}
       />
 
-      {/* 4. Feature grid */}
-      <FeatureGrid
-        revealContent
-        background="paper"
-        title="What it actually is"
-        eyebrow=""
-        intro=""
-        columns={2}
-        features={FEATURES}
-      />
-
-      {/* 5. Mission block */}
-      <Section background="mint" padding="lg" bordered container="prose">
-        <Eyebrow>Our mission</Eyebrow>
+      {/* 4. The science — measurement framing, no IQ-boost claim (hard guardrail). */}
+      <Section background="paper" padding="lg" bordered container="prose">
+        <Eyebrow>The (boring) science</Eyebrow>
         <Heading as={2} size="xl" className="mt-4">
-          We want thinking to be the flex
+          A workout, not a time-killer
         </Heading>
         <div className="mt-6 space-y-5 text-lg font-medium leading-relaxed">
           <p>
-            Kids are handed screens engineered to hold them as long as humanly possible.
-            The reward for scrolling is just… more scrolling. We think that&apos;s a
-            terrible deal — and a beatable one.
+            Working memory — how much your brain can hold and juggle at once — is one of
+            the most-studied predictors of how kids learn, backed by decades of
+            cognitive-science research. Our games are built to give it a real workout.
           </p>
           <p>
-            So we built a game that&apos;s genuinely fun and genuinely hard. You get
-            ranked, you climb, you flex on your friends. The status isn&apos;t in the
-            likes — it&apos;s in being sharp. If we can make <em>&ldquo;I&apos;m smart&rdquo;</em> the
-            coolest thing a kid can say, we&apos;ve done our job.
+            What we won&apos;t do is promise it &lsquo;boosts IQ.&rsquo; No game does that
+            — but a genuine mental challenge kids actually <em>want</em>{" "}
+            to play? That&apos;s the whole point.
           </p>
         </div>
       </Section>
 
-      {/* 6. FAQ */}
+      {/* 5. Feature grid — three tight cards. */}
+      <FeatureGrid
+        revealContent
+        background="mint"
+        title="What it actually is"
+        eyebrow=""
+        intro=""
+        columns={3}
+        features={FEATURES}
+      />
+
+      {/* 6. Pricing rationale — no number (undecided); explains why it isn't free. */}
+      <Section background="coral" padding="lg" bordered container="prose">
+        <Eyebrow>Why it costs money</Eyebrow>
+        <Heading as={2} size="xl" className="mt-4">
+          You pay, so advertisers don&apos;t
+        </Heading>
+        <p className="mt-6 text-lg font-medium leading-relaxed">
+          Free apps make their money by farming your kid&apos;s attention — more time on
+          screen, more ads, worse incentives. We&apos;d rather answer to you than to
+          advertisers. So parents pay, and the app stays ad-free and built around your kid
+          instead of against them.
+        </p>
+      </Section>
+
+      {/* 7. Mission block — one tight paragraph. */}
+      <Section background="yellow" padding="lg" container="prose">
+        <Eyebrow>Our mission</Eyebrow>
+        <Heading as={2} size="xl" className="mt-4">
+          We want thinking to be the flex
+        </Heading>
+        <p className="mt-6 text-lg font-medium leading-relaxed">
+          Kids are handed screens engineered to hold them as long as humanly possible.
+          We&apos;re building the opposite — something genuinely fun and genuinely hard,
+          where the flex is being sharp, not racking up hours. If we can make{" "}
+          <em>&ldquo;I&apos;m smart&rdquo;</em>{" "}
+          the coolest thing a kid can say, we&apos;ve done our job.
+        </p>
+      </Section>
+
+      {/* 8. FAQ — the four simplest concerns. */}
       <Faq
         revealContent
         background="paper"
@@ -172,7 +186,7 @@ export default function ParentsPage() {
         items={FAQ}
       />
 
-      {/* 7. Closing CTA (no form) */}
+      {/* 9. Closing CTA (no form) */}
       <CtaBand
         revealContent
         background="green"

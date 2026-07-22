@@ -145,3 +145,13 @@ Big Anton, centered:
 - Which mascot asset to show in the hero (`/logo.png`, `/wordmark.png`, or the two-tone brain SVG in `GTM/brand-assets/`).
 - Exact responsive treatment of the new nav link below `sm`.
 - Git handling: this is a teammate's repo — build on a feature branch and open a PR rather than committing to `main` (confirm with Grace before pushing).
+
+---
+
+## Revision — 2026-07-22 (copy pass)
+
+User feedback: "too much text — address the simplest concerns; mention the learning/IQ science; explain why it's the price it is." Changes:
+- **Tightened prose:** mission cut from two paragraphs to one; feature grid trimmed 4→3 cards with terser bodies; FAQ trimmed 6→4 (dropped the standalone "does it make my kid smarter?" — folded into the new science section — and "do you have ads?" — covered by the "No ads, ever" feature + pricing section).
+- **NEW §ordered "The (boring) science" section** (paper): working memory framed as a *measured* predictor of learning, "lightly cited" (decades of cognitive-science research) per user's choice. Holds the guardrail — explicitly refuses the "boosts IQ" claim; uses the approved "workout" (exercise) framing, not a durable-improvement claim.
+- **NEW "Why it costs money" section** (coral): pricing *rationale, no number* (undecided) — "you pay so advertisers don't; free = attention-farming + ads."
+- New section order/rhythm: Hero(blue) → Manifesto(ink) → Comparison(cream) → Science(paper) → Features(mint) → Pricing(coral) → Mission(yellow) → FAQ(paper) → CTA(green).
