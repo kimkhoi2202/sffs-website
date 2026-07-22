@@ -15,8 +15,9 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  *
  * Flow: client-validate -> POST /api/access-signup -> loading state -> on success
  * swap the whole form for an on-brand "You're in!" confirmation; on failure show
- * a friendly, retryable error. Fully keyboard-accessible: real <label>, native
- * focus outline (from globals.css :focus-visible), aria-invalid + aria-describedby
+ * a friendly, retryable error. Fully keyboard-accessible: real <label>, an
+ * on-brand blue+ink focus ring matching <Button> (see the input's className),
+ * aria-invalid + aria-describedby
  * wiring, an assertive error alert, a polite success status that receives focus,
  * and inputs disabled while submitting.
  */
@@ -129,6 +130,14 @@ export function GetAccessForm({ className }: { className?: string }) {
         className={cn(
           "h-14 w-full rounded-full border-[2.5px] bg-paper px-5 text-base font-medium text-ink shadow-hard-sm",
           "placeholder:text-ink/40 disabled:cursor-not-allowed disabled:opacity-60",
+          // Focus: match the <Button> convention. Kill the global black
+          // :focus-visible outline (keep a transparent real outline so a ring
+          // survives forced-colors / Windows High Contrast), then paint the same
+          // two-tone brand ring — a bold blue band wrapped in a thin ink keyline,
+          // no white halo, no doubled black border. The rest hard shadow is
+          // re-declared here so it's preserved when the ring takes over box-shadow.
+          "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-transparent",
+          "focus-visible:[box-shadow:0_0_0_4px_var(--color-blue),0_0_0_6px_var(--color-ink),4px_4px_0_0_var(--color-ink)]",
           invalid ? "border-coral" : "border-ink",
         )}
       />
