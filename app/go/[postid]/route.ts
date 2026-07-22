@@ -33,6 +33,26 @@ function normalizeSource(value: string | undefined): string | undefined {
   return NAMED_PLATFORMS.find((p) => lower.includes(p)) ?? lower;
 }
 
+/**
+ * Recover the REAL platform from the post id when no explicit source param is
+ * given. Hermes mints ids like `ttk_7423991` (tiktok), `ig_31842` (instagram),
+ * `yt_…` (youtube) — so the prefix already encodes the channel. This keeps
+ * `utm_source` = tiktok / instagram (not the generic "social") even when the
+ * bio short link omits `?s=` (see docs/analytics/hermes-utm-handoff.md).
+ * Matches documented prefixes (or a full platform name anywhere) to avoid false
+ * positives like "igloo". Returns undefined when the platform is unknown.
+ */
+function platformFromPostId(id: string): string | undefined {
+  const lower = id.toLowerCase();
+  if (lower.startsWith("ttk_") || lower.startsWith("tt_") || lower.includes("tiktok"))
+    return "tiktok";
+  if (lower.startsWith("ig_") || lower.startsWith("insta") || lower.includes("instagram"))
+    return "instagram";
+  if (lower.startsWith("yt_") || lower.includes("youtube") || lower.includes("youtu"))
+    return "youtube";
+  return undefined;
+}
+
 export async function GET(
   req: NextRequest,
   ctx: { params: Promise<{ postid: string }> },
@@ -47,9 +67,13 @@ export async function GET(
   const dest = new URL("/", req.nextUrl.origin);
   const out = dest.searchParams;
 
+  // Explicit source wins; otherwise infer the real platform from the post-id
+  // prefix; only then fall back to the generic "social".
   out.set(
     "utm_source",
-    normalizeSource(clean(q.get("utm_source") ?? q.get("s"))) ?? "social",
+    normalizeSource(clean(q.get("utm_source") ?? q.get("s"))) ??
+      platformFromPostId(postId) ??
+      "social",
   );
   out.set(
     "utm_medium",

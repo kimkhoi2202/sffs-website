@@ -9,6 +9,11 @@
  * REPLAY, and persistent cookies are ALL on — but with responsible guards that hold
  * regardless: inputs masked in replay (email never recorded), no request bodies,
  * email/$ip denylisted + scrubbed, and GPC/DNT honored.
+ *
+ * PROD-DOMAIN GUARD: PostHog only initializes on the production hostname(s). On
+ * localhost, `*.vercel.app` previews, or any other host it never boots — so dev
+ * sessions and preview traffic never pollute the single prod project (no stray
+ * events, pageviews, or session replays).
  */
 import posthog from "posthog-js";
 
@@ -19,7 +24,16 @@ import {
 
 const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
 
-if (typeof window !== "undefined" && key) {
+/** The only hosts allowed to send data to the prod PostHog project. */
+const PROD_HOSTS = new Set([
+  "smartfellaorfartsmella.com",
+  "www.smartfellaorfartsmella.com",
+]);
+
+const isProdHost =
+  typeof window !== "undefined" && PROD_HOSTS.has(window.location.hostname);
+
+if (isProdHost && key) {
   posthog.init(key, {
     // Reverse proxy (next.config.ts rewrites) to dodge ad-blockers; ui_host is
     // the PostHog app host so "view in PostHog" links resolve correctly.
@@ -41,7 +55,7 @@ if (typeof window !== "undefined" && key) {
 
     // --- session replay ON, privacy-guarded (plan §5) ---
     disable_session_recording: false,
-    enable_recording_console_log: true, // helps debug form error reasons (never logs email)
+    enable_recording_console_log: false, // W2: never capture console logs in replay (max privacy)
     session_recording: {
       maskAllInputs: true, // masks the email field — typed values never recorded
       maskTextSelector: "[data-ph-mask]", // opt-in extra masking hook (form wrapper)

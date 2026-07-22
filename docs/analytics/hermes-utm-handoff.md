@@ -54,9 +54,15 @@ the UTM mapping any time **without re-editing live posts**. It accepts either
 short params or full `utm_*` (explicit `utm_*` wins). The post id in the path is
 always used as `utm_content`.
 
+**Real-platform default:** if you omit `s`/`utm_source`, the route infers the
+platform from the post-id prefix — `ttk_…`→`tiktok`, `ig_…`→`instagram`,
+`yt_…`→`youtube` — so a rotated TikTok bio link still reports `utm_source=tiktok`
+(not the generic `social`). Setting `s` explicitly always wins; keep the `ttk_` /
+`ig_` prefix convention (below) for the inference to work.
+
 | Short param | Maps to        | Default          |
 | ----------- | -------------- | ---------------- |
-| `s`         | `utm_source`   | `social`         |
+| `s`         | `utm_source`   | inferred from the post-id prefix (`ttk_`→`tiktok`, `ig_`→`instagram`, `yt_`→`youtube`), else `social` |
 | `m`         | `utm_medium`   | `social_organic` |
 | `c`         | `utm_campaign` | _(omitted)_      |
 | `t`         | `utm_term`     | _(omitted)_      |
@@ -85,9 +91,10 @@ allowed, click counts at the redirect layer, and freedom to change UTMs later.
 Some in-app browsers strip params/referrers. Two belts already exist site-side:
 
 1. `platform` is derived from the referring domain when `utm_source` is missing.
-2. A **post-signup "How did you find us?" PostHog survey** self-reports
-   attribution (TikTok / Instagram / friend / other), rescuing it when the
-   technical signals fail.
+2. Our **own on-brand post-signup "How did you find us?" survey** self-reports
+   attribution (TikTok / Instagram / friend / search / other), rescuing it when
+   the technical signals fail. It writes to Aurora `survey_responses` and fires a
+   no-PII `attribution_survey_answered` PostHog event.
 
 Neither needs Hermes changes — they're mentioned so you know the coverage.
 

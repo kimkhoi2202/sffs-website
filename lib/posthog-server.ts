@@ -20,6 +20,17 @@ import { PostHog } from "posthog-node";
 
 const INGESTION_HOST = "https://us.i.posthog.com";
 
+/**
+ * W4 — only emit server-side events for real production traffic. Mirrors the
+ * client's prod-domain guard so localhost dev and `*.vercel.app` previews never
+ * pollute the single prod project with stray conversions.
+ */
+function isProdRequest(req: NextRequest): boolean {
+  if (process.env.NODE_ENV !== "production") return false;
+  const host = (req.headers.get("host") ?? "").toLowerCase();
+  return host.endsWith("smartfellaorfartsmella.com");
+}
+
 let client: PostHog | null = null;
 
 function getClient(): PostHog | null {
@@ -92,6 +103,7 @@ export async function captureEmailCapturedServer(
   req: NextRequest,
   source: string,
 ): Promise<void> {
+  if (!isProdRequest(req)) return; // W4: prod domain only — no dev/preview pollution
   const ph = getClient();
   if (!ph) return;
   try {
