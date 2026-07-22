@@ -56,7 +56,7 @@ export default function ParentsPage() {
         containerClassName="text-center"
       >
         <Eyebrow>For Parents</Eyebrow>
-        <Heading as={1} size="display" className="mt-4">
+        <Heading as={1} size="display" className="mt-6 !leading-[1.05]">
           Brains, not brain rot.
         </Heading>
         <p className="mx-auto mt-6 max-w-2xl text-pretty text-lg font-medium leading-snug sm:text-xl">
