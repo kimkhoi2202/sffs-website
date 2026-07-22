@@ -183,22 +183,27 @@ export default function SmartOrFartPage() {
             the wavy ink line (no more grid-less band) and the shapes bounce at
             that same wavy edge. Hence there is NO standalone <SectionDivider>
             here anymore — the hero ends in white below the wave and flows
-            straight into the (also-white) Steps section. */}
+            straight into the (also-white) waitlist section below. */}
       </div>
+
+      {/* Waitlist moved up to the 2nd section (right after the hero) so the email
+          capture sits high on the page. Paper (white) keeps it seamless with the
+          hero's white swoop-wave bottom — no divider needed here. */}
+      <Waitlist id="waitlist" className="scroll-mt-nav" background="paper" />
+
+      {/* Top edge of the merged gray block (how it works → which one → what you get). */}
+      <SectionDivider top="paper" bottom="gray" variant="curve" />
 
       <Steps
         revealContent
         id="how"
         className="scroll-mt-nav"
-        background="paper"
+        background="gray"
         eyebrow=""
         title="Three steps to the flex"
         steps={STEPS}
         cta={{ label: "Join the waitlist", href: "#waitlist", variant: "green" }}
       />
-
-      {/* Outer TOP edge of the merged gray block (comparison + what-you-get). */}
-      <SectionDivider top="paper" bottom="gray" variant="curve" />
 
       <div className="relative">
       <Comparison
@@ -251,11 +256,7 @@ export default function SmartOrFartPage() {
         </div>
       </Section>
 
-      <SectionDivider top="gray" bottom="coral" variant="scallopBig" size="lg" />
-
-      <Waitlist id="waitlist" className="scroll-mt-nav" background="coral" />
-
-      <SectionDivider top="coral" bottom="paper" variant="blob" />
+      <SectionDivider top="gray" bottom="paper" variant="blob" size="lg" />
 
       <div className="relative">
       <Faq
