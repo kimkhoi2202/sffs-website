@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import { LegalPage, type LegalSection } from "@/components/sections/legal-page";
 
-const LAST_UPDATED = "July 21, 2026";
+const LAST_UPDATED = "July 22, 2026";
 const CONTACT_EMAIL = "smartfellaorfartsmella123@gmail.com";
 
 export const metadata: Metadata = {
@@ -42,18 +42,31 @@ const SECTIONS: LegalSection[] = [
         <p>We keep data collection minimal and honest:</p>
         <ul>
           <li>
-            <strong>Information you give us.</strong> If you email us or reach out
-            through a social channel, we receive whatever you choose to send —
-            typically your email address or handle and the contents of your
-            message.
+            <strong>Information you give us.</strong> When you enter your email
+            address in our &ldquo;get access&rdquo; form to join the list, we
+            store it so we can reach you about the Fella Test. If you email us or
+            reach out through a social channel, we also receive whatever you
+            choose to send.
           </li>
           <li>
-            <strong>Basic, aggregated analytics.</strong> Like most sites, we
-            collect limited technical information automatically to understand how
-            the site is used — for example page views, referring links, general
-            device and browser type, and approximate (city- or country-level)
-            location derived from your IP address. We use this in aggregate; we do
-            not build advertising profiles about you.
+            <strong>Product analytics (PostHog).</strong> We use{" "}
+            <strong>PostHog</strong>, a third-party analytics provider, to
+            understand how the site is used — for example page views, the social
+            post or link that referred you (via UTM tags), general device and
+            browser type, approximate (city- or country-level) location derived
+            from your IP address, clicks and scroll depth, performance and error
+            signals, and steps in the email form such as starting or submitting
+            it. We use this to see which content and traffic sources work. We do
+            not build advertising profiles and we do not sell this data.
+          </li>
+          <li>
+            <strong>Session replay.</strong> PostHog also captures{" "}
+            <strong>session replays</strong> — a reconstructed playback of on-page
+            interactions such as scrolling, taps, and mouse movement — so we can
+            find where the experience confuses or delights. Replays{" "}
+            <strong>mask everything you type</strong>: your email address and any
+            other input is never recorded, and we do not capture the contents of
+            network requests.
           </li>
           <li>
             <strong>Quiz answers.</strong> Your quiz responses are processed to
@@ -63,8 +76,13 @@ const SECTIONS: LegalSection[] = [
           </li>
         </ul>
         <p>
-          We do not knowingly collect sensitive personal information, and we ask
-          that you not send it to us.
+          <strong>
+            We never send your email address (or other personal identifiers) to
+            our analytics provider.
+          </strong>{" "}
+          It is stored only in our own signup database. We also do not knowingly
+          collect sensitive personal information, and we ask that you not send it
+          to us.
         </p>
       </>
     ),
@@ -89,9 +107,11 @@ const SECTIONS: LegalSection[] = [
           </li>
         </ul>
         <p>
-          We rely on these legitimate purposes — and, where required, your consent
-          (for example for non-essential analytics cookies) — as our legal basis
-          for processing.
+          We rely on our legitimate interest in operating, measuring, and
+          improving the Services as the basis for this limited analytics
+          processing. We honor browser &ldquo;Do Not Track&rdquo; and Global
+          Privacy Control (GPC) signals, and you can opt out at any time — see{" "}
+          <a href="#your-rights">Your rights and choices</a>.
         </p>
       </>
     ),
@@ -102,11 +122,21 @@ const SECTIONS: LegalSection[] = [
     body: (
       <>
         <p>
-          We use a small number of cookies and similar technologies to make the
-          site work and to gather the aggregate analytics described above. You can
-          control or clear cookies in your browser settings, and where required we
-          will ask for your consent before setting non-essential ones. Blocking
-          some cookies may affect how parts of the site behave.
+          We (and PostHog on our behalf) use first-party cookies and similar
+          technologies (such as local storage) to run the site and to measure how
+          it is used — for example to recognize a returning device, group events
+          into a session, and remember preferences. Because we route analytics
+          through our own domain, these are set as first-party cookies. We use
+          them to understand usage and improve the site; we do <strong>not</strong>{" "}
+          use them for advertising and we do <strong>not</strong> sell the data
+          they collect.
+        </p>
+        <p>
+          We honor &ldquo;Do Not Track&rdquo; and Global Privacy Control (GPC)
+          browser signals — if your browser sends one, we turn analytics and
+          session replay off for your visit. You can also block or clear cookies
+          in your browser settings at any time; some parts of the site may then
+          behave differently.
         </p>
       </>
     ),
@@ -185,8 +215,10 @@ const SECTIONS: LegalSection[] = [
         <ul>
           <li>
             <strong>Service providers.</strong> With vendors who help us run the
-            Services — such as our website host and analytics provider — who may
-            process data only on our instructions and for our purposes.
+            Services — such as our website host (<strong>Vercel</strong>), our
+            product-analytics provider (<strong>PostHog</strong>), and the cloud
+            infrastructure (<strong>AWS</strong>) that stores signup emails — who
+            may process data only on our instructions and for our purposes.
           </li>
           <li>
             <strong>Platforms you connect.</strong> With TikTok, as necessary to
@@ -212,7 +244,9 @@ const SECTIONS: LegalSection[] = [
       <>
         <p>
           We keep information only as long as we need it for the purposes
-          described here. Aggregate analytics are retained in de-identified form;
+          described here. Product-analytics events and session replays are
+          retained for a limited period and then automatically deleted or
+          de-identified; the email you submit is kept while you are on our list;
           messages you send us are kept as long as needed to help you and for our
           records; and TikTok access tokens are kept only while the integration is
           connected and are deleted when you disconnect the app or the tokens
@@ -248,7 +282,11 @@ const SECTIONS: LegalSection[] = [
             request access to, correction of, or deletion of personal information
             we hold about you;
           </li>
-          <li>opt out of non-essential analytics cookies;</li>
+          <li>
+            opt out of analytics and session replay — turn on your
+            browser&rsquo;s Do Not Track or Global Privacy Control signal, or
+            block our cookies;
+          </li>
           <li>
             disconnect SFFS Creator Studio from your TikTok account at any time
             (see the TikTok section above); and
