@@ -86,12 +86,15 @@ export function VideoShowcase({
       <Marquee speed={60} gap="1.25rem" className="mt-10 md:mt-12">
         {VIDEO_IDS.map((videoId) => (
           <div key={videoId} className="shrink-0">
-            <div className="overflow-hidden rounded-2xl border-[2.5px] border-ink bg-paper shadow-hard">
+            {/* Fixed height + overflow-hidden crops TikTok's tall caption/sound
+                footer, leaving just the video — smaller cards, less wasted room.
+                Width stays 325 (TikTok's embed minimum) so the video isn't clipped. */}
+            <div className="h-[560px] w-[325px] overflow-hidden rounded-2xl border-[2.5px] border-ink bg-paper shadow-hard">
               <blockquote
-                className="tiktok-embed"
+                className="tiktok-embed !m-0"
                 cite={`${PROFILE_URL}/video/${videoId}`}
                 data-video-id={videoId}
-                style={{ maxWidth: 340, minWidth: 325 }}
+                style={{ maxWidth: 325, minWidth: 325, margin: 0 }}
               >
                 <section>
                   <a target="_blank" rel="noreferrer" href={`${PROFILE_URL}/video/${videoId}`}>
