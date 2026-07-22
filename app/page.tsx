@@ -148,7 +148,7 @@ const TESTIMONIALS: Testimonial[] = [
 const FAQ: FaqItem[] = [
   {
     q: "What is this, exactly?",
-    a: "A dumb little game that knows exactly how smart you are. Quick memory and puzzle rounds (think 2048 and block blast) that score your brain and rank you against everyone else.",
+    a: "A dumb little game that knows exactly how smart you are. Quick rounds of 2048, block blast, and memory challenges that score your brain and rank you against everyone else.",
   },
   {
     q: "Is it actually fun, or is it secretly homework?",
