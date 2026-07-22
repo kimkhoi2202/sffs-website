@@ -86,22 +86,25 @@ export function VideoShowcase({
       <Marquee speed={60} gap="1.25rem" className="mt-10 py-6 md:mt-12">
         {VIDEO_IDS.map((videoId) => (
           <div key={videoId} className="shrink-0">
-            {/* Fixed height + overflow-hidden crops TikTok's tall caption/sound
-                footer, leaving just the video — smaller cards, less wasted room.
-                Width stays 325 (TikTok's embed minimum) so the video isn't clipped. */}
-            <div className="h-[560px] w-[325px] overflow-hidden rounded-2xl border-[2.5px] border-ink bg-paper shadow-hard">
-              <blockquote
-                className="tiktok-embed !m-0"
-                cite={`${PROFILE_URL}/video/${videoId}`}
-                data-video-id={videoId}
-                style={{ maxWidth: 325, minWidth: 325, margin: 0 }}
-              >
-                <section>
-                  <a target="_blank" rel="noreferrer" href={`${PROFILE_URL}/video/${videoId}`}>
-                    @{TIKTOK_HANDLE}
-                  </a>
-                </section>
-              </blockquote>
+            {/* overflow-hidden + fixed height crops TikTok's tall caption footer;
+                the inner negative margin nudges the embed up so the top chrome
+                strip (TikTok logo + pink seek bar) is cropped too — leaving just
+                the video. Width stays 325 (TikTok's embed minimum). */}
+            <div className="h-[512px] w-[325px] overflow-hidden rounded-2xl border-[2.5px] border-ink bg-paper shadow-hard">
+              <div className="-mt-[46px]">
+                <blockquote
+                  className="tiktok-embed !m-0"
+                  cite={`${PROFILE_URL}/video/${videoId}`}
+                  data-video-id={videoId}
+                  style={{ maxWidth: 325, minWidth: 325, margin: 0 }}
+                >
+                  <section>
+                    <a target="_blank" rel="noreferrer" href={`${PROFILE_URL}/video/${videoId}`}>
+                      @{TIKTOK_HANDLE}
+                    </a>
+                  </section>
+                </blockquote>
+              </div>
             </div>
           </div>
         ))}
