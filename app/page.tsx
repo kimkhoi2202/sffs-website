@@ -25,7 +25,7 @@ const STEPS: StepItem[] = [
   {
     label: "Step 1",
     title: "Pick a dumb little game",
-    body: "2048, block blast, memory challenges — quick rounds that actually make you think, not zone out.",
+    body: "Jump into a quick round — the kind that actually makes you think, not zone out.",
   },
   {
     label: "Step 2",
@@ -43,7 +43,7 @@ const FEATURES: Feature[] = [
   {
     icon: Gamepad2,
     title: "Real brain games",
-    body: "2048, block blast, and memory challenges — not mindless tap-to-win.",
+    body: "Genuinely tricky rounds that reward focus and memory — not mindless tap-to-win.",
   },
   {
     icon: TrendingUp,
@@ -136,7 +136,7 @@ const TESTIMONIALS: Testimonial[] = [
     circleColor: "paper",
   },
   {
-    quote: "Replaced my 2am doomscroll with block blast. My brain said thank you.",
+    quote: "Replaced my 2am doomscroll with a few quick rounds. My brain said thank you.",
     name: "Sam K.",
     role: "Reformed doomscroller",
     avatarImage: "/testimonials/sam.png",
@@ -148,7 +148,7 @@ const TESTIMONIALS: Testimonial[] = [
 const FAQ: FaqItem[] = [
   {
     q: "What is this, exactly?",
-    a: "A dumb little game that knows exactly how smart you are. Quick rounds of 2048, block blast, and memory challenges that score your brain and rank you against everyone else.",
+    a: "A dumb little game that knows exactly how smart you are. Quick brain-game rounds that score your brain and rank you against everyone else.",
   },
   {
     q: "Is it actually fun, or is it secretly homework?",

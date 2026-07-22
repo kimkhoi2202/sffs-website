@@ -83,7 +83,7 @@ export function VideoShowcase({
       {/* Full-bleed marquee: the embeds auto-scroll continuously, same as the
           testimonials strip. Marquee duplicates its children for a seamless loop,
           so each video renders twice (~16 iframes total — fine for this count). */}
-      <Marquee speed={60} gap="1.25rem" className="mt-10 md:mt-12">
+      <Marquee speed={60} gap="1.25rem" className="mt-10 py-6 md:mt-12">
         {VIDEO_IDS.map((videoId) => (
           <div key={videoId} className="shrink-0">
             {/* Fixed height + overflow-hidden crops TikTok's tall caption/sound
