@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { getSupabaseAdmin } from "@/lib/supabase";
+import { insertEmailSignup } from "@/lib/email-store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -54,11 +54,11 @@ interface SignupBody {
 /**
  * Capture an email lead from the pricing "get access" form.
  *
- * POST { email, source? } -> validates the email server-side, then inserts into
- * the `email_signups` table using the SERVICE ROLE client (which bypasses RLS).
- * Duplicate emails are ignored gracefully (ON CONFLICT DO NOTHING), so a repeat
- * submit still returns { ok: true }. Never echoes the service role key or raw DB
- * errors back to the client.
+ * POST { email, source? } -> validates the email server-side, then forwards it
+ * to the email proxy (AWS Lambda -> Aurora via the RDS Data API). Duplicate
+ * emails are ignored gracefully (ON CONFLICT DO NOTHING), so a repeat submit
+ * still returns { ok: true }. Never echoes the shared secret or raw errors back
+ * to the client.
  */
 export async function POST(request: NextRequest) {
   const ip =
@@ -111,27 +111,7 @@ export async function POST(request: NextRequest) {
   };
 
   try {
-    const supabase = getSupabaseAdmin();
-    const { error } = await supabase
-      .from("email_signups")
-      .upsert(
-        { email, source, meta },
-        { onConflict: "email", ignoreDuplicates: true },
-      );
-
-    if (error) {
-      // With ignoreDuplicates this shouldn't fire for dupes, but treat a unique
-      // violation as success (they're already on the list) just in case.
-      if ((error as { code?: string }).code === "23505") {
-        return NextResponse.json({ ok: true });
-      }
-      console.error("email_signups insert failed:", error.message);
-      return NextResponse.json(
-        { ok: false, error: "Something went wrong. Please try again." },
-        { status: 500 },
-      );
-    }
-
+    await insertEmailSignup({ email, source, meta });
     return NextResponse.json({ ok: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unexpected error.";
