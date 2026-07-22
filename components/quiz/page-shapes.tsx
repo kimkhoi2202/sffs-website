@@ -375,6 +375,11 @@ export function PageShapes() {
   const [colors, setColors] = useState<ShapeColor[]>(() => ITEMS.map((it) => it.color ?? "blue"));
   const colorsRef = useRef<ShapeColor[]>(ITEMS.map((it) => it.color ?? "blue"));
 
+  // The shapes are the HERO's decorative field. Only render them on pages that
+  // actually have a `.fella-hero` (the home hero); routes without one (e.g.
+  // /parents) get no shapes. Set in measure() below, pre-paint via layout effect.
+  const [hasHero, setHasHero] = useState(false);
+
   const [mvs] = useState(() =>
     ITEMS.map(() => ({
       x: motionValue(0),
@@ -426,6 +431,7 @@ export function PageShapes() {
   useIsomorphicLayoutEffect(() => {
     const measure = () => {
       const hero = document.querySelector<HTMLElement>(".fella-hero");
+      setHasHero(!!hero);
       const r = hero?.getBoundingClientRect();
       const w = r?.width || window.innerWidth;
       const heroTop = (r?.top ?? 0) + window.scrollY;
@@ -742,6 +748,9 @@ export function PageShapes() {
     }
     releaseRef.current = { i: d.i, vx, vy };
   };
+
+  // No hero on this route → no shape field (keeps calmer pages like /parents clean).
+  if (!hasHero) return null;
 
   return (
     <div

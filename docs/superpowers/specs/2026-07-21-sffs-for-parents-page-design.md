@@ -162,3 +162,11 @@ Brought the parents page in line with Khoi's latest homepage treatments:
 - **Wavy section dividers** (`SectionDivider`) between every seam, varied variants (swoop off the hero, then doubleWave / peaks / scallopBig / blob / arch / stepped / torn). Removed the now-redundant `bordered` from the custom sections (the wave is the edge).
 - **Hero shape bounce:** marked the hero `.fella-hero` so `page-shapes` confines the draggable shapes to it and bounces them off its edges (roomy side margins on the short hero keep them clear of the headline).
 - **Animated water footer:** already inherited from the root layout (`SiteFooter`); the green CTA → footer seam is the footer's own water wave (no divider).
+
+## Revision — 2026-07-22 (calm it down)
+
+User felt the bright/fun treatment was distracting for a parent audience. Dialed it back:
+- **Neutral palette:** sections are now cream/paper (one soft blue accent on the closing CTA) instead of the blue/ink/mint/coral/yellow color-blocking. Functional color (comparison card coding, feature icons) stays.
+- **No hero shapes:** the draggable shape field is now home-hero-only — `page-shapes.tsx` renders nothing unless a `.fella-hero` exists, so `/parents` (no hero marker) has no shapes. Homepage unaffected.
+- **Subtler dividers:** all seams use one gentle `curve` variant at `size="sm"` instead of the varied loud waves.
+- Manifesto is a bold statement on paper (not a black band). Nav CTA now targets `/#waitlist` (see homepage waitlist change).

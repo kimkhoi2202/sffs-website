@@ -55,19 +55,23 @@ const FAQ: FaqItem[] = [
   },
 ];
 
+/*
+  This page is intentionally CALMER than the home page: a mostly neutral
+  cream/paper palette (one soft blue accent on the closing CTA), gentle
+  same-variant "curve" dividers, and NO draggable hero shapes (the shape field
+  is home-hero-only — see components/quiz/page-shapes.tsx). Parent-facing =
+  trustworthy and quiet, not loud.
+*/
 export default function ParentsPage() {
   return (
     <main id="main" className="flex-1">
-      <QuizNav pinned homeHref="/" ctaHref="/#pricing" />
+      <QuizNav pinned homeHref="/" ctaHref="/#waitlist" />
 
-      {/* 1. Hero — pt offsets the fixed nav so the headline isn't tucked under it.
-          `fella-hero` marks this as the shapes' confinement box (page-shapes.tsx),
-          so the draggable shapes bounce inside the hero like they do on the home
-          hero. `relative isolate` gives them a clean stacking context. */}
+      {/* 1. Hero — pt offsets the fixed nav so the headline isn't tucked under it. */}
       <Section
-        background="blue"
+        background="cream"
         padding="lg"
-        className="fella-hero relative isolate pt-[96px] md:pt-[120px]"
+        className="pt-[96px] md:pt-[120px]"
         container="prose"
         containerClassName="text-center"
       >
@@ -86,24 +90,18 @@ export default function ParentsPage() {
         </div>
       </Section>
 
-      {/* Wavy seams (brand divider language) flow each color band into the next —
-          same system as the homepage. The swoop echoes the homepage hero's edge;
-          adjacent sections drop their own borders since the wave IS the edge. */}
-      <SectionDivider top="blue" bottom="ink" variant="swoop" size="lg" />
+      {/* Gentle, consistent "curve" seams keep the neutral bands quietly distinct
+          without the home page's louder, varied waves. */}
+      <SectionDivider top="cream" bottom="paper" variant="curve" size="sm" />
 
-      {/* 2. Manifesto strip */}
-      <Section
-        background="ink"
-        padding="md"
-        container="prose"
-        containerClassName="text-center"
-      >
+      {/* 2. Manifesto — one bold statement, on neutral paper (not a loud black band). */}
+      <Section background="paper" padding="md" container="prose" containerClassName="text-center">
         <Heading as={2} size="xl" className="text-balance">
           Everything online is trying to make your kid dumber. We make thinking the flex.
         </Heading>
       </Section>
 
-      <SectionDivider top="ink" bottom="cream" variant="doubleWave" />
+      <SectionDivider top="paper" bottom="cream" variant="curve" size="sm" />
 
       {/* 3. Comparison — the single scannable "is it just more screen time?" answer */}
       <Comparison
@@ -127,7 +125,7 @@ export default function ParentsPage() {
         ]}
       />
 
-      <SectionDivider top="cream" bottom="paper" variant="peaks" />
+      <SectionDivider top="cream" bottom="paper" variant="curve" size="sm" />
 
       {/* 4. The science — measurement framing, no IQ-boost claim (hard guardrail). */}
       <Section background="paper" padding="lg" container="prose">
@@ -149,12 +147,12 @@ export default function ParentsPage() {
         </div>
       </Section>
 
-      <SectionDivider top="paper" bottom="mint" variant="scallopBig" size="lg" />
+      <SectionDivider top="paper" bottom="cream" variant="curve" size="sm" />
 
       {/* 5. Feature grid — three tight cards. */}
       <FeatureGrid
         revealContent
-        background="mint"
+        background="cream"
         title="What it actually is"
         eyebrow=""
         intro=""
@@ -162,10 +160,10 @@ export default function ParentsPage() {
         features={FEATURES}
       />
 
-      <SectionDivider top="mint" bottom="coral" variant="blob" />
+      <SectionDivider top="cream" bottom="paper" variant="curve" size="sm" />
 
       {/* 6. Pricing rationale — no number (undecided); explains why it isn't free. */}
-      <Section background="coral" padding="lg" container="prose">
+      <Section background="paper" padding="lg" container="prose">
         <Eyebrow>Why it costs money</Eyebrow>
         <Heading as={2} size="xl" className="mt-4">
           You pay, so advertisers don&apos;t
@@ -178,10 +176,10 @@ export default function ParentsPage() {
         </p>
       </Section>
 
-      <SectionDivider top="coral" bottom="yellow" variant="arch" />
+      <SectionDivider top="paper" bottom="cream" variant="curve" size="sm" />
 
       {/* 7. Mission block — one tight paragraph. */}
-      <Section background="yellow" padding="lg" container="prose">
+      <Section background="cream" padding="lg" container="prose">
         <Eyebrow>Our mission</Eyebrow>
         <Heading as={2} size="xl" className="mt-4">
           We want thinking to be the flex
@@ -195,7 +193,7 @@ export default function ParentsPage() {
         </p>
       </Section>
 
-      <SectionDivider top="yellow" bottom="paper" variant="stepped" size="lg" />
+      <SectionDivider top="cream" bottom="paper" variant="curve" size="sm" />
 
       {/* 8. FAQ — the four simplest concerns. */}
       <Faq
@@ -206,13 +204,12 @@ export default function ParentsPage() {
         items={FAQ}
       />
 
-      <SectionDivider top="paper" bottom="green" variant="torn" />
+      <SectionDivider top="paper" bottom="blue" variant="curve" size="sm" />
 
-      {/* 9. Closing CTA (no form). Green → footer seam is the footer's own animated
-          water wave (see site-footer.tsx), so no divider here. */}
+      {/* 9. Closing CTA (no form) — the page's single soft color accent. */}
       <CtaBand
         revealContent
-        background="green"
+        background="blue"
         align="center"
         title="See what they'll actually be playing"
         subtitle=""
