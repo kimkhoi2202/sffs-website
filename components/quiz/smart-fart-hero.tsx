@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { Fragment, useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -13,14 +13,27 @@ import { cn } from "@/lib/utils";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
-/** Split a word into per-character spans so GSAP can stagger them. */
+/**
+ * Split text into per-character `.char` spans (so GSAP can stagger them), but
+ * GROUP each word in an inline-block `whitespace-nowrap` wrapper so a word can
+ * never break mid-way (e.g. "SMELLA?" splitting into "S" / "MELLA?"). Lines only
+ * break BETWEEN words, at the plain space between wrappers.
+ */
 function Chars({ text, className }: { text: string; className?: string }) {
+  const words = text.split(" ");
   return (
     <span aria-label={text} className={cn("inline-block", className)}>
-      {text.split("").map((ch, i) => (
-        <span key={`${ch}-${i}`} aria-hidden className="char inline-block">
-          {ch === " " ? "\u00A0" : ch}
-        </span>
+      {words.map((word, wi) => (
+        <Fragment key={`${word}-${wi}`}>
+          {wi > 0 ? " " : null}
+          <span className="inline-block whitespace-nowrap">
+            {Array.from(word).map((ch, ci) => (
+              <span key={`${ch}-${ci}`} aria-hidden className="char inline-block">
+                {ch}
+              </span>
+            ))}
+          </span>
+        </Fragment>
       ))}
     </span>
   );
