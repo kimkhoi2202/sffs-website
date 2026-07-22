@@ -114,6 +114,7 @@ export default function ParentsPage() {
         revealContent
         background="cream"
         title="The feed vs. the fella"
+        eyebrow=""
         theirLabel="Brain rot"
         ourLabel="SFFS"
         theirPoints={[
@@ -135,6 +136,8 @@ export default function ParentsPage() {
         revealContent
         background="paper"
         title="What it actually is"
+        eyebrow=""
+        intro=""
         columns={2}
         features={FEATURES}
       />
@@ -165,6 +168,7 @@ export default function ParentsPage() {
         revealContent
         background="paper"
         title="Questions parents actually ask"
+        eyebrow=""
         items={FAQ}
       />
 
@@ -174,6 +178,8 @@ export default function ParentsPage() {
         background="green"
         align="center"
         title="See what they'll actually be playing"
+        subtitle=""
+        badge=""
         primaryCta={{ label: "Play Smart Fella or Fart Smella", href: "/" }}
         secondaryCta={null}
       />
