@@ -99,7 +99,7 @@ export function QuizNav({
         <div className="col-start-3 flex items-center justify-self-end gap-3 sm:gap-5">
           <Link
             href="/parents"
-            className="hidden font-sans text-sm font-bold uppercase tracking-wide leading-none text-ink underline-offset-4 hover:underline sm:inline-block"
+            className="inline-block font-sans text-xs sm:text-sm font-bold uppercase tracking-wide leading-none text-ink underline-offset-4 hover:underline"
           >
             For Parents
           </Link>
