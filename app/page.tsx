@@ -6,12 +6,14 @@ import { QuizNav } from "@/components/quiz/quiz-nav";
 import { Steps, type StepItem } from "@/components/sections/steps";
 import { Comparison } from "@/components/sections/comparison";
 import { FeatureGrid, type Feature } from "@/components/sections/feature-grid";
-import { Testimonials, type Testimonial } from "@/components/sections/testimonials";
+import { TestimonialMarquee, type Testimonial } from "@/components/sections/testimonials";
 import { Faq, type FaqItem } from "@/components/sections/faq";
 import { CtaBand } from "@/components/sections/cta-band";
 import { VideoShowcase } from "@/components/sections/video-showcase";
 import { FollowUs } from "@/components/sections/follow-us";
 import { Waitlist } from "@/components/sections/waitlist";
+import { Section } from "@/components/ui/section";
+import { Heading } from "@/components/ui/heading";
 import { SectionDivider } from "@/components/ui/section-divider";
 
 export const metadata: Metadata = {
@@ -236,16 +238,19 @@ export default function SmartOrFartPage() {
         features={FEATURES}
       />
 
-      {/* No divider: the merged gray "what you get" block flows straight into the
-          (also-gray) testimonials as ONE continuous gray area. The two sections'
-          own vertical padding keeps "LIVES HAVE BEEN CHANGED" from cramping. */}
-      <Testimonials
-        revealContent
-        background="gray"
-        eyebrow=""
-        title="Lives have been changed"
-        testimonials={TESTIMONIALS}
-      />
+      {/* Social proof as a scrolling MARQUEE, not a second card grid — otherwise
+          it reads as "grid stacked on grid" right after the feature grid. Stays on
+          the same gray block; the motion + single row break the visual rhythm. */}
+      <Section background="gray" container={false} padding="md">
+        <div className="mx-auto max-w-page px-4 text-center md:px-8">
+          <Heading as={2} size="xl">
+            Lives have been changed
+          </Heading>
+        </div>
+        <div className="mt-8">
+          <TestimonialMarquee testimonials={TESTIMONIALS} />
+        </div>
+      </Section>
 
       <SectionDivider top="gray" bottom="coral" variant="scallopBig" size="lg" />
 
