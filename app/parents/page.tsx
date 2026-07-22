@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Gamepad2, Sparkles, ShieldCheck } from "lucide-react";
 
 import { QuizNav } from "@/components/quiz/quiz-nav";
 import { Section } from "@/components/ui/section";
@@ -8,7 +7,6 @@ import { Eyebrow } from "@/components/ui/eyebrow";
 import { Button } from "@/components/ui/button";
 import { SectionDivider } from "@/components/ui/section-divider";
 import { Comparison } from "@/components/sections/comparison";
-import { FeatureGrid, type Feature } from "@/components/sections/feature-grid";
 import { Faq, type FaqItem } from "@/components/sections/faq";
 import { CtaBand } from "@/components/sections/cta-band";
 
@@ -17,24 +15,6 @@ export const metadata: Metadata = {
   description:
     "The good kind of screen time. A dumb little game that makes thinking a flex — built on real working-memory science, with no ads and no bottomless feed.",
 };
-
-const FEATURES: Feature[] = [
-  {
-    icon: Gamepad2,
-    title: "A game, not a feed",
-    body: "Rounds end. No infinite scroll, no autoplay.",
-  },
-  {
-    icon: Sparkles,
-    title: "Speaks their language",
-    body: "Goofy on purpose, so they choose it themselves.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "No ads, ever",
-    body: "We don't sell your kid's attention to anyone.",
-  },
-];
 
 const FAQ: FaqItem[] = [
   {
@@ -56,18 +36,18 @@ const FAQ: FaqItem[] = [
 ];
 
 /*
-  This page is intentionally CALMER than the home page: a mostly neutral
-  cream/paper palette (one soft blue accent on the closing CTA), gentle
-  same-variant "curve" dividers, and NO draggable hero shapes (the shape field
-  is home-hero-only — see components/quiz/page-shapes.tsx). Parent-facing =
-  trustworthy and quiet, not loud.
+  Intentionally CALM (neutral cream/paper, one soft blue CTA accent, gentle
+  same-variant dividers, no hero shapes) and TIGHT: one distinct idea per
+  section — the hook (hero), the concrete contrast (comparison), the real
+  challenge (science), why it costs money (pricing), practical questions (FAQ).
+  No theme-restating filler sections.
 */
 export default function ParentsPage() {
   return (
     <main id="main" className="flex-1">
       <QuizNav pinned homeHref="/" ctaHref="/#waitlist" />
 
-      {/* 1. Hero — pt offsets the fixed nav so the headline isn't tucked under it. */}
+      {/* 1. Hero — the anti-brain-rot hook (states the mission once). */}
       <Section
         background="cream"
         padding="lg"
@@ -90,23 +70,12 @@ export default function ParentsPage() {
         </div>
       </Section>
 
-      {/* Gentle, consistent "curve" seams keep the neutral bands quietly distinct
-          without the home page's louder, varied waves. */}
       <SectionDivider top="cream" bottom="paper" variant="curve" size="sm" />
 
-      {/* 2. Manifesto — one bold statement, on neutral paper (not a loud black band). */}
-      <Section background="paper" padding="md" container="prose" containerClassName="text-center">
-        <Heading as={2} size="xl" className="text-balance">
-          Everything online is trying to make your kid dumber. We make thinking the flex.
-        </Heading>
-      </Section>
-
-      <SectionDivider top="paper" bottom="cream" variant="curve" size="sm" />
-
-      {/* 3. Comparison — the single scannable "is it just more screen time?" answer */}
+      {/* 2. Comparison — the concrete "how it's different from the feed." */}
       <Comparison
         revealContent
-        background="cream"
+        background="paper"
         title="The feed vs. the fella"
         eyebrow=""
         theirLabel="Brain rot"
@@ -125,10 +94,10 @@ export default function ParentsPage() {
         ]}
       />
 
-      <SectionDivider top="cream" bottom="paper" variant="curve" size="sm" />
+      <SectionDivider top="paper" bottom="cream" variant="curve" size="sm" />
 
-      {/* 4. The science — measurement framing, no IQ-boost claim (hard guardrail). */}
-      <Section background="paper" padding="lg" container="prose">
+      {/* 3. The science — measurement framing, no IQ-boost claim (hard guardrail). */}
+      <Section background="cream" padding="lg" container="prose">
         <Eyebrow>The (boring) science</Eyebrow>
         <Heading as={2} size="xl" className="mt-4">
           A workout, not a time-killer
@@ -147,22 +116,9 @@ export default function ParentsPage() {
         </div>
       </Section>
 
-      <SectionDivider top="paper" bottom="cream" variant="curve" size="sm" />
-
-      {/* 5. Feature grid — three tight cards. */}
-      <FeatureGrid
-        revealContent
-        background="cream"
-        title="What it actually is"
-        eyebrow=""
-        intro=""
-        columns={3}
-        features={FEATURES}
-      />
-
       <SectionDivider top="cream" bottom="paper" variant="curve" size="sm" />
 
-      {/* 6. Pricing rationale — no number (undecided); explains why it isn't free. */}
+      {/* 4. Why it costs money — the pillar (no number; explains the ad-free model). */}
       <Section background="paper" padding="lg" container="prose">
         <Eyebrow>Why it costs money</Eyebrow>
         <Heading as={2} size="xl" className="mt-4">
@@ -178,35 +134,18 @@ export default function ParentsPage() {
 
       <SectionDivider top="paper" bottom="cream" variant="curve" size="sm" />
 
-      {/* 7. Mission block — one tight paragraph. */}
-      <Section background="cream" padding="lg" container="prose">
-        <Eyebrow>Our mission</Eyebrow>
-        <Heading as={2} size="xl" className="mt-4">
-          We want thinking to be the flex
-        </Heading>
-        <p className="mt-6 text-lg font-medium leading-relaxed">
-          Kids are handed screens engineered to hold them as long as humanly possible.
-          We&apos;re building the opposite — something genuinely fun and genuinely hard,
-          where the flex is being sharp, not racking up hours. If we can make{" "}
-          <em>&ldquo;I&apos;m smart&rdquo;</em>{" "}
-          the coolest thing a kid can say, we&apos;ve done our job.
-        </p>
-      </Section>
-
-      <SectionDivider top="cream" bottom="paper" variant="curve" size="sm" />
-
-      {/* 8. FAQ — the four simplest concerns. */}
+      {/* 5. FAQ — the practical parent questions. */}
       <Faq
         revealContent
-        background="paper"
+        background="cream"
         title="Questions parents actually ask"
         eyebrow=""
         items={FAQ}
       />
 
-      <SectionDivider top="paper" bottom="blue" variant="curve" size="sm" />
+      <SectionDivider top="cream" bottom="blue" variant="curve" size="sm" />
 
-      {/* 9. Closing CTA (no form) — the page's single soft color accent. */}
+      {/* 6. Closing CTA (no form) — the page's single soft color accent. */}
       <CtaBand
         revealContent
         background="blue"
