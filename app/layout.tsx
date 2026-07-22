@@ -5,6 +5,9 @@ import { SmoothScroll } from "@/components/quiz/smooth-scroll";
 import { MusicToggle } from "@/components/quiz/music-toggle";
 import { SiteFooter } from "@/components/sections/site-footer";
 import { PageShapes } from "@/components/quiz/page-shapes";
+import { PostHogProvider } from "@/components/analytics/posthog-provider";
+import { EngagementTracker } from "@/components/analytics/engagement-tracker";
+import { LinkTracker } from "@/components/analytics/link-tracker";
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -65,21 +68,28 @@ export default function RootLayout({
       {/* `relative` so the document-glued shapes overlay (absolute inset-0)
           spans the whole document as its containing block. */}
       <body className="relative flex min-h-full flex-col bg-paper text-ink antialiased">
-        <a
-          href="#main"
-          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-full focus:border-[2.5px] focus:border-ink focus:bg-yellow focus:px-4 focus:py-2 focus:font-bold focus:text-ink"
-        >
-          Skip to content
-        </a>
-        <SmoothScroll>
-          {children}
-          <SiteFooter />
-          <MusicToggle />
-        </SmoothScroll>
-        {/* Page-level draggable shape field — a document-glued overlay mounted
-            OUTSIDE the hero so it's never clipped by it; the shapes confine
-            themselves to the hero and bounce off its wavy divider edge. */}
-        <PageShapes />
+        <PostHogProvider>
+          <a
+            href="#main"
+            className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-full focus:border-[2.5px] focus:border-ink focus:bg-yellow focus:px-4 focus:py-2 focus:font-bold focus:text-ink"
+          >
+            Skip to content
+          </a>
+          <SmoothScroll>
+            {children}
+            <SiteFooter />
+            <MusicToggle />
+          </SmoothScroll>
+          {/* Page-level draggable shape field — a document-glued overlay mounted
+              OUTSIDE the hero so it's never clipped by it; the shapes confine
+              themselves to the hero and bounce off its wavy divider edge. */}
+          <PageShapes />
+          {/* Scroll-depth + section-view analytics (IntersectionObserver). Renders
+              nothing; safe no-op on routes without the tracked sections. */}
+          <EngagementTracker />
+          {/* Outbound + social link-click analytics (delegated listener). */}
+          <LinkTracker />
+        </PostHogProvider>
       </body>
     </html>
   );

@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { insertEmailSignup } from "@/lib/email-store";
+import { captureEmailCapturedServer } from "@/lib/posthog-server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -112,6 +113,9 @@ export async function POST(request: NextRequest) {
 
   try {
     await insertEmailSignup({ email, source, meta });
+    // Ad-blocker-proof server-side conversion truth (no PII — source/attribution
+    // only). Runs after the durable insert; never throws.
+    await captureEmailCapturedServer(request, source);
     return NextResponse.json({ ok: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unexpected error.";
