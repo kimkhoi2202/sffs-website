@@ -135,7 +135,7 @@ export function QuizNav() {
           <Button
             href="#pricing"
             variant="coral"
-            size="sm"
+            size="md"
             className="col-start-3 justify-self-end font-sans font-bold text-lg uppercase leading-none tracking-[-0.01em]"
           >
             Take the test

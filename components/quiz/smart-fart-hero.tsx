@@ -147,7 +147,7 @@ export function SmartFartHero({
   return (
     <section
       ref={root}
-      className="fella-hero relative isolate flex min-h-[calc(100svh_+_56px)] flex-col items-center overflow-hidden bg-yellow px-4 py-8 text-center sm:min-h-[calc(100svh_+_78px)] sm:py-12 md:min-h-[calc(100svh_+_100px)]"
+      className="fella-hero relative flex min-h-[calc(100svh_+_56px)] flex-col items-center overflow-hidden bg-yellow px-4 py-8 text-center sm:min-h-[calc(100svh_+_78px)] sm:py-12 md:min-h-[calc(100svh_+_100px)]"
     >
       {/*
         BASE background layer — perspective "synthwave floor" grid backdrop.
@@ -201,8 +201,15 @@ export function SmartFartHero({
         on a white block). Same swoop path + stroke as SectionDivider variant
         "swoop" (components/ui/section-divider.tsx), so the seam into the white
         section below is visually identical to the old divider. z-[1] keeps it
-        above the grid (z-0) but below the content + scroll cue (z-10); the shape
-        overlay (page-level, z-30) still floats above everything.
+        above the grid (z-0) but below the shape overlay (page-level, z-30). The
+        hero CONTENT (.fella-inner + scroll cue) sits at z-40 — ABOVE the z-30
+        shapes — so the "Take the test" CTA (and the headline) are always tappable
+        and legible even when a shape drifts over them; the shapes still float
+        above the yellow + grid + wave, just behind the text. (This matches the
+        design-system convention used by the legal pages + music toggle: z-30 =
+        shapes, z-40 = above-shape content, z-50 = nav.) The hero deliberately
+        does NOT set `isolation: isolate`, so the content's z-40 competes with the
+        page-level z-30 overlay at the document's root stacking context.
 
         page-shapes.tsx measures THIS element (.fella-wave) to set the shapes'
         bottom bounce bound to the wave, so shapes and background share one edge.
@@ -229,7 +236,7 @@ export function SmartFartHero({
         </svg>
       </div>
 
-      <div className="fella-inner relative z-10 mx-auto flex w-full max-w-5xl flex-1 flex-col items-center justify-center">
+      <div className="fella-inner relative z-40 mx-auto flex w-full max-w-5xl flex-1 flex-col items-center justify-center">
         <Badge color="coral" size="md" shadow="hard" className="fella-eyebrow rotate-[-2deg]">
           {eyebrow}
         </Badge>
@@ -249,14 +256,14 @@ export function SmartFartHero({
         <h1 className="mt-[clamp(1rem,3.4vh,2.5rem)] block text-center font-display uppercase leading-[0.85] tracking-[-0.02em] [perspective:800px]">
           <Chars
             text={smartWord}
-            className="fella-smart block text-[clamp(2.5rem,min(15vw,14vh),12rem)] text-blue [-webkit-text-stroke:3px_#000] [text-shadow:0.04em_0.04em_0_#000]"
+            className="fella-smart block whitespace-nowrap text-[clamp(2.5rem,min(15vw,14vh),12rem)] text-blue [-webkit-text-stroke:3px_#000] [text-shadow:0.04em_0.04em_0_#000]"
           />
           <span className="fella-or my-[clamp(0.6rem,1.9vh,1.5rem)] inline-block rounded-full border-[2.5px] border-ink bg-paper px-5 py-1 font-display text-[clamp(1.05rem,3vw,2.15rem)] uppercase leading-none shadow-hard-sm">
             {orWord}
           </span>
           <Chars
             text={fartWord}
-            className="fella-fart block text-[clamp(2.5rem,min(15vw,14vh),12rem)] text-coral [-webkit-text-stroke:3px_#000] [text-shadow:0.04em_0.04em_0_#000]"
+            className="fella-fart block whitespace-nowrap text-[clamp(2.5rem,min(15vw,14vh),12rem)] text-coral [-webkit-text-stroke:3px_#000] [text-shadow:0.04em_0.04em_0_#000]"
           />
         </h1>
 
@@ -264,8 +271,10 @@ export function SmartFartHero({
           {subtitle}
         </p>
 
-        <div className="fella-cta mt-[clamp(1rem,3.4vh,2.5rem)] flex flex-col items-center gap-[clamp(1.15rem,3.8vh,2.85rem)]">
-          <p className="flex items-center justify-center gap-2 text-sm font-medium text-ink/70">
+        <div className="fella-cta relative z-40 mt-[clamp(1rem,3.4vh,2.5rem)] flex flex-col items-center gap-[clamp(1.15rem,3.8vh,2.85rem)]">
+          {/* The "Press T" hint is meaningless on touch (no keyboard) and steals a
+              vertical line on short phones — show it only for fine pointers. */}
+          <p className="fine-pointer-only items-center justify-center gap-2 text-sm font-medium text-ink/70">
             <span>Press</span>
             <kbd className="inline-flex size-7 items-center justify-center rounded-md border-2 border-ink bg-paper font-sans text-sm font-bold leading-none text-ink shadow-hard-xs">
               T
@@ -281,7 +290,7 @@ export function SmartFartHero({
       <a
         href="#how"
         aria-label="Scroll to how it works"
-        className="fella-cue relative z-10 mt-[clamp(1rem,3vh,2.5rem)] shrink-0 text-xs font-bold uppercase tracking-[0.14em]"
+        className="fella-cue relative z-40 mt-[clamp(1rem,3vh,2.5rem)] shrink-0 text-xs font-bold uppercase tracking-[0.14em]"
       >
         <span className="flex flex-col items-center gap-1.5">
           Scroll
