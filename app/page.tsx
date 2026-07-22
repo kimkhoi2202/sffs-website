@@ -14,10 +14,10 @@ import { Steps, type StepItem } from "@/components/sections/steps";
 import { Comparison } from "@/components/sections/comparison";
 import { FeatureGrid, type Feature } from "@/components/sections/feature-grid";
 import { Testimonials, type Testimonial } from "@/components/sections/testimonials";
-import { Pricing, type Tier } from "@/components/sections/pricing";
 import { Faq, type FaqItem } from "@/components/sections/faq";
 import { CtaBand } from "@/components/sections/cta-band";
 import { FollowUs } from "@/components/sections/follow-us";
+import { Waitlist } from "@/components/sections/waitlist";
 import { SectionDivider } from "@/components/ui/section-divider";
 
 export const metadata: Metadata = {
@@ -151,23 +151,6 @@ const TESTIMONIALS: Testimonial[] = [
   },
 ];
 
-const TIERS: Tier[] = [
-  {
-    name: "The Fella Test",
-    price: "$67",
-    billingNote: "one-time",
-    description: "One full diagnostic, your complete report, and a shareable result card.",
-    features: [
-      "The full 27-question test",
-      "Your Fella Score + report",
-      "Shareable result card",
-      "Personal improvement plan",
-    ],
-    cta: "Take the test",
-    href: "#pricing",
-  },
-];
-
 const FAQ: FaqItem[] = [
   {
     q: "Is this scientifically valid?",
@@ -217,7 +200,7 @@ export default function SmartOrFartPage() {
         eyebrow=""
         title="Three steps to the truth"
         steps={STEPS}
-        cta={{ label: "Take the test", href: "#pricing", variant: "green" }}
+        cta={{ label: "Join the waitlist", href: "#waitlist", variant: "green" }}
       />
 
       {/* Outer TOP edge of the merged gray block (comparison + what-you-get). */}
@@ -273,17 +256,7 @@ export default function SmartOrFartPage() {
 
       <SectionDivider top="gray" bottom="coral" variant="scallopBig" size="lg" />
 
-      <Pricing
-        revealContent
-        fullViewport
-        staticCards
-        id="pricing"
-        className="scroll-mt-nav"
-        background="coral"
-        eyebrow=""
-        title="Settle it for the price of a coffee"
-        tiers={TIERS}
-      />
+      <Waitlist id="waitlist" className="scroll-mt-nav" background="coral" />
 
       <SectionDivider top="coral" bottom="paper" variant="blob" />
 
@@ -303,10 +276,10 @@ export default function SmartOrFartPage() {
         revealContent
         background="green"
         align="center"
-        badge="Takes 5 minutes"
+        badge="Launching soon"
         title="So… smart fella or fart smella?"
         subtitle=""
-        primaryCta={{ label: "Take the test", href: "#pricing" }}
+        primaryCta={{ label: "Join the waitlist", href: "#waitlist" }}
         secondaryCta={null}
       />
 

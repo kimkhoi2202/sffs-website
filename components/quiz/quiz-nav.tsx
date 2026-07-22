@@ -49,7 +49,7 @@ const NAV_EDGE = "M0,16 C120,4 1320,4 1440,16";
 export function QuizNav({
   pinned = false,
   homeHref = "#top",
-  ctaHref = "#pricing",
+  ctaHref = "#waitlist",
 }: {
   pinned?: boolean;
   homeHref?: string;
@@ -154,7 +154,7 @@ export function QuizNav({
               size="sm"
               className="font-sans font-bold text-lg uppercase leading-none tracking-[-0.01em]"
             >
-              Take the test
+              Join the waitlist
             </Button>
           </div>
         </nav>

@@ -57,7 +57,7 @@ export function SmartFartHero({
   orWord = "or",
   fartWord = "Fart Smella?",
   subtitle = "A brutally honest 27-question diagnostic that scores your fella-ness and tells you exactly which one you are. Backed by vibes, peer pressure, and questionable science.",
-  primaryCta = { label: "Take the test", href: "#pricing" },
+  primaryCta = { label: "Join the waitlist", href: "#waitlist" },
 }: SmartFartHeroProps = {}) {
   const root = useRef<HTMLElement>(null);
 
@@ -136,9 +136,9 @@ export function SmartFartHero({
       ) {
         return;
       }
-      if (!document.getElementById("pricing")) return;
+      if (!document.getElementById("waitlist")) return;
       event.preventDefault();
-      scrollToQuizHash("#pricing");
+      scrollToQuizHash("#waitlist");
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
@@ -270,7 +270,7 @@ export function SmartFartHero({
             <kbd className="inline-flex size-7 items-center justify-center rounded-md border-2 border-ink bg-paper font-sans text-sm font-bold leading-none text-ink shadow-hard-xs">
               T
             </kbd>
-            <span>anytime to take the test</span>
+            <span>anytime to join the waitlist</span>
           </p>
           <Button href={primaryCta.href} variant="green" size="lg">
             {primaryCta.label}
