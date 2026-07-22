@@ -12,6 +12,8 @@ import {
 } from "react";
 import { motion, motionValue, useAnimationFrame } from "motion/react";
 
+import { trackHeroShapeDragged, trackHeroShapeThrown } from "@/lib/analytics/events";
+
 /*
   Draggable, self-recoloring neo-brutalist shape field, mounted once in
   app/layout.tsx.
@@ -407,6 +409,9 @@ export function PageShapes() {
   const pointerRef = useRef({ x: 0, y: 0 });
   const samplesRef = useRef<{ t: number; x: number; y: number }[]>([]);
   const releaseRef = useRef<{ i: number; vx: number; vy: number } | null>(null);
+  // Debounce hero_shape_dragged to once per shape per mount (a fidgety session
+  // must not emit hundreds of events — see plan §2.2).
+  const draggedTrackedRef = useRef<Set<string>>(new Set());
 
   const [colors, setColors] = useState<ShapeColor[]>(() => ITEMS.map((it) => it.color ?? "blue"));
   const colorsRef = useRef<ShapeColor[]>(ITEMS.map((it) => it.color ?? "blue"));
@@ -784,6 +789,17 @@ export function PageShapes() {
           ox: b.cx - (e.clientX + window.scrollX),
           oy: b.cy - (e.clientY + window.scrollY),
         };
+        // A press just became a real drag — record it once per shape/session.
+        const dit = items[p.i];
+        if (dit && !draggedTrackedRef.current.has(dit.id)) {
+          draggedTrackedRef.current.add(dit.id);
+          trackHeroShapeDragged({
+            shape_id: dit.id,
+            shape_type: dit.type,
+            shape_color: colorsRef.current[p.i],
+            is_touch: coarse,
+          });
+        }
       } else {
         return; // still ambiguous — wait for a clearer move
       }
@@ -818,6 +834,16 @@ export function PageShapes() {
         vx = (last.x - ref.x) / dtS;
         vy = (last.y - ref.y) / dtS;
       }
+    }
+    // A release above the throw threshold is an intentional "throw" gesture.
+    const tit = items[d.i];
+    const throwSpeed = Math.hypot(vx, vy);
+    if (tit && throwSpeed >= THROW_MIN) {
+      trackHeroShapeThrown({
+        shape_id: tit.id,
+        throw_speed: throwSpeed,
+        is_touch: coarse,
+      });
     }
     releaseRef.current = { i: d.i, vx, vy };
   };

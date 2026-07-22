@@ -229,6 +229,7 @@ export default function SmartOrFartPage() {
       <div className="relative">
       <Comparison
         revealContent
+        id="comparison"
         background="gray"
         eyebrow=""
         title="Which one are you, really?"
@@ -254,6 +255,7 @@ export default function SmartOrFartPage() {
           ACTUALLY GET" heading breathing room from the checklist cards above. */}
       <FeatureGrid
         revealContent
+        id="features"
         background="gray"
         className="pt-2 md:pt-6"
         eyebrow=""
@@ -268,6 +270,7 @@ export default function SmartOrFartPage() {
           own vertical padding keeps "LIVES HAVE BEEN CHANGED" from cramping. */}
       <Testimonials
         revealContent
+        id="testimonials"
         background="gray"
         eyebrow=""
         title="Lives have been changed"
@@ -293,6 +296,7 @@ export default function SmartOrFartPage() {
       <div className="relative">
       <Faq
         revealContent
+        id="faq"
         background="paper"
         eyebrow=""
         title="Questions from concerned fellas"
@@ -304,6 +308,7 @@ export default function SmartOrFartPage() {
 
       <CtaBand
         revealContent
+        id="cta_band"
         background="green"
         align="center"
         badge="Takes 5 minutes"
@@ -320,7 +325,7 @@ export default function SmartOrFartPage() {
           yellow→blue transition is NOT a divider here: the footer's own animated
           water wave (see components/sections/site-footer.tsx) is the sole seam —
           it overlaps this section and lets the yellow show above its crests. */}
-      <FollowUs revealContent background="yellow" />
+      <FollowUs revealContent id="follow_us" background="yellow" />
     </main>
   );
 }

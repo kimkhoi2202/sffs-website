@@ -9,6 +9,7 @@ import { ArrowDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { scrollToQuizHash } from "@/components/quiz/smooth-scroll";
+import { trackTestCtaActivated } from "@/lib/analytics/events";
 import { cn } from "@/lib/utils";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
@@ -138,6 +139,7 @@ export function SmartFartHero({
       }
       if (!document.getElementById("pricing")) return;
       event.preventDefault();
+      trackTestCtaActivated("key_t", "hero");
       scrollToQuizHash("#pricing");
     };
     window.addEventListener("keydown", onKeyDown);

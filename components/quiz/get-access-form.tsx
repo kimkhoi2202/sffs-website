@@ -1,8 +1,17 @@
 "use client";
 
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import {
+  trackEmailCaptured,
+  trackEmailCaptureStarted,
+  trackEmailCaptureSubmitted,
+  trackEmailCaptureValidationFailed,
+  trackEmailFieldFocused,
+  trackEmailFormViewed,
+  type ValidationFailReason,
+} from "@/lib/analytics/events";
 import { cn } from "@/lib/utils";
 
 type Status = "idle" | "submitting" | "error" | "success";
@@ -29,9 +38,31 @@ export function GetAccessForm({ className }: { className?: string }) {
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const successRef = useRef<HTMLDivElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  // Once-per-mount analytics guards so focus/first-keystroke/view fire once.
+  const focusedRef = useRef(false);
+  const startedRef = useRef(false);
 
   const submitting = status === "submitting";
   const invalid = status === "error" && Boolean(error);
+
+  // email_form_viewed — fire once when the form scrolls into view (plan §2.2).
+  useEffect(() => {
+    const el = formRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          trackEmailFormViewed();
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.4 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -41,12 +72,16 @@ export function GetAccessForm({ className }: { className?: string }) {
     if (!EMAIL_RE.test(trimmed)) {
       setStatus("error");
       setError("Hmm, that email looks off. Mind double-checking it?");
+      trackEmailCaptureValidationFailed("invalid_format_client");
       inputRef.current?.focus();
       return;
     }
 
     setStatus("submitting");
     setError(null);
+    // Passed the client regex → a real attempt. NOTE: the email is NEVER sent to
+    // PostHog; this event carries no properties (source/attribution ride super props).
+    trackEmailCaptureSubmitted();
 
     try {
       const res = await fetch("/api/access-signup", {
@@ -63,15 +98,27 @@ export function GetAccessForm({ className }: { className?: string }) {
         setError(
           data?.error ?? "That didn't go through. Give it another shot.",
         );
+        // Map the HTTP status 1:1 to a typed reason (plan §2.2).
+        const reason: ValidationFailReason =
+          res.status === 400
+            ? "invalid_format_server"
+            : res.status === 413
+              ? "payload_too_large"
+              : res.status === 429
+                ? "rate_limited"
+                : "server_error";
+        trackEmailCaptureValidationFailed(reason);
         return;
       }
 
       setStatus("success");
+      trackEmailCaptured(); // THE conversion — source only, no email
       // Move focus to the confirmation so screen-reader users hear it announced.
       requestAnimationFrame(() => successRef.current?.focus());
     } catch {
       setStatus("error");
       setError("Couldn't reach the server. Check your connection and try again.");
+      trackEmailCaptureValidationFailed("network_error");
     }
   }
 
@@ -99,8 +146,12 @@ export function GetAccessForm({ className }: { className?: string }) {
 
   return (
     <form
+      ref={formRef}
       onSubmit={handleSubmit}
       noValidate
+      // Belt-and-suspenders session-replay masking: maskAllInputs already masks
+      // the value; data-ph-mask (maskTextSelector) also masks any text in here.
+      data-ph-mask
       className={cn("mt-8 flex flex-col gap-3 text-left", className)}
     >
       <label htmlFor={inputId} className="eyebrow text-ink">
@@ -120,7 +171,16 @@ export function GetAccessForm({ className }: { className?: string }) {
         disabled={submitting}
         aria-invalid={invalid || undefined}
         aria-describedby={invalid ? errorId : undefined}
+        onFocus={() => {
+          if (focusedRef.current) return;
+          focusedRef.current = true;
+          trackEmailFieldFocused();
+        }}
         onChange={(event) => {
+          if (!startedRef.current && event.target.value.length > 0) {
+            startedRef.current = true;
+            trackEmailCaptureStarted(); // first keystroke
+          }
           setEmail(event.target.value);
           if (status === "error") {
             setStatus("idle");

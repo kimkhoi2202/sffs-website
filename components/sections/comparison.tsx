@@ -34,6 +34,8 @@ export interface ComparisonProps {
   ourPoints?: string[];
   /** Full-bleed section background color. */
   background?: ComparisonBackground;
+  /** Optional anchor id set on the section wrapper. */
+  id?: string;
   /** Fade + rise the inner content on scroll while the section bg stays static. */
   revealContent?: boolean;
 }
@@ -69,6 +71,7 @@ export function Comparison({
   theirPoints = DEFAULT_THEIR_POINTS,
   ourPoints = DEFAULT_OUR_POINTS,
   background = "cream",
+  id,
   revealContent = true,
 }: ComparisonProps = {}) {
   // Cross-column alignment: both columns are laid into one CSS grid that shares
@@ -81,7 +84,7 @@ export function Comparison({
   const rowCount = Math.max(theirPoints.length, ourPoints.length);
 
   return (
-    <Section background={background} padding="lg">
+    <Section background={background} padding="lg" id={id}>
       {(eyebrow || title) && (
         <Reveal stagger enabled={revealContent} className="mx-auto max-w-2xl text-center">
           {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}

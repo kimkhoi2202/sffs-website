@@ -6,7 +6,22 @@ import "lenis/dist/lenis.css";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
+import { trackTestCtaActivated, type CtaLocation } from "@/lib/analytics/events";
+
 gsap.registerPlugin(ScrollTrigger);
+
+/**
+ * Which "take the test" entry point an in-page anchor belongs to, from its DOM
+ * context. Every such CTA routes to #pricing; the location powers the funnel +
+ * heatmap of which entry point converts (plan §2.2 test_cta_activated).
+ */
+function ctaLocationForAnchor(anchor: Element | null | undefined): CtaLocation {
+  if (anchor?.closest("header.fixed")) return "nav";
+  if (anchor?.closest(".fella-hero")) return "hero";
+  if (anchor?.closest("#cta_band")) return "cta_band";
+  if (anchor?.closest("#how")) return "steps";
+  return "hero";
+}
 
 /**
  * Premium "dampened" smooth scrolling for the /smart-or-fart quiz route.
@@ -276,6 +291,13 @@ export function SmoothScroll({ children }: { children: ReactNode }) {
 
       const target = document.getElementById(decodeURIComponent(href.slice(1)));
       if (!target) return;
+
+      // Every "take the test" CTA scrolls to #pricing — capture the activation
+      // here (this capture-phase handler owns the click, so a Button onClick
+      // would never fire) with the entry point derived from the anchor's context.
+      if (target.id === "pricing") {
+        trackTestCtaActivated("click", ctaLocationForAnchor(anchor));
+      }
 
       event.preventDefault();
       event.stopPropagation();
