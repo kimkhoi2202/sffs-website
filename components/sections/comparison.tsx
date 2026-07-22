@@ -167,7 +167,7 @@ export function Comparison({
                     text's FIRST line (stays put when the text wraps to 2 lines). */}
                 <span className="flex h-[1lh] shrink-0 items-center">
                   <span className="flex size-6 items-center justify-center rounded-full border-[2.5px] border-ink bg-ink text-mint">
-                    <span className="sr-only">Better with Closer: </span>
+                    <span className="sr-only">Better: </span>
                     <Check className="size-3.5" strokeWidth={3} aria-hidden="true" />
                   </span>
                 </span>

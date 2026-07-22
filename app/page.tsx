@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Flame, Gamepad2, Share2, TrendingUp, Trophy, Users } from "lucide-react";
+import { Flame, Gamepad2, TrendingUp, Users } from "lucide-react";
 
 import { SmartFartHero } from "@/components/quiz/smart-fart-hero";
 import { QuizNav } from "@/components/quiz/quiz-nav";
@@ -54,16 +54,6 @@ const FEATURES: Feature[] = [
     icon: Flame,
     title: "Daily streak",
     body: "A fresh challenge every day. Miss one and watch the streak die.",
-  },
-  {
-    icon: Trophy,
-    title: "Leaderboards",
-    body: "Climb past your friends, your class, and total strangers.",
-  },
-  {
-    icon: Share2,
-    title: "Shareable rank card",
-    body: "A bordered, brag-worthy card engineered for the group chat.",
   },
   {
     icon: Users,
@@ -238,7 +228,7 @@ export default function SmartOrFartPage() {
         eyebrow=""
         title="What you actually get"
         intro="It's all built to make thinking a flex — get ranked, keep a streak, and drag your friends in."
-        columns={3}
+        columns={2}
         features={FEATURES}
       />
 
