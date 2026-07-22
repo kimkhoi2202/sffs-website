@@ -9,7 +9,7 @@ import { FeatureGrid, type Feature } from "@/components/sections/feature-grid";
 import { Testimonials, type Testimonial } from "@/components/sections/testimonials";
 import { Faq, type FaqItem } from "@/components/sections/faq";
 import { CtaBand } from "@/components/sections/cta-band";
-import { TikTokFeed } from "@/components/sections/tiktok-feed";
+import { VideoShowcase } from "@/components/sections/video-showcase";
 import { FollowUs } from "@/components/sections/follow-us";
 import { Waitlist } from "@/components/sections/waitlist";
 import { SectionDivider } from "@/components/ui/section-divider";
@@ -278,8 +278,9 @@ export default function SmartOrFartPage() {
 
       <SectionDivider top="green" bottom="cream" variant="stepped" size="lg" />
 
-      {/* TikTok profile feed — a slideshow of recent videos near the bottom. */}
-      <TikTokFeed background="cream" />
+      {/* Full-bleed video slideshow (self-hosted shorts from the tiktok-samples
+          manifest) — big vertical cards spanning the whole width. */}
+      <VideoShowcase id="videos" background="cream" />
 
       <SectionDivider top="cream" bottom="yellow" variant="curve" />
 
