@@ -268,8 +268,16 @@ export default function SmartOrFartPage() {
       />
       </div>
 
-      <SectionDivider top="paper" bottom="green" variant="arch" />
+      <SectionDivider top="paper" bottom="yellow" variant="arch" />
 
+      {/* Full-bleed TikTok video embeds + the merged social-follow moment (IG +
+          TikTok icons), as a bright yellow beacon. */}
+      <VideoShowcase id="videos" background="yellow" />
+
+      <SectionDivider top="yellow" bottom="green" variant="stepped" size="lg" />
+
+      {/* Final call to action — the LAST section before the footer. The footer's
+          own animated water wave is the green→blue seam (no divider needed). */}
       <CtaBand
         revealContent
         background="green"
@@ -280,14 +288,6 @@ export default function SmartOrFartPage() {
         primaryCta={{ label: "Join the waitlist", href: "#waitlist" }}
         secondaryCta={null}
       />
-
-      <SectionDivider top="green" bottom="yellow" variant="stepped" size="lg" />
-
-      {/* Full-bleed TikTok video embeds + the merged social-follow moment (IG +
-          TikTok icons), as a bright yellow beacon (green → yellow → blue). The
-          yellow→blue transition is NOT a divider: the footer's own animated water
-          wave (see site-footer.tsx) is the sole seam. */}
-      <VideoShowcase id="videos" background="yellow" />
     </main>
   );
 }
