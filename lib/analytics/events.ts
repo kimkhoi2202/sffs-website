@@ -208,3 +208,31 @@ export function trackOutboundLinkClicked(p: {
 }): void {
   posthog.capture("outbound_link_clicked", p);
 }
+
+/* --------------------------------------------------------------------------
+ * Attribution survey ("How did you find us?") — our OWN card that replaces the
+ * native PostHog survey (plan §9). Self-reported channel rescues attribution
+ * when in-app browsers strip UTMs/referrers. The answer is ALSO written to Aurora
+ * `survey_responses`; these events keep it visible in PostHog funnels/dashboards.
+ * ------------------------------------------------------------------------ */
+export type AttributionSource =
+  | "tiktok"
+  | "instagram"
+  | "friend"
+  | "search"
+  | "other";
+
+/** The survey card became visible (right after the "You're in!" success state). */
+export function trackAttributionSurveyShown(): void {
+  posthog.capture("attribution_survey_shown");
+}
+
+/** THE attribution answer. Source only — NEVER the email or any PII. */
+export function trackAttributionSurveyAnswered(source: AttributionSource): void {
+  posthog.capture("attribution_survey_answered", { source });
+}
+
+/** The visitor skipped the survey. */
+export function trackAttributionSurveyDismissed(): void {
+  posthog.capture("attribution_survey_dismissed");
+}

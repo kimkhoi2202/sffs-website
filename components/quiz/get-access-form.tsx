@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 
+import { AttributionSurvey } from "@/components/quiz/attribution-survey";
 import { Button } from "@/components/ui/button";
 import {
   trackEmailCaptured,
@@ -124,22 +125,25 @@ export function GetAccessForm({ className }: { className?: string }) {
 
   if (status === "success") {
     return (
-      <div
-        ref={successRef}
-        tabIndex={-1}
-        role="status"
-        aria-live="polite"
-        className={cn(
-          "mt-8 rounded-2xl border-[2.5px] border-ink bg-mint p-6 text-center shadow-hard-sm outline-none",
-          className,
-        )}
-      >
-        <p className="font-display text-3xl uppercase leading-none tracking-tight">
-          You&apos;re in! <span aria-hidden="true">🧠</span>
-        </p>
-        <p className="mt-3 text-sm font-medium leading-relaxed text-ink/80">
-          Certified smart move. That&apos;s exactly what a smart fella would do.
-        </p>
+      <div className={cn("mt-8", className)}>
+        <div
+          ref={successRef}
+          tabIndex={-1}
+          role="status"
+          aria-live="polite"
+          className="rounded-2xl border-[2.5px] border-ink bg-mint p-6 text-center shadow-hard-sm outline-none"
+        >
+          <p className="font-display text-3xl uppercase leading-none tracking-tight">
+            You&apos;re in! <span aria-hidden="true">🧠</span>
+          </p>
+          <p className="mt-3 text-sm font-medium leading-relaxed text-ink/80">
+            Certified smart move. That&apos;s exactly what a smart fella would do.
+          </p>
+        </div>
+        {/* Our OWN on-brand attribution survey (replaces the native PostHog
+            popover). Skippable; writes to Aurora + fires a no-PII PostHog event.
+            The email ties the answer to the signup in Aurora only. */}
+        <AttributionSurvey email={email.trim().toLowerCase()} />
       </div>
     );
   }
