@@ -1,29 +1,30 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 import { Section } from "@/components/ui/section";
 import { Heading } from "@/components/ui/heading";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { Button } from "@/components/ui/button";
-import { Placeholder } from "@/components/ui/placeholder";
 
 type SectionBackground = NonNullable<React.ComponentProps<typeof Section>["background"]>;
 
 const TIKTOK_HANDLE = "smartfellafartsmellatest";
 const PROFILE_URL = `https://www.tiktok.com/@${TIKTOK_HANDLE}`;
-const MANIFEST_URL = "/tiktok-samples/manifest.json";
+const EMBED_SRC = "https://www.tiktok.com/embed.js";
 
-/** One hosted short, mirroring public/tiktok-samples/manifest.json entries. */
-interface ShowcaseVideo {
-  id: string;
-  title?: string;
-  src: string;
-  poster?: string;
-}
-
-/** Placeholder card colors, cycled while there are no real videos yet. */
-const PLACEHOLDER_COLORS = ["blue", "mint", "coral", "yellow"] as const;
+/**
+ * TikTok video IDs to feature (from @smartfellafartsmellatest). Add/remove IDs
+ * here — grab the number after `/video/` in a TikTok URL. Each renders as a
+ * live embedded player.
+ */
+const VIDEO_IDS = [
+  "7664675246712163614",
+  "7664737430003666207",
+  "7665159571417189646",
+  "7664995258723224863",
+  "7664804452393618719",
+];
 
 export interface VideoShowcaseProps {
   id?: string;
@@ -35,14 +36,11 @@ export interface VideoShowcaseProps {
 }
 
 /**
- * Full-bleed video slideshow for the landing page: big vertical (9:16) cards in
- * an edge-to-edge, snap-scrolling row. Self-hosted (not the size-locked TikTok
- * widget), so the videos render as large as we want and span the full width.
- *
- * Videos come from the SAME place the Creator Studio uses:
- * `public/tiktok-samples/manifest.json` — drop `.mp4`s in that folder and list
- * them there (see its README) and they appear here automatically. While the
- * manifest is empty, we render placeholder phone-cards so the layout is intact.
+ * Full-bleed video slideshow: a row of live TikTok video EMBEDS spanning the
+ * whole width (snap-scrolling on overflow). TikTok's `embed.js` swaps each
+ * `.tiktok-embed` blockquote for its player; before it runs (or if blocked),
+ * each degrades to a link to the video. Player size/chrome is controlled by
+ * TikTok — the brand framing lives on the card around each one.
  */
 export function VideoShowcase({
   id,
@@ -52,27 +50,16 @@ export function VideoShowcase({
   title = "Watch us on TikTok",
   subtitle = "New dumb little videos every week. Tag a fart smella.",
 }: VideoShowcaseProps = {}) {
-  const [videos, setVideos] = useState<ShowcaseVideo[]>([]);
-
   useEffect(() => {
-    let alive = true;
-    fetch(MANIFEST_URL, { cache: "no-store" })
-      .then((r) => (r.ok ? r.json() : { videos: [] }))
-      .then((data: { videos?: ShowcaseVideo[] }) => {
-        if (alive && Array.isArray(data.videos)) setVideos(data.videos);
-      })
-      .catch(() => {
-        /* No manifest / offline: fall back to placeholder cards. */
-      });
-    return () => {
-      alive = false;
-    };
+    // (Re)load TikTok's embed script so it upgrades the blockquotes into
+    // players — including after a client-side navigation back to this page.
+    const existing = document.querySelector<HTMLScriptElement>(`script[src="${EMBED_SRC}"]`);
+    if (existing) existing.remove();
+    const script = document.createElement("script");
+    script.src = EMBED_SRC;
+    script.async = true;
+    document.body.appendChild(script);
   }, []);
-
-  // Until real videos are listed, show four placeholder phone-cards so the
-  // full-bleed layout reads correctly.
-  const hasVideos = videos.length > 0;
-  const cardCount = hasVideos ? videos.length : 4;
 
   return (
     <Section id={id} className={className} background={background} padding="lg" container={false}>
@@ -88,46 +75,26 @@ export function VideoShowcase({
         ) : null}
       </div>
 
-      {/* Full-bleed, snap-scrolling row of big vertical cards. */}
-      <ul className="mt-10 flex snap-x snap-mandatory list-none gap-4 overflow-x-auto px-4 pb-4 [-ms-overflow-style:none] [scrollbar-width:none] md:mt-12 md:gap-6 md:px-8 [&::-webkit-scrollbar]:hidden">
-        {Array.from({ length: cardCount }).map((_, i) => {
-          const video = hasVideos ? videos[i] : undefined;
-          return (
-            <li
-              key={video?.id ?? `placeholder-${i}`}
-              className="h-[clamp(380px,64vh,560px)] shrink-0 snap-center"
-            >
-              <div className="relative h-full overflow-hidden rounded-2xl border-[2.5px] border-ink bg-paper shadow-hard [aspect-ratio:9/16]">
-                {video ? (
-                  <video
-                    className="size-full object-cover"
-                    src={video.src}
-                    poster={video.poster}
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                    preload="metadata"
-                  />
-                ) : (
-                  <Placeholder
-                    color={PLACEHOLDER_COLORS[i % PLACEHOLDER_COLORS.length]}
-                    aspect="9/16"
-                    rounded="rounded-none"
-                    bordered={false}
-                    className="size-full"
-                    label="video coming soon"
-                  />
-                )}
-              </div>
-              {video?.title ? (
-                <p className="mt-3 line-clamp-1 px-1 text-center text-sm font-bold">
-                  {video.title}
-                </p>
-              ) : null}
-            </li>
-          );
-        })}
+      {/* Full-bleed, snap-scrolling row of live TikTok embeds. */}
+      <ul className="mt-10 flex snap-x snap-mandatory list-none justify-start gap-4 overflow-x-auto px-4 pb-4 [-ms-overflow-style:none] [scrollbar-width:none] md:mt-12 md:justify-center md:gap-6 md:px-8 [&::-webkit-scrollbar]:hidden">
+        {VIDEO_IDS.map((videoId) => (
+          <li key={videoId} className="shrink-0 snap-center">
+            <div className="overflow-hidden rounded-2xl border-[2.5px] border-ink bg-paper shadow-hard">
+              <blockquote
+                className="tiktok-embed"
+                cite={`${PROFILE_URL}/video/${videoId}`}
+                data-video-id={videoId}
+                style={{ maxWidth: 340, minWidth: 325 }}
+              >
+                <section>
+                  <a target="_blank" rel="noreferrer" href={`${PROFILE_URL}/video/${videoId}`}>
+                    @{TIKTOK_HANDLE}
+                  </a>
+                </section>
+              </blockquote>
+            </div>
+          </li>
+        ))}
       </ul>
 
       <div className="mx-auto mt-8 max-w-page px-4 text-center md:px-8">
