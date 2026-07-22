@@ -173,27 +173,22 @@ export default function SmartOrFartPage() {
             the wavy ink line (no more grid-less band) and the shapes bounce at
             that same wavy edge. Hence there is NO standalone <SectionDivider>
             here anymore — the hero ends in white below the wave and flows
-            straight into the (also-white) waitlist section below. */}
+            straight into the (also-white) Steps section. */}
       </div>
-
-      {/* Waitlist moved up to the 2nd section (right after the hero) so the email
-          capture sits high on the page. Paper (white) keeps it seamless with the
-          hero's white swoop-wave bottom — no divider needed here. */}
-      <Waitlist id="waitlist" className="scroll-mt-nav" background="paper" />
-
-      {/* Top edge of the merged gray block (how it works → which one → what you get). */}
-      <SectionDivider top="paper" bottom="gray" variant="curve" />
 
       <Steps
         revealContent
         id="how"
         className="scroll-mt-nav"
-        background="gray"
+        background="paper"
         eyebrow=""
         title="Three steps to the flex"
         steps={STEPS}
         cta={{ label: "Join the waitlist", href: "#waitlist", variant: "green" }}
       />
+
+      {/* Top edge of the merged gray block (which one → what you get → testimonials). */}
+      <SectionDivider top="paper" bottom="gray" variant="curve" />
 
       <div className="relative">
       <Comparison
@@ -246,7 +241,13 @@ export default function SmartOrFartPage() {
         </div>
       </Section>
 
-      <SectionDivider top="gray" bottom="paper" variant="blob" size="lg" />
+      <SectionDivider top="gray" bottom="coral" variant="scallopBig" size="lg" />
+
+      {/* Waitlist — a colorful coral pop, placed AFTER the games are shown (not at
+          the very top, so the page doesn't lead with "not launched yet"). */}
+      <Waitlist id="waitlist" className="scroll-mt-nav" background="coral" />
+
+      <SectionDivider top="coral" bottom="paper" variant="blob" />
 
       <div className="relative">
       <Faq
