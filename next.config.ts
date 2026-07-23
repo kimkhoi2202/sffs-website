@@ -9,6 +9,32 @@ const nextConfig: NextConfig = {
         destination: "/",
         permanent: true,
       },
+      // --- Social vanity links (temporary 307, editable) ---
+      // Short, memorable bio links that stamp the traffic source so PostHog
+      // attributes the visit + any signup to the right platform. Temporary (307)
+      // so we can retune the UTM mapping any time without a cached permanent
+      // redirect. `utm_medium=social` per the acquisition spec.
+      //
+      // NOTE: `/tiktok` doubles as the internal Creator Studio tool, so it only
+      // redirects for NON-authenticated visitors (no `tiktok_session` cookie) —
+      // logged-in team members still get the Studio, and the connect flow starts
+      // at /api/tiktok/auth (unaffected). /instagram + /youtube are free paths.
+      {
+        source: "/tiktok",
+        missing: [{ type: "cookie", key: "tiktok_session" }],
+        destination: "/?utm_source=tiktok&utm_medium=social",
+        permanent: false,
+      },
+      {
+        source: "/instagram",
+        destination: "/?utm_source=instagram&utm_medium=social",
+        permanent: false,
+      },
+      {
+        source: "/youtube",
+        destination: "/?utm_source=youtube&utm_medium=social",
+        permanent: false,
+      },
     ];
   },
 
