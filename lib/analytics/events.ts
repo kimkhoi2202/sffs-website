@@ -120,6 +120,78 @@ export function scrubAndEnrich(cr: CaptureResult | null): CaptureResult | null {
 }
 
 /* --------------------------------------------------------------------------
+ * Per-browser opt-out — internal-traffic exclusion (see app/analytics-optout)
+ *
+ * Our analytics are ANONYMOUS (no stored IP/email to filter on server-side), so
+ * the owner + teammates exclude their OWN visits with PostHog's recommended
+ * opt-out-capturing. Two redundant signals keep it robust:
+ *   1. PostHog's own consent store (via opt_out_capturing / opt_in_capturing).
+ *   2. A durable localStorage flag we control, read SYNCHRONOUSLY at init in
+ *      instrumentation-client.ts BEFORE the first pageview — so an opted-out
+ *      browser sends ZERO events from the very first paint, and re-asserts the
+ *      opt-out even if PostHog's own store was cleared.
+ * This is ADDITIVE to the GPC/DNT suppression — it never re-enables anyone.
+ * ------------------------------------------------------------------------ */
+
+/** localStorage key for the durable per-browser opt-out flag ("1" == opted out). */
+export const OPT_OUT_STORAGE_KEY = "sffs_ph_optout";
+
+/** Synchronously read the durable opt-out flag. SSR- and error-safe. */
+export function hasStoredOptOut(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return window.localStorage.getItem(OPT_OUT_STORAGE_KEY) === "1";
+  } catch {
+    return false; // storage blocked (private mode / hardened browser)
+  }
+}
+
+/** True if PostHog currently reports this browser opted out (incl. GPC/DNT). */
+export function isCapturingOptedOut(): boolean {
+  try {
+    return posthog.has_opted_out_capturing();
+  } catch {
+    // PostHog not initialized (non-prod host guard) — fall back to our flag.
+    return hasStoredOptOut();
+  }
+}
+
+/**
+ * Opt THIS browser OUT: set the durable flag AND stop PostHog capturing (which
+ * persists in PostHog's own consent store). Idempotent; never throws.
+ */
+export function optOutThisBrowser(): void {
+  try {
+    window.localStorage.setItem(OPT_OUT_STORAGE_KEY, "1");
+  } catch {
+    /* storage blocked — the PostHog opt-out below still applies this session */
+  }
+  try {
+    posthog.opt_out_capturing();
+  } catch {
+    /* not initialized here — the durable flag above is read at init on prod */
+  }
+}
+
+/**
+ * Re-enable analytics on THIS browser: clear the durable flag AND opt back in.
+ * GPC/DNT still re-suppress on the next load if the browser sends them.
+ * Idempotent; never throws.
+ */
+export function optInThisBrowser(): void {
+  try {
+    window.localStorage.removeItem(OPT_OUT_STORAGE_KEY);
+  } catch {
+    /* storage blocked — nothing to clear */
+  }
+  try {
+    posthog.opt_in_capturing();
+  } catch {
+    /* not initialized here (non-prod host guard) */
+  }
+}
+
+/* --------------------------------------------------------------------------
  * Event catalog (plan §2.2) — one typed helper per seam
  * ------------------------------------------------------------------------ */
 

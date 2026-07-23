@@ -18,6 +18,7 @@
 import posthog from "posthog-js";
 
 import {
+  hasStoredOptOut,
   registerLaunchSuperProperties,
   scrubAndEnrich,
 } from "@/lib/analytics/events";
@@ -32,6 +33,15 @@ const PROD_HOSTS = new Set([
 
 const isProdHost =
   typeof window !== "undefined" && PROD_HOSTS.has(window.location.hostname);
+
+/**
+ * Internal-traffic exclusion: read the durable per-browser opt-out flag
+ * SYNCHRONOUSLY (before posthog.init) so a teammate who visited /analytics-optout
+ * starts opted-out and sends ZERO events from the very first pageview — not only
+ * after re-visiting the opt-out page. Only ever true when the explicit flag is
+ * set, so normal visitors are unaffected. Additive to GPC/DNT (below).
+ */
+const optedOut = hasStoredOptOut();
 
 if (isProdHost && key) {
   posthog.init(key, {
@@ -65,10 +75,18 @@ if (isProdHost && key) {
 
     // --- responsible guards that hold even in full-send mode (plan §11.1) ---
     respect_dnt: true, // honor Do Not Track
+    // Internal-traffic exclusion: start opted-out iff THIS browser set the durable
+    // flag via /analytics-optout. No effect for normal visitors (flag absent).
+    opt_out_capturing_by_default: optedOut,
     property_denylist: ["$ip", "email", "email_address"], // hard PII guard
     before_send: scrubAndEnrich, // belt-and-suspenders PII scrub + platform enrich
 
     loaded: (ph) => {
+      // Re-assert the durable per-browser opt-out into PostHog's own consent
+      // store (belt-and-suspenders alongside opt_out_capturing_by_default above,
+      // in case that store was cleared). Only when the explicit flag is present —
+      // never opts a normal visitor out. See /analytics-optout.
+      if (optedOut) ph.opt_out_capturing();
       registerLaunchSuperProperties();
       // Honor Global Privacy Control: opt out even though the default is full send.
       const gpc = (navigator as Navigator & { globalPrivacyControl?: boolean })
