@@ -4,7 +4,9 @@ import { useEffect } from "react";
 
 import {
   trackOfferViewed,
+  trackPricingSectionViewed,
   trackScrollDepthReached,
+  trackScrolledToBottom,
   trackSectionViewed,
   type ScrollDepth,
   type SectionName,
@@ -58,6 +60,8 @@ export function EngagementTracker() {
         if (hit && !fired.has(d)) {
           fired.add(d);
           trackScrollDepthReached(d);
+          // 100% == reached the bottom — also fire the discrete funnel step.
+          if (d === 100) trackScrolledToBottom();
         }
       }
     };
@@ -80,9 +84,13 @@ export function EngagementTracker() {
             | null;
           if (name) {
             trackSectionViewed(name);
-            // The $67 offer lives in the pricing section — fire offer_viewed too
-            // (keeps pricing.tsx a Server Component; plan §2.2 offer_viewed).
-            if (name === "pricing") trackOfferViewed();
+            // The $67 offer lives in the pricing section — fire the dedicated
+            // pricing_section_viewed funnel step + offer_viewed too (keeps
+            // pricing.tsx a Server Component; plan §2.2 offer_viewed).
+            if (name === "pricing") {
+              trackPricingSectionViewed();
+              trackOfferViewed();
+            }
           }
           observer.unobserve(entry.target); // once each
         }

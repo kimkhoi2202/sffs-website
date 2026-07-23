@@ -266,8 +266,26 @@ export function trackScrollDepthReached(depth: ScrollDepth): void {
   posthog.capture("scroll_depth_reached", { depth_pct: depth });
 }
 
+/**
+ * The visitor reached the bottom of the landing page (fired once per load).
+ * A discrete, explicitly-named funnel step — cleaner than filtering
+ * `scroll_depth_reached` on `depth_pct = 100`, which still also fires.
+ */
+export function trackScrolledToBottom(): void {
+  posthog.capture("scrolled_to_bottom");
+}
+
 export function trackSectionViewed(section: SectionName): void {
   posthog.capture("section_viewed", { section_name: section });
+}
+
+/**
+ * The pricing section ("Settle it for the price of a coffee") crossed into the
+ * viewport (fired once per load). A dedicated funnel step for the pricing view —
+ * complements `section_viewed{pricing}` + `offer_viewed` with a clean name.
+ */
+export function trackPricingSectionViewed(): void {
+  posthog.capture("pricing_section_viewed", { location: "pricing" });
 }
 
 export function trackHeroShapeDragged(p: {
