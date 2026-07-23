@@ -78,6 +78,12 @@ if (isProdHost && key) {
     // Internal-traffic exclusion: start opted-out iff THIS browser set the durable
     // flag via /analytics-optout. No effect for normal visitors (flag absent).
     opt_out_capturing_by_default: optedOut,
+    // When opted out, also silence the only calls PostHog would still make while
+    // opted out — feature-flag eval (/flags) + surveys (/api/surveys) — so an
+    // excluded browser touches /ingest ZERO times, not just for event capture.
+    // Both default false ⇒ IDENTICAL behavior for normal visitors (optedOut=false).
+    advanced_disable_flags: optedOut,
+    disable_surveys: optedOut,
     property_denylist: ["$ip", "email", "email_address"], // hard PII guard
     before_send: scrubAndEnrich, // belt-and-suspenders PII scrub + platform enrich
 
