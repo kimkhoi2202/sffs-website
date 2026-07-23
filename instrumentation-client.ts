@@ -18,7 +18,7 @@
 import posthog from "posthog-js";
 
 import {
-  hasStoredOptOut,
+  hasStoredInternal,
   registerLaunchSuperProperties,
   scrubAndEnrich,
 } from "@/lib/analytics/events";
@@ -35,13 +35,14 @@ const isProdHost =
   typeof window !== "undefined" && PROD_HOSTS.has(window.location.hostname);
 
 /**
- * Internal-traffic exclusion: read the durable per-browser opt-out flag
- * SYNCHRONOUSLY (before posthog.init) so a teammate who visited /analytics-optout
- * starts opted-out and sends ZERO events from the very first pageview — not only
- * after re-visiting the opt-out page. Only ever true when the explicit flag is
- * set, so normal visitors are unaffected. Additive to GPC/DNT (below).
+ * Internal-user tag: read the durable per-browser flag SYNCHRONOUSLY (before
+ * posthog.init) so a teammate who marked this browser internal via
+ * /analytics-optout has `is_internal: true` registered BEFORE the first capture.
+ * Their events STILL flow — they're just stamped internal and filtered out of the
+ * public metrics by the project's test-account filter. Only ever true when the
+ * explicit flag is set, so normal visitors are unaffected. Additive to GPC/DNT.
  */
-const optedOut = hasStoredOptOut();
+const isInternal = hasStoredInternal();
 
 if (isProdHost && key) {
   posthog.init(key, {
@@ -75,28 +76,15 @@ if (isProdHost && key) {
 
     // --- responsible guards that hold even in full-send mode (plan §11.1) ---
     respect_dnt: true, // honor Do Not Track
-    // Internal-traffic exclusion: start opted-out iff THIS browser set the durable
-    // flag via /analytics-optout. No effect for normal visitors (flag absent).
-    opt_out_capturing_by_default: optedOut,
-    // When opted out, also silence everything else that would still touch /ingest
-    // even with capture off — feature-flag eval (/flags), surveys (/api/surveys),
-    // and PostHog's lazy-loaded extension scripts (/ingest/static/*.js: web-vitals,
-    // exception + dead-click autocapture, recorder). Net result: an excluded
-    // browser hits /ingest ZERO times. All default false ⇒ IDENTICAL behavior for
-    // normal visitors (optedOut=false); PostHog still inits, so /analytics-optout
-    // can re-enable live.
-    advanced_disable_flags: optedOut,
-    disable_surveys: optedOut,
-    disable_external_dependency_loading: optedOut,
     property_denylist: ["$ip", "email", "email_address"], // hard PII guard
-    before_send: scrubAndEnrich, // belt-and-suspenders PII scrub + platform enrich
+    before_send: scrubAndEnrich, // PII scrub + platform enrich + internal-user stamp
 
     loaded: (ph) => {
-      // Re-assert the durable per-browser opt-out into PostHog's own consent
-      // store (belt-and-suspenders alongside opt_out_capturing_by_default above,
-      // in case that store was cleared). Only when the explicit flag is present —
-      // never opts a normal visitor out. See /analytics-optout.
-      if (optedOut) ph.opt_out_capturing();
+      // Stamp this browser's events as internal BEFORE first capture when the
+      // durable flag is set (belt-and-suspenders alongside the before_send
+      // enforcement + the SDK-persisted super-property). Only when the explicit
+      // flag is present — never tags a normal visitor. See /analytics-optout.
+      if (isInternal) ph.register({ is_internal: true });
       registerLaunchSuperProperties();
       // Honor Global Privacy Control: opt out even though the default is full send.
       const gpc = (navigator as Navigator & { globalPrivacyControl?: boolean })

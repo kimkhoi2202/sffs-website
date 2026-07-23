@@ -116,76 +116,105 @@ export function scrubAndEnrich(cr: CaptureResult | null): CaptureResult | null {
   if (cr.properties && cr.properties.platform == null) {
     cr.properties.platform = platformOnce();
   }
+  // Stamp events from an internal browser so the project's "internal & test
+  // users" filter can exclude them from the PUBLIC metrics. Events still record
+  // — they're just tagged. Enforced here (on EVERY event) as a belt-and-suspenders
+  // guarantee alongside the registered super-property, so even the first pageview
+  // of a fresh load is tagged. See app/analytics-optout.
+  if (cr.properties && hasStoredInternal()) {
+    cr.properties[INTERNAL_PROPERTY] = true;
+  }
   return cr;
 }
 
 /* --------------------------------------------------------------------------
- * Per-browser opt-out — internal-traffic exclusion (see app/analytics-optout)
+ * Per-browser INTERNAL-USER toggle (see app/analytics-optout)
  *
- * Our analytics are ANONYMOUS (no stored IP/email to filter on server-side), so
- * the owner + teammates exclude their OWN visits with PostHog's recommended
- * opt-out-capturing. Two redundant signals keep it robust:
- *   1. PostHog's own consent store (via opt_out_capturing / opt_in_capturing).
- *   2. A durable localStorage flag we control, read SYNCHRONOUSLY at init in
- *      instrumentation-client.ts BEFORE the first pageview — so an opted-out
- *      browser sends ZERO events from the very first paint, and re-asserts the
- *      opt-out even if PostHog's own store was cleared.
- * This is ADDITIVE to the GPC/DNT suppression — it never re-enables anyone.
+ * The owner + teammates mark their OWN browser as internal so their visits are
+ * EXCLUDED FROM THE PUBLIC METRICS without vanishing: events still flow to
+ * PostHog, they're just stamped `is_internal: true` and filtered out by the
+ * project's "internal & test users" test-account filter. Two redundant signals:
+ *   1. A PostHog super-property (posthog.register / unregister) — persisted by
+ *      the SDK and attached to every event.
+ *   2. A durable localStorage flag we control, read SYNCHRONOUSLY at init so the
+ *      stamp is applied BEFORE the first capture and re-enforced in `before_send`
+ *      on EVERY outbound event (guarantees even the first pageview is tagged).
+ * Additive to GPC/DNT: marking internal keeps events flowing, but GPC/DNT still
+ * suppress capture entirely when the browser asks for it.
  * ------------------------------------------------------------------------ */
 
-/** localStorage key for the durable per-browser opt-out flag ("1" == opted out). */
-export const OPT_OUT_STORAGE_KEY = "sffs_ph_optout";
+/** localStorage key for the durable per-browser "internal user" flag ("1" == internal). */
+export const INTERNAL_STORAGE_KEY = "sffs_ph_internal";
 
-/** Synchronously read the durable opt-out flag. SSR- and error-safe. */
-export function hasStoredOptOut(): boolean {
+/** The event property stamped on every event from an internal browser. */
+export const INTERNAL_PROPERTY = "is_internal";
+
+/** Legacy hard-opt-out key (superseded by the internal toggle); cleaned up on toggle. */
+const LEGACY_OPT_OUT_KEY = "sffs_ph_optout";
+
+/**
+ * Module cache of the internal flag so `before_send` (runs on EVERY event) never
+ * hits localStorage per-event. Initialized lazily from storage and kept live by
+ * markInternalUser / clearInternalUser, so a same-session toggle takes effect
+ * immediately (no stale reads).
+ */
+let internalCache: boolean | null = null;
+
+/** Synchronously read the durable internal flag. SSR- and error-safe. */
+export function hasStoredInternal(): boolean {
+  if (internalCache !== null) return internalCache;
   if (typeof window === "undefined") return false;
   try {
-    return window.localStorage.getItem(OPT_OUT_STORAGE_KEY) === "1";
+    internalCache = window.localStorage.getItem(INTERNAL_STORAGE_KEY) === "1";
   } catch {
-    return false; // storage blocked (private mode / hardened browser)
+    internalCache = false; // storage blocked (private mode / hardened browser)
   }
+  return internalCache;
 }
 
-/** True if PostHog currently reports this browser opted out (incl. GPC/DNT). */
-export function isCapturingOptedOut(): boolean {
+/** Whether THIS browser is currently marked internal (drives the toggle UI). */
+export function isInternalUser(): boolean {
+  return hasStoredInternal();
+}
+
+/**
+ * Mark THIS browser as internal: persist the flag + register the `is_internal`
+ * super-property so every event is stamped. Also opts back in (no `$opt_in`
+ * noise) if a legacy hard opt-out was set, so a previously-excluded teammate
+ * starts recording again — tagged internal. Idempotent; never throws.
+ */
+export function markInternalUser(): void {
+  internalCache = true;
   try {
-    return posthog.has_opted_out_capturing();
+    window.localStorage.setItem(INTERNAL_STORAGE_KEY, "1");
+    window.localStorage.removeItem(LEGACY_OPT_OUT_KEY);
   } catch {
-    // PostHog not initialized (non-prod host guard) — fall back to our flag.
-    return hasStoredOptOut();
+    /* storage blocked — the super-property below still stamps this session */
+  }
+  try {
+    if (posthog.has_opted_out_capturing()) {
+      posthog.opt_in_capturing({ captureEventName: false });
+    }
+    posthog.register({ [INTERNAL_PROPERTY]: true });
+  } catch {
+    /* not initialized here (non-prod host guard) — init re-applies from the flag */
   }
 }
 
 /**
- * Opt THIS browser OUT: set the durable flag AND stop PostHog capturing (which
- * persists in PostHog's own consent store). Idempotent; never throws.
+ * Make THIS browser a normal visitor again: clear the flag + unregister the
+ * super-property so events are no longer stamped internal. Idempotent; never throws.
  */
-export function optOutThisBrowser(): void {
+export function clearInternalUser(): void {
+  internalCache = false;
   try {
-    window.localStorage.setItem(OPT_OUT_STORAGE_KEY, "1");
-  } catch {
-    /* storage blocked — the PostHog opt-out below still applies this session */
-  }
-  try {
-    posthog.opt_out_capturing();
-  } catch {
-    /* not initialized here — the durable flag above is read at init on prod */
-  }
-}
-
-/**
- * Re-enable analytics on THIS browser: clear the durable flag AND opt back in.
- * GPC/DNT still re-suppress on the next load if the browser sends them.
- * Idempotent; never throws.
- */
-export function optInThisBrowser(): void {
-  try {
-    window.localStorage.removeItem(OPT_OUT_STORAGE_KEY);
+    window.localStorage.removeItem(INTERNAL_STORAGE_KEY);
+    window.localStorage.removeItem(LEGACY_OPT_OUT_KEY);
   } catch {
     /* storage blocked — nothing to clear */
   }
   try {
-    posthog.opt_in_capturing();
+    posthog.unregister(INTERNAL_PROPERTY);
   } catch {
     /* not initialized here (non-prod host guard) */
   }

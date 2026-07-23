@@ -9,32 +9,32 @@ import { Heading } from "@/components/ui/heading";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
-  hasStoredOptOut,
-  isCapturingOptedOut,
-  optInThisBrowser,
-  optOutThisBrowser,
+  clearInternalUser,
+  isInternalUser,
+  markInternalUser,
 } from "@/lib/analytics/events";
 
 /**
- * /analytics-optout — a bookmarkable, per-browser "exclude my traffic" switch.
+ * /analytics-optout — a bookmarkable, per-browser INTERNAL-USER toggle.
  *
- * Because SFFS analytics are ANONYMOUS (no stored IP/email to filter server-side),
- * the owner + teammates keep their own visits out of PostHog with the vendor's
- * recommended opt-out-capturing. This page IS the control:
- *   • Visiting it (default) OPTS THE BROWSER OUT — posthog.opt_out_capturing()
- *     plus a durable `sffs_ph_optout` localStorage flag the SDK reads at init, so
- *     zero events fire from the very first pageview on every later visit.
- *   • `?on=1` (or the on-page button) RE-ENABLES — posthog.opt_in_capturing()
- *     and clears the flag.
+ * The owner + teammates mark their OWN browser as internal so their visits don't
+ * skew the PUBLIC metrics — without disappearing. Events still flow to PostHog;
+ * they're just stamped `is_internal: true` and filtered out by the project's
+ * "internal & test users" test-account filter. This page IS the control:
+ *   • Visiting it (default) MARKS THE BROWSER INTERNAL — posthog.register({is_internal:true})
+ *     plus a durable `sffs_ph_internal` localStorage flag the SDK reads at init,
+ *     so every event (from the first pageview on) is tagged.
+ *   • `?on=1` (or the on-page button) makes it a NORMAL visitor again —
+ *     posthog.unregister('is_internal') and clears the flag.
  *
- * The opt-out is additive to GPC/DNT; it never re-enables a browser that the
- * browser's own privacy signals already suppressed.
+ * Additive to GPC/DNT: tagging keeps events flowing, but GPC/DNT still suppress
+ * capture entirely when the browser asks for it.
  */
 
-type Status = "loading" | "off" | "on";
+type Status = "loading" | "internal" | "normal";
 
 /* --------------------------------------------------------------------------
- * A tiny external store so the UI reflects PostHog's live consent state in an
+ * A tiny external store so the UI reflects the live internal-tag state in an
  * SSR-safe way (useSyncExternalStore) — no setState-in-effect, no hydration
  * mismatch. `resolved` stays false until the mount effect applies the URL intent,
  * so the server render and the first client render agree on a stable "loading"
@@ -56,23 +56,23 @@ function emit(): void {
 
 function getSnapshot(): Status {
   if (!resolved) return "loading";
-  return isCapturingOptedOut() || hasStoredOptOut() ? "off" : "on";
+  return isInternalUser() ? "internal" : "normal";
 }
 
 function getServerSnapshot(): Status {
   return "loading";
 }
 
-/** Opt this browser out, then notify subscribers to re-render. */
-function applyOptOut(): void {
-  optOutThisBrowser();
+/** Mark this browser internal, then notify subscribers to re-render. */
+function applyMarkInternal(): void {
+  markInternalUser();
   resolved = true;
   emit();
 }
 
-/** Re-enable this browser, then notify subscribers to re-render. */
-function applyOptIn(): void {
-  optInThisBrowser();
+/** Make this browser a normal visitor, then notify subscribers to re-render. */
+function applyMakeNormal(): void {
+  clearInternalUser();
   resolved = true;
   emit();
 }
@@ -80,18 +80,18 @@ function applyOptIn(): void {
 export function AnalyticsOptOut() {
   const status = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
-  // On first load, apply the intent from the URL: `?on=1` re-enables, anything
-  // else opts this browser out. Idempotent, so React 18 Strict Mode's dev
-  // double-invoke is harmless (and non-prod hosts never init PostHog anyway).
+  // On first load, apply the intent from the URL: `?on=1` makes this a normal
+  // visitor, anything else marks it internal. Idempotent, so React 18 Strict
+  // Mode's dev double-invoke is harmless (non-prod hosts never init PostHog).
   useEffect(() => {
-    const wantsReEnable =
+    const wantsNormal =
       new URLSearchParams(window.location.search).get("on") === "1";
-    if (wantsReEnable) applyOptIn();
-    else applyOptOut();
+    if (wantsNormal) applyMakeNormal();
+    else applyMarkInternal();
   }, []);
 
-  const isOff = status === "off";
-  const isOn = status === "on";
+  const isInternal = status === "internal";
+  const isNormal = status === "normal";
 
   return (
     <div id="top" className="relative z-40 flex flex-1 flex-col bg-paper text-ink">
@@ -129,12 +129,14 @@ export function AnalyticsOptOut() {
           <Container size="prose" className="py-14 md:py-20">
             <Eyebrow>Team tool</Eyebrow>
             <Heading as={1} size="xl" className="mt-4">
-              Exclude my traffic
+              Internal user
             </Heading>
             <p className="mt-6 max-w-prose text-[1.05rem] leading-[1.7] text-ink/80">
-              For the SFFS team. Turn product analytics{" "}
-              <strong>off for this browser</strong> so your own visits (and your
-              teammates&rsquo;) don&rsquo;t get counted in the numbers.
+              For the SFFS team. Mark this browser as{" "}
+              <strong>internal</strong> so your own visits (and your
+              teammates&rsquo;) still record but are{" "}
+              <strong>kept out of the public metrics</strong> — dashboards,
+              funnels, and reports.
             </p>
           </Container>
         </section>
@@ -149,23 +151,27 @@ export function AnalyticsOptOut() {
               aria-live="polite"
               className={cn(
                 "rounded-3xl border-[2.5px] border-ink p-6 shadow-hard-lg sm:p-8",
-                isOff && "bg-mint",
-                isOn && "bg-coral",
+                isInternal && "bg-mint",
+                isNormal && "bg-coral",
                 status === "loading" && "bg-cream",
               )}
             >
               <div className="flex flex-col items-start gap-5 sm:flex-row sm:items-center">
-                {/* Big Anton on/off chip. */}
+                {/* Big Anton status chip. */}
                 <span
                   aria-hidden
                   className={cn(
-                    "inline-flex shrink-0 items-center justify-center rounded-2xl border-[2.5px] border-ink px-5 py-3 font-display text-3xl uppercase leading-none tracking-[-0.01em] shadow-hard-sm sm:text-4xl",
-                    isOff && "bg-paper text-ink",
-                    isOn && "bg-ink text-paper",
+                    "inline-flex shrink-0 items-center justify-center rounded-2xl border-[2.5px] border-ink px-5 py-3 font-display text-2xl uppercase leading-none tracking-[-0.01em] shadow-hard-sm sm:text-3xl",
+                    isInternal && "bg-ink text-paper",
+                    isNormal && "bg-paper text-ink",
                     status === "loading" && "bg-paper text-ink/40",
                   )}
                 >
-                  {status === "loading" ? "···" : isOff ? "Off" : "On"}
+                  {status === "loading"
+                    ? "···"
+                    : isInternal
+                      ? "Internal"
+                      : "Normal"}
                 </span>
 
                 <div className="min-w-0">
@@ -175,28 +181,30 @@ export function AnalyticsOptOut() {
                     </Heading>
                   )}
 
-                  {isOff && (
+                  {isInternal && (
                     <>
                       <Heading as={2} size="sm">
-                        Analytics are OFF on this browser{" "}
-                        <span aria-hidden>✅</span>
+                        This browser is marked INTERNAL{" "}
+                        <span aria-hidden>🏷️</span>
                       </Heading>
                       <p className="mt-2 text-[1.05rem] font-semibold leading-[1.6] text-ink">
-                        You&rsquo;re excluded — you and your teammates won&rsquo;t
-                        be counted here.
+                        Your visits <strong>still record</strong> — they&rsquo;re
+                        just tagged and excluded from the public metrics, so you
+                        and your teammates never skew the numbers.
                       </p>
                     </>
                   )}
 
-                  {isOn && (
+                  {isNormal && (
                     <>
                       <Heading as={2} size="sm">
-                        Analytics are ON for this browser{" "}
+                        This browser counts as a normal visitor{" "}
                         <span aria-hidden>👀</span>
                       </Heading>
                       <p className="mt-2 text-[1.05rem] font-semibold leading-[1.6] text-ink">
-                        This browser <strong>is being counted</strong>. If
-                        you&rsquo;re on the team, switch it off below.
+                        Your visits <strong>are counted</strong> in the public
+                        metrics. If you&rsquo;re on the team, mark this browser
+                        internal below.
                       </p>
                     </>
                   )}
@@ -204,19 +212,20 @@ export function AnalyticsOptOut() {
               </div>
 
               {/* Primary control — ONE persistent button (so keyboard focus
-                  survives the state flip). OFF ⇒ a quiet "re-enable"; ON ⇒ the
-                  prominent "turn off" that is this page's whole purpose. */}
+                  survives the state flip). INTERNAL ⇒ a quiet "make normal";
+                  NORMAL ⇒ the prominent "mark internal" that is this page's
+                  whole purpose. */}
               {status !== "loading" && (
                 <div className="mt-6 flex flex-wrap items-center gap-3 border-t-[2.5px] border-ink/15 pt-6">
                   <Button
                     type="button"
-                    onClick={isOff ? () => applyOptIn() : () => applyOptOut()}
-                    variant={isOff ? "paper" : "ink"}
-                    size={isOff ? "sm" : "lg"}
+                    onClick={isInternal ? () => applyMakeNormal() : () => applyMarkInternal()}
+                    variant={isInternal ? "paper" : "ink"}
+                    size={isInternal ? "sm" : "lg"}
                   >
-                    {isOff
-                      ? "Re-enable analytics"
-                      : "Turn analytics off for this browser"}
+                    {isInternal
+                      ? "Make this a normal visitor"
+                      : "Mark this browser as internal"}
                   </Button>
                 </div>
               )}
@@ -236,9 +245,11 @@ export function AnalyticsOptOut() {
             {/* Plain-language explainer. */}
             <div className="mt-8 space-y-4 text-[1rem] leading-[1.7] text-ink/80">
               <p>
-                This sets a small preference in <em>this</em> browser that tells
-                our analytics (PostHog) to stop counting your visits. It clears if
-                you wipe this browser&rsquo;s storage, switch browsers, or use a
+                This sets a small preference in <em>this</em> browser and tags
+                its events as <code>is_internal</code> in our analytics (PostHog).
+                Nothing is hidden from us — your visits still record — they&rsquo;re
+                just filtered out of the <em>public</em> numbers. It clears if you
+                wipe this browser&rsquo;s storage, switch browsers, or use a
                 different device — that&rsquo;s why you repeat it per browser.
               </p>
               <p>
