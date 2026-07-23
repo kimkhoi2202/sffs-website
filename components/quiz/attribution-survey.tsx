@@ -5,7 +5,6 @@ import posthog from "posthog-js";
 
 import {
   trackAttributionSurveyAnswered,
-  trackAttributionSurveyDismissed,
   trackAttributionSurveyShown,
   type AttributionSource,
 } from "@/lib/analytics/events";
@@ -22,13 +21,13 @@ import { cn } from "@/lib/utils";
  *   2. POSTs to /api/attribution-survey -> the keyless Lambda proxy -> Aurora
  *      `survey_responses` (durable, tied to the signup via email + distinct_id).
  *
- * Fully responsive (mobile-first — most traffic is TikTok/IG in-app browsers),
- * keyboard-accessible (native radios in a labelled group), and skippable so it
- * never gets in the way. The signup email is used only to tie the answer to the
- * signup in Aurora — it is NEVER sent to PostHog.
+ * Fully responsive (mobile-first — most traffic is TikTok/IG in-app browsers)
+ * and keyboard-accessible (native radios in a labelled group). The signup email
+ * is used only to tie the answer to the signup in Aurora — it is NEVER sent to
+ * PostHog.
  */
 
-type Phase = "idle" | "submitting" | "done" | "skipped";
+type Phase = "idle" | "submitting" | "done";
 
 const OPTIONS: { value: AttributionSource; label: string }[] = [
   { value: "tiktok", label: "TikTok" },
@@ -97,14 +96,6 @@ export function AttributionSurvey({
     requestAnimationFrame(() => doneRef.current?.focus());
   }
 
-  function handleSkip() {
-    trackAttributionSurveyDismissed();
-    setPhase("skipped");
-  }
-
-  // Skipped → collapse entirely so it never lingers.
-  if (phase === "skipped") return null;
-
   if (phase === "done") {
     return (
       <div
@@ -164,8 +155,14 @@ export function AttributionSurvey({
                 />
                 <span
                   className={cn(
-                    "press flex h-12 w-full items-center justify-center rounded-full border-[2.5px] border-ink bg-paper px-3 text-center text-sm font-bold uppercase tracking-wide text-ink shadow-hard-xs",
+                    "flex h-12 w-full items-center justify-center rounded-full border-[2.5px] border-ink bg-paper px-3 text-center text-sm font-bold uppercase tracking-wide text-ink shadow-hard-xs",
                     "cursor-pointer select-none",
+                    // HeroUI-style press feedback: smoothly scale to 0.97 on press
+                    // (mirrors HeroUI's Button `data-[pressed=true]:scale-[0.97]` +
+                    // transition-transform) — no translate, no shadow-pop, replacing
+                    // the old neo-brutalist .press. Gated by motion-safe so
+                    // reduced-motion users get no scale animation at all.
+                    "transition-transform motion-safe:active:scale-[0.97] motion-reduce:transition-none",
                     "peer-checked:bg-blue peer-checked:shadow-none peer-checked:translate-x-[2px] peer-checked:translate-y-[2px]",
                     "peer-focus-visible:outline peer-focus-visible:outline-[3px] peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ink",
                   )}
@@ -204,15 +201,7 @@ export function AttributionSurvey({
           </div>
         ) : null}
 
-        <div className="mt-4 flex items-center justify-between gap-3">
-          <button
-            type="button"
-            onClick={handleSkip}
-            className="rounded-full px-2 py-1 text-sm font-semibold text-ink/60 underline decoration-2 underline-offset-4 transition-colors hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
-          >
-            Skip
-          </button>
-
+        <div className="mt-4 flex items-center justify-end">
           <button
             type="submit"
             disabled={!selected || phase === "submitting"}
