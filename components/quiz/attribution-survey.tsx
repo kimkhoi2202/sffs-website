@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import posthog from "posthog-js";
 
 import {
+  identifyOnSurveyAnswer,
   trackAttributionSurveyAnswered,
   trackAttributionSurveyDismissed,
   trackAttributionSurveyShown,
@@ -73,9 +74,11 @@ export function AttributionSurvey({
     if (!selected || phase === "submitting") return;
     setPhase("submitting");
 
-    // 1) The analytics truth — source only, no PII. Fire first so attribution
-    //    lands even if the durable write below is blocked.
+    // 1) The analytics truth — source only, no PII on the event. Fire first so
+    //    attribution lands even if the durable write below is blocked.
     trackAttributionSurveyAnswered(selected);
+    // Identify by email + record the self-reported channel on the person profile.
+    identifyOnSurveyAnswer(email, selected, openText.trim() || undefined);
 
     // 2) The durable write (best-effort — the event already captured attribution).
     try {

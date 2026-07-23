@@ -5,6 +5,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { AttributionSurvey } from "@/components/quiz/attribution-survey";
 import { Button } from "@/components/ui/button";
 import {
+  identifyOnSignup,
   trackEmailCaptured,
   trackEmailCaptureStarted,
   trackEmailCaptureSubmitted,
@@ -113,7 +114,8 @@ export function GetAccessForm({ className }: { className?: string }) {
       }
 
       setStatus("success");
-      trackEmailCaptured(); // THE conversion — source only, no email
+      identifyOnSignup(trimmed); // IDENTIFY by email — ties the whole journey to a real person
+      trackEmailCaptured(); // THE conversion event — source + attribution (email rides on the person profile)
       // Move focus to the confirmation so screen-reader users hear it announced.
       requestAnimationFrame(() => successRef.current?.focus());
     } catch {

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import { LegalPage, type LegalSection } from "@/components/sections/legal-page";
 
-const LAST_UPDATED = "July 22, 2026";
+const LAST_UPDATED = "July 23, 2026";
 const CONTACT_EMAIL = "smartfellaorfartsmella123@gmail.com";
 
 export const metadata: Metadata = {
@@ -56,17 +56,21 @@ const SECTIONS: LegalSection[] = [
             browser type, approximate (city- or country-level) location derived
             from your IP address, clicks and scroll depth, performance and error
             signals, and steps in the email form such as starting or submitting
-            it. We use this to see which content and traffic sources work. We do
-            not build advertising profiles and we do not sell this data.
+            it. Once you join our list, we also send PostHog your{" "}
+            <strong>email address</strong> and use it as your identifier, so these
+            events connect into your individual journey rather than staying
+            anonymous. We use this to see which content and traffic sources work.
+            We do not build advertising profiles and we do not sell this data.
           </li>
           <li>
             <strong>Session replay.</strong> PostHog also captures{" "}
             <strong>session replays</strong> — a reconstructed playback of on-page
             interactions such as scrolling, taps, and mouse movement — so we can
-            find where the experience confuses or delights. Replays{" "}
-            <strong>mask everything you type</strong>: your email address and any
-            other input is never recorded, and we do not capture the contents of
-            network requests.
+            find where the experience confuses or delights. Once you join our list,
+            your replays are linked to your profile. Even so, replays{" "}
+            <strong>still mask everything you type</strong>: the characters of your
+            email address (and any other input) are never recorded, and we do not
+            capture the contents of network requests.
           </li>
           <li>
             <strong>Quiz answers.</strong> Your quiz responses are processed to
@@ -77,12 +81,15 @@ const SECTIONS: LegalSection[] = [
         </ul>
         <p>
           <strong>
-            We never send your email address (or other personal identifiers) to
-            our analytics provider.
+            When you join our list, we associate your email address with your
+            analytics profile.
           </strong>{" "}
-          It is stored only in our own signup database. We also do not knowingly
-          collect sensitive personal information, and we ask that you not send it
-          to us.
+          We use your email as your identifier in PostHog so we can understand
+          individual journeys — which post brought you, what you did on the page,
+          and your signup — instead of only anonymous aggregates. Before you sign
+          up, your activity is anonymous; after you sign up, it is linked to you by
+          email. We still do not knowingly collect sensitive personal information,
+          we do not build advertising profiles, and we do not sell your data.
         </p>
       </>
     ),
@@ -97,8 +104,8 @@ const SECTIONS: LegalSection[] = [
           <li>operate, maintain, and secure the website and the quiz;</li>
           <li>calculate and display your quiz results;</li>
           <li>
-            understand aggregate usage so we can improve our content and fix
-            problems;
+            understand usage — both aggregate trends and, once you sign up, your
+            individual journey — so we can improve our content and fix problems;
           </li>
           <li>respond to messages and support requests you send us; and</li>
           <li>

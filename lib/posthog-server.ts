@@ -1,6 +1,5 @@
 import "server-only";
 
-import { randomUUID } from "node:crypto";
 import type { NextRequest } from "next/server";
 import { PostHog } from "posthog-node";
 
@@ -9,13 +8,14 @@ import { PostHog } from "posthog-node";
  *
  * Firing `email_captured` from `/api/access-signup` (in addition to the client)
  * gives an AD-BLOCKER-PROOF source of truth: even when a visitor blocks the
- * client SDK, the conversion still lands. Uses the PUBLIC project key `phc_…`
- * (never the personal `phx_` key) and hits the direct US ingestion host (the
- * server doesn't need the ad-blocker reverse proxy).
+ * client SDK, the conversion still lands AND is tied to the real person. Uses the
+ * PUBLIC project key `phc_…` (never the personal `phx_` key) and hits the direct
+ * US ingestion host (the server doesn't need the ad-blocker reverse proxy).
  *
- * PRIVACY INVARIANT: no email or PII is ever sent — source + attribution only.
- * The event stays anonymous (`$process_person_profile: false`, mirroring the
- * client's `identified_only`); the address lives solely in Aurora.
+ * IDENTIFIED: the event is keyed to the EMAIL (distinct_id = email) and sets the
+ * email + attribution on the person profile, mirroring the client's
+ * identifyOnSignup — so the conversion lands on the identified individual even
+ * when the client SDK is blocked.
  */
 
 const INGESTION_HOST = "https://us.i.posthog.com";
@@ -102,6 +102,7 @@ function platformFromReferer(req: NextRequest): string | undefined {
 export async function captureEmailCapturedServer(
   req: NextRequest,
   source: string,
+  email: string,
 ): Promise<void> {
   if (!isProdRequest(req)) return; // W4: prod domain only — no dev/preview pollution
   const ph = getClient();
@@ -110,14 +111,21 @@ export async function captureEmailCapturedServer(
     const stitchedId = distinctIdFromRequest(req);
     const platform = platformFromReferer(req);
     ph.capture({
-      distinctId: stitchedId ?? randomUUID(),
+      distinctId: email, // IDENTIFIED: key the conversion to the email person
       event: "email_captured",
       properties: {
         source,
         server_side: true, // lets insights dedupe/split client vs server truth
-        stitched: Boolean(stitchedId),
+        stitched: Boolean(stitchedId), // whether the client SDK cookie was present
         ...(platform ? { platform } : {}),
-        $process_person_profile: false, // stay anonymous (mirrors identified_only)
+        // Set the email + attribution on the person profile (identified analytics),
+        // so the conversion lands on the real individual even if the client is blocked.
+        $set: {
+          email,
+          signup_source: source,
+          ...(platform ? { signup_platform: platform } : {}),
+        },
+        $set_once: { first_signup_at: new Date().toISOString() },
       },
     });
     await ph.flush();
