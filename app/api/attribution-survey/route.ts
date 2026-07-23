@@ -17,6 +17,7 @@ const MAX_DISTINCT_ID_LENGTH = 200;
 const ALLOWED_SOURCES = new Set([
   "tiktok",
   "instagram",
+  "youtube",
   "friend",
   "search",
   "other",

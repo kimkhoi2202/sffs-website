@@ -29,9 +29,20 @@ import { cn } from "@/lib/utils";
 
 type Phase = "idle" | "submitting" | "done";
 
-const OPTIONS: { value: AttributionSource; label: string }[] = [
+/**
+ * The survey's self-reported source values. "youtube" is a newly added option
+ * that isn't in the shared `AttributionSource` union yet (that lives in
+ * lib/analytics and is owned by the analytics/attribution pass) — model it
+ * locally so the option is fully typed without reaching into that file. The API
+ * route and the PostHog event both accept the raw source string, so "youtube"
+ * flows through end-to-end.
+ */
+type SurveySource = AttributionSource | "youtube";
+
+const OPTIONS: { value: SurveySource; label: string }[] = [
   { value: "tiktok", label: "TikTok" },
   { value: "instagram", label: "Instagram" },
+  { value: "youtube", label: "YouTube" },
   { value: "friend", label: "A friend" },
   { value: "search", label: "Search" },
   { value: "other", label: "Somewhere else" },
@@ -57,7 +68,7 @@ export function AttributionSurvey({
 }) {
   const legendId = useId();
   const groupName = useId();
-  const [selected, setSelected] = useState<AttributionSource | null>(null);
+  const [selected, setSelected] = useState<SurveySource | null>(null);
   const [openText, setOpenText] = useState("");
   const [phase, setPhase] = useState<Phase>("idle");
   const doneRef = useRef<HTMLDivElement>(null);
@@ -73,8 +84,10 @@ export function AttributionSurvey({
     setPhase("submitting");
 
     // 1) The analytics truth — source only, no PII. Fire first so attribution
-    //    lands even if the durable write below is blocked.
-    trackAttributionSurveyAnswered(selected);
+    //    lands even if the durable write below is blocked. ("youtube" isn't in
+    //    the shared AttributionSource union yet — owned by the analytics pass —
+    //    but the event still fires with the raw source value.)
+    trackAttributionSurveyAnswered(selected as AttributionSource);
 
     // 2) The durable write (best-effort — the event already captured attribution).
     try {
@@ -108,11 +121,16 @@ export function AttributionSurvey({
           className,
         )}
       >
-        <p className="font-display text-2xl uppercase leading-none tracking-tight">
-          Thanks! <span aria-hidden="true">🧠</span>
+        {/* The global ::selection is brand-blue — invisible on this blue card — so
+            each text line carries a visible on-brand (ink/paper) selection. Set
+            per-line (not on the card) so the higher-specificity element rule wins
+            over the global ::selection without relying on highlight inheritance. */}
+        <p className="font-display text-2xl uppercase leading-none tracking-tight selection:bg-ink selection:text-paper">
+          Thanks!
         </p>
-        <p className="mt-2 text-sm font-medium leading-relaxed text-ink/80">
-          That helps us make more of what you like.
+        <p className="mt-2 text-sm font-medium leading-relaxed text-ink/80 selection:bg-ink selection:text-paper">
+          That helps us make more of what you like{" "}
+          <span aria-hidden="true">❤️</span>
         </p>
       </div>
     );
@@ -136,15 +154,10 @@ export function AttributionSurvey({
           aria-labelledby={legendId}
           className="mt-4 grid grid-cols-2 gap-2.5"
         >
-          {OPTIONS.map((opt, i) => {
+          {OPTIONS.map((opt) => {
             const isChecked = selected === opt.value;
-            // The 5th option ("Somewhere else") spans the full width for balance.
-            const spanFull = i === OPTIONS.length - 1;
             return (
-              <label
-                key={opt.value}
-                className={cn("min-w-0", spanFull && "col-span-2")}
-              >
+              <label key={opt.value} className="min-w-0">
                 <input
                   type="radio"
                   name={groupName}
