@@ -23,41 +23,41 @@ export const metadata: Metadata = {
 const STEPS: StepItem[] = [
   {
     label: "Step 1",
-    title: "Pick a dumb little game",
-    body: "Jump into a quick round — the kind that actually makes you think, not zone out.",
+    title: "Pick a game and play",
+    body: "Jump into a quick puzzle round — slide, stack, or match your way to a high score in under a minute.",
   },
   {
     label: "Step 2",
-    title: "Get ranked",
-    body: "Every round scores you and moves your brain rank. The better you play, the higher you climb.",
+    title: "Beat your best, climb the rank",
+    body: "Every round scores you and bumps your brain rank. The higher you score, the higher you climb.",
   },
   {
     label: "Step 3",
-    title: "Flex on your friends",
-    body: "Keep a daily streak, share your rank, and tag a fart smella to settle who's really smart.",
+    title: "Drag your friends in",
+    body: "Keep your daily streak alive, then send a friend the exact same board to settle who's smarter.",
   },
 ];
 
 const FEATURES: Feature[] = [
   {
     icon: Gamepad2,
-    title: "Real brain games",
-    body: "Genuinely tricky rounds that reward focus and memory — not mindless tap-to-win.",
+    title: "A stack of quick puzzle games",
+    body: "Slide, stack, match, and remember your way to a high score — one-handed rounds you finish in under a minute.",
   },
   {
     icon: TrendingUp,
-    title: "Your brain rank",
-    body: "Every game scores you and ranks your brain against everyone else playing.",
+    title: "One shared brain rank",
+    body: "Every game feeds a single score. Beat your own bests to climb from certified fart smella to smart fella.",
   },
   {
     icon: Flame,
-    title: "Daily streak",
-    body: "A fresh challenge every day. Miss one and watch the streak die.",
+    title: "A daily challenge + streaks",
+    body: "One new challenge drops every day. Play daily to grow your streak — miss a day and it resets to zero.",
   },
   {
     icon: Users,
-    title: "Tag a fart smella",
-    body: "Challenge anyone head to head and prove who's really smart.",
+    title: "Head-to-head with friends",
+    body: "Send a friend the exact same board and see who scores higher. Loser gets tagged, obviously.",
   },
 ];
 
@@ -122,7 +122,7 @@ const TESTIMONIALS: Testimonial[] = [
 const FAQ: FaqItem[] = [
   {
     q: "What is this, exactly?",
-    a: "A dumb little game that knows exactly how smart you are. Quick brain-game rounds that score your brain and rank you against everyone else.",
+    a: "A stack of quick puzzle games — slide, stack, and match for a high score — that score your brain and rank you against everyone else playing.",
   },
   {
     q: "Is it actually fun, or is it secretly homework?",
@@ -200,7 +200,7 @@ export default function SmartOrFartPage() {
         className="pt-2 md:pt-6"
         eyebrow=""
         title="What you actually get"
-        intro="It's all built to make thinking a flex — get ranked, keep a streak, and drag your friends in."
+        intro="A stack of quick puzzle games, one shared brain rank, and a daily streak you'll get weirdly protective of."
         columns={2}
         features={FEATURES}
       />
