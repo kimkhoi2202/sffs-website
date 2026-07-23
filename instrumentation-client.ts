@@ -4,15 +4,11 @@
  * ready by first paint. The <PostHogProvider> in app/layout.tsx shares THIS same
  * singleton so `usePostHog()` / feature-flag hooks work in client components.
  *
- * Config = "MAXIMUM tracking, IDENTIFIED" per the go-live decision: the site is
- * general-audience, so autocapture, web analytics, web vitals, SESSION REPLAY,
- * heatmaps, console-log capture, and persistent cookies are ALL on, and visitors
- * are IDENTIFIED BY EMAIL on signup (see lib/analytics/events.ts identifyOnSignup)
- * so events + sessions tie to a real person. The email is now captured as a person
- * identifier. TWO reversible safety guards remain: (1) the email INPUT stays masked
- * in session replay — we never record it being typed — and request/response bodies
- * are never recorded; and (2) GPC/DNT are honored. $ip stays denylisted so raw IP is
- * never stored (PostHog still derives city/country geo server-side).
+ * Config = "privacy-conscious FULL SEND" per docs/analytics/posthog-tracking-plan.md:
+ * the site is general-audience, so autocapture, web analytics, web vitals, SESSION
+ * REPLAY, and persistent cookies are ALL on — but with responsible guards that hold
+ * regardless: inputs masked in replay (email never recorded), no request bodies,
+ * email/$ip denylisted + scrubbed, and GPC/DNT honored.
  *
  * PROD-DOMAIN GUARD: PostHog only initializes on the production hostname(s). On
  * localhost, `*.vercel.app` previews, or any other host it never boots — so dev
@@ -59,22 +55,18 @@ if (isProdHost && key) {
 
     // --- session replay ON, privacy-guarded (plan §5) ---
     disable_session_recording: false,
-    enable_recording_console_log: true, // MAX coverage — capture console logs in replay (app never logs the email)
+    enable_recording_console_log: false, // W2: never capture console logs in replay (max privacy)
     session_recording: {
-      // SAFETY DEFAULT (reversible): the email INPUT stays masked — we never record
-      // the address being typed char-by-char. Say the word to unmask this too.
-      maskAllInputs: true,
+      maskAllInputs: true, // masks the email field — typed values never recorded
       maskTextSelector: "[data-ph-mask]", // opt-in extra masking hook (form wrapper)
-      recordBody: false, // keep request/response bodies OFF (the POST body has the email)
+      recordBody: false, // NEVER capture request/response bodies (the POST body has the email)
       recordHeaders: false,
     },
 
-    // --- retained guards (reversible) ---
-    respect_dnt: true, // honor Do Not Track / GPC (privacy-policy promise)
-    // Email is now CAPTURED as a person identifier (identified analytics); only $ip
-    // stays denylisted so raw IP is never stored (geo still derived server-side).
-    property_denylist: ["$ip"],
-    before_send: scrubAndEnrich, // platform enrichment + $ip belt (no longer strips email)
+    // --- responsible guards that hold even in full-send mode (plan §11.1) ---
+    respect_dnt: true, // honor Do Not Track
+    property_denylist: ["$ip", "email", "email_address"], // hard PII guard
+    before_send: scrubAndEnrich, // belt-and-suspenders PII scrub + platform enrich
 
     loaded: (ph) => {
       registerLaunchSuperProperties();

@@ -113,9 +113,9 @@ export async function POST(request: NextRequest) {
 
   try {
     await insertEmailSignup({ email, source, meta });
-    // Ad-blocker-proof server-side conversion truth, tied to the email person
-    // (identified analytics). Runs after the durable insert; never throws.
-    await captureEmailCapturedServer(request, source, email);
+    // Ad-blocker-proof server-side conversion truth (no PII — source/attribution
+    // only). Runs after the durable insert; never throws.
+    await captureEmailCapturedServer(request, source);
     return NextResponse.json({ ok: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unexpected error.";

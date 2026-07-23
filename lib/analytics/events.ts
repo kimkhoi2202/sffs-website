@@ -6,13 +6,10 @@
  * typed, self-documenting call (1:1 with docs/analytics/posthog-tracking-plan.md
  * §2) instead of scattering stringly-typed `posthog.capture("...")` around.
  *
- * IDENTIFIED ANALYTICS: visitors are identified BY EMAIL on signup + survey answer
- * (see identifyOnSignup / identifyOnSurveyAnswer), so events + sessions tie to a
- * real person and full individual journeys are visible. The email lives on the
- * PERSON profile (via identify), not on the conversion event itself —
- * `email_captured` still carries source + attribution only. `scrubAndEnrich` strips
- * $ip from outbound events (belt) and enriches platform; it intentionally NO LONGER
- * strips email.
+ * PRIVACY INVARIANT: no event here ever carries an email address or any PII. The
+ * conversion event `email_captured` carries source + attribution only; the email
+ * lives solely in Aurora. `scrubAndEnrich` is a belt-and-suspenders guard that
+ * strips email/$ip from EVERY outbound event regardless of caller.
  */
 import posthog from "posthog-js";
 import type { CaptureResult } from "posthog-js";
@@ -94,12 +91,9 @@ export function registerLaunchSuperProperties(): void {
 }
 
 /* --------------------------------------------------------------------------
- * before_send — $ip belt + platform enrichment
+ * before_send — PII scrubber + platform enrichment (plan §11.1)
  * ------------------------------------------------------------------------ */
-// Email is intentionally CAPTURED now (identified analytics), so it is NOT in this
-// list. Only $ip is stripped (belt) so raw IP never leaves the browser — PostHog
-// still derives city/country geo server-side from the request.
-const PII_KEYS = ["$ip"] as const;
+const PII_KEYS = ["email", "email_address", "$ip"] as const;
 
 let cachedPlatform: string | null = null;
 function platformOnce(): string {
@@ -108,11 +102,10 @@ function platformOnce(): string {
 }
 
 /**
- * Runs on EVERY outbound event. (1) strips `$ip` from properties + the person
- * `$set`/`$set_once` bags (belt — raw IP is never stored); (2) guarantees
- * `platform` is present so the conversion funnel's platform breakdown is never
- * blank (including the first pageview). Email is deliberately left intact so
- * identify()'s person properties reach PostHog.
+ * Runs on EVERY outbound event. (1) hard-strips email/$ip from properties + the
+ * person `$set`/`$set_once` bags — a guarantee no accidental PII ever leaves the
+ * browser; (2) guarantees `platform` is present so the conversion funnel's
+ * platform breakdown is never blank (including the first pageview).
  */
 export function scrubAndEnrich(cr: CaptureResult | null): CaptureResult | null {
   if (!cr) return cr;
@@ -124,77 +117,6 @@ export function scrubAndEnrich(cr: CaptureResult | null): CaptureResult | null {
     cr.properties.platform = platformOnce();
   }
   return cr;
-}
-
-/* --------------------------------------------------------------------------
- * Identity — IDENTIFIED analytics (email is the person identifier)
- * ------------------------------------------------------------------------ */
-
-/** First-touch attribution from the landing URL, for identify()'s $set_once. */
-function initialAttribution(): Record<string, string> {
-  const out: Record<string, string> = {};
-  if (typeof window === "undefined") return out;
-  try {
-    const p = new URLSearchParams(window.location.search);
-    for (const k of [
-      "utm_source",
-      "utm_medium",
-      "utm_campaign",
-      "utm_content",
-      "utm_term",
-    ] as const) {
-      const v = p.get(k);
-      if (v) out[`initial_${k}`] = v;
-    }
-    if (document.referrer) out.initial_referrer = document.referrer;
-  } catch {
-    // best-effort — attribution is nice-to-have, never block identify
-  }
-  return out;
-}
-
-/**
- * Identify the visitor BY EMAIL on signup. This ties every prior anonymous event
- * and every future event + session replay to a real person, so full individual
- * journeys are visible. Rich person properties are set for segmentation; the email
- * is intentionally stored on the person profile (identified analytics).
- */
-export function identifyOnSignup(email: string): void {
-  const platform = derivePlatform();
-  const now = new Date().toISOString();
-  posthog.identify(
-    email, // the person identifier = the email address
-    {
-      // $set — latest-wins person properties
-      email,
-      signup_source: EMAIL_SOURCE,
-      signup_platform: platform,
-      is_touch: isTouchDevice(),
-      last_signup_at: now,
-    },
-    {
-      // $set_once — first-touch, never overwritten
-      first_signup_at: now,
-      initial_signup_platform: platform,
-      ...initialAttribution(),
-    },
-  );
-}
-
-/**
- * On the attribution-survey answer: (re)identify by email (per the identified-
- * analytics decision) and record the self-reported acquisition channel on the
- * person profile. Falls back to setPersonProperties if the email is unavailable.
- */
-export function identifyOnSurveyAnswer(
-  email: string | undefined,
-  source: AttributionSource,
-  detail?: string,
-): void {
-  const set: Record<string, string> = { self_reported_source: source };
-  if (detail) set.self_reported_detail = detail;
-  if (email) posthog.identify(email, set);
-  else posthog.setPersonProperties(set);
 }
 
 /* --------------------------------------------------------------------------
