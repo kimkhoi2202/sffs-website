@@ -11,7 +11,7 @@ export type LegalSection = {
   id: string;
   /** Uppercase Anton section heading. */
   heading: string;
-  /** Body content — author paragraphs / lists as DIRECT children (see proseClass). */
+  /** Body content: author paragraphs / lists as DIRECT children (see proseClass). */
   body: ReactNode;
 };
 
@@ -34,15 +34,15 @@ const proseClass =
 /**
  * On-brand shell for the site's long-form legal pages (Terms, Privacy).
  *
- * Echoes the site's neo-brutalist system — Anton display headings, DM Sans body,
- * thick ink rules, hard offset shadows, brand color-blocking — but tuned for
+ * Echoes the site's neo-brutalist system (Anton display headings, DM Sans body,
+ * thick ink rules, hard offset shadows, brand color-blocking) but tuned for
  * readability: a narrow prose column, an uppercase-Anton heading per section, and
  * generous spacing.
  *
  * The whole page sits in its own `relative z-40` stacking context with opaque
  * brand surfaces, so the global draggable shape field (an inset-0 z-30 overlay
  * mounted in app/layout.tsx) stays BEHIND the dense legal copy and never drifts
- * over the text — while the fixed music toggle (z-40, later in the DOM) and the
+ * over the text, while the fixed music toggle (z-40, later in the DOM) and the
  * skip link (z-100) stay on top and fully usable. `flex-1` lets the page grow to
  * fill the viewport so the shared footer is always grounded at the bottom.
  */
@@ -65,7 +65,7 @@ export function LegalPage({
         <Container className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 py-3 md:py-4">
           <Link
             href="/"
-            aria-label="Smart Fella or Fart Smella — home"
+            aria-label="Smart Fella or Fart Smella, home"
             className="col-start-1 inline-flex items-center justify-self-start"
           >
             {/* eslint-disable-next-line @next/next/no-img-element -- brand mark is a static /public asset */}
@@ -93,7 +93,7 @@ export function LegalPage({
       </header>
 
       <main id="main" className="flex-1">
-        {/* Title band — signature yellow color-block, ink rule below. */}
+        {/* Title band: signature yellow color-block, ink rule below. */}
         <section className="border-b-[2.5px] border-ink bg-yellow">
           <Container size="prose" className="py-14 md:py-20">
             <Eyebrow>Legal</Eyebrow>
@@ -106,12 +106,12 @@ export function LegalPage({
           </Container>
         </section>
 
-        {/* Body — prose column on paper. */}
+        {/* Body: prose column on paper. */}
         <section className="bg-paper">
           <Container size="prose" className="py-14 md:py-20">
             <div className={proseClass}>{intro}</div>
 
-            {/* On this page — quick jump menu for a long document. */}
+            {/* On this page: quick jump menu for a long document. */}
             <nav
               aria-label="On this page"
               className="mt-10 rounded-2xl border-[2.5px] border-ink bg-cream p-6 shadow-hard-sm"

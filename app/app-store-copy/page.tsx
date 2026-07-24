@@ -21,6 +21,10 @@ export const metadata: Metadata = {
   // Internal utility page, keep it out of search results.
   robots: { index: false, follow: false },
   alternates: { canonical: "/app-store-copy" },
+  // Plain string images (no alt) so this internal page does not inherit the
+  // site-wide OG/Twitter card alt text.
+  openGraph: { images: ["/opengraph-image"] },
+  twitter: { images: ["/twitter-image"] },
 };
 
 // ---- Character-limited copy (edit here; counts update automatically) ----
