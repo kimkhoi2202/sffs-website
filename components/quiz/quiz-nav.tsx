@@ -112,7 +112,7 @@ export function QuizNav({
         */}
         <nav
           aria-label="The Fella Test"
-          className="mx-auto grid max-w-page grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 py-3 md:px-8"
+          className="mx-auto grid max-w-page grid-cols-[auto_1fr_auto] items-center gap-3 px-4 py-3 md:grid-cols-[1fr_auto_1fr] md:px-8"
         >
           <a
             href={homeHref}
@@ -152,7 +152,7 @@ export function QuizNav({
               href={ctaHref}
               variant="coral"
               size="sm"
-              className="font-sans font-bold text-lg uppercase leading-none tracking-[-0.01em]"
+              className="font-sans font-bold text-sm uppercase leading-none tracking-[-0.01em] sm:text-lg"
             >
               Join the waitlist
             </Button>
