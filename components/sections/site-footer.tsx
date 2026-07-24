@@ -1,16 +1,26 @@
 import type { CSSProperties } from "react";
+import Link from "next/link";
 
 import styles from "./site-footer.module.css";
 
+/*
+  [Support Email] is a clearly-marked placeholder token so the owner can
+  find/replace it before launch. Recommended default: hello@smartfellaorfartsmella.com
+*/
+const SUPPORT_EMAIL = "[Support Email]";
+
+const footerLink =
+  "font-bold text-ink underline decoration-2 underline-offset-4 transition-colors hover:text-ink/60";
+
 /**
- * The footer as a living body of WATER (preview-only — nothing here pushes
+ * The footer as a living body of WATER (preview-only, nothing here pushes
  * page layout; every effect is an absolutely-positioned, aria-hidden overlay).
  *
  * The top seam is the SOLE boundary between the previous (yellow) section and
  * the blue footer: a smooth multi-crest water surface rolls across it. The strip
- * ABOVE the wave is transparent — the footer overlaps the section above (a
+ * ABOVE the wave is transparent (the footer overlaps the section above via a
  * negative top margin, cancelled by matching padding so the content doesn't
- * move), so that section's color shows through above the crests — and everything
+ * move), so that section's color shows through above the crests, and everything
  * from the ink surface line DOWN is filled brand-blue. A sunlit sheen rides
  * locked to the very same surface line (shared crest path + roll, no independent
  * drift). Small "~~~" ripple marks scatter and drift over the water, the swim
@@ -68,7 +78,7 @@ export function SiteFooter() {
       />
 
       {/*
-        TOP SEAM — the SOLE yellow→blue boundary. A rolling multi-crest water
+        TOP SEAM: the SOLE yellow to blue boundary. A rolling multi-crest water
         surface: transparent above the wave (the overlapped section shows through),
         brand-blue from the ink surface line down. Full-bleed, 200%-wide with a
         -50% roll so the crest pattern wraps with no visible seam. aria-hidden +
@@ -82,7 +92,7 @@ export function SiteFooter() {
           {/*
             ONE rolling group so the blue fill, the sunlit sheen, and the ink
             surface line share the EXACT same crest path, phase, direction and
-            speed — they can never desync (the sheen rides locked just under the
+            speed, they can never desync (the sheen rides locked just under the
             line). The stroke is a continuous SCALING stroke (deliberately NOT
             `vector-effect="non-scaling-stroke"`, which trips a Chromium
             rasterizer bug that fragments the line under this
@@ -153,7 +163,7 @@ export function SiteFooter() {
         ))}
       </div>
 
-      {/* Swim brain mascot, mid-breaststroke in the lower-left water — well
+      {/* Swim brain mascot, mid-breaststroke in the lower-left water, well
           clear of the bottom-right copyright and the fixed bottom-right music
           toggle, so it never collides at any width. */}
       <span
@@ -173,14 +183,34 @@ export function SiteFooter() {
           BOTTOM-RIGHT corner (right-aligned, near the bottom) rather than
           centered. Full-bleed (NOT the max-w Container) so its right edge is
           measured from the true page edge; pr-[6.5rem] (104px) clears the fixed
-          bottom-right music toggle — a 56px puck inset 24px from the edge (left
-          edge ~80px in) — with a ~24px gap, so text and puck never overlap at
+          bottom-right music toggle, a 56px puck inset 24px from the edge (left
+          edge ~80px in), with a ~24px gap, so text and puck never overlap at
           any breakpoint. On the narrowest screens the single line can't fit in
           the gap between the lower-left mascot and the toggle, so a max-width
           lets it wrap to two right-aligned lines that stay clear of BOTH the
           mascot and the puck; the cap is dropped at sm+ where there's room for
           one line. min-height preserves the water body's height. */}
-      <div className="relative z-10 flex min-h-[13rem] items-end justify-end pb-6 pl-6 pr-[6.5rem]">
+      <div className="relative z-10 flex min-h-[13rem] flex-col items-end justify-end gap-4 pb-6 pl-6 pr-[6.5rem]">
+        {/* Legal + support text links (required on every page). Right-aligned and
+            stacked above the copyright so they clear the lower-left mascot and the
+            fixed bottom-right music toggle at every width. */}
+        <nav
+          aria-label="Footer"
+          className="flex flex-wrap items-center justify-end gap-x-5 gap-y-2 text-right text-sm"
+        >
+          <Link href="/privacy" className={footerLink}>
+            Privacy
+          </Link>
+          <Link href="/terms" className={footerLink}>
+            Terms
+          </Link>
+          <Link href="/support" className={footerLink}>
+            Support
+          </Link>
+          <a href={`mailto:${SUPPORT_EMAIL}`} className={footerLink}>
+            {SUPPORT_EMAIL}
+          </a>
+        </nav>
         <p className={`${styles.copy} max-w-[8.5rem] text-right text-sm font-medium text-ink/70 sm:max-w-none`}>
           © 2026 Smart Fella or Fart Smella
         </p>
