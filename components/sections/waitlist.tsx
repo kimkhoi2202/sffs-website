@@ -23,11 +23,11 @@ export interface WaitlistProps {
 /**
  * Waitlist email capture for the landing page.
  *
- * ⚠️ NOT WIRED TO A BACKEND YET. `onSubmit` validates the address client-side
- * and shows a success state, but the email is DISCARDED — nothing is stored or
- * sent anywhere. Before this goes live, connect an email service (ConvertKit /
- * Mailchimp / Beehiiv / a Route Handler that writes somewhere) at the TODO
- * below. Until then, do not present this as a working signup in production.
+ * `onSubmit` validates the address client-side, then POSTs it to the real
+ * `/api/access-signup` Route Handler (which forwards it to Aurora via the
+ * email proxy). Success only flips to the confirmation state on an `{ ok:
+ * true }` response; a failed or unreachable request re-enables the form and
+ * shows a retryable error instead.
  */
 export function Waitlist({
   id,
@@ -40,10 +40,12 @@ export function Waitlist({
 }: WaitlistProps = {}) {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  function onSubmit(e: FormEvent<HTMLFormElement>) {
+  async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (submitting) return;
     const value = email.trim();
     const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
     if (!valid) {
@@ -51,9 +53,26 @@ export function Waitlist({
       return;
     }
     setError(null);
-    // TODO(email): wire this to a real email service. Right now the address is
-    // NOT stored or sent anywhere — this only flips the UI to a success state.
-    setSubmitted(true);
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/access-signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: value }),
+      });
+      const data = (await res.json().catch(() => null)) as
+        | { ok?: boolean; error?: string }
+        | null;
+      if (!res.ok || !data?.ok) {
+        setError(data?.error ?? "That didn't go through. Give it another shot.");
+        setSubmitting(false);
+        return;
+      }
+      setSubmitted(true);
+    } catch {
+      setError("Couldn't reach the server. Check your connection and try again.");
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -104,11 +123,12 @@ export function Waitlist({
               placeholder="you@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              disabled={submitting}
               aria-invalid={error ? true : undefined}
               aria-describedby={error ? "waitlist-error" : undefined}
-              className="h-14 flex-1 rounded-full border-[2.5px] border-ink bg-paper px-6 font-sans text-base font-medium text-ink placeholder:text-ink/45 shadow-hard-sm outline-none focus-visible:ring-2 focus-visible:ring-ink"
+              className="h-14 flex-1 rounded-full border-[2.5px] border-ink bg-paper px-6 font-sans text-base font-medium text-ink placeholder:text-ink/45 shadow-hard-sm outline-none focus-visible:ring-2 focus-visible:ring-ink disabled:cursor-not-allowed disabled:opacity-60"
             />
-            <Button type="submit" variant="green" size="lg" className="shrink-0">
+            <Button type="submit" variant="green" size="lg" className="shrink-0" disabled={submitting}>
               {cta}
             </Button>
           </form>
