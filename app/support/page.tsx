@@ -8,13 +8,8 @@ import { Container } from "@/components/ui/container";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { Heading } from "@/components/ui/heading";
 
-/*
-  Deliverable 3: the Support and Help page.
-
-  [Support Email] is left as a clearly-marked placeholder token so the owner can
-  find/replace it before launch. Recommended default: hello@smartfellaorfartsmella.com
-*/
-const SUPPORT_EMAIL = "[Support Email]";
+/* Deliverable 3: the Support and Help page. */
+const SUPPORT_EMAIL = "smartfellaorfartsmella123@gmail.com";
 
 export const metadata: Metadata = {
   title: { absolute: "Support and Help | Smart Fella or Fart Smella" },
@@ -171,7 +166,7 @@ const FAQ_ITEMS: FaqItem[] = [
       </>
     ),
     plain:
-      "Refunds are handled by the Apple App Store or Google Play under their policies, so please request refunds there. If you need help, email us at [Support Email].",
+      "Refunds are handled by the Apple App Store or Google Play under their policies, so please request refunds there. If you need help, email us at smartfellaorfartsmella123@gmail.com.",
   },
   {
     id: "delete-data",
@@ -207,7 +202,7 @@ const FAQ_ITEMS: FaqItem[] = [
       </>
     ),
     plain:
-      "Email us at [Support Email] and a real person will get back to you, usually within a couple of business days.",
+      "Email us at smartfellaorfartsmella123@gmail.com and a real person will get back to you, usually within a couple of business days.",
   },
 ];
 

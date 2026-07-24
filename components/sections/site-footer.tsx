@@ -3,11 +3,8 @@ import Link from "next/link";
 
 import styles from "./site-footer.module.css";
 
-/*
-  [Support Email] is a clearly-marked placeholder token so the owner can
-  find/replace it before launch. Recommended default: hello@smartfellaorfartsmella.com
-*/
-const SUPPORT_EMAIL = "[Support Email]";
+/* Support contact address, shown in the footer and used for the mailto link. */
+const SUPPORT_EMAIL = "smartfellaorfartsmella123@gmail.com";
 
 const footerLink =
   "font-bold text-ink underline decoration-2 underline-offset-4 transition-colors hover:text-ink/60";

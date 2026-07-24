@@ -5,15 +5,13 @@ import { LegalPage, type LegalSection } from "@/components/sections/legal-page";
 /*
   Deliverable 2: the Smart Fella or Fart Smella APP Terms of Service.
 
-  Fill-in values are left as clearly-marked placeholder tokens in EXACT bracket
-  format so the owner can find/replace them before launch. Do NOT invent values.
-  Recommended default for [Support Email]: hello@smartfellaorfartsmella.com
+  The operator is an individual sole developer (Kim Khoi Lam), not a company.
 */
-const LEGAL_ENTITY = "[Legal Entity Name]";
-const BUSINESS_ADDRESS = "[Business Address]";
-const GOVERNING_LAW = "[Governing-Law Jurisdiction]";
-const EFFECTIVE_DATE = "[Effective Date]";
-const SUPPORT_EMAIL = "[Support Email]";
+const LEGAL_ENTITY = "Kim Khoi Lam";
+const BUSINESS_ADDRESS = "1143 Sultana Spgs Ct, Houston, TX 77090";
+const GOVERNING_LAW = "the State of Texas, USA";
+const EFFECTIVE_DATE = "July 24, 2026";
+const SUPPORT_EMAIL = "smartfellaorfartsmella123@gmail.com";
 
 export const metadata: Metadata = {
   title: { absolute: "Terms of Service | Smart Fella or Fart Smella" },
@@ -103,8 +101,9 @@ const SECTIONS: LegalSection[] = [
           You do not need an account to play. The games work without one.
         </p>
         <p>
-          If you choose to sign in, you can use Supabase email and password or
-          Google sign-in. You are responsible for keeping your login details
+          If you choose to sign in, you can use Supabase email and password,
+          Google, or Apple sign-in. You are responsible for keeping your login
+          details
           private and for activity that happens under your account. If you think
           someone else is using your account, contact us through our{" "}
           <a href="/support">support page</a>.

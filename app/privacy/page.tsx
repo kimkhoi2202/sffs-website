@@ -6,14 +6,12 @@ import { Card } from "@/components/ui/card";
 /*
   Deliverable 1: the Smart Fella or Fart Smella APP Privacy Policy.
 
-  Fill-in values are left as clearly-marked placeholder tokens in EXACT bracket
-  format so the owner can find/replace them before launch. Do NOT invent values.
-  Recommended default for [Support Email]: hello@smartfellaorfartsmella.com
+  The operator is an individual sole developer (Kim Khoi Lam), not a company.
 */
-const LEGAL_ENTITY = "[Legal Entity Name]";
-const BUSINESS_ADDRESS = "[Business Address]";
-const EFFECTIVE_DATE = "[Effective Date]";
-const SUPPORT_EMAIL = "[Support Email]";
+const LEGAL_ENTITY = "Kim Khoi Lam";
+const BUSINESS_ADDRESS = "1143 Sultana Spgs Ct, Houston, TX 77090";
+const EFFECTIVE_DATE = "July 24, 2026";
+const SUPPORT_EMAIL = "smartfellaorfartsmella123@gmail.com";
 
 export const metadata: Metadata = {
   // Absolute title so the exact required tag is emitted (bypasses the site
@@ -170,7 +168,8 @@ const SECTIONS: LegalSection[] = [
                   Create and secure your optional account.
                 </td>
                 <td className="px-4 py-3 align-top">
-                  You or a parent at sign-in, through Supabase.
+                  You or a parent at sign-in, handled through Supabase using
+                  email and password, Google, or Apple.
                 </td>
               </tr>
               <tr className="border-b-2 border-ink/15">
@@ -182,6 +181,18 @@ const SECTIONS: LegalSection[] = [
                 </td>
                 <td className="px-4 py-3 align-top">
                   Google (only if you use Google sign-in).
+                </td>
+              </tr>
+              <tr className="border-b-2 border-ink/15">
+                <td className="px-4 py-3 align-top font-semibold">
+                  Apple account basics (name, email)
+                </td>
+                <td className="px-4 py-3 align-top">
+                  Identify your account if you choose Sign in with Apple.
+                </td>
+                <td className="px-4 py-3 align-top">
+                  Apple. With Apple&rsquo;s Hide My Email, the email may be a
+                  private relay address that forwards to us.
                 </td>
               </tr>
               <tr className="border-b-2 border-ink/15">
