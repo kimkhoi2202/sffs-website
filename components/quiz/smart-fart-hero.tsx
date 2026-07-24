@@ -128,16 +128,17 @@ export function SmartFartHero({
     { scope: root },
   );
 
-  // Global "press T to take the test" shortcut. The hero stays mounted for the
-  // whole page, so this window listener works anywhere. It ignores modifier
-  // combos and keystrokes typed into form fields, then smooth-scrolls to the
-  // pricing/test section via the SAME nav-height-aware helper the "Take the
-  // test" CTA uses (components/quiz/smooth-scroll.tsx), so the shortcut and the
-  // click land on the exact same spot below the fixed nav — and it composes
-  // cleanly with Lenis (falling back to native scroll under reduced motion).
+  // Global "press W to join the waitlist" shortcut. The hero stays mounted for
+  // the whole page, so this window listener works anywhere. It ignores modifier
+  // combos and keystrokes typed into form fields (so typing "w" in the email
+  // input never fires it), then smooth-scrolls to the waitlist via the SAME
+  // nav-height-aware helper the CTA uses (components/quiz/smooth-scroll.tsx), so
+  // the shortcut and the click land on the exact same spot below the fixed nav —
+  // and it composes cleanly with Lenis (falling back to native scroll under
+  // reduced motion).
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key.toLowerCase() !== "t") return;
+      if (event.key.toLowerCase() !== "w") return;
       if (event.ctrlKey || event.metaKey || event.altKey) return;
       const target = event.target as HTMLElement | null;
       if (
@@ -278,12 +279,25 @@ export function SmartFartHero({
         </p>
 
         <div className="fella-cta mt-[clamp(1rem,3.4vh,2.5rem)] flex flex-col items-center gap-[clamp(1.15rem,3.8vh,2.85rem)]">
-          <p className="flex items-center justify-center gap-2 text-sm font-medium text-ink/70">
-            <span>Press</span>
-            <kbd className="inline-flex size-7 items-center justify-center rounded-md border-2 border-ink bg-paper font-sans text-sm font-bold leading-none text-ink shadow-hard-xs">
-              T
+          {/*
+            "Press W anytime to join the Waitlist". `fine-pointer-only` (globals.css)
+            hides this on touch / coarse-pointer devices (where a keyboard hint is
+            meaningless) and shows it as a flex row on real mouse/trackpad pointers.
+            aria-label carries the exact reading so AT gets one clean phrase instead
+            of the split "Press" / kbd / trailing-text fragments.
+          */}
+          <p
+            aria-label="Press W anytime to join the Waitlist"
+            className="fine-pointer-only items-center justify-center gap-2 text-sm font-medium text-ink/70"
+          >
+            <span aria-hidden>Press</span>
+            <kbd
+              aria-hidden
+              className="inline-flex size-7 items-center justify-center rounded-md border-2 border-ink bg-paper font-sans text-sm font-bold leading-none text-ink shadow-hard-xs"
+            >
+              W
             </kbd>
-            <span>anytime to join the waitlist</span>
+            <span aria-hidden>anytime to join the Waitlist</span>
           </p>
           <Button href={primaryCta.href} variant="green" size="lg">
             {primaryCta.label}

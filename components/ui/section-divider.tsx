@@ -107,13 +107,24 @@ export function SectionDivider({
   return (
     <div
       aria-hidden
-      className={cn("relative w-full leading-[0]", className)}
+      // overflow-hidden + -my-px kill the edge artifacts this divider used to show
+      // against a bright section: (1) the ink stroke STARTS/ENDS at the left and
+      // right viewBox edges (e.g. scallopBig's 0,34 / 1440,34), so its round
+      // line-caps rendered as short VERTICAL ticks at the section's side edges —
+      // the SVG below is over-drawn a few px past each side and clipped here so
+      // those endpoints fall off-screen and the wave runs cleanly to both edges;
+      // (2) the divider's top/bottom land on fractional pixels, so each seam with
+      // the adjacent same-color section revealed a faint full-width HORIZONTAL
+      // hairline — -my-px overlaps both neighbours by 1px (the divider's top/bottom
+      // colour matches the section it meets) so no sub-pixel gap can show. Net: the
+      // wavy ink line is the ONLY line in the seam.
+      className={cn("relative -my-px w-full overflow-hidden leading-[0]", className)}
       style={{ backgroundColor: HEX[bottom] }}
     >
       <svg
         viewBox="0 0 1440 100"
         preserveAspectRatio="none"
-        className={cn("block w-full", SIZE[size], flip && "-scale-x-100")}
+        className={cn("-ml-2 block w-[calc(100%+16px)]", SIZE[size], flip && "-scale-x-100")}
       >
         <path d={`${d} L1440,0 L0,0 Z`} fill={HEX[top]} shapeRendering="geometricPrecision" />
         <path
