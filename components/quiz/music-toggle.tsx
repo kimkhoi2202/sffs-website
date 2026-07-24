@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 /**
  * Floating background-music toggle for the /smart-or-fart quiz.
  *
- * A fixed neo-brutalist yellow puck pinned to the bottom-right corner that
+ * A fixed neo-brutalist orange puck pinned to the bottom-right corner that
  * plays/pauses a looping fanfare track. It defaults to OFF: nothing plays on
  * load and the page stays silent until the user explicitly clicks the button.
  * The first click starts the track (audible); clicking again pauses it.
@@ -59,8 +59,9 @@ export function MusicToggle() {
         className={cn(
           // Always-on-top floating puck, clear of page content + the reveal nav.
           "fixed bottom-6 right-6 z-40 grid size-14 place-items-center",
-          // Signature 30MPC surface: yellow, thick ink border.
-          "cursor-pointer rounded-full border-[2.5px] border-ink bg-yellow text-ink",
+          // Signature 30MPC surface: orange fill (no section background is
+          // orange, so the puck never blends in), thick ink border.
+          "cursor-pointer rounded-full border-[2.5px] border-ink bg-orange text-ink",
           // Shared button interaction (single source of truth for the press feel):
           // the hard offset shadow MOVES on hover — rest 4px/4px, hover lifts
           // up-left with a bigger 6px/6px shadow, active presses flat to 0. Owns

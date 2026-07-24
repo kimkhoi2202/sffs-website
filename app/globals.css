@@ -20,6 +20,9 @@
   --color-mint: #c6fcd0;
   --color-coral: #fd7962;
   --color-yellow: #fce552;
+  /* Punchy orange used only by the floating sound toggle. No section surface is
+     orange, so the puck always pops instead of blending into the background. */
+  --color-orange: #ff7a1a;
   /* Brand "smart-brain" green from the logo: a medium spring/emerald green
      (distinct from the light pastel --color-mint). Used for primary
      conversion CTAs, which sit on a plain black hard shadow. */
