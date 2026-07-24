@@ -107,25 +107,33 @@ export function SectionDivider({
   return (
     <div
       aria-hidden
-      // overflow-hidden + -my-px kill the edge artifacts this divider used to show
-      // against a bright section: (1) the ink stroke STARTS/ENDS at the left and
-      // right viewBox edges (e.g. scallopBig's 0,34 / 1440,34), so its round
-      // line-caps rendered as short VERTICAL ticks at the section's side edges —
-      // the SVG below is over-drawn a few px past each side and clipped here so
-      // those endpoints fall off-screen and the wave runs cleanly to both edges;
-      // (2) the divider's top/bottom land on fractional pixels, so each seam with
-      // the adjacent same-color section revealed a faint full-width HORIZONTAL
-      // hairline — -my-px overlaps both neighbours by 1px (the divider's top/bottom
-      // colour matches the section it meets) so no sub-pixel gap can show. Net: the
-      // wavy ink line is the ONLY line in the seam.
+      // The wavy ink stroke is the ONLY line at this seam. Three things make that
+      // true:
+      // (1) BOTH section colours are painted INSIDE the SVG — the top colour above
+      //     the wave and the bottom colour below it — so the whole SVG is opaque and
+      //     the div needs NO background. The div is therefore transparent: an anti-
+      //     aliased SVG box-edge then blends with the SAME-colour section sitting
+      //     behind it (not a mismatched div bg), so neither the top nor the bottom
+      //     edge can leave a faint coloured hairline. (Previously the div bg was the
+      //     bottom colour, so the SVG's top edge exposed ~1 sub-pixel of it.)
+      // (2) The ink stroke starts/ends at the left/right viewBox edges (e.g.
+      //     scallopBig 0,34 / 1440,34); its round caps would show as short VERTICAL
+      //     ticks at the section's sides, so the SVG is over-drawn a few px past each
+      //     side and clipped by overflow-hidden — the endpoints fall off-screen and
+      //     the wave runs cleanly to both edges.
+      // (3) -my-px overlaps both neighbours by 1px (same colour) as belt-and-braces
+      //     against any sub-pixel gap where the divider's top/bottom lands on a
+      //     fractional device pixel.
       className={cn("relative -my-px w-full overflow-hidden leading-[0]", className)}
-      style={{ backgroundColor: HEX[bottom] }}
     >
       <svg
         viewBox="0 0 1440 100"
         preserveAspectRatio="none"
         className={cn("-ml-2 block w-[calc(100%+16px)]", SIZE[size], flip && "-scale-x-100")}
       >
+        {/* Bottom-colour fill BELOW the wave (down to the viewBox bottom). */}
+        <path d={`${d} L1440,100 L0,100 Z`} fill={HEX[bottom]} shapeRendering="geometricPrecision" />
+        {/* Top-colour fill ABOVE the wave (up to the viewBox top). */}
         <path d={`${d} L1440,0 L0,0 Z`} fill={HEX[top]} shapeRendering="geometricPrecision" />
         <path
           d={d}
