@@ -6,6 +6,7 @@ import { Section } from "@/components/ui/section";
 import { Heading } from "@/components/ui/heading";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 type SectionBackground = NonNullable<React.ComponentProps<typeof Section>["background"]>;
 
@@ -78,9 +79,30 @@ export function Waitlist({
   return (
     <Section
       id={id}
-      className={className}
+      className={cn(
+        // FULL-VIEWPORT coral panel. This is the primary conversion section, so it
+        // fills a whole screen — when it's in view (chiefly via the "Join the
+        // waitlist" CTAs, which pin its top just under the fixed nav) the coral
+        // reaches from under the nav to the fold and the FAQ below stays under the
+        // fold instead of peeking up.
+        //
+        // Height: 100dvh MINUS the live nav height. dvh (not svh) because this is
+        // a SCROLLED-TO section — by the time it's reached the mobile URL bar is
+        // already collapsed, so dvh matches the real visible height; svh would be
+        // sized to the small (bar-shown) viewport and leave the FAQ peeking once
+        // the bar hides. The fixed nav is an overlay (not in flow), so we subtract
+        // its measured height (--nav-h, published by smooth-scroll.tsx; 4.5rem
+        // fallback pre-hydration) so the panel fills exactly the area below it.
+        //
+        // Flex-centered so the eyebrow/headline/subtext/form sit balanced in the
+        // panel; min-height (not height) lets it grow on very short phones so the
+        // email input + button are never clipped. py shrinks on small screens to
+        // keep that form on-screen.
+        "flex min-h-[calc(100dvh_-_var(--nav-h,4.5rem))] flex-col justify-center py-10 md:py-16",
+        className,
+      )}
       background={background}
-      padding="lg"
+      padding="none"
       container="prose"
       containerClassName="text-center"
     >
@@ -126,7 +148,12 @@ export function Waitlist({
               disabled={submitting}
               aria-invalid={error ? true : undefined}
               aria-describedby={error ? "waitlist-error" : undefined}
-              className="h-14 flex-1 rounded-full border-[2.5px] border-ink bg-paper px-6 font-sans text-base font-medium text-ink placeholder:text-ink/45 shadow-hard-sm outline-none focus-visible:ring-2 focus-visible:ring-ink disabled:cursor-not-allowed disabled:opacity-60"
+              // w-full + sm:flex-1: on mobile the form is a flex-COLUMN, where
+              // `flex-1` would collapse the input's height to its min-content
+              // (~26px) and leave it shorter than the button. Keep the fixed h-14
+              // via full width on mobile, and only grow horizontally (flex-1) once
+              // the form switches to a row at sm+.
+              className="h-14 w-full rounded-full border-[2.5px] border-ink bg-paper px-6 font-sans text-base font-medium text-ink placeholder:text-ink/45 shadow-hard-sm outline-none focus-visible:ring-2 focus-visible:ring-ink disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:flex-1"
             />
             <Button type="submit" variant="green" size="lg" className="shrink-0" disabled={submitting}>
               {cta}
