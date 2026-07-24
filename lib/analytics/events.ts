@@ -120,7 +120,7 @@ export function scrubAndEnrich(cr: CaptureResult | null): CaptureResult | null {
   // users" filter can exclude them from the PUBLIC metrics. Events still record
   // — they're just tagged. Enforced here (on EVERY event) as a belt-and-suspenders
   // guarantee alongside the registered super-property, so even the first pageview
-  // of a fresh load is tagged. See app/analytics-optout.
+  // of a fresh load is tagged. See app/internal.
   if (cr.properties && hasStoredInternal()) {
     cr.properties[INTERNAL_PROPERTY] = true;
   }
@@ -128,7 +128,7 @@ export function scrubAndEnrich(cr: CaptureResult | null): CaptureResult | null {
 }
 
 /* --------------------------------------------------------------------------
- * Per-browser INTERNAL-USER toggle (see app/analytics-optout)
+ * Per-browser INTERNAL-USER toggle (see app/internal)
  *
  * The owner + teammates mark their OWN browser as internal so their visits are
  * EXCLUDED FROM THE PUBLIC METRICS without vanishing: events still flow to

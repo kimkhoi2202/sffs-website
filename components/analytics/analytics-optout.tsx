@@ -15,7 +15,7 @@ import {
 } from "@/lib/analytics/events";
 
 /**
- * /analytics-optout — a bookmarkable, per-browser INTERNAL-USER toggle.
+ * /internal — a bookmarkable, per-browser INTERNAL-USER toggle.
  *
  * The owner + teammates mark their OWN browser as internal so their visits don't
  * skew the PUBLIC metrics — without disappearing. Events still flow to PostHog;
@@ -133,7 +133,7 @@ export function AnalyticsOptOut() {
             </Heading>
             <p className="mt-6 max-w-prose text-[1.05rem] leading-[1.7] text-ink/80">
               For the SFFS team. Mark this browser as{" "}
-              <strong>internal</strong> so your own visits (and your
+              <strong>internal</strong>{" "}so your own visits (and your
               teammates&rsquo;) still record but are{" "}
               <strong>kept out of the public metrics</strong> — dashboards,
               funnels, and reports.
@@ -222,6 +222,9 @@ export function AnalyticsOptOut() {
                     onClick={isInternal ? () => applyMakeNormal() : () => applyMarkInternal()}
                     variant={isInternal ? "paper" : "ink"}
                     size={isInternal ? "sm" : "lg"}
+                    // Soften the mark-internal CTA's hard drop shadow from black
+                    // to an on-brand gray so it reads gentler on the coral card.
+                    className={!isInternal ? "[--btn-shadow-color:var(--color-gray-600)]" : undefined}
                   >
                     {isInternal
                       ? "Make this a normal visitor"

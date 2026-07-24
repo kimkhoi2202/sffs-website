@@ -37,7 +37,7 @@ const isProdHost =
 /**
  * Internal-user tag: read the durable per-browser flag SYNCHRONOUSLY (before
  * posthog.init) so a teammate who marked this browser internal via
- * /analytics-optout has `is_internal: true` registered BEFORE the first capture.
+ * /internal has `is_internal: true` registered BEFORE the first capture.
  * Their events STILL flow — they're just stamped internal and filtered out of the
  * public metrics by the project's test-account filter. Only ever true when the
  * explicit flag is set, so normal visitors are unaffected. Additive to GPC/DNT.
@@ -83,7 +83,7 @@ if (isProdHost && key) {
       // Stamp this browser's events as internal BEFORE first capture when the
       // durable flag is set (belt-and-suspenders alongside the before_send
       // enforcement + the SDK-persisted super-property). Only when the explicit
-      // flag is present — never tags a normal visitor. See /analytics-optout.
+      // flag is present — never tags a normal visitor. See /internal.
       if (isInternal) ph.register({ is_internal: true });
       registerLaunchSuperProperties();
       // Honor Global Privacy Control: opt out even though the default is full send.

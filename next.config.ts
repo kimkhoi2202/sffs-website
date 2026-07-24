@@ -35,6 +35,25 @@ const nextConfig: NextConfig = {
         destination: "/?utm_source=youtube&utm_medium=social",
         permanent: false,
       },
+      // --- Team vanity link: Hermes content-pipeline dashboard (temporary 307) ---
+      // Short, bookmarkable link to the Hermes dashboard on the box's Elastic IP.
+      // A plain external redirect (NOT a proxy/rewrite) so the browser lands
+      // directly on the box; permanent:false so we can retarget the IP/host any
+      // time without a cached permanent redirect.
+      {
+        source: "/hermes-dashboard",
+        destination: "http://3.228.178.144:8080/",
+        permanent: false,
+      },
+      // --- Route rename: /analytics-optout -> /internal (internal-user toggle) ---
+      // The internal-user toggle page moved to /internal. Keep the old bookmark
+      // working; temporary (307) and Next.js forwards the query string, so
+      // /analytics-optout?on=1 still reverts this browser to a normal visitor.
+      {
+        source: "/analytics-optout",
+        destination: "/internal",
+        permanent: false,
+      },
     ];
   },
 
