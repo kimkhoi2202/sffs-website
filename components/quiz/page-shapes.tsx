@@ -3,6 +3,7 @@
 import {
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   useSyncExternalStore,
@@ -10,6 +11,8 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import { motion, motionValue, useAnimationFrame } from "motion/react";
+
+import { trackHeroShapeDragged, trackHeroShapeThrown } from "@/lib/analytics/events";
 
 /*
   Draggable, self-recoloring neo-brutalist shape field, mounted once in
@@ -149,6 +152,17 @@ const SHAPE_ITEMS: Item[] = [
 ];
 const ITEMS: Item[] = [...SHAPE_ITEMS];
 
+// TOUCH / coarse-pointer layout: only THREE shapes, pushed hard to the hero's
+// edges (top-left, right-middle, bottom-left) so the central headline+CTA band
+// stays clear on a narrow phone screen. A subset of the desktop shapes (same
+// ids/types/colors) so recolor + physics behave identically — just fewer of
+// them, edge-biased, and shrunk further via a lower scale floor (see measure()).
+const MOBILE_ITEMS: Item[] = [
+  { ...SHAPE_ITEMS[0], fx: 0.08, fy: 0.14 }, // circle (blue)  — top-left
+  { ...SHAPE_ITEMS[2], fx: 0.93, fy: 0.5 }, //  hexagon (green) — right, mid-height
+  { ...SHAPE_ITEMS[5], fx: 0.1, fy: 0.88 }, //  diamond (coral) — bottom-left
+];
+
 /** SSR-safe `prefers-reduced-motion` (server snapshot false → no hydration mismatch). */
 function usePrefersReducedMotion(): boolean {
   return useSyncExternalStore(
@@ -158,6 +172,21 @@ function usePrefersReducedMotion(): boolean {
       return () => q.removeEventListener("change", onChange);
     },
     () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+    () => false,
+  );
+}
+
+/** SSR-safe `(pointer: coarse)` — touch devices (phones/tablets). Server snapshot
+ *  is false so SSR + the first client render agree (desktop layout, 6 shapes),
+ *  then it re-evaluates on the client and swaps to the lean mobile field. */
+function useCoarsePointer(): boolean {
+  return useSyncExternalStore(
+    (onChange) => {
+      const q = window.matchMedia("(pointer: coarse)");
+      q.addEventListener("change", onChange);
+      return () => q.removeEventListener("change", onChange);
+    },
+    () => window.matchMedia("(pointer: coarse)").matches,
     () => false,
   );
 }
@@ -352,6 +381,11 @@ function boundingRadius(type: ShapeType, w: number, h: number): number {
 
 export function PageShapes() {
   const reduced = usePrefersReducedMotion();
+  // On touch devices render the lean 3-shape, edge-biased field; on mouse/desktop
+  // keep the full 6. Memoized so its identity only changes when the pointer type
+  // does (drives the layout effect below to rebuild the bodies once).
+  const coarse = useCoarsePointer();
+  const items = useMemo(() => (coarse ? MOBILE_ITEMS : SHAPE_ITEMS), [coarse]);
   const overlayRef = useRef<HTMLDivElement>(null);
   const dimsRef = useRef({
     heroLeft: 0,
@@ -368,9 +402,16 @@ export function PageShapes() {
   const bodiesRef = useRef<Body[] | null>(null);
   const timeRef = useRef(0);
   const dragRef = useRef<{ i: number; pointerId: number; ox: number; oy: number } | null>(null);
+  // A press awaiting intent classification (see the pointer handlers): recorded
+  // on pointerdown, promoted to `dragRef` on a horizontal-dominant move, or
+  // dropped on a vertical-dominant move / tap so the page scrolls natively.
+  const pendingRef = useRef<{ i: number; pointerId: number; x: number; y: number } | null>(null);
   const pointerRef = useRef({ x: 0, y: 0 });
   const samplesRef = useRef<{ t: number; x: number; y: number }[]>([]);
   const releaseRef = useRef<{ i: number; vx: number; vy: number } | null>(null);
+  // Debounce hero_shape_dragged to once per shape per mount (a fidgety session
+  // must not emit hundreds of events — see plan §2.2).
+  const draggedTrackedRef = useRef<Set<string>>(new Set());
 
   const [colors, setColors] = useState<ShapeColor[]>(() => ITEMS.map((it) => it.color ?? "blue"));
   const colorsRef = useRef<ShapeColor[]>(ITEMS.map((it) => it.color ?? "blue"));
@@ -469,7 +510,9 @@ export function PageShapes() {
         heroTop,
         heroW: w,
         heroH,
-        scale: clamp(w / 1280, 0.55, 1),
+        // Shrink the shapes further on touch (lower floor) so the smaller field
+        // reads lighter on a phone and leaves more of the hero clear.
+        scale: clamp(w / 1280, coarse ? 0.4 : 0.55, 1),
         waveGeom,
         bottomFallbackY: heroTop + heroH,
       };
@@ -488,10 +531,15 @@ export function PageShapes() {
       };
     };
 
-    if (!bodiesRef.current) {
+    // Build (or rebuild, when the pointer type flips the active set between the
+    // 6-shape desktop field and the 3-shape touch field) the bodies + colors.
+    if (!bodiesRef.current || bodiesRef.current.length !== items.length) {
+      const initialColors = items.map((it) => it.color ?? "blue");
+      colorsRef.current = initialColors;
+      setColors(initialColors);
       const rand = (a: number, b: number) => a + Math.random() * (b - a);
       const scale = dimsRef.current.scale;
-      bodiesRef.current = ITEMS.map((it, i) => {
+      bodiesRef.current = items.map((it, i) => {
         const home = homeOf(it);
         // Fixed positions; only the tiny idle-wobble phases + a small initial tilt
         // stay random (as in the original) so the drift still reads as organic.
@@ -536,7 +584,7 @@ export function PageShapes() {
       if (bodies) {
         bodies.forEach((b, i) => {
           if (b.mode === "idle") {
-            const home = homeOf(ITEMS[i]);
+            const home = homeOf(items[i]);
             b.hx = home.x;
             b.hy = home.y;
           }
@@ -545,7 +593,7 @@ export function PageShapes() {
     };
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
-  }, [mvs]);
+  }, [mvs, items, coarse]);
 
   // Physics loop. Normal motion: continuous ambient drift + drag + throw/bounce,
   // all confined to the hero rect. Reduced motion: nothing runs unless a shape is
@@ -705,22 +753,64 @@ export function PageShapes() {
   });
 
   // Pointer handlers write ONLY refs (the loop owns all body mutations).
+  //
+  // INTENT-GATED drag (so a vertical swipe on a shape scrolls the page instead
+  // of being hijacked): pointerdown does NOT capture the pointer — it only
+  // records a PENDING press. The first significant move decides intent:
+  //   • horizontal-dominant (|dx|>8 && |dx|>|dy|) → promote to a real drag and
+  //     capture the pointer;
+  //   • vertical-dominant   (|dy|>10 && |dy|>=|dx|) → abandon, so the browser's
+  //     native pan-y (touch-action: pan-y on the shape) scrolls the page.
   const onShapePointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
     const i = Number(e.currentTarget.dataset.shapeIndex);
     const b = bodiesRef.current?.[i];
     if (!b) return;
-    e.currentTarget.setPointerCapture(e.pointerId);
-    dragRef.current = {
-      i,
-      pointerId: e.pointerId,
-      ox: b.cx - (e.clientX + window.scrollX),
-      oy: b.cy - (e.clientY + window.scrollY),
-    };
+    // Record the press but DON'T capture yet (capturing on down would swallow
+    // the browser's vertical scroll). Promotion + capture happen in pointermove.
+    pendingRef.current = { i, pointerId: e.pointerId, x: e.clientX, y: e.clientY };
     pointerRef.current = { x: e.clientX, y: e.clientY };
     samplesRef.current = [{ t: performance.now(), x: e.clientX, y: e.clientY }];
   };
 
   const onShapePointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
+    // Classify a still-pending press into a horizontal drag or a vertical scroll.
+    const p = pendingRef.current;
+    if (p && e.pointerId === p.pointerId) {
+      const dx = e.clientX - p.x;
+      const dy = e.clientY - p.y;
+      if (Math.abs(dy) > 10 && Math.abs(dy) >= Math.abs(dx)) {
+        pendingRef.current = null; // vertical intent → let the page scroll
+        return;
+      }
+      if (Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy)) {
+        // Horizontal intent → promote to a real drag. Recompute the grab offset
+        // against the body's LIVE (drifted) center so it doesn't jump on capture.
+        const b = bodiesRef.current?.[p.i];
+        pendingRef.current = null;
+        if (!b) return;
+        e.currentTarget.setPointerCapture(e.pointerId);
+        dragRef.current = {
+          i: p.i,
+          pointerId: p.pointerId,
+          ox: b.cx - (e.clientX + window.scrollX),
+          oy: b.cy - (e.clientY + window.scrollY),
+        };
+        // A press just became a real drag — record it once per shape/session.
+        const dit = items[p.i];
+        if (dit && !draggedTrackedRef.current.has(dit.id)) {
+          draggedTrackedRef.current.add(dit.id);
+          trackHeroShapeDragged({
+            shape_id: dit.id,
+            shape_type: dit.type,
+            shape_color: colorsRef.current[p.i],
+            is_touch: coarse,
+          });
+        }
+      } else {
+        return; // still ambiguous — wait for a clearer move
+      }
+    }
+
     const d = dragRef.current;
     if (!d || e.pointerId !== d.pointerId) return;
     pointerRef.current = { x: e.clientX, y: e.clientY };
@@ -730,6 +820,11 @@ export function PageShapes() {
   };
 
   const endDrag = (e: ReactPointerEvent<HTMLDivElement>) => {
+    // An un-promoted press (a tap, or a vertical swipe the browser took over and
+    // ended with pointercancel) just clears the pending intent — nothing to throw.
+    if (pendingRef.current && e.pointerId === pendingRef.current.pointerId) {
+      pendingRef.current = null;
+    }
     const d = dragRef.current;
     if (!d || e.pointerId !== d.pointerId) return;
     dragRef.current = null;
@@ -746,6 +841,16 @@ export function PageShapes() {
         vy = (last.y - ref.y) / dtS;
       }
     }
+    // A release above the throw threshold is an intentional "throw" gesture.
+    const tit = items[d.i];
+    const throwSpeed = Math.hypot(vx, vy);
+    if (tit && throwSpeed >= THROW_MIN) {
+      trackHeroShapeThrown({
+        shape_id: tit.id,
+        throw_speed: throwSpeed,
+        is_touch: coarse,
+      });
+    }
     releaseRef.current = { i: d.i, vx, vy };
   };
 
@@ -758,10 +863,12 @@ export function PageShapes() {
       aria-hidden
       className="pointer-events-none absolute inset-0 z-30 overflow-hidden"
     >
-      {ITEMS.map((it, i) => (
+      {items.map((it, i) => (
         <motion.div
           key={it.id}
-          className="pointer-events-auto absolute left-0 top-0 cursor-grab touch-none select-none active:cursor-grabbing"
+          // touch-action: pan-y — the browser keeps vertical scrolling; a drag is
+          // only claimed once movement is horizontal-dominant (see the handlers).
+          className="pointer-events-auto absolute left-0 top-0 cursor-grab touch-pan-y select-none active:cursor-grabbing"
           style={{
             width: it.w,
             height: it.h,

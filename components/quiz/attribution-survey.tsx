@@ -1,0 +1,261 @@
+"use client";
+
+import { useEffect, useId, useRef, useState } from "react";
+import posthog from "posthog-js";
+
+import {
+  trackAttributionSurveyAnswered,
+  trackAttributionSurveyShown,
+  type AttributionSource,
+} from "@/lib/analytics/events";
+import { cn } from "@/lib/utils";
+
+/**
+ * Our OWN post-signup "How did you find us?" survey — the on-brand, neo-brutalist
+ * replacement for the native PostHog popover (which carried a "Survey by PostHog"
+ * watermark). Renders right under the "You're in!" success state.
+ *
+ * On answer it does BOTH (best of both worlds):
+ *   1. fires the `attribution_survey_answered` PostHog event (source only, NO PII)
+ *      so attribution shows in funnels/dashboards, AND
+ *   2. POSTs to /api/attribution-survey -> the keyless Lambda proxy -> Aurora
+ *      `survey_responses` (durable, tied to the signup via email + distinct_id).
+ *
+ * Fully responsive (mobile-first — most traffic is TikTok/IG in-app browsers)
+ * and keyboard-accessible (native radios in a labelled group). The signup email
+ * is used only to tie the answer to the signup in Aurora — it is NEVER sent to
+ * PostHog.
+ */
+
+type Phase = "idle" | "submitting" | "done";
+
+/**
+ * The survey's self-reported source values. "youtube" is a newly added option
+ * that isn't in the shared `AttributionSource` union yet (that lives in
+ * lib/analytics and is owned by the analytics/attribution pass) — model it
+ * locally so the option is fully typed without reaching into that file. The API
+ * route and the PostHog event both accept the raw source string, so "youtube"
+ * flows through end-to-end.
+ */
+type SurveySource = AttributionSource | "youtube";
+
+const OPTIONS: { value: SurveySource; label: string }[] = [
+  { value: "tiktok", label: "TikTok" },
+  { value: "instagram", label: "Instagram" },
+  { value: "youtube", label: "YouTube" },
+  { value: "friend", label: "A friend" },
+  { value: "search", label: "Search" },
+  { value: "other", label: "Somewhere else" },
+];
+
+/** Best-effort PostHog distinct_id so the answer stitches to the same person.
+ * Returns undefined when the SDK isn't initialized (e.g. off the prod domain). */
+function currentDistinctId(): string | undefined {
+  try {
+    const id = posthog.get_distinct_id?.();
+    return typeof id === "string" && id.length > 0 ? id : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+export function AttributionSurvey({
+  email,
+  className,
+}: {
+  email?: string;
+  className?: string;
+}) {
+  const legendId = useId();
+  const groupName = useId();
+  const [selected, setSelected] = useState<SurveySource | null>(null);
+  const [openText, setOpenText] = useState("");
+  const [phase, setPhase] = useState<Phase>("idle");
+  const doneRef = useRef<HTMLDivElement>(null);
+
+  // Fire the "shown" event once per mount (i.e. once per signup).
+  useEffect(() => {
+    trackAttributionSurveyShown();
+  }, []);
+
+  async function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
+    if (!selected || phase === "submitting") return;
+    setPhase("submitting");
+
+    // 1) The analytics truth — source only, no PII. Fire first so attribution
+    //    lands even if the durable write below is blocked. ("youtube" isn't in
+    //    the shared AttributionSource union yet — owned by the analytics pass —
+    //    but the event still fires with the raw source value.)
+    trackAttributionSurveyAnswered(selected as AttributionSource);
+
+    // 2) The durable write (best-effort — the event already captured attribution).
+    try {
+      await fetch("/api/attribution-survey", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          source: selected,
+          open_text: openText.trim() || undefined,
+          email: email || undefined,
+          distinct_id: currentDistinctId(),
+        }),
+      });
+    } catch {
+      // Swallow — analytics already fired; never show the user an error here.
+    }
+
+    setPhase("done");
+    requestAnimationFrame(() => doneRef.current?.focus());
+  }
+
+  if (phase === "done") {
+    return (
+      <div
+        ref={doneRef}
+        tabIndex={-1}
+        role="status"
+        aria-live="polite"
+        className={cn(
+          "mt-4 rounded-2xl border-[2.5px] border-ink bg-blue p-5 text-center shadow-hard-sm outline-none",
+          className,
+        )}
+      >
+        {/* The global ::selection is brand-blue — invisible on this blue card — so
+            each text line carries a visible on-brand (ink/paper) selection. Set
+            per-line (not on the card) so the higher-specificity element rule wins
+            over the global ::selection without relying on highlight inheritance. */}
+        <p className="font-display text-2xl uppercase leading-none tracking-tight selection:bg-ink selection:text-paper">
+          Thanks!
+        </p>
+        <p className="mt-2 text-sm font-medium leading-relaxed text-ink/80 selection:bg-ink selection:text-paper">
+          That helps us make more of what you like{" "}
+          <span aria-hidden="true">❤️</span>
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      className={cn(
+        "mt-4 rounded-2xl border-[2.5px] border-ink bg-paper p-5 text-left shadow-hard-sm",
+        className,
+      )}
+    >
+      <fieldset className="min-w-0" disabled={phase === "submitting"}>
+        <legend id={legendId} className="eyebrow text-ink">
+          One quick thing — how did you find us?
+        </legend>
+
+        <div
+          role="radiogroup"
+          aria-labelledby={legendId}
+          className="mt-4 grid grid-cols-2 gap-2.5"
+        >
+          {OPTIONS.map((opt) => {
+            const isChecked = selected === opt.value;
+            return (
+              <label key={opt.value} className="min-w-0">
+                <input
+                  type="radio"
+                  name={groupName}
+                  value={opt.value}
+                  checked={isChecked}
+                  onChange={() => setSelected(opt.value)}
+                  className="peer sr-only"
+                />
+                <span
+                  className={cn(
+                    "flex h-12 w-full items-center justify-center rounded-full border-[2.5px] border-ink bg-paper px-3 text-center text-sm font-bold uppercase tracking-wide text-ink shadow-hard-xs",
+                    "cursor-pointer select-none",
+                    // HeroUI-style press feedback: smoothly scale to 0.97 on press
+                    // (mirrors HeroUI's Button `data-[pressed=true]:scale-[0.97]` +
+                    // transition-transform) — no translate, no shadow-pop, replacing
+                    // the old neo-brutalist .press. Gated by motion-safe so
+                    // reduced-motion users get no scale animation at all.
+                    "transition-transform motion-safe:active:scale-[0.97] motion-reduce:transition-none",
+                    "peer-checked:bg-blue peer-checked:shadow-none peer-checked:translate-x-[2px] peer-checked:translate-y-[2px]",
+                    "peer-focus-visible:outline peer-focus-visible:outline-[3px] peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ink",
+                  )}
+                >
+                  {opt.label}
+                </span>
+              </label>
+            );
+          })}
+        </div>
+
+        {/* Optional detail + submit reveal only after a choice — keeps the card
+            compact on first paint (mobile), and makes "answering" explicit. */}
+        {selected ? (
+          <div className="mt-3">
+            <label htmlFor={`${groupName}-note`} className="sr-only">
+              Anything to add? (optional)
+            </label>
+            <input
+              id={`${groupName}-note`}
+              type="text"
+              value={openText}
+              maxLength={2000}
+              placeholder={
+                selected === "other"
+                  ? "Where'd you spot us? (optional)"
+                  : "Anything to add? (optional)"
+              }
+              onChange={(e) => setOpenText(e.target.value)}
+              className={cn(
+                "h-12 w-full rounded-full border-[2.5px] border-ink bg-paper px-5 text-base font-medium text-ink shadow-hard-xs",
+                "placeholder:text-ink/40",
+                "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-transparent",
+              )}
+            />
+          </div>
+        ) : null}
+
+        <div className="mt-4 flex items-center justify-end">
+          <button
+            type="submit"
+            disabled={!selected || phase === "submitting"}
+            aria-busy={phase === "submitting"}
+            className={cn(
+              "btn-press inline-flex h-12 items-center justify-center gap-2 rounded-full border-[2.5px] border-ink bg-green px-7 text-sm font-bold uppercase tracking-wide leading-none text-ink",
+              "cursor-pointer select-none disabled:cursor-not-allowed disabled:opacity-50",
+              "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-transparent",
+            )}
+          >
+            {phase === "submitting" ? (
+              <>
+                <svg
+                  className="size-4 animate-spin"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="9"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    className="opacity-25"
+                  />
+                  <path
+                    d="M21 12a9 9 0 0 0-9-9"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                  />
+                </svg>
+                Sending…
+              </>
+            ) : (
+              "Send"
+            )}
+          </button>
+        </div>
+      </fieldset>
+    </form>
+  );
+}

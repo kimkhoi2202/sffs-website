@@ -108,6 +108,8 @@ export interface TestimonialsProps {
    * to peek the brain mascot out from behind the first "L" of the heading.
    */
   firstLetterAccessory?: React.ReactNode;
+  /** Optional anchor id set on the section wrapper. */
+  id?: string;
   className?: string;
 }
 
@@ -395,6 +397,7 @@ export function Testimonials({
   cta,
   revealContent = true,
   firstLetterAccessory,
+  id,
   className,
 }: TestimonialsProps = {}) {
   const items = testimonials.length > 0 ? testimonials : DEFAULT_TESTIMONIALS;
@@ -406,7 +409,7 @@ export function Testimonials({
   const cardCycle = filteredCycle.length > 0 ? filteredCycle : CARD_COLOR_CYCLE;
 
   return (
-    <Section background={background} padding="lg" className={className}>
+    <Section background={background} padding="lg" className={className} id={id}>
       <Reveal stagger enabled={revealContent} className="mb-10 max-w-2xl md:mb-14">
         {eyebrow ? <Eyebrow>{eyebrow}</Eyebrow> : null}
         <Heading as={2} size="xl" className={cn(eyebrow && "mt-4")}>

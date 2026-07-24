@@ -55,6 +55,13 @@ export interface Tier {
   color?: CardColor;
   /** Overrides the CTA button variant. */
   ctaVariant?: ButtonVariant;
+  /**
+   * Replaces the CTA button entirely with custom content (e.g. an inline
+   * email-capture form). When set, `cta` / `href` / `ctaVariant` are ignored for
+   * this tier and this node renders in their place. The node owns its own top
+   * spacing (the default button used `mt-8`), so mirror that for visual parity.
+   */
+  ctaSlot?: React.ReactNode;
 }
 
 export interface PricingProps {
@@ -271,7 +278,9 @@ export function Pricing({
                 ))}
               </ul>
 
-              {tier.href ? (
+              {tier.ctaSlot ? (
+                tier.ctaSlot
+              ) : tier.href ? (
                 <Button
                   href={tier.href}
                   variant={ctaVariant}

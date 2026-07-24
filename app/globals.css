@@ -225,6 +225,21 @@
 }
 
 /*
+  Show a node ONLY on devices with a precise pointer (desktop mouse / trackpad).
+  Base is hidden; a real fine pointer flips it to flex. Used for the hero's
+  "Press T" keyboard hint, which is meaningless on touch and steals a vertical
+  line on short phones. Written as raw `@media (pointer: fine)` (like the
+  (hover:hover) gating in .btn-press / .card-hover) so it never depends on a
+  Tailwind pointer variant being available.
+*/
+@utility fine-pointer-only {
+  display: none;
+  @media (pointer: fine) {
+    display: flex;
+  }
+}
+
+/*
   The canonical <Button> interaction (buttons only — the shared .press above is
   left untouched so cards/pills keep pressing "down").
   - The hard offset shadow COLOR is driven by --btn-shadow-color (defaults to
