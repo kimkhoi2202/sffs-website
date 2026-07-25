@@ -490,6 +490,14 @@ const SECTIONS: LegalSection[] = [
           have a session-recording module installed, so there are no app
           recordings to keep.
         </p>
+        <p>
+          <strong>Waitlist emails.</strong>{" "}
+          This one works differently. The copy of the waitlist list in PostHog
+          is a mirror of our own database, refreshed hourly, and it keeps no
+          history: each refresh replaces the whole list rather than adding to
+          it. So unlike the analytics data above, deleting your email from our
+          database does remove it from PostHog, at the next refresh.
+        </p>
       </>
     ),
   },
