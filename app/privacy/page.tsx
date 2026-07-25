@@ -91,8 +91,8 @@ const SECTIONS: LegalSection[] = [
           <ul className="list-disc space-y-2 pl-6 text-[1.02rem] leading-relaxed marker:text-ink">
             <li>Signing in is optional. The games work without an account.</li>
             <li>
-              We collect very little: what the app needs to run, plus aggregate
-              usage analytics so we can improve it.
+              We collect very little: what the app needs to run, plus usage
+              analytics so we can improve it.
             </li>
             <li>
               We never sell or share your personal data, and there are no
@@ -217,7 +217,7 @@ const SECTIONS: LegalSection[] = [
                   Pro entitlement status
                 </td>
                 <td className="px-4 py-3 align-top">
-                  Know whether the one-time unlock is active on your account.
+                  Know whether your unlock or subscription is active.
                 </td>
                 <td className="px-4 py-3 align-top">
                   RevenueCat, based on your Apple or Google purchase.
@@ -262,6 +262,16 @@ const SECTIONS: LegalSection[] = [
           your IP address or location, we do not use advertising identifiers, and
           we do not build an advertising profile.
         </p>
+        <p>
+          <strong>How analytics connect to your account.</strong>{" "}
+          PostHog gives your install its own identifier. If you sign in and buy,
+          our payments provider (RevenueCat) reports that purchase against the
+          same identifier, and your purchases are tied to your account, so your
+          analytics events can be connected back to that account. We use this to
+          answer questions like whether people who reach the paywall go on to
+          buy. If you never sign in, there is no account for any of it to
+          connect to.
+        </p>
       </>
     ),
   },
@@ -274,7 +284,7 @@ const SECTIONS: LegalSection[] = [
         <ul>
           <li>provide and run the games;</li>
           <li>save your progress and achievements;</li>
-          <li>enable and restore the one-time purchase;</li>
+          <li>enable and restore purchases and subscriptions;</li>
           <li>secure accounts and prevent abuse;</li>
           <li>
             understand how the app is used, in aggregate, so we can improve it;
@@ -303,7 +313,7 @@ const SECTIONS: LegalSection[] = [
         <ul>
           <li>
             <strong>Contract.</strong> To provide the app and the features you
-            ask for, including the one-time unlock.
+            ask for, including the unlock and any subscription.
           </li>
           <li>
             <strong>Consent.</strong> For optional sign-in. You can withdraw

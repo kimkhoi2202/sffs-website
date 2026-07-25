@@ -16,7 +16,7 @@ const SUPPORT_EMAIL = "smartfellaorfartsmella123@gmail.com";
 export const metadata: Metadata = {
   title: { absolute: "Terms of Service | Smart Fella or Fart Smella" },
   description:
-    "The terms for using the Smart Fella or Fart Smella app, including purchases, the one-time unlock, and acceptable use.",
+    "The terms for using the Smart Fella or Fart Smella app, including purchases, subscriptions, and acceptable use.",
   alternates: { canonical: "/terms" },
   robots: { index: true, follow: true },
   openGraph: {
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     siteName: "Smart Fella or Fart Smella",
     title: "Terms of Service | Smart Fella or Fart Smella",
     description:
-      "The terms for using the Smart Fella or Fart Smella app, including purchases, the one-time unlock, and acceptable use.",
+      "The terms for using the Smart Fella or Fart Smella app, including purchases, subscriptions, and acceptable use.",
     url: "/terms",
     images: ["/opengraph-image"],
   },
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Terms of Service | Smart Fella or Fart Smella",
     description:
-      "The terms for using the Smart Fella or Fart Smella app, including purchases, the one-time unlock, and acceptable use.",
+      "The terms for using the Smart Fella or Fart Smella app, including purchases, subscriptions, and acceptable use.",
     images: ["/twitter-image"],
   },
 };
@@ -124,7 +124,7 @@ const SECTIONS: LegalSection[] = [
   },
   {
     id: "purchases",
-    heading: "Purchases and the one-time unlock",
+    heading: "Purchases and unlocks",
     body: (
       <>
         <p>
@@ -132,9 +132,17 @@ const SECTIONS: LegalSection[] = [
           to play.
         </p>
         <p>
-          <strong>One-time unlock.</strong> A single, one-time lifetime unlock
+          <strong>Lifetime unlock.</strong> A single, one-time lifetime unlock
           (the non-consumable product <code>sffs_pro_lifetime</code>) unlocks the
-          rest of the games. It is a one-time purchase, not a subscription.
+          rest of the games. It is a one-time purchase and it does not renew.
+        </p>
+        <p>
+          <strong>Monthly subscription.</strong> We also offer a monthly
+          auto-renewing subscription (the product{" "}
+          <code>sffs_pro_monthly</code>) that unlocks the same games for as long
+          as it stays active. Apple or Google shows you the price and the terms
+          before you confirm, and you manage or cancel it in your store account
+          settings.
         </p>
         <ul>
           <li>
@@ -147,9 +155,10 @@ const SECTIONS: LegalSection[] = [
             to buy it.
           </li>
           <li>
-            <strong>Possible future subscriptions.</strong> We may offer
-            subscriptions in the future. If we do, their own terms and pricing
-            will be shown to you before you buy. There is no subscription today.
+            <strong>Occasional offers.</strong> We sometimes show a discounted
+            lifetime unlock to players who did not buy the first time. It is the
+            same lifetime unlock at a lower price, and it is not always
+            available.
           </li>
         </ul>
       </>

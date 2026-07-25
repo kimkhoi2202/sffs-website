@@ -14,7 +14,7 @@ const SUPPORT_EMAIL = "smartfellaorfartsmella123@gmail.com";
 export const metadata: Metadata = {
   title: { absolute: "Support and Help | Smart Fella or Fart Smella" },
   description:
-    "Get help with Smart Fella or Fart Smella. Find answers about accounts, the one-time unlock, restoring purchases, privacy, and how to delete your data.",
+    "Get help with Smart Fella or Fart Smella. Find answers about accounts, unlocks and subscriptions, restoring purchases, privacy, and how to delete your data.",
   alternates: { canonical: "/support" },
   robots: { index: true, follow: true },
   openGraph: {
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     siteName: "Smart Fella or Fart Smella",
     title: "Support and Help | Smart Fella or Fart Smella",
     description:
-      "Get help with Smart Fella or Fart Smella. Find answers about accounts, the one-time unlock, restoring purchases, privacy, and how to delete your data.",
+      "Get help with Smart Fella or Fart Smella. Find answers about accounts, unlocks and subscriptions, restoring purchases, privacy, and how to delete your data.",
     url: "/support",
     images: ["/opengraph-image"],
   },
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Support and Help | Smart Fella or Fart Smella",
     description:
-      "Get help with Smart Fella or Fart Smella. Find answers about accounts, the one-time unlock, restoring purchases, privacy, and how to delete your data.",
+      "Get help with Smart Fella or Fart Smella. Find answers about accounts, unlocks and subscriptions, restoring purchases, privacy, and how to delete your data.",
     images: ["/twitter-image"],
   },
 };
@@ -96,7 +96,8 @@ const FAQ_ITEMS: FaqItem[] = [
         and we never sell data. We collect very little, and signing in is
         optional. We do use a privacy-friendly analytics tool (PostHog) to see
         how the app is used in aggregate, with screen recording, tap capture, IP
-        collection, and advertising identifiers all turned off. Read the full
+        collection, and advertising identifiers all turned off. Signing in and
+        buying does connect your analytics events to your account. Read the full
         details in our{" "}
         <a href="/privacy" className={LINK}>
           Privacy Policy
@@ -105,45 +106,49 @@ const FAQ_ITEMS: FaqItem[] = [
       </>
     ),
     plain:
-      "Yes, privacy is a priority. There are no third-party ads, no ad tracking, and we never sell data. We collect very little, and signing in is optional. We do use a privacy-friendly analytics tool (PostHog) to see how the app is used in aggregate, with screen recording, tap capture, IP collection, and advertising identifiers all turned off. Read the full details in our Privacy Policy.",
+      "Yes, privacy is a priority. There are no third-party ads, no ad tracking, and we never sell data. We collect very little, and signing in is optional. We do use a privacy-friendly analytics tool (PostHog) to see how the app is used in aggregate, with screen recording, tap capture, IP collection, and advertising identifiers all turned off. Signing in and buying does connect your analytics events to your account. Read the full details in our Privacy Policy.",
   },
   {
     id: "cost",
     q: "How much does it cost?",
     a: (
       <>
-        The first game in every category is free. To unlock the rest, there is a
-        single one-time purchase. There is no subscription.
+        The first game in every category is free. To unlock the rest, the
+        lifetime unlock is a single purchase that never renews. There is also a
+        monthly plan if you would rather not pay up front. Apple or Google shows
+        you the current price before you confirm.
       </>
     ),
     plain:
-      "The first game in every category is free. To unlock the rest, there is a single one-time purchase. There is no subscription.",
+      "The first game in every category is free. To unlock the rest, the lifetime unlock is a single purchase that never renews. There is also a monthly plan if you would rather not pay up front. Apple or Google shows you the current price before you confirm.",
   },
   {
     id: "unlock",
     q: "What do I get when I unlock?",
     a: (
       <>
-        The one-time unlock opens all of the games beyond the free first game in
-        each category. It is a one-time purchase that stays with your store
-        account.
+        Either way you get all of the games beyond the free first game in each
+        category. The lifetime unlock is a one-time purchase that stays with
+        your store account. The monthly plan gives you the same games for as
+        long as it stays active.
       </>
     ),
     plain:
-      "The one-time unlock opens all of the games beyond the free first game in each category. It is a one-time purchase that stays with your store account.",
+      "Either way you get all of the games beyond the free first game in each category. The lifetime unlock is a one-time purchase that stays with your store account. The monthly plan gives you the same games for as long as it stays active.",
   },
   {
     id: "subscription",
-    q: "Is this a subscription?",
+    q: "Is there a subscription?",
     a: (
       <>
-        No. It is a one-time purchase, not a subscription. We may add
-        subscription options in the future, and if we do, the details and pricing
-        will be shown before you buy.
+        There is a monthly plan, but you do not need it. The lifetime unlock is
+        a single purchase that never renews, and it is the option most people
+        want. The monthly plan renews until you cancel, and you can cancel any
+        time in your Apple or Google store account settings.
       </>
     ),
     plain:
-      "No. It is a one-time purchase, not a subscription. We may add subscription options in the future, and if we do, the details and pricing will be shown before you buy.",
+      "There is a monthly plan, but you do not need it. The lifetime unlock is a single purchase that never renews, and it is the option most people want. The monthly plan renews until you cancel, and you can cancel any time in your Apple or Google store account settings.",
   },
   {
     id: "restore",

@@ -32,7 +32,7 @@ const FAQ: FaqItem[] = [
   },
   {
     q: "Is my data safe?",
-    a: "No ads, no third-party ad tracking, and we never sell data. Signing in is optional, so you can play without handing over an account. We do log anonymous usage events so we can see which parts of the app work, but we never record your screen or use advertising identifiers. The full details are in our Privacy Policy.",
+    a: "No ads, no third-party ad tracking, and we never sell data. Signing in is optional, so you can play without handing over an account. We do log usage events so we can see which parts of the app work, and if you sign in and buy, those events can be connected to your account. We never record your screen or use advertising identifiers. The full details are in our Privacy Policy.",
   },
 ];
 
@@ -138,7 +138,7 @@ export default function AboutPage() {
         <p className="mt-6 text-lg font-medium leading-relaxed">
           Free apps make their money by farming your attention: more time on
           screen, more ads, worse incentives. We would rather answer to you than
-          to advertisers. So you pay once, and the app stays ad-free and built
+          to advertisers. So you pay, and the app stays ad-free and built
           around you instead of against you.
         </p>
       </Section>
