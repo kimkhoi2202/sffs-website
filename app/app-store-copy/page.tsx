@@ -36,7 +36,7 @@ const SUBTITLE_ALT_1 = "Brain training and fun games";
 const SUBTITLE_ALT_2 = "The dumb little brain game";
 
 const PROMO_TEXT =
-  "Play the first game in every category free. No ads, and we never sell your data. Quick brain games with a very stupid name, plus a one-time unlock for the rest.";
+  "Play the first game in every category free. No ads, and we never sell your data. Quick brain games with a very stupid name. Unlock the rest for life, or go monthly.";
 
 const KEYWORDS =
   "brain,training,logic,puzzle,memory,focus,attention,quiz,trivia,reflex,casual,streak,brainteaser";
@@ -53,7 +53,7 @@ Progress and personal bests. Save scores and beat your own high score over time.
 
 First game in every category free. Try before you buy, no strings attached.
 
-One-time unlock, no subscription. A single purchase opens the rest of the games.
+One purchase unlocks everything. Buy the lifetime unlock once and the rest of the games are yours for good. There is a monthly plan too, if you would rather not pay up front.
 
 NO ADS, NO CREEPY TRACKING
 
@@ -61,7 +61,7 @@ No ads, no third-party ad tracking, and we never sell data. Signing in is option
 
 SIMPLE PRICING
 
-Try the first game in every category for free. When you are ready, one purchase unlocks everything. There is no subscription, and Restore Purchases is supported if you switch devices. If we ever add subscriptions, the details will be shown first.
+Try the first game in every category for free. When you are ready, the lifetime unlock is a single purchase that opens everything and never renews. If you would rather not pay up front, there is also a monthly plan that renews until you cancel, and you can cancel any time in your App Store settings. Restore Purchases is supported if you switch devices.
 
 A quick, honest note: this is a fun brain-exercise and games app. It does not make medical, clinical, or IQ claims, and it is not a test of intelligence or grades. It is here to make thinking fun.`;
 
@@ -70,7 +70,7 @@ const WHATS_NEW = `Welcome to Smart Fella or Fart Smella! This is our very first
 Here is what you can do:
 Play brain-training challenges and fun casual games.
 Try the first game in every category for free.
-Unlock the rest with a single one-time purchase.
+Unlock the rest for good with the lifetime purchase, or take the monthly plan.
 Enjoy it all with no ads.
 
 We would love your feedback. Reach us any time from the Support page.`;
@@ -253,16 +253,39 @@ export default function AppStoreCopyPage() {
                 <li>
                   <strong>Usage data (product interaction).</strong> App usage
                   events through PostHog (screens viewed, buttons tapped,
-                  purchases started or completed), for analytics. NOT linked to
-                  you: the app never calls identify, so there is no per-user
-                  profile. Not used for tracking.
+                  purchases started or completed), for analytics.{" "}
+                  <strong>Linked to you.</strong> The app does not call identify,
+                  but it does set <code>$posthogUserId</code> as a RevenueCat
+                  subscriber attribute, so RevenueCat&rsquo;s server-side
+                  purchase events land on the same PostHog person, and RevenueCat
+                  is keyed to the Supabase user ID for signed-in users. That is a
+                  real path from analytics events to an identified account, so
+                  declare it linked. Not used for tracking.
+                </li>
+                <li>
+                  <strong>Identifiers (user ID).</strong> PostHog&rsquo;s
+                  anonymous distinct ID, an app-assigned persistent identifier,
+                  for analytics. Linked to you. Not used for tracking.
                 </li>
               </ul>
               <p>
+                <strong>User ID, not Device ID.</strong> Do{" "}
+                <strong>not</strong> declare Device ID. PostHog&rsquo;s React
+                Native SDK has no native code and never touches IDFA or IDFV, so
+                declaring Device ID would be a false over-declaration. That
+                distinction is also why the app needs no App Tracking
+                Transparency prompt.
+              </p>
+              <p>
+                <strong>Answer NO to &ldquo;used for tracking&rdquo; on every
+                single data type.</strong> Answering yes on even one type
+                obligates an ATT prompt.
+              </p>
+              <p>
                 Data is <strong>not</strong> used for third-party advertising,
                 <strong> not</strong> sold, and there is{" "}
-                <strong>no</strong> tracking across other companies&rsquo; apps or
-                sites.
+                <strong>no</strong>{" "}
+                tracking across other companies&rsquo; apps or sites.
               </p>
             </FieldCard>
 
