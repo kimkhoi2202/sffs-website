@@ -22,11 +22,11 @@ Enumerate every shot/asset in order with: shot #, segment, duration, aspect, bac
 - Flag which shots need original media vs. placeholder.
 
 ## Guardrails (non-negotiable)
-- COPPA/CARU: include the parent-email gate + public-rules link as explicit end shots; no child-data-capture shots; age-appropriate media only.
+- Honest creative: include the public-rules link as an explicit end shot; no data-capture shots.
 - No Alpha branding: neutral "Closer" brand only — no Alpha School / Alpha AI assets, colors, or URLs.
 - 100% original: list original media/puzzles only; never schedule reused frames or answer art.
 
 ## Definition of done
 - [ ] Every shot listed with duration, layout, media, audio, transition; runtime checks out.
 - [ ] Components referenced (not redesigned); 16:9 + 9:16 covered; export specs noted.
-- [ ] Parent-email gate shots present; no child PII; no Alpha; original media.
+- [ ] Outro CTA shots present; no personal data; no Alpha; original media.

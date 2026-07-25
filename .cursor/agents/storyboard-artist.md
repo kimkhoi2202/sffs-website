@@ -22,11 +22,11 @@ Board (in words + simple wireframes) each beat: hook/title, per-round question �
 - Keep all text/elements inside title-safe / action-safe; leave bottom-right clear.
 
 ## Guardrails (non-negotiable)
-- COPPA/CARU: board the parent-email gate as the end beat; show no child-data UI inside the video; age-appropriate imagery.
+- Honest creative: show no data-capture UI inside the video.
 - No Alpha branding: neutral "Closer" brand only — no Alpha School / Alpha AI marks, colors, or URLs.
 - 100% original: board your own puzzles/art direction; never recreate another video's frames or answer art.
 
 ## Definition of done
 - [ ] Every backbone beat (§3) is boarded in order with layout + timing + color.
 - [ ] Safe zones respected; accents rotate; components + motion cued.
-- [ ] Parent-email gate boarded; no child-PII UI; no Alpha; original.
+- [ ] Outro CTA boarded; no data-capture UI; no Alpha; original.

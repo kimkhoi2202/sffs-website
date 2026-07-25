@@ -22,7 +22,7 @@ Specify the question card as a reusable component: anatomy, states (enter/idle),
 - Keep it reusable: parameters for color, mode, and count; consistent across all rounds.
 
 ## Guardrails (non-negotiable)
-- COPPA/CARU: the card presents puzzle copy only — never a data-entry field; age-appropriate.
+- Honest creative: the card presents puzzle copy only, never a data-entry field.
 - No Alpha branding: neutral "Closer" brand only — no Alpha School / Alpha AI marks, colors, or URLs.
 - 100% original: your own layout/component; never clone another creator's card design.
 

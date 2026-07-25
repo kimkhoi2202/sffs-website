@@ -22,7 +22,7 @@ Specify the stage system: the per-round accent rotation, an optional bordered "s
 - Provide 9:16 framing that stays balanced when elements stack.
 
 ## Guardrails (non-negotiable)
-- COPPA/CARU: the background carries no data-entry UI and no manipulative overlays; age-appropriate.
+- Honest creative: the background carries no data-entry UI and no manipulative overlays.
 - No Alpha branding: neutral "Closer" brand only — no Alpha School / Alpha AI colors, logos, patterns, or URLs.
 - 100% original: your own stage; never recreate another video's background art.
 

@@ -22,7 +22,7 @@ Specify the transition + motion system: hard color-block slams/wipes, Anton word
 - SFX: punchy clicks/thocks/slams on presses and reveals; nothing ambient; note a reduced-motion fallback.
 
 ## Guardrails (non-negotiable)
-- COPPA/CARU: motion adds energy, not pressure — no manipulative flashing or urgency; age-appropriate; respect reduced-motion.
+- Honest creative: motion adds energy, not pressure, with no manipulative flashing or urgency; respect reduced-motion.
 - No Alpha branding: neutral "Closer" brand only — no Alpha School / Alpha AI stings, colors, or logos.
 - 100% original: your own transitions/SFX design; never copy another video's motion or audio.
 

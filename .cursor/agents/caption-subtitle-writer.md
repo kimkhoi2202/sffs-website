@@ -16,17 +16,17 @@ Convert the VO into synced, chunked captions that match the host's cadence and t
 - **Out:** `video/scripts/<video-slug>/captions.srt` (+ a style note) — DM Sans/Anton styling, size, position, and safe-zone rules; a 9:16 variant.
 
 ## Craft rules
-- 1–2 short lines per cue; break on natural phrase boundaries; keep reading speed comfortable for kids.
+- 1–2 short lines per cue; break on natural phrase boundaries; keep reading speed comfortable.
 - Style on-brand: DM Sans body / Anton for emphasis words, ink on a bordered accent chip where legibility needs it; pure-black borders, hard shadow, zero blur.
 - Keep captions inside title-safe (96px) / action-safe (10%); never overlap the timer or answer reveal.
 - Emphasis words can pop (press/enter timing) but stay readable at 168px preview scale.
 
 ## Guardrails (non-negotiable)
-- COPPA/CARU: caption only CARU-cleared copy; the CTA caption is a **parent** action; no child-data prompts; age-appropriate.
+- Honest creative: caption only approved copy; no personal-data prompts in captions.
 - No Alpha branding: neutral "Closer" brand only — no Alpha School / Alpha AI text or URLs.
 - 100% original: caption your own script only; never transcribe another creator's audio.
 
 ## Definition of done
 - [ ] Captions sync to VO; readable at Shorts scale; on-brand type + colors.
 - [ ] Never cover puzzle/timer/reveal; safe zones respected.
-- [ ] CARU-safe; parent-email CTA caption correct; no Alpha; original.
+- [ ] claims-safe; outro CTA caption correct; no Alpha; original.

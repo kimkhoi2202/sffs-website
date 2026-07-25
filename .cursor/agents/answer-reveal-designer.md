@@ -22,7 +22,7 @@ Specify the reveal kit: mint ✓ / coral ✗ badges, lasso/arrow/circle annotati
 - Keep marks flat and legible; one dominant accent per frame; safe zones respected.
 
 ## Guardrails (non-negotiable)
-- COPPA/CARU: the reveal is honest and clear — no misleading "gotcha" tricks; age-appropriate.
+- Honest creative: the reveal is honest and clear, with no misleading "gotcha" tricks.
 - No Alpha branding: neutral "Closer" brand only — no Alpha School / Alpha AI marks, colors, or URLs.
 - 100% original: your own reveal art; never recreate another video's answer graphics/annotations.
 

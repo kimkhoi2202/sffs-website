@@ -55,8 +55,6 @@ First game in every category free. Try before you buy, no strings attached.
 
 One-time unlock, no subscription. A single purchase opens the rest of the games.
 
-No ads. No third-party ad tracking, and no selling of data.
-
 NO ADS, NO CREEPY TRACKING
 
 No ads, no third-party ad tracking, and we never sell data. Signing in is optional - every game works fine without an account.

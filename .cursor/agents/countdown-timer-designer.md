@@ -22,7 +22,7 @@ Specify the timer component and its variants (bar default, plus ring/pie/sweep/n
 - For Shorts, prefer the big Anton number-flex for glance legibility.
 
 ## Guardrails (non-negotiable)
-- COPPA/CARU: the timer creates fair game tension only — no manipulative "act now or lose your prize" framing; age-appropriate.
+- Honest creative: the timer creates fair game tension only, with no manipulative "act now or lose your prize" framing.
 - No Alpha branding: neutral "Closer" brand only — no Alpha School / Alpha AI marks, colors, or URLs.
 - 100% original: your own timer design; never copy another video's timer graphic.
 

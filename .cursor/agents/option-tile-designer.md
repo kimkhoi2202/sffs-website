@@ -22,7 +22,7 @@ Specify the option component set: tile and pill forms, A–D layout, color rotat
 - Legible at 168px; consistent spacing on the 8px grid; 16:9 row + 9:16 stack.
 
 ## Guardrails (non-negotiable)
-- COPPA/CARU: options are puzzle answers only — no data entry; answers unambiguous; age-appropriate.
+- Honest creative: options are puzzle answers only, never data entry, and answers are unambiguous.
 - No Alpha branding: neutral "Closer" brand only — no Alpha School / Alpha AI marks, colors, or URLs.
 - 100% original: your own component; never reuse another video's option art / answer graphics.
 

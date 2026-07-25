@@ -10,7 +10,7 @@
 - **The one number that matters:** **email-signup conversion rate, segmented by traffic source** (TikTok vs Instagram vs direct), and ideally **per social post**.
 - **Primary conversion event:** `email_captured` (fired on the "You're in!" success state of `components/quiz/get-access-form.tsx`).
 - **Biggest analytics unlock:** a disciplined **UTM scheme** (see §A) + a **per-post short-link redirect** so PostHog can attribute every visit and signup back to the exact TikTok/IG post and A/B hook that drove it.
-- **Biggest risk:** the audience **skews toward kids/parents**, but the current privacy policy declares the site "not directed to children under 13." Session replay + persistent tracking on a potentially child-directed site has real **COPPA / GDPR‑K** exposure. This is a **legal decision, not a config toggle** (see §11).
+- **Biggest risk:** session replay + persistent tracking are the highest-exposure features. SFFS is positioned for **teens and adults** (13+ Terms, not in Apple's Kids Category), so COPPA does not apply, but **GDPR‑K** consent ages (13–16) and EU/UK consent rules still bite. Default replay OFF and go cookieless until consent exists (see §11).
 - **Install recommendation:** **manual, privacy-first install** (optionally seeded by the PostHog wizard PR, but reviewed line-by-line). The wizard's generic defaults must not go live unreviewed given the audience.
 
 ---
@@ -315,7 +315,7 @@ Enable **Heatmaps** (autocapture-powered; view via the PostHog Toolbar on the li
 | Flag key | Purpose |
 |---|---|
 | `session-replay-enabled` | Master kill-switch for replay (privacy safety + cost). |
-| `analytics-consent-required` | Region/consent gate; when true, hold analytics until opt-in (EU/child-safe default). |
+| `analytics-consent-required` | Region/consent gate; when true, hold analytics until opt-in (EU-safe default). |
 | `show-hero-shapes` | Perf/UX kill-switch — disable the heavy shape overlay for low-end devices or as an experiment arm. |
 | `pricing-visible` / `pricing-framing` | Gate or vary how the $67 offer is shown (ties to experiments §8). |
 | `email-first-layout` | Test moving the email capture higher up the page. |
@@ -352,7 +352,7 @@ Run experiments **segmented by `device_type`** (a mobile-first audience means de
 | **Exit-intent / dwell "What almost stopped you?"** | Desktop exit-intent; mobile via dwell-without-scroll or scroll-up near the offer | Objection mining (price / "not sure it's worth it" / "just browsing" / technical issue). |
 | **Price-sensitivity (Van Westendorp)** | Later, once traffic supports it | Validate the $67 point before scaling paid. |
 
-Keep surveys **light, skippable, throttled** (one per session), and — given the audience — never ask a child for personal info. Target with flags/properties so they never harm the conversion path.
+Keep surveys **light, skippable, throttled** (one per session), and never ask for personal info. Target with flags/properties so they never harm the conversion path.
 
 ---
 
@@ -378,22 +378,24 @@ Keep surveys **light, skippable, throttled** (one per session), and — given th
 
 ## 11. PRIVACY / COMPLIANCE  ⚠️ (read before enabling anything)
 
-**This is a genuine legal consideration, not a checkbox.** The brand's audience **skews toward kids/parents**, yet the current privacy policy (`app/privacy/page.tsx`) states the site is *"not directed to children under 13"* and that we *"do not knowingly collect personal information from them."* Under **COPPA**, whether a site is *"directed to children"* is judged by its **actual content, audience, and marketing** — a disclaimer does **not** override reality. **GDPR‑K** (Art. 8) sets a digital-consent age of **13–16** depending on EU member state. If the site is deemed child-directed (or we have *actual knowledge* of under-13 users), then **behavioral tracking, persistent identifiers, third-party analytics, and especially session replay** are restricted absent **verifiable parental consent**.
+**This is a genuine legal consideration, not a checkbox.** SFFS is positioned for **teens and adults**: the app is rated 4+ because nothing in it is objectionable, but it is **not designed for or directed to children under 13** and is **not enrolled in Apple's Kids Category**. The site copy, the Terms (13+ minimum), and the privacy policy (`app/privacy/page.tsx`) now all say this consistently, which is what matters, because under **COPPA** whether a service is *"directed to children"* is judged by its **actual content, audience, and marketing**, not by a disclaimer. Keeping the marketing consistent with the 13+ position is therefore an ongoing obligation, not a one-time edit.
 
-> **Required action:** get a real compliance determination (counsel) on whether SFFS is *"child-directed."* The answer drives whether replay + persistent tracking can run at all. Ship the **privacy-conservative default** (below) until then.
+**GDPR‑K** (Art. 8) still sets a digital-consent age of **13–16** depending on EU member state, so EU teenagers remain a real consideration for consent-based processing even though COPPA does not apply.
+
+> **Required action:** keep every new marketing surface consistent with the 13+ position (no age ranges below 13, no parent-directed framing, no school/classroom framing). If that ever slips, the COPPA analysis changes. Ship the **privacy-conservative default** (below) regardless, because it is good practice and cheap.
 
 ### 11.1 Privacy-conservative default config (safe to ship at P0)
 - **Cookieless by default:** `persistence: 'memory'` (or `sessionStorage`) until explicit consent — honors the policy's existing promise to gate non-essential cookies.
 - **`person_profiles: 'identified_only'`** — don't mint a profile for every anonymous visitor.
 - **No PII in events:** `email_captured` carries **no** email; the address stays only in Aurora. Add `property_denylist: ['$ip', 'email', 'email_address']` as a hard guard.
-- **Session replay OFF** until the child-directed decision; when on, **mask all inputs** (email masked), bodies off, sampled, and flag-gated (`session-replay-enabled`).
+- **Session replay OFF** by default; when on, **mask all inputs** (email masked), bodies off, sampled, and flag-gated (`session-replay-enabled`).
 - **Discard client IP** at the project level (PostHog "Discard client IP data") after geo is derived — reduces PII while keeping city/country.
 - **Honor GPC / Do Not Track** and respect a consent banner's opt-out via `posthog.opt_out_capturing()`.
 
 ### 11.2 The specific flags to raise (call these out to the owner)
-1. **Child-directed status is undecided** and the policy's disclaimer may not match reality → **blocks** replay + persistent tracking until resolved.
+1. **The 13+ position must stay true in the marketing**, not just the policy → any new child-directed copy would reopen COPPA exposure and re-block replay + persistent tracking.
 2. **The policy already promises consent for non-essential cookies** → shipping PostHog cookies **without a consent banner would break that promise**. Either go cookieless (default) or ship the banner first.
-3. **Session replay of minors** is the highest-risk feature — default OFF; enable only post-decision, masked + sampled + consent-gated + geo-limited.
+3. **Session replay** is the highest-risk feature, and teenage EU visitors still fall under GDPR‑K consent ages — default OFF; enable only masked + sampled + consent-gated + geo-limited.
 4. **US data residency** (project is on US cloud). For EU visitors, document the transfer and consider stricter gating; **sign PostHog's DPA**.
 5. **Update the privacy policy** to name **PostHog** as the analytics processor, describe session replay (if used) and the consent choices — the current text only says "analytics provider" generically.
 6. **Retention:** set the **shortest workable** retention (short replay retention, e.g. 30 days; minimal person retention). Policy already commits to de-identified aggregate analytics.

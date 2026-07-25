@@ -22,7 +22,7 @@ Craft the opening dare + title in the host voice: a truthful "only X% can solve 
 - Hand the visual team the hook text + which word to box + accent choice.
 
 ## Guardrails (non-negotiable)
-- COPPA/CARU: no fake scarcity or manipulative urgency; claims truthful and age-appropriate; no child-data ask in the open; CARU-cleared.
+- Honest creative: no fake scarcity or manipulative urgency; claims truthful and substantiated; no data ask in the open.
 - No Alpha branding: neutral "Closer" brand only — no Alpha School / Alpha AI names, logos, colors, or URLs.
 - 100% original: write your own hook and stat framing; never lift another video's opening line.
 

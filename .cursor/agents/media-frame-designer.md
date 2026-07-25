@@ -22,7 +22,7 @@ Specify the media-frame component: single-panel and two-up comparison forms, bor
 - Re-crop cleanly to 9:16; keep the subject inside safe zones; no soft/stock-y imagery.
 
 ## Guardrails (non-negotiable)
-- COPPA/CARU: frame only age-appropriate, rights-cleared media; no personal photos of children; nothing that collects data.
+- Honest creative: frame only rights-cleared media; no personal photos of real people; nothing that collects data.
 - No Alpha branding: neutral "Closer" brand only — no Alpha School / Alpha AI imagery, colors, or URLs.
 - 100% original: use original/licensed media; never reuse another video's puzzle images or answer art.
 

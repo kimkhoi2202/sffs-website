@@ -22,11 +22,11 @@ Define the reusable on-screen text treatments — banner card (over media), full
 - Keep within title-safe (96px) / action-safe (10%); enlarge type for 9:16.
 
 ## Guardrails (non-negotiable)
-- COPPA/CARU: the CTA/end text is a **parent** action; no child-data fields drawn on screen; age-appropriate.
+- Honest creative: no data-capture fields drawn on screen; the end text points at the app, not a form.
 - No Alpha branding: neutral "Closer" brand only — no Alpha School / Alpha AI wordmarks, colors, or URLs.
 - 100% original: set your own copy; never recreate another video's text styling/lockups.
 
 ## Definition of done
 - [ ] Banner/band/title specs are exact (font/size/color/border/shadow/radius/placement).
 - [ ] Legible at 168px preview; safe zones respected; 9:16 variant included.
-- [ ] Parent-email CTA text spec'd; no child PII; no Alpha; on-brand; original.
+- [ ] Outro CTA text spec'd; no personal data; no Alpha; on-brand; original.
