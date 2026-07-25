@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 
 import { Section } from "@/components/ui/section";
 import { Heading } from "@/components/ui/heading";
@@ -43,36 +43,51 @@ export function Waitlist({
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /**
+   * Synchronous re-entry guard. `submitting` state is NOT enough on its own:
+   * setState is async, so several clicks landing in the same frame all read the
+   * old `false` and all fire a POST before React re-renders and disables the
+   * button. Three clicks in one frame really did produce three signup requests.
+   * This ref is read and written in the same tick, so the 2nd and 3rd clicks
+   * return immediately. The state below stays for the visual disabled
+   * affordance; the ref is the correctness guard.
+   */
+  const submittingRef = useRef(false);
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (submitting) return;
-    const value = email.trim();
-    const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-    if (!valid) {
-      setError("Hmm, that doesn't look like an email.");
-      return;
-    }
-    setError(null);
-    setSubmitting(true);
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     try {
-      const res = await fetch("/api/access-signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: value }),
-      });
-      const data = (await res.json().catch(() => null)) as
-        | { ok?: boolean; error?: string }
-        | null;
-      if (!res.ok || !data?.ok) {
-        setError(data?.error ?? "That didn't go through. Give it another shot.");
-        setSubmitting(false);
+      const value = email.trim();
+      const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+      if (!valid) {
+        setError("Hmm, that doesn't look like an email.");
         return;
       }
-      setSubmitted(true);
-    } catch {
-      setError("Couldn't reach the server. Check your connection and try again.");
-      setSubmitting(false);
+      setError(null);
+      setSubmitting(true);
+      try {
+        const res = await fetch("/api/access-signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: value }),
+        });
+        const data = (await res.json().catch(() => null)) as
+          | { ok?: boolean; error?: string }
+          | null;
+        if (!res.ok || !data?.ok) {
+          setError(data?.error ?? "That didn't go through. Give it another shot.");
+          setSubmitting(false);
+          return;
+        }
+        setSubmitted(true);
+      } catch {
+        setError("Couldn't reach the server. Check your connection and try again.");
+        setSubmitting(false);
+      }
+    } finally {
+      submittingRef.current = false;
     }
   }
 

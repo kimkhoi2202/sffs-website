@@ -22,13 +22,27 @@ export interface EmailSignupInput {
   meta: Record<string, unknown>;
 }
 
+export interface EmailSignupResult {
+  /**
+   * True when this call actually created a row. False when the address was
+   * already on the list and `ON CONFLICT DO NOTHING` suppressed the insert.
+   *
+   * The caller uses this to decide whether the submit is a real conversion. A
+   * repeat submit is still a success for the visitor (same status, same body),
+   * it just must not be counted twice.
+   */
+  inserted: boolean;
+}
+
 /**
  * Forward a validated lead to the proxy. Resolves on success — including a
  * deduped repeat submit, which the proxy treats as success (ON CONFLICT DO
  * NOTHING). Throws on misconfiguration, a non-2xx proxy response, or a network
  * failure so the caller can return a generic 500 without leaking details.
  */
-export async function insertEmailSignup(input: EmailSignupInput): Promise<void> {
+export async function insertEmailSignup(
+  input: EmailSignupInput,
+): Promise<EmailSignupResult> {
   const url = process.env.EMAIL_PROXY_URL;
   const secret = process.env.EMAIL_PROXY_SECRET;
   if (!url || !secret) {
@@ -58,4 +72,31 @@ export async function insertEmailSignup(input: EmailSignupInput): Promise<void> 
     }
     throw new Error(`email proxy responded ${res.status}: ${detail}`);
   }
+
+  /*
+    Read the proxy's row-created flag. The proxy's insert uses RETURNING, so a
+    row comes back only when ON CONFLICT did not fire.
+
+    FAIL OPEN on purpose. A proxy build that predates this flag sends no such
+    field, and treating "absent" as false would silently drop every conversion
+    event to zero, which is far worse than the double-count this replaces. So an
+    absent or unparseable flag means "count it", exactly matching the old
+    behavior, and the dedupe only starts once the proxy actually reports.
+
+    Accepts `inserted` or `created` so this does not hinge on which name the
+    proxy settles on.
+  */
+  let inserted = true;
+  try {
+    const data = (await res.json()) as {
+      inserted?: unknown;
+      created?: unknown;
+    } | null;
+    if (typeof data?.inserted === "boolean") inserted = data.inserted;
+    else if (typeof data?.created === "boolean") inserted = data.created;
+  } catch {
+    // No body, or not JSON: keep the fail-open default.
+  }
+
+  return { inserted };
 }

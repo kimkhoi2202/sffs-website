@@ -112,10 +112,18 @@ export async function POST(request: NextRequest) {
   };
 
   try {
-    await insertEmailSignup({ email, source, meta });
+    const { inserted } = await insertEmailSignup({ email, source, meta });
     // Ad-blocker-proof server-side conversion truth (no PII — source/attribution
     // only). Runs after the durable insert; never throws.
-    await captureEmailCapturedServer(request, source);
+    //
+    // Only a genuinely new row counts. Re-submitting an address that is already
+    // on the list is not a second conversion, and no client-side guard can
+    // catch that case because it spans separate visits.
+    if (inserted) {
+      await captureEmailCapturedServer(request, source);
+    }
+    // Same status and same body either way: never reveal whether an address is
+    // already on the list.
     return NextResponse.json({ ok: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unexpected error.";
