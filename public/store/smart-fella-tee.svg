@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" role="img" aria-labelledby="smart-fella-tee-title">
+  <title id="smart-fella-tee-title">Smart Fella Tee — placeholder art</title>
+  <!-- Same neo-brutalist tee silhouette as the Fart Smella tee, recolored
+       brand-blue for the earned/gated tier, plus a small "certified" star. -->
+  <path
+    d="M95,70 L40,110 L65,145 L95,120 L95,260 Q95,270 105,270 L215,270 Q225,270 225,260 L225,120 L255,145 L280,110 L225,70 Q205,95 160,95 Q115,95 95,70 Z"
+    fill="#839aff"
+    stroke="#000000"
+    stroke-width="6"
+    stroke-linejoin="round"
+  />
+  <path
+    d="M160,150 L167,168 L186,168 L171,180 L176,199 L160,188 L144,199 L149,180 L134,168 L153,168 Z"
+    fill="#fce552"
+    stroke="#000000"
+    stroke-width="4"
+    stroke-linejoin="round"
+  />
+  <text x="160" y="222" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="26" letter-spacing="1" fill="#000000">SMART</text>
+  <text x="160" y="252" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="26" letter-spacing="1" fill="#000000">FELLA</text>
+</svg>
