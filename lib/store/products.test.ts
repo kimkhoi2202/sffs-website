@@ -23,4 +23,10 @@ describe("PRODUCTS catalog", () => {
   it("returns undefined for an unknown product id", () => {
     expect(getProduct("nope")).toBeUndefined();
   });
+
+  it("returns undefined for prototype keys (no gate bypass)", () => {
+    for (const key of ["__proto__", "constructor", "toString", "hasOwnProperty"]) {
+      expect(getProduct(key)).toBeUndefined();
+    }
+  });
 });

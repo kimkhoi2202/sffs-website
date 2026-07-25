@@ -34,5 +34,10 @@ export const PRODUCTS: Record<ProductId, Product> = {
 };
 
 export function getProduct(id: string): Product | undefined {
+  // Own-property guard: plain bracket indexing resolves prototype keys
+  // ("__proto__", "constructor", "toString"), which would return a truthy
+  // non-product object. On the paid/gated checkout route that must fail closed
+  // to a clean "unknown product", so only real catalog ids ever resolve.
+  if (typeof id !== "string" || !Object.hasOwn(PRODUCTS, id)) return undefined;
   return (PRODUCTS as Record<string, Product>)[id];
 }

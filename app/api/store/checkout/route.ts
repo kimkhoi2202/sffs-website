@@ -87,7 +87,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unknown product." }, { status: 400 });
   }
 
+  // Validate size against the product's own list rather than passing free text
+  // through to Stripe metadata (an oversized/garbage value would 502 from Stripe).
   const size = typeof body.size === "string" ? body.size : undefined;
+  if (size !== undefined && !product.sizes.includes(size)) {
+    return NextResponse.json({ error: "Invalid size." }, { status: 400 });
+  }
   const token = typeof body.token === "string" ? body.token : undefined;
 
   if (product.gated) {
