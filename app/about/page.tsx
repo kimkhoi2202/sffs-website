@@ -32,7 +32,7 @@ const FAQ: FaqItem[] = [
   },
   {
     q: "Is my data safe?",
-    a: "No ads, no third-party ad tracking, and we never sell data. Signing in is optional, so you can play without giving us anything. The full details are in our Privacy Policy.",
+    a: "No ads, no third-party ad tracking, and we never sell data. Signing in is optional, so you can play without handing over an account. We do log anonymous usage events so we can see which parts of the app work, but we never record your screen or use advertising identifiers. The full details are in our Privacy Policy.",
   },
 ];
 

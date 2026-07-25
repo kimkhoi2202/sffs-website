@@ -250,6 +250,13 @@ export default function AppStoreCopyPage() {
                   <strong>Purchases.</strong> Purchase and entitlement status
                   through RevenueCat, for app functionality.
                 </li>
+                <li>
+                  <strong>Usage data (product interaction).</strong> App usage
+                  events through PostHog (screens viewed, buttons tapped,
+                  purchases started or completed), for analytics. NOT linked to
+                  you: the app never calls identify, so there is no per-user
+                  profile. Not used for tracking.
+                </li>
               </ul>
               <p>
                 Data is <strong>not</strong> used for third-party advertising,

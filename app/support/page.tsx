@@ -94,7 +94,10 @@ const FAQ_ITEMS: FaqItem[] = [
       <>
         Yes, privacy is a priority. There are no third-party ads, no ad tracking,
         and we never sell data. We collect very little, and signing in is
-        optional. Read the full details in our{" "}
+        optional. We do use a privacy-friendly analytics tool (PostHog) to see
+        how the app is used in aggregate, with screen recording, tap capture, IP
+        collection, and advertising identifiers all turned off. Read the full
+        details in our{" "}
         <a href="/privacy" className={LINK}>
           Privacy Policy
         </a>
@@ -102,7 +105,7 @@ const FAQ_ITEMS: FaqItem[] = [
       </>
     ),
     plain:
-      "Yes, privacy is a priority. There are no third-party ads, no ad tracking, and we never sell data. We collect very little, and signing in is optional. Read the full details in our Privacy Policy.",
+      "Yes, privacy is a priority. There are no third-party ads, no ad tracking, and we never sell data. We collect very little, and signing in is optional. We do use a privacy-friendly analytics tool (PostHog) to see how the app is used in aggregate, with screen recording, tap capture, IP collection, and advertising identifiers all turned off. Read the full details in our Privacy Policy.",
   },
   {
     id: "cost",

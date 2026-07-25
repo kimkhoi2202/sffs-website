@@ -208,9 +208,9 @@ const SECTIONS: LegalSection[] = [
       <>
         <p>
           The app relies on services from Apple, Google, Supabase, RevenueCat,
-          and Expo and EAS. Your use of those services may also be subject to
-          their own terms. We do not control them and are not responsible for
-          them.
+          PostHog, and Expo and EAS. Your use of those services may also be
+          subject to their own terms. We do not control them and are not
+          responsible for them.
         </p>
       </>
     ),

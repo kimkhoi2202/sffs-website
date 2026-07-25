@@ -90,7 +90,10 @@ const SECTIONS: LegalSection[] = [
         <Card color="mint" shadow="sm" padding="lg" className="not-prose">
           <ul className="list-disc space-y-2 pl-6 text-[1.02rem] leading-relaxed marker:text-ink">
             <li>Signing in is optional. The games work without an account.</li>
-            <li>We collect very little, and only what the app needs to run.</li>
+            <li>
+              We collect very little: what the app needs to run, plus aggregate
+              usage analytics so we can improve it.
+            </li>
             <li>
               We never sell or share your personal data, and there are no
               third-party ads.
@@ -220,6 +223,19 @@ const SECTIONS: LegalSection[] = [
                   RevenueCat, based on your Apple or Google purchase.
                 </td>
               </tr>
+              <tr className="border-b-2 border-ink/15">
+                <td className="px-4 py-3 align-top font-semibold">
+                  App usage events (screens viewed, buttons tapped, purchases
+                  started or completed)
+                </td>
+                <td className="px-4 py-3 align-top">
+                  Understand which parts of the app work and which do not, so we
+                  can improve it. Not used for advertising.
+                </td>
+                <td className="px-4 py-3 align-top">
+                  Your use of the app, sent to PostHog.
+                </td>
+              </tr>
               <tr>
                 <td className="px-4 py-3 align-top font-semibold">
                   Limited technical data
@@ -234,8 +250,17 @@ const SECTIONS: LegalSection[] = [
         </div>
         <p>
           The app does <strong>not</strong> collect or store payment card data.
-          Apple and Google process all payments. Analytics in the app are minimal
-          to none, and we do not add advertising trackers.
+          Apple and Google process all payments. We use a privacy-friendly
+          analytics tool (PostHog) to understand how the app is used in
+          aggregate, and we do not add advertising trackers.
+        </p>
+        <p>
+          <strong>Analytics, and what we deliberately do not do.</strong> We use
+          PostHog to see how the app is used in aggregate. We have turned off the
+          things that would matter most for privacy: we do not record your
+          screen, we do not automatically capture what you tap, we do not collect
+          your IP address or location, we do not use advertising identifiers, and
+          we do not build an advertising profile.
         </p>
       </>
     ),
@@ -251,6 +276,9 @@ const SECTIONS: LegalSection[] = [
           <li>save your progress and achievements;</li>
           <li>enable and restore the one-time purchase;</li>
           <li>secure accounts and prevent abuse;</li>
+          <li>
+            understand how the app is used, in aggregate, so we can improve it;
+          </li>
           <li>respond to your support requests; and</li>
           <li>meet our legal obligations.</li>
         </ul>
@@ -283,7 +311,8 @@ const SECTIONS: LegalSection[] = [
           </li>
           <li>
             <strong>Legitimate interests.</strong> To keep the service secure and
-            working.
+            working, and to understand how the app is used in aggregate so we can
+            improve it.
           </li>
         </ul>
       </>
@@ -410,6 +439,19 @@ const SECTIONS: LegalSection[] = [
             <strong>Expo and EAS.</strong> App builds and over-the-air updates.{" "}
             <a
               href="https://expo.dev/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Privacy policy
+            </a>
+            .
+          </li>
+          <li>
+            <strong>PostHog.</strong> Privacy-friendly product analytics, used to
+            understand how the app is used in aggregate. Analytics data is not
+            used for advertising and is not sold.{" "}
+            <a
+              href="https://posthog.com/privacy"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -561,8 +603,10 @@ const SECTIONS: LegalSection[] = [
         <p>
           The section below is about this marketing website
           (smartfellaorfartsmella.com), which is separate from the app described
-          above. It does not change how the app handles data, and it does not add
-          any analytics to the app.
+          above. Both the website and the app use PostHog for analytics,
+          configured differently: the website&rsquo;s setup is described here,
+          and the app&rsquo;s more restricted setup is described in the sections
+          above.
         </p>
         <Card color="cream" shadow="sm" padding="lg" className="not-prose">
           <ul className="list-disc space-y-2.5 pl-6 text-[1.02rem] leading-relaxed marker:text-ink">
