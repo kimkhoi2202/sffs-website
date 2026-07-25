@@ -621,10 +621,11 @@ const SECTIONS: LegalSection[] = [
               sell the data.
             </li>
             <li>
-              <strong>Waitlist emails.</strong> If you give us your email through
-              the waitlist form, we store it in our own database and also mirror
-              it into PostHog&rsquo;s data warehouse as a separate list, so we can
-              query signups internally. That list stands on its own: it is not
+              <strong>Waitlist emails.</strong>{" "}
+              If you give us your email through the waitlist form, we store it
+              in our own database and also mirror it into PostHog&rsquo;s data
+              warehouse as a separate list, so we can query signups internally.
+              That list stands on its own: it is not
               linked to the anonymous analytics above, it is not joined to any
               profile or to anyone&rsquo;s browsing behavior, it is not used for
               advertising, and it is not sold.
