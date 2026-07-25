@@ -449,7 +449,10 @@ const SECTIONS: LegalSection[] = [
           <li>
             <strong>PostHog.</strong> Privacy-friendly product analytics, used to
             understand how the app is used in aggregate. Analytics data is not
-            used for advertising and is not sold.{" "}
+            used for advertising and is not sold. PostHog also holds the waitlist
+            emails collected on our website, kept as a separate list and never
+            joined to the analytics above; see{" "}
+            <a href="#about-this-website">About this website</a> below.{" "}
             <a
               href="https://posthog.com/privacy"
               target="_blank"
@@ -616,6 +619,15 @@ const SECTIONS: LegalSection[] = [
               general usage). It does not collect personal information that
               identifies you, we do not use it for advertising, and we do not
               sell the data.
+            </li>
+            <li>
+              <strong>Waitlist emails.</strong> If you give us your email through
+              the waitlist form, we store it in our own database and also mirror
+              it into PostHog&rsquo;s data warehouse as a separate list, so we can
+              query signups internally. That list stands on its own: it is not
+              linked to the anonymous analytics above, it is not joined to any
+              profile or to anyone&rsquo;s browsing behavior, it is not used for
+              advertising, and it is not sold.
             </li>
             <li>
               <strong>SFFS Creator Studio (our own posting tool).</strong> We
