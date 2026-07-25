@@ -197,6 +197,9 @@ export function SiteFooter() {
           aria-label="Footer"
           className="flex flex-wrap items-center justify-end gap-x-5 gap-y-2 text-right text-sm"
         >
+          <Link href="/store" className={footerLink}>
+            Store
+          </Link>
           <Link href="/about" className={footerLink}>
             About
           </Link>
