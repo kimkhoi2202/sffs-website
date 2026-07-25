@@ -477,6 +477,19 @@ const SECTIONS: LegalSection[] = [
           ask us to delete your data, we delete it. We may keep anonymized or
           aggregate information that does not identify you.
         </p>
+        <p>
+          <strong>Analytics events.</strong>{" "}
+          Analytics events are kept for seven years. That is the retention
+          period our analytics provider applies to our plan, and it is not a
+          setting we can shorten.
+        </p>
+        <p>
+          <strong>Website session recordings.</strong>{" "}
+          Recordings of browsing sessions on this website are kept for 30 days
+          and then deleted. This applies to the website only. The app does not
+          have a session-recording module installed, so there are no app
+          recordings to keep.
+        </p>
       </>
     ),
   },
@@ -619,6 +632,15 @@ const SECTIONS: LegalSection[] = [
               general usage). It does not collect personal information that
               identifies you, we do not use it for advertising, and we do not
               sell the data.
+            </li>
+            <li>
+              <strong>Website session recordings.</strong>{" "}
+              This site also records browsing sessions, so we can see where the
+              page confuses people. Every input is masked, so anything you type
+              (including your email) is never captured, and the recordings leave
+              out request and response bodies, headers, and console logs. The
+              app does not do this at all: it has no session-recording module
+              installed.
             </li>
             <li>
               <strong>Waitlist emails.</strong>{" "}
