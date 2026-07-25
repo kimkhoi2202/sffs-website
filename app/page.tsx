@@ -61,28 +61,31 @@ const FEATURES: Feature[] = [
   },
 ];
 
-// SANDWICH color scheme (gray section): every card pins a distinct brand color
-// that is ALSO its brain avatar's body color (cardColor == the brain PNG fill),
-// and the avatar CIRCLE (circleColor) contrasts in BOTH hue and lightness so the
-// brain always pops. Green-family cards use a non-green disc (Dana green→paper,
-// Marcus mint→coral); the two greens are kept non-adjacent.
+// SANDWICH color scheme (gray section): the brain-mascot cards each pin a
+// distinct brand color that is ALSO the brain avatar's body color (cardColor ==
+// the brain PNG fill), and the avatar CIRCLE (circleColor) contrasts in BOTH hue
+// and lightness so the brain always pops (Marcus mint→coral disc).
+//
+// The two grown-up voices (Dana, Sam) deliberately SKIP the brain mascot and take
+// the initials <Avatar> on a solid ink disc instead, so the wall does not read as
+// six identical cartoon brains. Same 2.5px ink border and hard-shadow language,
+// just a monogram in place of the PNG.
 const TESTIMONIALS: Testimonial[] = [
   {
     quote: "Beat my whole friend group and I will NOT let them forget it.",
     name: "Leo M.",
-    role: "Ranked #3 in his class",
+    role: "Ranked #3, taking it personally",
     avatarImage: "/testimonials/leo.png",
     cardColor: "blue",
     circleColor: "yellow",
   },
   {
     quote:
-      "My kid asked to play a memory game instead of watching slime videos. Actual witchcraft.",
+      "Downloaded it to make fun of the name. It is now the only app on my home screen.",
     name: "Dana R.",
-    role: "Parent",
-    avatarImage: "/testimonials/dana.png",
+    role: "Ironic download, sincere addict",
+    avatarColor: "ink",
     cardColor: "green",
-    circleColor: "paper",
   },
   {
     quote: "Makes me feel like a genius and an idiot in the same round. Can't stop.",
@@ -113,9 +116,8 @@ const TESTIMONIALS: Testimonial[] = [
     quote: "Replaced my 2am doomscroll with a few quick rounds. My brain said thank you.",
     name: "Sam K.",
     role: "Reformed doomscroller",
-    avatarImage: "/testimonials/sam.png",
+    avatarColor: "ink",
     cardColor: "paper",
-    circleColor: "coral",
   },
 ];
 
@@ -134,7 +136,7 @@ const FAQ: FaqItem[] = [
   },
   {
     q: "Who's it for?",
-    a: "Anyone who wants to out-think their friends. Built for sharp kids — but honestly addictive for everyone.",
+    a: "Anyone who wants to out-think their friends. If you still think a fart joke is funny, you are the target demographic.",
   },
   {
     q: "When does it launch?",

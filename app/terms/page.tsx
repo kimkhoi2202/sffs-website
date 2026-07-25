@@ -10,7 +10,7 @@ import { LegalPage, type LegalSection } from "@/components/sections/legal-page";
 const LEGAL_ENTITY = "Kim Khoi Lam";
 const BUSINESS_ADDRESS = "1143 Sultana Spgs Ct, Houston, TX 77090";
 const GOVERNING_LAW = "the State of Texas, USA";
-const EFFECTIVE_DATE = "July 24, 2026";
+const EFFECTIVE_DATE = "July 25, 2026";
 const SUPPORT_EMAIL = "smartfellaorfartsmella123@gmail.com";
 
 export const metadata: Metadata = {
@@ -71,24 +71,13 @@ const SECTIONS: LegalSection[] = [
   },
   {
     id: "who-can-use",
-    heading: "Who can use the app, and parental consent",
+    heading: "Who can use the app",
     body: (
       <>
         <p>
-          The app is made for tweens, roughly ages 10 to 14. We care about young
-          players, so parental involvement matters here.
+          You must be at least 13 to use the app, or the age of digital consent
+          where you live, whichever is higher.
         </p>
-        <ul>
-          <li>
-            If you are under 13, or under the age of digital consent where you
-            live, a parent or guardian must agree to these Terms and create or
-            approve the account before you use the app.
-          </li>
-          <li>
-            A parent or guardian who sets up or approves an account is
-            responsible for the child&rsquo;s use of the app under these Terms.
-          </li>
-        </ul>
       </>
     ),
   },
@@ -187,7 +176,7 @@ const SECTIONS: LegalSection[] = [
     body: (
       <>
         <p>
-          Keep it kind and kid-appropriate. When using the app, you agree not to:
+          Keep it kind. When using the app, you agree not to:
         </p>
         <ul>
           <li>misuse the app or use it in a way that breaks the law;</li>

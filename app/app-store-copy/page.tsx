@@ -31,25 +31,23 @@ export const metadata: Metadata = {
 const APP_NAME = "Smart Fella or Fart Smella";
 const APP_NAME_FALLBACK = "Smart Fella: Brain Games";
 
-const SUBTITLE_PRIMARY = "Brain games for curious kids";
+const SUBTITLE_PRIMARY = "Dumb name. Real brain games.";
 const SUBTITLE_ALT_1 = "Brain training and fun games";
-const SUBTITLE_ALT_2 = "Brain workouts for tweens";
+const SUBTITLE_ALT_2 = "The dumb little brain game";
 
 const PROMO_TEXT =
-  "Play the first game in every category free. No ads, and we never sell your data. Fun brain workouts plus casual games for tweens, with a one-time unlock for the rest.";
+  "Play the first game in every category free. No ads, and we never sell your data. Quick brain games with a very stupid name, plus a one-time unlock for the rest.";
 
 const KEYWORDS =
-  "brain,training,logic,puzzle,memory,focus,attention,kids,tween,educational,learning,math,quiz,games";
+  "brain,training,logic,puzzle,memory,focus,attention,quiz,trivia,reflex,casual,streak,brainteaser";
 
-const DESCRIPTION = `Smart Fella or Fart Smella turns brain training into something tweens actually want to open. It mixes quick brain workouts with fun, casual games, so grades 5 to 8 get a challenge that feels like play.
-
-Part brain workout, part arcade for young minds. It brings together real brain-training exercises and bright, arcade-style casual games. Exciting for kids, reassuring for parents.
+const DESCRIPTION = `Smart Fella or Fart Smella is a dumb little brain game with a very stupid name. Quick logic, memory, focus, and word games mixed with casual arcade rounds - a real challenge you can finish in about a minute. Play a round, get ranked, and settle the only question that matters: are you a smart fella, or a certified fart smella?
 
 WHAT IS INSIDE
 
-Brain-training challenges. Quick logic, memory, focus, and attention games that keep young minds busy.
+Brain-training challenges. Quick logic, memory, focus, and attention games that keep your brain busy.
 
-Fun casual games. Arcade-style games for the moments they just want to play.
+Fun casual games. Arcade-style games for the moments you just want to play.
 
 Progress and personal bests. Save scores and beat your own high score over time.
 
@@ -59,9 +57,9 @@ One-time unlock, no subscription. A single purchase opens the rest of the games.
 
 No ads. No third-party ad tracking, and no selling of data.
 
-BUILT WITH PARENTS IN MIND
+NO ADS, NO CREEPY TRACKING
 
-There are no ads, no third-party ad tracking, and we never sell data. Signing in is optional, privacy is designed for a younger audience, and the account can be owned by a parent.
+No ads, no third-party ad tracking, and we never sell data. Signing in is optional - every game works fine without an account.
 
 SIMPLE PRICING
 
@@ -202,10 +200,10 @@ export default function AppStoreCopyPage() {
                 Secondary: Education.
               </p>
               <p>
-                <strong>Tradeoff.</strong> Education reassures parents and fits
-                the brain-training angle. Games first widens reach in the largest,
-                most-browsed category. Pick based on whether parent trust or
-                discovery matters more at launch.
+                <strong>Tradeoff.</strong> Education fits the brain-training
+                angle and signals that the games have substance. Games first
+                widens reach in the largest, most-browsed category. Pick based on
+                whether credibility or discovery matters more at launch.
               </p>
             </FieldCard>
 
@@ -221,14 +219,13 @@ export default function AppStoreCopyPage() {
                 <li>No unrestricted web access.</li>
               </ul>
               <p>
-                <strong>Kids Category note.</strong> Some players are under 13, so
-                the app is child-directed. The two requirements that matter most
-                for the Kids Category are already met: no third-party ads and no
-                behavioral tracking.
+                <strong>Kids Category note.</strong> Do not enroll in the Kids
+                Category. The rating is 4+ because there is nothing objectionable
+                in the app, not because the app is aimed at children.
               </p>
               <p>
-                Confirm the final age band and whether to enroll in the Kids
-                Category directly in App Store Connect. Keep every questionnaire
+                Confirm the final age band directly in App Store Connect. Keep
+                every questionnaire
                 answer consistent with the Privacy Policy and the app behavior,
                 and do not overclaim.
               </p>

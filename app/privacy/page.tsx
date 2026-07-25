@@ -10,7 +10,7 @@ import { Card } from "@/components/ui/card";
 */
 const LEGAL_ENTITY = "Kim Khoi Lam";
 const BUSINESS_ADDRESS = "1143 Sultana Spgs Ct, Houston, TX 77090";
-const EFFECTIVE_DATE = "July 24, 2026";
+const EFFECTIVE_DATE = "July 25, 2026";
 const SUPPORT_EMAIL = "smartfellaorfartsmella123@gmail.com";
 
 export const metadata: Metadata = {
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   // template that appends a middot suffix).
   title: { absolute: "Privacy Policy | Smart Fella or Fart Smella" },
   description:
-    "How Smart Fella or Fart Smella collects, uses, and protects data, with a strong focus on children's privacy and parental rights.",
+    "How Smart Fella or Fart Smella collects, uses, and protects data.",
   alternates: { canonical: "/privacy" },
   robots: { index: true, follow: true },
   openGraph: {
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     siteName: "Smart Fella or Fart Smella",
     title: "Privacy Policy | Smart Fella or Fart Smella",
     description:
-      "How Smart Fella or Fart Smella collects, uses, and protects data, with a strong focus on children's privacy and parental rights.",
+      "How Smart Fella or Fart Smella collects, uses, and protects data.",
     url: "/privacy",
     images: ["/opengraph-image"],
   },
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Privacy Policy | Smart Fella or Fart Smella",
     description:
-      "How Smart Fella or Fart Smella collects, uses, and protects data, with a strong focus on children's privacy and parental rights.",
+      "How Smart Fella or Fart Smella collects, uses, and protects data.",
     images: ["/twitter-image"],
   },
 };
@@ -54,12 +54,11 @@ const SECTIONS: LegalSection[] = [
           This Privacy Policy is provided by {LEGAL_ENTITY}, the operator of the
           Smart Fella or Fart Smella mobile app (the &ldquo;app&rdquo;). It
           explains, in plain language, what information the app handles when you
-          or your child play, why we handle it, and the choices your family has.
+          play, why we handle it, and the choices you have.
         </p>
         <p>
-          We wrote this policy to be easy for a parent to read and to put
-          children&rsquo;s privacy first. If anything here is unclear, please
-          reach out through our <a href="/support">support page</a>.
+          We wrote this policy to be easy to read. If anything here is unclear,
+          please reach out through our <a href="/support">support page</a>.
         </p>
       </>
     ),
@@ -75,9 +74,9 @@ const SECTIONS: LegalSection[] = [
           <a href="#contact">Contact us</a> section below.
         </p>
         <p>
-          Smart Fella or Fart Smella is a brain-training and casual-games app for
-          tweens: part brain workout, part arcade for young minds. It is made to
-          be fun for kids and reassuring for parents.
+          Smart Fella or Fart Smella is a brain-training and casual-games app:
+          part brain workout, part arcade. Quick logic, memory, focus, and word
+          games with a very stupid name.
         </p>
       </>
     ),
@@ -96,7 +95,10 @@ const SECTIONS: LegalSection[] = [
               We never sell or share your personal data, and there are no
               third-party ads.
             </li>
-            <li>The app is built for kids, and it respects parents.</li>
+            <li>
+              The app is made for teens and adults, and it is not directed to
+              children under 13.
+            </li>
             <li>
               You can ask us to delete your data at any time through our{" "}
               <a
@@ -118,14 +120,15 @@ const SECTIONS: LegalSection[] = [
     body: (
       <>
         <p>
-          Smart Fella or Fart Smella is designed for tweens in grades 5 to 8,
-          roughly ages 10 to 14. Some players are under 13, so children&rsquo;s
-          privacy laws apply and we take them seriously.
+          Smart Fella or Fart Smella is made for teens and adults who like silly
+          humour and quick brain games. It is rated 4+ because there is nothing
+          objectionable in it, but it is not designed for or directed to children
+          under 13, and it is not enrolled in Apple&rsquo;s Kids Category.
         </p>
         <p>
-          A parent or guardian may create and own the account. If you are a
-          grown-up setting this up for your child, this policy is written with
-          you in mind.
+          We do not knowingly collect personal information from children under
+          13. If you believe a child under 13 has provided us personal
+          information, contact us and we will delete it.
         </p>
       </>
     ),
@@ -168,8 +171,8 @@ const SECTIONS: LegalSection[] = [
                   Create and secure your optional account.
                 </td>
                 <td className="px-4 py-3 align-top">
-                  You or a parent at sign-in, handled through Supabase using
-                  email and password, Google, or Apple.
+                  You, at sign-in, handled through Supabase using email and
+                  password, Google, or Apple.
                 </td>
               </tr>
               <tr className="border-b-2 border-ink/15">
@@ -254,7 +257,7 @@ const SECTIONS: LegalSection[] = [
         <p>
           <strong>
             We do not use information for behavioral advertising, and we do not
-            build advertising profiles of children.
+            build advertising profiles.
           </strong>
         </p>
       </>
@@ -275,8 +278,7 @@ const SECTIONS: LegalSection[] = [
             ask for, including the one-time unlock.
           </li>
           <li>
-            <strong>Consent.</strong> For optional sign-in, and for parental
-            consent where a child in the EU uses the app. You can withdraw
+            <strong>Consent.</strong> For optional sign-in. You can withdraw
             consent at any time.
           </li>
           <li>
@@ -289,50 +291,44 @@ const SECTIONS: LegalSection[] = [
   },
   {
     id: "childrens-privacy",
-    heading: "Children's privacy (COPPA and GDPR-K)",
+    heading: "Children under 13",
     body: (
       <>
         <p>
-          This is the part parents care about most, so we put it front and
-          center.
+          The app is not designed for or directed to children under 13, and it
+          is not enrolled in Apple&rsquo;s Kids Category.
         </p>
         <Card color="blue" shadow="md" padding="lg" className="not-prose">
           <ul className="list-disc space-y-2.5 pl-6 text-[1.02rem] leading-relaxed marker:text-ink">
             <li>
-              We design the app to minimize any child&rsquo;s personal
-              information beyond an account email.
+              We do not knowingly collect personal information from children
+              under 13.
             </li>
             <li>
-              A parent or guardian may create and control the account.
+              We keep collection small for everyone: an optional account email,
+              your game progress, and whether the unlock is active.
             </li>
             <li>
-              We do not knowingly over-collect, and we do not show behavioral ads
-              or use third-party ad tracking.
+              We do not show behavioral ads or use third-party ad tracking.
             </li>
-            <li>We do not sell or share children&rsquo;s data.</li>
+            <li>We do not sell or share personal data.</li>
             <li>
-              <strong>Parental rights.</strong> A parent or guardian may review,
-              correct, delete, or revoke consent by using our{" "}
+              If you believe a child under 13 has provided us personal
+              information, tell us through our{" "}
               <a
                 href="/support"
                 className="font-semibold text-ink underline decoration-2 underline-offset-2"
               >
                 support page
               </a>{" "}
-              or emailing{" "}
+              or email{" "}
               <a
                 href={`mailto:${SUPPORT_EMAIL}`}
                 className="font-semibold text-ink underline decoration-2 underline-offset-2"
               >
                 {SUPPORT_EMAIL}
-              </a>
-              .
-            </li>
-            <li>
-              <strong>How we verify a parent request.</strong> Before we act on a
-              request about a child&rsquo;s account, we confirm it comes from the
-              parent or account owner, for example by confirming control of the
-              account email.
+              </a>{" "}
+              and we will delete it.
             </li>
           </ul>
         </Card>
@@ -348,7 +344,7 @@ const SECTIONS: LegalSection[] = [
           We do <strong>not</strong> sell your personal information, and we do{" "}
           <strong>not</strong> share it for cross-context behavioral advertising,
           in the sense those terms are used under California law (CCPA and CPRA).
-          This applies to everyone, including children.
+          This applies to everyone.
         </p>
       </>
     ),
@@ -455,8 +451,8 @@ const SECTIONS: LegalSection[] = [
             it is for.
           </li>
           <li>
-            Help us confirm you own the account (or that you are the parent or
-            guardian), so we can protect it from someone else.
+            Help us confirm you own the account, so we can protect it from
+            someone else.
           </li>
         </ol>
         <p>
@@ -607,10 +603,9 @@ export default function PrivacyPage() {
       lastUpdated={EFFECTIVE_DATE}
       intro={
         <p>
-          Smart Fella or Fart Smella is part brain workout and part arcade, made
-          for curious tweens. This policy explains, in plain language, what the
-          app collects (not much), why, and the choices you and your family have.
-          We built it to put children&rsquo;s privacy first.
+          Smart Fella or Fart Smella is part brain workout and part arcade, with
+          a very stupid name. This policy explains, in plain language, what the
+          app collects (not much), why, and the choices you have.
         </p>
       }
       sections={SECTIONS}

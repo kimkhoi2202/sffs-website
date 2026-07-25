@@ -53,46 +53,48 @@ const FAQ_ITEMS: FaqItem[] = [
     q: "What is Smart Fella or Fart Smella?",
     a: (
       <>
-        It is a brain-training and casual-games app for tweens. Think part brain
-        workout, part arcade: quick logic, memory, and focus challenges mixed
-        with fun casual games.
+        It is a brain-training and casual-games app. Think part brain workout,
+        part arcade: quick logic, memory, and focus challenges mixed with fun
+        casual games.
       </>
     ),
     plain:
-      "It is a brain-training and casual-games app for tweens. Think part brain workout, part arcade: quick logic, memory, and focus challenges mixed with fun casual games.",
+      "It is a brain-training and casual-games app. Think part brain workout, part arcade: quick logic, memory, and focus challenges mixed with fun casual games.",
   },
   {
     id: "who-is-it-for",
     q: "Who is it for?",
     a: (
       <>
-        It is made for tweens in grades 5 to 8, roughly ages 10 to 14. It is
-        playful for kids and built to be reassuring for parents.
+        Smart Fella or Fart Smella is made for teens and adults who like silly
+        humour and quick brain games. It is rated 4+ because there is nothing
+        objectionable in it, but it is not designed for or directed to children
+        under 13, and it is not enrolled in Apple&rsquo;s Kids Category.
       </>
     ),
     plain:
-      "It is made for tweens in grades 5 to 8, roughly ages 10 to 14. It is playful for kids and built to be reassuring for parents.",
+      "Smart Fella or Fart Smella is made for teens and adults who like silly humour and quick brain games. It is rated 4+ because there is nothing objectionable in it, but it is not designed for or directed to children under 13, and it is not enrolled in Apple's Kids Category.",
   },
   {
     id: "need-account",
-    q: "Does my child need an account?",
+    q: "Do I need an account?",
     a: (
       <>
         No. The games work without an account. Signing in is optional and simply
-        saves progress. An account can be created and owned by a parent.
+        saves your progress across devices.
       </>
     ),
     plain:
-      "No. The games work without an account. Signing in is optional and simply saves progress. An account can be created and owned by a parent.",
+      "No. The games work without an account. Signing in is optional and simply saves your progress across devices.",
   },
   {
     id: "safe-and-private",
-    q: "Is it safe and private for kids?",
+    q: "Is it safe and private?",
     a: (
       <>
         Yes, privacy is a priority. There are no third-party ads, no ad tracking,
-        and we never sell data. We collect very little, and an account can be
-        parent-owned. Read the full details in our{" "}
+        and we never sell data. We collect very little, and signing in is
+        optional. Read the full details in our{" "}
         <a href="/privacy" className={LINK}>
           Privacy Policy
         </a>
@@ -100,7 +102,7 @@ const FAQ_ITEMS: FaqItem[] = [
       </>
     ),
     plain:
-      "Yes, privacy is a priority. There are no third-party ads, no ad tracking, and we never sell data. We collect very little, and an account can be parent-owned. Read the full details in our Privacy Policy.",
+      "Yes, privacy is a priority. There are no third-party ads, no ad tracking, and we never sell data. We collect very little, and signing in is optional. Read the full details in our Privacy Policy.",
   },
   {
     id: "cost",
@@ -295,8 +297,7 @@ export default function SupportPage() {
                   , and tell us it is a deletion request.
                 </li>
                 <li>
-                  Help us confirm you own the account (or that you are the parent
-                  or guardian), so we can protect it.
+                  Help us confirm you own the account, so we can protect it.
                 </li>
                 <li>
                   We complete verified requests and confirm when your data is
