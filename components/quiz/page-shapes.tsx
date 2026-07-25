@@ -418,7 +418,7 @@ export function PageShapes() {
 
   // The shapes are the HERO's decorative field. Only render them on pages that
   // actually have a `.fella-hero` (the home hero); routes without one (e.g.
-  // /parents) get no shapes. Set in measure() below, pre-paint via layout effect.
+  // /about) get no shapes. Set in measure() below, pre-paint via layout effect.
   const [hasHero, setHasHero] = useState(false);
 
   const [mvs] = useState(() =>
@@ -854,7 +854,7 @@ export function PageShapes() {
     releaseRef.current = { i: d.i, vx, vy };
   };
 
-  // No hero on this route → no shape field (keeps calmer pages like /parents clean).
+  // No hero on this route → no shape field (keeps calmer pages like /about clean).
   if (!hasHero) return null;
 
   return (

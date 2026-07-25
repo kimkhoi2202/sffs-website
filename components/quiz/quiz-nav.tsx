@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -39,7 +38,7 @@ const NAV_EDGE = "M0,16 C120,4 1320,4 1440,16";
  * Default (home): hidden at the very top so the hero reads full-bleed, then
  * slides down once the visitor scrolls past REVEAL_AT.
  *
- * `pinned` (sub-routes like /parents): always visible — those pages have no
+ * `pinned` (sub-routes like /about): always visible — those pages have no
  * full-bleed hero scroll trigger, so the bar stays put and no ScrollTrigger runs.
  *
  * `homeHref` sets where the logo links ("#top" on the single-page home, "/" on
@@ -104,8 +103,8 @@ export function QuizNav({
       <div className="bg-paper/95 backdrop-blur-sm">
         {/*
           Three-zone layout: brain logo LEFT (the home link), wordmark CENTERED
-          across the full bar, and the RIGHT zone holding the "For Parents" link +
-          the CTA. A `1fr auto 1fr` grid keeps the side columns equal width, so the
+          across the full bar, and the RIGHT zone holding the CTA. A
+          `1fr auto 1fr` grid keeps the side columns equal width, so the
           middle (wordmark) column is truly centered regardless of the logo/right
           widths. The wordmark is hidden below `md` (where the bar is too tight) so
           it never collides with the logo or the right zone on small screens.
@@ -135,19 +134,11 @@ export function QuizNav({
             draggable={false}
           />
           {/*
-            Right zone: "For Parents" link + the CTA, grouped in an explicit
-            `col-start-3` flex row so both stay in the RIGHT column even when the
-            wordmark is display:none on small screens (otherwise they'd collapse
-            into the empty middle). The link stays visible on mobile (scaled down)
-            so /parents is reachable on phones, where there is no footer link to it.
+            Right zone: the CTA, in an explicit `col-start-3` flex row so it stays
+            in the RIGHT column even when the wordmark is display:none on small
+            screens (otherwise it would collapse into the empty middle).
           */}
           <div className="col-start-3 flex items-center justify-self-end gap-3 sm:gap-5">
-            <Link
-              href="/parents"
-              className="inline-block font-sans text-xs sm:text-sm font-bold uppercase tracking-wide leading-none text-ink underline-offset-4 hover:underline"
-            >
-              For Parents
-            </Link>
             <Button
               href={ctaHref}
               variant="coral"

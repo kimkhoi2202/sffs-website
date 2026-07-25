@@ -9,6 +9,16 @@ const nextConfig: NextConfig = {
         destination: "/",
         permanent: true,
       },
+      // Route retirement: /parents -> /about. The old page addressed parents
+      // about their children, which contradicts the 13+ positioning; its
+      // substance now lives at /about addressed to the player. Permanent (308)
+      // because /parents sat in the site-wide nav on every page, so assume it is
+      // indexed and consolidate that signal onto /about.
+      {
+        source: "/parents",
+        destination: "/about",
+        permanent: true,
+      },
       // --- Social vanity links (temporary 307, editable) ---
       // Short, memorable bio links that stamp the traffic source so PostHog
       // attributes the visit + any signup to the right platform. Temporary (307)

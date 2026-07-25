@@ -188,13 +188,18 @@ export function SiteFooter() {
           mascot and the puck; the cap is dropped at sm+ where there's room for
           one line. min-height preserves the water body's height. */}
       <div className="relative z-10 flex min-h-[13rem] flex-col items-end justify-end gap-4 pb-6 pl-6 pr-[6.5rem]">
-        {/* Legal + support text links (required on every page). Right-aligned and
-            stacked above the copyright so they clear the lower-left mascot and the
-            fixed bottom-right music toggle at every width. */}
+        {/* About + legal + support text links (required on every page). The About
+            link is the ONLY inbound link to /about now that it is off the top nav,
+            so it also keeps that route crawlable. Right-aligned and stacked above
+            the copyright so they clear the lower-left mascot and the fixed
+            bottom-right music toggle at every width. */}
         <nav
           aria-label="Footer"
           className="flex flex-wrap items-center justify-end gap-x-5 gap-y-2 text-right text-sm"
         >
+          <Link href="/about" className={footerLink}>
+            About
+          </Link>
           <Link href="/privacy" className={footerLink}>
             Privacy
           </Link>

@@ -11,43 +11,50 @@ import { Faq, type FaqItem } from "@/components/sections/faq";
 import { CtaBand } from "@/components/sections/cta-band";
 
 export const metadata: Metadata = {
-  title: { absolute: "For Parents — Smart Fella or Fart Smella" },
+  title: "About",
   description:
-    "The good kind of screen time. A dumb little game that makes thinking a flex — built on real working-memory science, with no ads and no bottomless feed.",
+    "We make one thing: a dumb little game with a very stupid name that is secretly a real brain workout. Here is why it exists and what we refuse to build. No ads, no bottomless feed.",
+  alternates: { canonical: "/about" },
 };
 
 const FAQ: FaqItem[] = [
   {
     q: "Is this just another addictive game?",
-    a: "No feed, no autoplay — rounds end. It's built to be put down, the opposite of the apps fighting for your kid's every waking second.",
+    a: "No feed, no autoplay, rounds end. It is built to be put down, the opposite of the apps fighting for your every waking second.",
   },
   {
     q: "What's the right amount of time?",
-    a: "A few rounds. The game doesn't beg for more — when your kid's done, it's done.",
+    a: "A few rounds. The game does not beg for more. When you are done, you are done.",
   },
   {
-    q: "What ages is it for?",
-    a: "Roughly 8 to 14. Younger kids can play too; the ranking just means more as they grow.",
+    q: "Who is it for?",
+    a: "Anyone who wants to out-think their friends. If you still think a fart joke is funny, you are the target demographic.",
   },
   {
-    q: "Is my kid's data safe?",
-    a: "We don't collect kids' data. If we ever email anyone, it's a parent — never your child.",
+    q: "Is my data safe?",
+    a: "No ads, no third-party ad tracking, and we never sell data. Signing in is optional, so you can play without giving us anything. The full details are in our Privacy Policy.",
   },
 ];
 
 /*
-  Intentionally CALM (neutral cream/paper, one soft blue CTA accent, gentle
-  same-variant dividers, no hero shapes) and TIGHT: one distinct idea per
-  section — the hook (hero), the concrete contrast (comparison), the real
+  The About page. It answers "who are you" the only honest way a one-product
+  studio can: here is the one thing we make, here is why it exists, and here is
+  what we refuse to build. The hero does the introduction, then each section
+  carries one distinct idea: what we refuse to be (comparison), the real
   challenge (science), why it costs money (pricing), practical questions (FAQ).
-  No theme-restating filler sections.
+
+  Intentionally CALM (neutral cream/paper, one soft blue CTA accent, gentle
+  same-variant dividers, no hero shapes) and TIGHT, with no theme-restating
+  filler sections.
+
+  Replaces the retired /parents route; next.config.ts 308s the old URL here.
 */
-export default function ParentsPage() {
+export default function AboutPage() {
   return (
     <main id="main" className="flex-1">
       <QuizNav pinned homeHref="/" ctaHref="/#waitlist" />
 
-      {/* 1. Hero — the anti-brain-rot hook (states the mission once). */}
+      {/* 1. Hero: the introduction and the mission in one breath. */}
       <Section
         background="cream"
         padding="lg"
@@ -55,13 +62,15 @@ export default function ParentsPage() {
         container="prose"
         containerClassName="text-center"
       >
-        <Eyebrow>For Parents</Eyebrow>
+        <Eyebrow>About us</Eyebrow>
         <Heading as={1} size="display" className="mt-6 !leading-[1.05]">
           Brains, not brain rot.
         </Heading>
         <p className="mx-auto mt-6 max-w-2xl text-pretty text-lg font-medium leading-snug sm:text-xl">
-          Everything online is built to turn your kid&apos;s brain to mush. We built the
-          opposite — a dumb little game that makes thinking feel like a flex.
+          We make one thing: a dumb little game with a very stupid name that
+          turns out to be a real brain workout. Everything else online is built
+          to turn your brain to mush. We wanted the opposite, something that
+          makes thinking feel like a flex.
         </p>
         <div className="mt-8">
           <Button href="/" variant="paper" size="lg">
@@ -72,31 +81,31 @@ export default function ParentsPage() {
 
       <SectionDivider top="cream" bottom="paper" variant="curve" size="sm" />
 
-      {/* 2. Comparison — the concrete "how it's different from the feed." */}
+      {/* 2. Comparison: what we refuse to build, made concrete. */}
       <Comparison
         revealContent
         background="paper"
         title="The feed vs. the fella"
-        eyebrow=""
+        eyebrow="What we refuse to build"
         theirLabel="Brain rot"
         ourLabel="SFFS"
         theirPoints={[
           "Infinite scroll designed to never end",
           "Rewards zoning out",
-          "Gets dumber the longer they watch",
-          "Built to keep them up till 2am",
+          "Gets dumber the longer you watch",
+          "Built to keep you up till 2am",
         ]}
         ourPoints={[
           "A challenge with an actual finish line",
           "Rewards focus, memory, and pattern-hunting",
-          "Gets harder as they get better",
-          "A few rounds, then they put it down",
+          "Gets harder as you get better",
+          "A few rounds, then you put it down",
         ]}
       />
 
       <SectionDivider top="paper" bottom="cream" variant="curve" size="sm" />
 
-      {/* 3. The science — measurement framing, no IQ-boost claim (hard guardrail). */}
+      {/* 3. The science: measurement framing, no IQ-boost claim (hard guardrail). */}
       <Section background="cream" padding="lg" container="prose">
         <Eyebrow>The (boring) science</Eyebrow>
         <Heading as={2} size="xl" className="mt-4">
@@ -104,13 +113,15 @@ export default function ParentsPage() {
         </Heading>
         <div className="mt-6 space-y-5 text-lg font-medium leading-relaxed">
           <p>
-            Working memory — how much your brain can hold and juggle at once — is one of
-            the most-studied predictors of how kids learn, backed by decades of
-            cognitive-science research. Our games are built to give it a real workout.
+            Working memory, how much your brain can hold and juggle at once, is
+            one of the most-studied predictors of how people learn, backed by
+            decades of cognitive-science research. Our games are built to give
+            it a real workout.
           </p>
           <p>
-            What we won&apos;t do is promise it &lsquo;boosts IQ.&rsquo; No game does that
-            — but a genuine mental challenge kids actually <em>want</em>{" "}
+            What we won&apos;t do is promise it &lsquo;boosts IQ.&rsquo; No game
+            does that. But a genuine mental challenge you actually{" "}
+            <em>want</em>{" "}
             to play? That&apos;s the whole point.
           </p>
         </div>
@@ -118,40 +129,40 @@ export default function ParentsPage() {
 
       <SectionDivider top="cream" bottom="paper" variant="curve" size="sm" />
 
-      {/* 4. Why it costs money — the pillar (no number; explains the ad-free model). */}
+      {/* 4. Why it costs money: the pillar (no number; explains the ad-free model). */}
       <Section background="paper" padding="lg" container="prose">
         <Eyebrow>Why it costs money</Eyebrow>
         <Heading as={2} size="xl" className="mt-4">
           You pay, so advertisers don&apos;t
         </Heading>
         <p className="mt-6 text-lg font-medium leading-relaxed">
-          Free apps make their money by farming your kid&apos;s attention — more time on
-          screen, more ads, worse incentives. We&apos;d rather answer to you than to
-          advertisers. So parents pay, and the app stays ad-free and built around your kid
-          instead of against them.
+          Free apps make their money by farming your attention: more time on
+          screen, more ads, worse incentives. We would rather answer to you than
+          to advertisers. So you pay once, and the app stays ad-free and built
+          around you instead of against you.
         </p>
       </Section>
 
       <SectionDivider top="paper" bottom="cream" variant="curve" size="sm" />
 
-      {/* 5. FAQ — the practical parent questions. */}
+      {/* 5. FAQ: the practical questions. */}
       <Faq
         revealContent
         background="cream"
-        title="Questions parents actually ask"
+        title="Questions people actually ask"
         eyebrow=""
         items={FAQ}
       />
 
       <SectionDivider top="cream" bottom="yellow" variant="curve" size="sm" />
 
-      {/* 6. Closing CTA (no form) — yellow "sand" above the footer's blue water
+      {/* 6. Closing CTA (no form): yellow "sand" above the footer's blue water
           wave, for a little beach effect at the bottom of the page. */}
       <CtaBand
         revealContent
         background="yellow"
         align="center"
-        title="See what they'll actually be playing"
+        title="See what you're actually getting into"
         subtitle=""
         badge=""
         primaryCta={{ label: "Play Smart Fella or Fart Smella", href: "/" }}
