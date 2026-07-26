@@ -115,7 +115,7 @@ export function QuizNav({
         >
           <a
             href={homeHref}
-            aria-label="Smart Fella or Fart Smella — home"
+            aria-label="Smart Fella or Fart Smella, home"
             className="col-start-1 inline-flex items-center justify-self-start"
           >
             {/* eslint-disable-next-line @next/next/no-img-element -- brand mark is a static public asset */}

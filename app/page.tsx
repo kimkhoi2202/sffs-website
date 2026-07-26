@@ -15,7 +15,7 @@ import { Heading } from "@/components/ui/heading";
 import { SectionDivider } from "@/components/ui/section-divider";
 
 export const metadata: Metadata = {
-  title: { absolute: "Smart Fella or Fart Smella? — the dumb little brain game" },
+  title: { absolute: "Smart Fella or Fart Smella? The dumb little brain game" },
   description:
     "A dumb little brain game that knows exactly how smart you are. Get ranked, climb the leaderboard, keep a streak, and flex on your friends. Join the waitlist.",
 };
@@ -24,7 +24,7 @@ const STEPS: StepItem[] = [
   {
     label: "Step 1",
     title: "Pick a game and play",
-    body: "Jump into a quick puzzle round — slide, stack, or match your way to a high score in under a minute.",
+    body: "Jump into a quick puzzle round: slide, stack, or match your way to a high score in under a minute.",
   },
   {
     label: "Step 2",
@@ -42,7 +42,7 @@ const FEATURES: Feature[] = [
   {
     icon: Gamepad2,
     title: "A stack of quick puzzle games",
-    body: "Slide, stack, match, and remember your way to a high score — one-handed rounds you finish in under a minute.",
+    body: "Slide, stack, match, and remember your way to a high score. One-handed rounds you finish in under a minute.",
   },
   {
     icon: TrendingUp,
@@ -52,7 +52,7 @@ const FEATURES: Feature[] = [
   {
     icon: Flame,
     title: "A daily challenge + streaks",
-    body: "One new challenge drops every day. Play daily to grow your streak — miss a day and it resets to zero.",
+    body: "One new challenge drops every day. Play daily to grow your streak. Miss a day and it resets to zero.",
   },
   {
     icon: Users,
@@ -124,11 +124,11 @@ const TESTIMONIALS: Testimonial[] = [
 const FAQ: FaqItem[] = [
   {
     q: "What is this, exactly?",
-    a: "A stack of quick puzzle games — slide, stack, and match for a high score — that score your brain and rank you against everyone else playing.",
+    a: "A stack of quick puzzle games (slide, stack, and match for a high score) that score your brain and rank you against everyone else playing.",
   },
   {
     q: "Is it actually fun, or is it secretly homework?",
-    a: "Game first. It's genuinely hard, genuinely dumb, and built to be flexed about — not studied.",
+    a: "Game first. It's genuinely hard, genuinely dumb, and built to be flexed about, not studied.",
   },
   {
     q: "How much will it cost?",
@@ -140,7 +140,7 @@ const FAQ: FaqItem[] = [
   },
   {
     q: "When does it launch?",
-    a: "Soon. Join the waitlist and you'll be first to know — and first up the ranks.",
+    a: "Soon. Join the waitlist and you'll be first to know, and first up the ranks.",
   },
 ];
 

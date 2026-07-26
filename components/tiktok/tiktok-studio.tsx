@@ -43,10 +43,10 @@ interface PostResult {
 }
 
 const PRIVACY_LABELS: Record<string, string> = {
-  PUBLIC_TO_EVERYONE: "Public — everyone",
+  PUBLIC_TO_EVERYONE: "Public (everyone)",
   MUTUAL_FOLLOW_FRIENDS: "Friends (mutual follows)",
   FOLLOWER_OF_CREATOR: "Followers",
-  SELF_ONLY: "Private — only me",
+  SELF_ONLY: "Private (only me)",
 };
 
 function privacyLabel(code: string): string {

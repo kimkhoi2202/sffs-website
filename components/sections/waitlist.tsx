@@ -36,7 +36,7 @@ export function Waitlist({
   background = "coral",
   eyebrow = "You've seen us on TikTok",
   title = "Get in before everyone else",
-  subtitle = "We're the fellas behind the brain quizzes. The game itself drops soon — drop your email and you're first in line, with a head start on the leaderboard.",
+  subtitle = "We're the fellas behind the brain quizzes. The game itself drops soon. Drop your email and you're first in line, with a head start on the leaderboard.",
   cta = "Join the waitlist",
 }: WaitlistProps = {}) {
   const [email, setEmail] = useState("");

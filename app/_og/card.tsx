@@ -14,7 +14,7 @@ import { ImageResponse } from "next/og";
 export const ogSize = { width: 1200, height: 630 };
 export const ogContentType = "image/png";
 export const ogAlt =
-  "Smart Fella or Fart Smella? — take the brutally honest 60-second Fella Test.";
+  "Smart Fella or Fart Smella? Take the brutally honest 60-second Fella Test.";
 
 // Literal, statically-scoped paths (read once at build time on the Node runtime).
 const anton = readFileSync(join(process.cwd(), "app/_fonts/Anton-Regular.ttf"));

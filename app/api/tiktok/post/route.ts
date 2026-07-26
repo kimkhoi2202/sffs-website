@@ -172,7 +172,7 @@ async function parseRequest(request: NextRequest): Promise<ParsedRequest> {
       form = await request.formData();
     } catch {
       throw new RequestError(
-        "Upload failed. Vercel limits direct file uploads to ~4.5MB — use a hosted sample for larger clips.",
+        "Upload failed. Vercel limits direct file uploads to ~4.5MB. Use a hosted sample for larger clips.",
         413,
       );
     }

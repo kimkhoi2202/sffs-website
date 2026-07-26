@@ -100,7 +100,7 @@ export function AnalyticsOptOut() {
         <Container className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 py-3 md:py-4">
           <Link
             href="/"
-            aria-label="Smart Fella or Fart Smella — home"
+            aria-label="Smart Fella or Fart Smella, home"
             className="col-start-1 inline-flex items-center justify-self-start"
           >
             {/* eslint-disable-next-line @next/next/no-img-element -- brand mark is a static /public asset */}
@@ -135,8 +135,8 @@ export function AnalyticsOptOut() {
               For the SFFS team. Mark this browser as{" "}
               <strong>internal</strong>{" "}so your own visits (and your
               teammates&rsquo;) still record but are{" "}
-              <strong>kept out of the public metrics</strong> — dashboards,
-              funnels, and reports.
+              <strong>kept out of the public metrics</strong> (dashboards,
+              funnels, and reports).
             </p>
           </Container>
         </section>
@@ -188,7 +188,7 @@ export function AnalyticsOptOut() {
                         <span aria-hidden>🏷️</span>
                       </Heading>
                       <p className="mt-2 text-[1.05rem] font-semibold leading-[1.6] text-ink">
-                        Your visits <strong>still record</strong> — they&rsquo;re
+                        Your visits <strong>still record</strong>, they&rsquo;re
                         just tagged and excluded from the public metrics, so you
                         and your teammates never skew the numbers.
                       </p>
@@ -240,7 +240,7 @@ export function AnalyticsOptOut() {
                 📌
               </span>
               <p className="text-[1.05rem] font-bold leading-[1.6] text-ink">
-                Do this once on every browser and device you use — phone, laptop,
+                Do this once on every browser and device you use: phone, laptop,
                 work machine, and any private/incognito windows.
               </p>
             </div>
@@ -250,10 +250,10 @@ export function AnalyticsOptOut() {
               <p>
                 This sets a small preference in <em>this</em> browser and tags
                 its events as <code>is_internal</code> in our analytics (PostHog).
-                Nothing is hidden from us — your visits still record — they&rsquo;re
+                Nothing is hidden from us. Your visits still record, they&rsquo;re
                 just filtered out of the <em>public</em> numbers. It clears if you
                 wipe this browser&rsquo;s storage, switch browsers, or use a
-                different device — that&rsquo;s why you repeat it per browser.
+                different device, which is why you repeat it per browser.
               </p>
               <p>
                 It doesn&rsquo;t change what we collect from real visitors, and it

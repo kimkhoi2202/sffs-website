@@ -44,7 +44,7 @@ export default async function TikTokPage({
         <Container className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 py-3 md:py-4">
           <Link
             href="/"
-            aria-label="Smart Fella or Fart Smella — home"
+            aria-label="Smart Fella or Fart Smella, home"
             className="col-start-1 inline-flex items-center justify-self-start"
           >
             {/* eslint-disable-next-line @next/next/no-img-element -- brand mark is a static /public asset */}
@@ -78,7 +78,7 @@ export default async function TikTokPage({
             <p className="mt-6 max-w-prose text-[1.05rem] leading-[1.7] text-ink/80">
               Connect our TikTok account once, then publish rendered{" "}
               <em>Smart Fella or Fart Smella</em> shorts straight to it with the
-              official TikTok Content Posting API — no manual uploads.
+              official TikTok Content Posting API, no manual uploads.
             </p>
           </Container>
         </section>

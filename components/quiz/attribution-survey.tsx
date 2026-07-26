@@ -146,7 +146,7 @@ export function AttributionSurvey({
     >
       <fieldset className="min-w-0" disabled={phase === "submitting"}>
         <legend id={legendId} className="eyebrow text-ink">
-          One quick thing — how did you find us?
+          One quick thing: how did you find us?
         </legend>
 
         <div
