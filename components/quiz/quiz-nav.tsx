@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -134,11 +135,19 @@ export function QuizNav({
             draggable={false}
           />
           {/*
-            Right zone: the CTA, in an explicit `col-start-3` flex row so it stays
-            in the RIGHT column even when the wordmark is display:none on small
-            screens (otherwise it would collapse into the empty middle).
+            Right zone: the "Store" link + the CTA, in an explicit `col-start-3`
+            flex row so they stay in the RIGHT column even when the wordmark is
+            display:none on small screens (otherwise they'd collapse into the empty
+            middle). The Store link stays visible on mobile (scaled down) so the
+            shop is reachable on phones.
           */}
           <div className="col-start-3 flex items-center justify-self-end gap-3 sm:gap-5">
+            <Link
+              href="/store"
+              className="inline-block font-sans text-xs sm:text-sm font-bold uppercase tracking-wide leading-none text-ink underline-offset-4 hover:underline"
+            >
+              Store
+            </Link>
             <Button
               href={ctaHref}
               variant="coral"
