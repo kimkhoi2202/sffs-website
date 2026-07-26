@@ -159,9 +159,21 @@ export function SmartFartHero({
   }, []);
 
   return (
+    /*
+      Vertical padding is deliberately ASYMMETRIC (small top, generous bottom)
+      so the block sits high in the frame with breathing room beneath it. Since
+      `.fella-inner` is `flex-1` and centers its content, the bottom pad is what
+      does the lifting: growing it shrinks the centering box from below and
+      carries the whole stack (and the scroll cue) upward.
+
+      That also buys back the scroll cue. With the old symmetric padding the cue
+      sat past the fold and overlapped the wave apron on short viewports; the
+      larger bottom pad pulls it clear of both. Do not re-symmetrize this
+      without re-checking the cue at ~640px tall.
+    */
     <section
       ref={root}
-      className="fella-hero relative isolate flex min-h-[calc(100svh_+_56px)] flex-col items-center overflow-hidden bg-yellow px-4 py-8 text-center sm:min-h-[calc(100svh_+_78px)] sm:py-12 md:min-h-[calc(100svh_+_100px)]"
+      className="fella-hero relative isolate flex min-h-[calc(100svh_+_56px)] flex-col items-center overflow-hidden bg-yellow px-4 pb-20 pt-2 text-center sm:min-h-[calc(100svh_+_78px)] sm:pb-24 sm:pt-4 md:min-h-[calc(100svh_+_100px)] md:pb-32 md:pt-6"
     >
       {/*
         BASE background layer — perspective "synthwave floor" grid backdrop.
