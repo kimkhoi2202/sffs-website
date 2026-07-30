@@ -42,7 +42,16 @@ const OFFER_LINE = "Early access to the game before it launches.";
  */
 export function EarlyAccess() {
   return (
-    <section className="relative isolate flex min-h-[100svh] flex-col items-center justify-center overflow-hidden bg-yellow px-4 py-8 text-center sm:py-12">
+    /*
+      Vertical padding is ASYMMETRIC on purpose. The floating music toggle
+      (app/layout.tsx) is a fixed 56px puck inset 24px from the bottom-right
+      corner, and on a short viewport (360x640) it landed on top of the "no
+      spam" line. Since the stack is flex-centered, the BOTTOM pad is what
+      lifts it: growing it shrinks the centering box from below and carries the
+      whole block clear of the puck, at every height, without a height-based
+      media query. Do not re-symmetrize this without re-checking 360x640.
+    */
+    <section className="relative isolate flex min-h-[100svh] flex-col items-center justify-center overflow-hidden bg-yellow px-4 pb-24 pt-8 text-center sm:pb-28 sm:pt-12">
       {/*
         The hero's perspective "receding floor" grid, kept so the page still
         reads as this brand and not as a generic squeeze page. Pure CSS, behind
