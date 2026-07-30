@@ -214,13 +214,20 @@ export function AttributionSurvey({
           </div>
         ) : null}
 
-        <div className="mt-4 flex items-center justify-end">
+        {/*
+          Full width, not a right-aligned pill. The floating music toggle is a
+          fixed 56px puck in the bottom-right corner, and a short right-aligned
+          button passes clean underneath it at some scroll positions, which on
+          a phone means the survey's only action is untappable. A full-width
+          button always leaves most of its hit area clear of the puck.
+        */}
+        <div className="mt-4">
           <button
             type="submit"
             disabled={!selected || phase === "submitting"}
             aria-busy={phase === "submitting"}
             className={cn(
-              "btn-press inline-flex h-12 items-center justify-center gap-2 rounded-full border-[2.5px] border-ink bg-green px-7 text-sm font-bold uppercase tracking-wide leading-none text-ink",
+              "btn-press inline-flex h-12 w-full items-center justify-center gap-2 rounded-full border-[2.5px] border-ink bg-green px-7 text-sm font-bold uppercase tracking-wide leading-none text-ink",
               "cursor-pointer select-none disabled:cursor-not-allowed disabled:opacity-50",
               "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-transparent",
             )}
