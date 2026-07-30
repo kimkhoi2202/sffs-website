@@ -43,13 +43,15 @@ const OFFER_LINE = "Early access to the game before it launches.";
 export function EarlyAccess() {
   return (
     /*
-      Vertical padding is ASYMMETRIC on purpose. The floating music toggle
-      (app/layout.tsx) is a fixed 56px puck inset 24px from the bottom-right
-      corner, and on a short viewport (360x640) it landed on top of the "no
-      spam" line. Since the stack is flex-centered, the BOTTOM pad is what
-      lifts it: growing it shrinks the centering box from below and carries the
-      whole block clear of the puck, at every height, without a height-based
-      media query. Do not re-symmetrize this without re-checking 360x640.
+      Vertical padding is ASYMMETRIC on purpose, and the copy below is kept
+      short on purpose. Both serve the same constraint: the floating music
+      toggle (app/layout.tsx) is a fixed 56px puck inset 24px from the
+      bottom-right corner, so at 360x640 anything past roughly y=550 lands
+      underneath it. The larger bottom pad shrinks the flex-centering box and
+      lifts the block, but that only helps while the stack still FITS the box,
+      so the stack has to stay under about 510px tall at 360 wide. Adding a
+      line of copy here costs about 24px and puts the trust line back under the
+      puck. Re-check 360x640 after any copy change.
     */
     <section className="relative isolate flex min-h-[100svh] flex-col items-center justify-center overflow-hidden bg-yellow px-4 pb-24 pt-8 text-center sm:pb-28 sm:pt-12">
       {/*
@@ -91,7 +93,7 @@ export function EarlyAccess() {
           draggable={false}
         />
 
-        <Badge color="coral" size="md" shadow="hard" className="mt-6 rotate-[-2deg]">
+        <Badge color="coral" size="md" shadow="hard" className="mt-5 rotate-[-2deg]">
           Early access
         </Badge>
 
@@ -104,14 +106,13 @@ export function EarlyAccess() {
         </p>
 
         <p className="mt-3 text-pretty text-base font-medium leading-snug text-ink/75 md:text-lg">
-          We&apos;re the fellas behind the brain quizzes. The game drops soon, and
-          this list is how you get in first.
+          We&apos;re the fellas behind the brain quizzes. The game drops soon.
         </p>
 
-        <GetAccessForm className="mt-6 w-full" />
+        <GetAccessForm className="mt-5 w-full" />
 
         <p className="mt-4 text-sm font-medium text-ink/70">
-          No spam, and we never sell your info.
+          No spam. We never sell your info.
         </p>
       </div>
     </section>
