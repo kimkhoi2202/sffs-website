@@ -73,12 +73,12 @@ export function EarlyAccess() {
         />
       </div>
 
-      <div className="relative z-10 flex w-full max-w-lg flex-col items-center">
+      <div className="relative z-10 flex w-full max-w-lg flex-col items-center md:max-w-xl">
         {/* eslint-disable-next-line @next/next/no-img-element -- brand wordmark is a static public asset */}
         <img
           src="/wordmark.png"
           alt="Smart Fella or Fart Smella"
-          className="h-11 w-auto max-w-full select-none object-contain sm:h-14"
+          className="h-11 w-auto max-w-full select-none object-contain sm:h-14 md:h-[4.5rem]"
           draggable={false}
         />
 
@@ -86,15 +86,15 @@ export function EarlyAccess() {
           Early access
         </Badge>
 
-        <h1 className="mt-5 font-display text-[clamp(2.25rem,9vw,3.5rem)] uppercase leading-[0.95] tracking-[-0.02em]">
+        <h1 className="mt-5 font-display text-[clamp(2.25rem,9vw,3.5rem)] uppercase leading-[0.95] tracking-[-0.02em] md:text-[3.75rem]">
           Get in before everyone else
         </h1>
 
-        <p className="mt-4 text-pretty text-lg font-bold leading-snug sm:text-xl">
+        <p className="mt-4 text-pretty text-lg font-bold leading-snug sm:text-xl md:text-2xl">
           {OFFER_LINE}
         </p>
 
-        <p className="mt-2 text-pretty text-base font-medium leading-snug text-ink/75">
+        <p className="mt-3 text-pretty text-base font-medium leading-snug text-ink/75 md:text-lg">
           We&apos;re the fellas behind the brain quizzes. The game drops soon, and
           this list is how you get in first.
         </p>
