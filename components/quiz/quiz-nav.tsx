@@ -41,14 +41,15 @@ const NAV_EDGE = "M0,16 C120,4 1320,4 1440,16";
  * `pinned` (sub-routes like /about): always visible — those pages have no
  * full-bleed hero scroll trigger, so the bar stays put and no ScrollTrigger runs.
  *
- * `homeHref` sets where the logo links ("#top" on the single-page home, "/" on
- * sub-routes). `ctaHref` sets the CTA target ("#pricing" on home, "/#pricing"
- * from a sub-route so it lands on the homepage pricing section).
+ * `homeHref` sets where the logo links ("#top" on a single-page route, "/" on
+ * sub-routes). `ctaHref` sets the CTA target; it defaults to "/" because the
+ * homepage is now a single early-access screen whose form is the first thing on
+ * it, so there is no longer an in-page section to jump to.
  */
 export function QuizNav({
   pinned = false,
   homeHref = "#top",
-  ctaHref = "#waitlist",
+  ctaHref = "/",
 }: {
   pinned?: boolean;
   homeHref?: string;
@@ -145,7 +146,7 @@ export function QuizNav({
               size="sm"
               className="font-sans font-bold text-sm uppercase leading-none tracking-[-0.01em] sm:text-lg"
             >
-              Join the waitlist
+              Get early access
             </Button>
           </div>
         </nav>
