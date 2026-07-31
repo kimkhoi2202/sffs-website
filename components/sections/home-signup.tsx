@@ -120,16 +120,46 @@ export function HomeSignup() {
 
       <div className="relative z-10 flex w-full max-w-lg flex-col items-center md:max-w-xl">
         {/*
-          The wordmark is the brand, so it leads at real size instead of sitting
-          above the headline like a footnote. Sized by height against min(vw,vh)
-          so it grows with the screen but never eats the vertical budget the
-          form needs on a short viewport.
+          BRAND LOCKUP: the brain mark stacked over the wordmark.
+
+          Sourced from the site's own public/logo.png rather than copied out of
+          the video repo. They are the same artwork: the pipeline's
+          remotion/public/images/sffs-logo.png and this file both have an opaque
+          area of exactly 811x597px, the video one simply padded into a square
+          1024 canvas and this one cropped tight to 844x629.
+
+          Proportions carried over from the two covers that stack the lockup
+          vertically (introcut/Thumbnails.tsx ThumbV and ThumbSq), measured
+          rather than eyeballed. There the brain's VISIBLE width is 0.34 to 0.46
+          of the name block's width and the gap is 0.12 to 0.32 of it. This uses
+          the tighter square-cover end of both, which is the closest analogue to
+          a centred hero block: brain height ≈ 0.49 of the wordmark's, and a gap
+          of roughly 0.12 of the wordmark's width. The -6deg tilt and the hard
+          zero-blur drop shadow are the mark's treatment in those same covers.
+
+          NOTE: in the videos the brain sits BELOW the name, not above it. This
+          is above by request; the sizes and spacing are the video's.
+
+          The vh term in the brain's clamp is deliberately tighter than a pure
+          0.49 scaling of the wordmark's. On a 640px-tall phone the strict ratio
+          costs 73px of vertical budget and pushes the button into the floating
+          music toggle, so the mark scales down there instead of the section
+          growing. Wordmark sizing is untouched.
         */}
+        {/* eslint-disable-next-line @next/next/no-img-element -- brand mark is a static public asset */}
+        <img
+          src="/logo.png"
+          alt=""
+          aria-hidden
+          className="h-[clamp(2.75rem,min(14.7vw,7.4vh),5.9rem)] w-auto max-w-full select-none object-contain rotate-[-6deg] [filter:drop-shadow(2px_2px_0_#000)] md:[filter:drop-shadow(3px_3px_0_#000)]"
+          draggable={false}
+        />
+
         {/* eslint-disable-next-line @next/next/no-img-element -- brand wordmark is a static public asset */}
         <img
           src="/wordmark.png"
           alt="Smart Fella or Fart Smella"
-          className="h-[clamp(6rem,min(30vw,18vh),12rem)] w-auto max-w-full select-none object-contain"
+          className="mt-[clamp(0.5rem,1.9vh,1.25rem)] h-[clamp(6rem,min(30vw,18vh),12rem)] w-auto max-w-full select-none object-contain"
           draggable={false}
         />
 
