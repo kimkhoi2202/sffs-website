@@ -21,7 +21,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /**
  * The site's only email lead-capture. Now the whole job of the homepage
- * (components/sections/early-access.tsx).
+ * (components/sections/home-signup.tsx).
  *
  * Flow: client-validate -> POST /api/access-signup -> loading state -> on success
  * swap the whole form for an on-brand confirmation; on failure show a friendly,
@@ -159,18 +159,20 @@ export function GetAccessForm({ className }: { className?: string }) {
           className="rounded-2xl border-[2.5px] border-ink bg-mint p-6 text-center shadow-hard-sm outline-none"
         >
           {/*
-            Submitting writes one row to Aurora. It sends no email, because
-            there is no transactional email provider wired up. So this state may
-            promise a FUTURE notification (the address really is stored and the
-            intent is real) but must never imply something is arriving now.
-            "Check your inbox" was removed for exactly that reason; do not let
-            it back in, in any wording, until an email actually gets sent.
+            Submitting writes one row to Aurora. It sends NOTHING ELSE: no
+            email, no link, no invite, because there is no transactional email
+            provider wired up and no distributable build URL to send. So this
+            state may describe what actually happened (the address is stored)
+            and promise a FUTURE contact, but it must never imply anything is
+            arriving now. "Check your inbox" was removed for exactly that
+            reason; do not let it back in, in any wording, until an email
+            genuinely gets sent.
           */}
           <p className="font-display text-3xl uppercase leading-none tracking-tight">
             You&apos;re on the list <span aria-hidden="true">🧠</span>
           </p>
           <p className="mt-3 text-sm font-medium leading-relaxed text-ink/80">
-            Your spot is saved. We&apos;ll let you know when the app is ready.
+            Your spot is saved. We&apos;ll be in touch when we can get you in.
             Nothing hits your inbox before then.
           </p>
         </div>
@@ -193,7 +195,7 @@ export function GetAccessForm({ className }: { className?: string }) {
       className={cn("mt-8 flex flex-col gap-3 text-left", className)}
     >
       <label htmlFor={inputId} className="eyebrow text-ink">
-        Enter your email to get access
+        Your email
       </label>
 
       <input
@@ -281,7 +283,9 @@ export function GetAccessForm({ className }: { className?: string }) {
             Sending…
           </>
         ) : (
-          "Get access"
+          // "Get me in", not "Get access". The button submits a REQUEST; it does
+          // not hand over access, because nothing is delivered on submit.
+          "Get me in"
         )}
       </Button>
     </form>

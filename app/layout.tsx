@@ -28,6 +28,23 @@ const geistMono = Geist_Mono({
   display: "swap",
 });
 
+/**
+ * The SITE-WIDE default description, inherited by any route that does not set
+ * its own. /privacy, /terms and /support each define their own title,
+ * description and openGraph block, so this reaches /about and anything added
+ * later.
+ *
+ * It describes the PRODUCT and nothing else. It used to end "Join the waitlist",
+ * which outlived the waitlist, and before that the share card called the app a
+ * "60-second Fella Test", which was a different product entirely. Both were
+ * still being served to anyone who shared a legal page, including an App Store
+ * reviewer following the listing links. Keep this one purely descriptive: no
+ * campaign language, no call to action, nothing that can go stale when the
+ * homepage changes again.
+ */
+const SITE_DESCRIPTION =
+  "A dumb little brain game that knows exactly how smart you are. Quick puzzle games, one brain rank, and a daily streak.";
+
 export const metadata: Metadata = {
   // Absolute base for OG/Twitter image URLs and the canonical share URL. The
   // auto-generated app/opengraph-image + app/twitter-image resolve against this,
@@ -37,21 +54,18 @@ export const metadata: Metadata = {
     default: "Smart Fella or Fart Smella?",
     template: "%s · Smart Fella or Fart Smella",
   },
-  description:
-    "A dumb little brain game that knows exactly how smart you are. Play memory + puzzle games, climb the ranks, and flex on your friends. Join the waitlist.",
+  description: SITE_DESCRIPTION,
   openGraph: {
     type: "website",
     siteName: "Smart Fella or Fart Smella",
     title: "Smart Fella or Fart Smella?",
-    description:
-      "The dumb little brain game that knows exactly how smart you are. Join the waitlist.",
+    description: SITE_DESCRIPTION,
     url: "/",
   },
   twitter: {
     card: "summary_large_image",
     title: "Smart Fella or Fart Smella?",
-    description:
-      "The dumb little brain game that knows exactly how smart you are. Join the waitlist.",
+    description: SITE_DESCRIPTION,
   },
 };
 
