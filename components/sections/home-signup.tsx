@@ -120,50 +120,65 @@ export function HomeSignup() {
 
       <div className="relative z-10 flex w-full max-w-lg flex-col items-center md:max-w-xl">
         {/*
-          BRAND LOCKUP: the brain mark stacked over the wordmark.
+          BRAND LOCKUP: the brain mark as a STICKER on the wordmark's top-right,
+          not a row of its own.
 
-          Sourced from the site's own public/logo.png rather than copied out of
-          the video repo. They are the same artwork: the pipeline's
+          The mark is the site's own public/logo.png, not a copy from the video
+          repo. It is the same artwork: the pipeline's
           remotion/public/images/sffs-logo.png and this file both have an opaque
-          area of exactly 811x597px, the video one simply padded into a square
-          1024 canvas and this one cropped tight to 844x629.
+          area of exactly 811x597px, the video one padded into a square 1024
+          canvas and this one cropped tight to 844x629.
 
-          Proportions carried over from the two covers that stack the lockup
-          vertically (introcut/Thumbnails.tsx ThumbV and ThumbSq), measured
-          rather than eyeballed. There the brain's VISIBLE width is 0.34 to 0.46
-          of the name block's width and the gap is 0.12 to 0.32 of it. This uses
-          the tighter square-cover end of both, which is the closest analogue to
-          a centred hero block. The gap below is literally the wordmark's own
-          clamp scaled by 0.189, which is 0.12 of its width given the wordmark's
-          1.576 aspect, so the two stay locked together at every size. The -6deg
-          tilt and the hard zero-blur drop shadow are the mark's treatment in
-          those same covers.
+          The placement comes from the pipeline's own sticker usages, measured
+          rather than eyeballed. The closest is IntroBrand.tsx CtaSection, which
+          pins the mark to a pill at top:-58 right:-34 with width 148 and
+          rotate(12deg). Allowing for that PNG's 20% transparent padding, the
+          real geometry there is: the mark's visible right edge sits just INSIDE
+          the label's right edge (by 2.75% of the label's width), it overhangs
+          the top edge by about a THIRD of its own height with the other two
+          thirds lying on the label, and it is rotated +12deg. scenes/Intro.tsx
+          agrees on the tilt, settling its pop at exactly +12deg too.
 
-          NOTE: in the videos the brain sits BELOW the name, not above it. This
-          is above by request; the sizes and spacing are the video's.
+          Note the tilt is POSITIVE here. The covers rotate a standalone mark
+          -6deg, but every place the pipeline uses it as a sticker it leans the
+          other way, +10 to +12.
 
-          The vh term in the brain's clamp is deliberately tighter than a pure
-          0.49 scaling of the wordmark's. On a 640px-tall phone the strict ratio
-          costs 73px of vertical budget and pushes the button into the floating
-          music toggle, so the mark scales down there instead of the section
-          growing. Wordmark sizing is untouched.
+          Percentages, not clamps: the mark is positioned and sized against the
+          wrapper, which is exactly the wordmark's box, so the whole lockup
+          scales as one unit from 360 to 1440 with no second set of breakpoints
+          to keep in sync. h-48% of the wordmark's height gives a visible mark
+          about 0.46 of it after the PNG's own 2.5% padding; top -16% puts a
+          third of the mark above the edge; right 2% lands its visible edge a
+          hair inside the wordmark's, as the pill does.
+
+          It overlaps the artwork rather than floating clear of it, which is
+          what both references do and what the wordmark's own artwork invites:
+          the PNG is 93.6% opaque, so there is no real empty corner to float in,
+          and the mark carries its own heavy ink outline plus a hard shadow so
+          it reads as sitting ON the name.
+
+          Being absolutely positioned, the mark now costs ZERO layout height,
+          which is what bought back the vertical budget the stacked version
+          spent. Only the upward overhang needs clearance, and the section's top
+          padding covers it. Wordmark sizing is untouched.
         */}
-        {/* eslint-disable-next-line @next/next/no-img-element -- brand mark is a static public asset */}
-        <img
-          src="/logo.png"
-          alt=""
-          aria-hidden
-          className="h-[clamp(2.75rem,min(14.7vw,7.4vh),5.9rem)] w-auto max-w-full select-none object-contain rotate-[-6deg] [filter:drop-shadow(2px_2px_0_#000)] md:[filter:drop-shadow(3px_3px_0_#000)]"
-          draggable={false}
-        />
-
-        {/* eslint-disable-next-line @next/next/no-img-element -- brand wordmark is a static public asset */}
-        <img
-          src="/wordmark.png"
-          alt="Smart Fella or Fart Smella"
-          className="mt-[clamp(1.13rem,min(5.67vw,3.4vh),2.27rem)] h-[clamp(6rem,min(30vw,18vh),12rem)] w-auto max-w-full select-none object-contain"
-          draggable={false}
-        />
+        <div className="relative inline-block">
+          {/* eslint-disable-next-line @next/next/no-img-element -- brand wordmark is a static public asset */}
+          <img
+            src="/wordmark.png"
+            alt="Smart Fella or Fart Smella"
+            className="block h-[clamp(6rem,min(30vw,18vh),12rem)] w-auto max-w-full select-none object-contain"
+            draggable={false}
+          />
+          {/* eslint-disable-next-line @next/next/no-img-element -- brand mark is a static public asset */}
+          <img
+            src="/logo.png"
+            alt=""
+            aria-hidden
+            className="pointer-events-none absolute right-[2%] top-[-16%] h-[48%] w-auto select-none rotate-[12deg] [filter:drop-shadow(3px_3px_0_#000)] md:[filter:drop-shadow(5px_5px_0_#000)]"
+            draggable={false}
+          />
+        </div>
 
         {/*
           One <span class="block"> per sentence, so the line break is structural
