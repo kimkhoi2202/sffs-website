@@ -146,16 +146,17 @@ export function HomeSignup() {
           Percentages, not clamps: the mark is positioned and sized against the
           wrapper, which is exactly the wordmark's box, so the whole lockup
           scales as one unit from 360 to 1440 with no second set of breakpoints
-          to keep in sync. h-48% of the wordmark's height gives a visible mark
-          about 0.46 of it after the PNG's own 2.5% padding; top -16% puts a
-          third of the mark above the edge; right 2% lands its visible edge a
-          hair inside the wordmark's, as the pill does.
+          to keep in sync.
 
-          It overlaps the artwork rather than floating clear of it, which is
-          what both references do and what the wordmark's own artwork invites:
-          the PNG is 93.6% opaque, so there is no real empty corner to float in,
-          and the mark carries its own heavy ink outline plus a hard shadow so
-          it reads as sitting ON the name.
+          The pill reference's own offsets could not be transferred literally.
+          That pill has 64px of horizontal padding, so its sticker lands on
+          empty pill; this wordmark is 93.6% opaque with its top row running the
+          full width, so the same tuck buried the word FELLA completely. The
+          mark therefore sits further out on the diagonal: it still overlaps the
+          corner and the tail of the final A, so it reads as stuck ON the name
+          rather than floating beside it, but the name stays fully legible.
+          Chosen by rendering five placements and comparing them at 360 and
+          1440, not by adjusting until it looked plausible at one size.
 
           Being absolutely positioned, the mark now costs ZERO layout height,
           which is what bought back the vertical budget the stacked version
@@ -175,7 +176,7 @@ export function HomeSignup() {
             src="/logo.png"
             alt=""
             aria-hidden
-            className="pointer-events-none absolute right-[2%] top-[-16%] h-[48%] w-auto select-none rotate-[12deg] [filter:drop-shadow(3px_3px_0_#000)] md:[filter:drop-shadow(5px_5px_0_#000)]"
+            className="pointer-events-none absolute right-[-10%] top-[-26%] h-[46%] w-auto select-none rotate-[12deg] [filter:drop-shadow(3px_3px_0_#000)] md:[filter:drop-shadow(5px_5px_0_#000)]"
             draggable={false}
           />
         </div>
