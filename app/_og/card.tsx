@@ -13,8 +13,17 @@ import { ImageResponse } from "next/og";
 
 export const ogSize = { width: 1200, height: 630 };
 export const ogContentType = "image/png";
+/*
+  The alt text and the TAGLINE below both used to describe a "brutally honest
+  60-second Fella Test", a diagnostic quiz that is not the product. This card is
+  the share preview for EVERY route, including /privacy, /terms and /support,
+  which are the links an App Store reviewer opens from the listing, so it has to
+  describe the actual app. Only the tagline string changed; the layout, the
+  brand headline and the colours are untouched.
+*/
 export const ogAlt =
-  "Smart Fella or Fart Smella? Take the brutally honest 60-second Fella Test.";
+  "Smart Fella or Fart Smella? A dumb little brain game that knows exactly how smart you are.";
+const TAGLINE = "A dumb little brain game that knows how smart you are.";
 
 // Literal, statically-scoped paths (read once at build time on the Node runtime).
 const anton = readFileSync(join(process.cwd(), "app/_fonts/Anton-Regular.ttf"));
@@ -192,7 +201,7 @@ export function renderFellaOgImage() {
               marginTop: 26,
             }}
           >
-            The brutally honest 60-second Fella diagnostic.
+            {TAGLINE}
           </div>
         </div>
       </div>

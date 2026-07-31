@@ -52,7 +52,9 @@ const FAQ: FaqItem[] = [
 export default function AboutPage() {
   return (
     <main id="main" className="flex-1">
-      <QuizNav pinned homeHref="/" ctaHref="/#waitlist" />
+      {/* The homepage is now a single signup screen with the form at the top,
+          so this points at "/" rather than the retired "#waitlist" anchor. */}
+      <QuizNav pinned homeHref="/" ctaHref="/" />
 
       {/* 1. Hero: the introduction and the mission in one breath. */}
       <Section

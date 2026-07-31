@@ -32,7 +32,20 @@ export type ValidationFailReason =
 export type SocialNetwork = "instagram" | "tiktok";
 export type SocialLocation = "follow_us" | "footer";
 export type ScrollDepth = 25 | 50 | 75 | 90 | 100;
+
+/**
+ * `section_name` values.
+ *
+ * The first two are the only ones the current single-screen homepage can emit.
+ * Everything below them is HISTORICAL: those sections were archived with the
+ * old multi-section homepage on 2026-07-30 (see the restore note at the top of
+ * app/page.tsx). They are kept in the union so historical data stays typed and
+ * so restoring the old page needs no change here.
+ */
 export type SectionName =
+  | "signup"
+  | "footer"
+  // historical, from the archived multi-section homepage:
   | "hero"
   | "how"
   | "comparison"
@@ -232,9 +245,15 @@ export function trackTestCtaActivated(
   posthog.capture("test_cta_activated", { method, location });
 }
 
-/** Pricing / email-capture card enters the viewport. */
+/**
+ * The email capture form enters the viewport.
+ *
+ * `location` was "pricing" until 2026-07-31, when the form stopped living in a
+ * pricing card and became the homepage. Any saved insight filtering on
+ * `location = pricing` needs repointing at `home_signup` to keep counting.
+ */
 export function trackEmailFormViewed(): void {
-  posthog.capture("email_form_viewed", { location: "pricing" });
+  posthog.capture("email_form_viewed", { location: "home_signup" });
 }
 
 export function trackEmailFieldFocused(): void {
@@ -280,9 +299,11 @@ export function trackSectionViewed(section: SectionName): void {
 }
 
 /**
- * The pricing section ("Settle it for the price of a coffee") crossed into the
- * viewport (fired once per load). A dedicated funnel step for the pricing view —
- * complements `section_viewed{pricing}` + `offer_viewed` with a clean name.
+ * RETIRED 2026-07-31, kept only so historical data stays documented. There is
+ * no pricing section on the site to view, and no price to view it at, so this
+ * has no reachable call site. Do not re-wire it to the signup screen: a signup
+ * screen is not a pricing view, and pointing this at it would silently redefine
+ * every historical number.
  */
 export function trackPricingSectionViewed(): void {
   posthog.capture("pricing_section_viewed", { location: "pricing" });
@@ -308,7 +329,11 @@ export function trackHeroShapeThrown(p: {
   });
 }
 
-/** The $67 tier card enters the viewport. */
+/**
+ * RETIRED 2026-07-31, kept only so historical data stays documented. It
+ * hardcodes a $67 "the_fella_test" tier that the product no longer sells, and
+ * the card it fired from is archived. No reachable call site.
+ */
 export function trackOfferViewed(): void {
   posthog.capture("offer_viewed", { price: 67, tier: "the_fella_test" });
 }
