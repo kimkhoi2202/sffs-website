@@ -133,9 +133,11 @@ export function HomeSignup() {
           rather than eyeballed. There the brain's VISIBLE width is 0.34 to 0.46
           of the name block's width and the gap is 0.12 to 0.32 of it. This uses
           the tighter square-cover end of both, which is the closest analogue to
-          a centred hero block: brain height ≈ 0.49 of the wordmark's, and a gap
-          of roughly 0.12 of the wordmark's width. The -6deg tilt and the hard
-          zero-blur drop shadow are the mark's treatment in those same covers.
+          a centred hero block. The gap below is literally the wordmark's own
+          clamp scaled by 0.189, which is 0.12 of its width given the wordmark's
+          1.576 aspect, so the two stay locked together at every size. The -6deg
+          tilt and the hard zero-blur drop shadow are the mark's treatment in
+          those same covers.
 
           NOTE: in the videos the brain sits BELOW the name, not above it. This
           is above by request; the sizes and spacing are the video's.
@@ -159,7 +161,7 @@ export function HomeSignup() {
         <img
           src="/wordmark.png"
           alt="Smart Fella or Fart Smella"
-          className="mt-[clamp(0.5rem,1.9vh,1.25rem)] h-[clamp(6rem,min(30vw,18vh),12rem)] w-auto max-w-full select-none object-contain"
+          className="mt-[clamp(1.13rem,min(5.67vw,3.4vh),2.27rem)] h-[clamp(6rem,min(30vw,18vh),12rem)] w-auto max-w-full select-none object-contain"
           draggable={false}
         />
 
