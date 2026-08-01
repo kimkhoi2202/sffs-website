@@ -105,6 +105,24 @@
     overflow-x: clip;
   }
 
+  /*
+    THE OVERSCROLL CANVAS IS BLUE ONLY BECAUSE THE FOOTER IS.
+
+    The rule above paints the root blue so that any residual overscroll shows
+    an on-brand colour matching the page's blue footer instead of a white
+    gutter. The v3 test flow has no footer and no blue anywhere, so on those
+    routes the same rule is the bug: rubber-band on iOS, or any moment the body
+    does not cover the root, and a slab of blue appears under a page that is
+    otherwise paper.
+
+    `[data-flow]` is set on the flow's own wrapper, and :has() lets the root
+    follow it. Scoped this way rather than by pathname so it cannot fall out of
+    step with which routes are actually the flow.
+  */
+  html:has([data-flow]) {
+    background-color: var(--color-paper);
+  }
+
   body {
     background-color: var(--color-paper);
     color: var(--color-ink);

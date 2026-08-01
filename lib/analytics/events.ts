@@ -58,6 +58,31 @@ export type SectionName =
 
 export const EMAIL_SOURCE = "pricing-get-access";
 
+/**
+ * Email sources, one per surface that can capture an address.
+ *
+ * These are the values written to Aurora `sffs.email_signups.source`, and they
+ * are the only way to tell the surfaces apart after the fact. The two IQ-test
+ * values are deliberately separate from each other as well as from the old
+ * homepage's: an address captured on the child branch is a GROWN-UP's address
+ * given on a child's behalf, and that is a materially different record to a
+ * parent giving their own. If a deletion request ever arrives, or the 13+
+ * positioning is ever audited, the distinction needs to already be in the data.
+ *
+ * Any new value must ALSO be added to ALLOWED_SOURCES in
+ * app/api/access-signup/route.ts, which silently rewrites anything it does not
+ * recognise back to the default rather than rejecting it.
+ */
+export const EMAIL_SOURCES = {
+  homepage: "pricing-get-access",
+  /** The adult test's results gate: a parent giving their own address. */
+  testParent: "smart-fella-test-parent",
+  /** A child test's results gate: a grown-up's address, asked for as such. */
+  testChild: "smart-fella-test-child",
+} as const;
+
+export type EmailSource = (typeof EMAIL_SOURCES)[keyof typeof EMAIL_SOURCES];
+
 /* --------------------------------------------------------------------------
  * Attribution — derived super properties (plan §2.1 + §A)
  * ------------------------------------------------------------------------ */
@@ -351,6 +376,170 @@ export function trackOutboundLinkClicked(p: {
   location: string;
 }): void {
   posthog.capture("outbound_link_clicked", p);
+}
+
+/* --------------------------------------------------------------------------
+ * THE IQ TEST FUNNEL
+ *
+ * The test replaced the homepage on 2026-08-01 and is now the front door, so
+ * this is the site's primary funnel:
+ *
+ *   $pageview
+ *     -> test_fork_selected        (parent or kid)
+ *     -> test_audience_selected    (parent branch only: themselves or their child)
+ *     -> test_grade_selected       (child test only)
+ *     -> test_started
+ *     -> test_completed            (carries the score)
+ *     -> test_results_gate_viewed
+ *     -> test_email_submitted      (the attempt)
+ *     -> email_captured            (server-side, only on a genuine new row)
+ *
+ * PRIVACY. Same posture as everything else here: no PII, ever. A score, a
+ * grade and a verdict band are not personal data on their own, and the email
+ * never leaves the browser for anywhere but Aurora. Note what is deliberately
+ * ABSENT: no per-question answer events. Which options a specific person picked,
+ * question by question, is a behavioural profile of a named child once it is
+ * joined to their grade and their session recording, and there is no product
+ * question worth that. Aggregate item difficulty, if it is ever wanted, should
+ * come from a deliberate anonymous rollup rather than as a side effect of
+ * instrumenting the runner.
+ * ------------------------------------------------------------------------ */
+
+/** Which door: taking it as a parent, or as a kid. */
+export type TestFork = "parent" | "child";
+/** Which test is actually being sat. */
+export type TestAudience = "adult" | "child";
+
+export function trackTestForkSelected(fork: TestFork): void {
+  posthog.capture("test_fork_selected", { fork });
+}
+
+/** The parent branch's second fork: taking it themselves, or handing it over. */
+export function trackTestAudienceSelected(audience: TestAudience): void {
+  posthog.capture("test_audience_selected", { audience });
+}
+
+export function trackTestGradeSelected(grade: number): void {
+  posthog.capture("test_grade_selected", { grade });
+}
+
+export function trackTestStarted(p: {
+  test_id: string;
+  audience: TestAudience;
+  band: string;
+  grade: number | null;
+  item_count: number;
+  duration_s: number;
+}): void {
+  posthog.capture("test_started", p);
+}
+
+/**
+ * A finished attempt.
+ *
+ * This event IS the sample described by `TestSubmission` in lib/test/types.ts.
+ * It carries everything a per-band comparison would ever need — score, max,
+ * band, test id, duration — so the data for an eventual "how you did against
+ * everyone else" is accumulating from the first attempt, without a durable
+ * store existing yet and without a single personal field being recorded.
+ *
+ * `band` is what any such comparison must group on, not `grade`: grades 7 and 8
+ * sit the identical test, so pooling them is correct and splitting them would
+ * be inventing a distinction. `grade` rides along because knowing which of the
+ * two a player chose is useful for content work, and a grade on its own is not
+ * a person.
+ */
+export function trackTestCompleted(p: {
+  test_id: string;
+  audience: TestAudience;
+  /** The scoring cohort: "adult" or a bank id. Group on this, not on grade. */
+  band: string;
+  grade: number | null;
+  score: number;
+  max_score: number;
+  percent: number;
+  answered: number;
+  verdict: string;
+  elapsed_s: number;
+  /** True when the clock ran out rather than the player finishing. */
+  timed_out: boolean;
+}): void {
+  posthog.capture("test_completed", p);
+}
+
+/** The blurred results and the email box are on screen. */
+export function trackTestResultsGateViewed(p: {
+  test_id: string;
+  audience: TestAudience;
+}): void {
+  posthog.capture("test_results_gate_viewed", p);
+}
+
+/**
+ * A well-formed address was submitted at the gate. This is the ATTEMPT, and it
+ * is deliberately separate from `test_email_sent`: the gap between the two is
+ * exactly the send-failure rate, which is the number worth watching when the
+ * only route to a result is an email that has to arrive.
+ *
+ * Note this is NOT the signup conversion either. `email_captured` still fires
+ * once, server-side, and only when Aurora genuinely inserted a row. Firing a
+ * client-side conversion here as well would double-count every one of them.
+ */
+export function trackTestEmailSubmitted(p: {
+  test_id: string;
+  audience: TestAudience;
+  source: string;
+}): void {
+  posthog.capture("test_email_submitted", p);
+}
+
+/** The provider accepted the message. `resend` separates first sends from repeats. */
+export function trackTestEmailSent(p: {
+  test_id: string;
+  audience: TestAudience;
+  resend: boolean;
+}): void {
+  posthog.capture("test_email_sent", p);
+}
+
+/**
+ * The send did not happen. `code` is the API's failure code (`send_failed`,
+ * `send_cap`, `address_limited`, `rate_limited`, `network`, ...) — a short
+ * enum, never a provider message, which can contain the recipient's address.
+ */
+export function trackTestEmailSendFailed(p: {
+  test_id: string;
+  audience: TestAudience;
+  code: string;
+}): void {
+  posthog.capture("test_email_send_failed", p);
+}
+
+/** They asked for the same address to be mailed again (typo, or it never came). */
+export function trackTestResendRequested(p: {
+  test_id: string;
+  audience: TestAudience;
+}): void {
+  posthog.capture("test_resend_requested", p);
+}
+
+/**
+ * Someone followed the link from their inbox. The other half of the funnel's
+ * only real question: did the email actually land.
+ *
+ * Carries no token. A token is a durable handle to one person's result page,
+ * and putting one in an event stream turns a no-PII dataset into a keyring.
+ */
+export function trackResultsLinkOpened(p: {
+  test_id: string;
+  audience: TestAudience;
+}): void {
+  posthog.capture("results_link_opened", p);
+}
+
+/** The parent tapped the link that hands the test to their kid. */
+export function trackTestShareToChildClicked(method: "link" | "copy"): void {
+  posthog.capture("test_share_to_child_clicked", { method });
 }
 
 /* --------------------------------------------------------------------------

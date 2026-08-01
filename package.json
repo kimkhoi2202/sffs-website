@@ -5,9 +5,12 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "postbuild": "npm run verify:no-devtools",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "verify:no-devtools": "node scripts/verify-no-devtools.mjs",
+    "verify:tests": "node --import ./scripts/ts-resolve-hook.mjs scripts/verify-tests.mjs"
   },
   "dependencies": {
     "@base-ui-components/react": "^1.0.0-rc.0",

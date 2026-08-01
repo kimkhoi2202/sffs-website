@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { insertEmailSignup } from "@/lib/email-store";
 import { captureEmailCapturedServer } from "@/lib/posthog-server";
+import { clientIp, isRateLimited } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -11,7 +12,26 @@ const MAX_BODY_BYTES = 4 * 1024;
 /** RFC 5321 max email length. */
 const MAX_EMAIL_LENGTH = 254;
 const DEFAULT_SOURCE = "pricing-get-access";
-const ALLOWED_SOURCES = new Set([DEFAULT_SOURCE]);
+
+/**
+ * Every surface that may capture an address. An unrecognised source is NOT
+ * rejected — it is silently rewritten to DEFAULT_SOURCE (see below), so
+ * forgetting to add one here does not break a signup, it just misfiles it
+ * forever. Keep this in step with EMAIL_SOURCES in lib/analytics/events.ts.
+ *
+ *   pricing-get-access         the archived early-access homepage form
+ *   smart-fella-test-parent    the adult test's results gate: a parent's own address
+ *   smart-fella-test-child     a child test's results gate: a GROWN-UP's address,
+ *                              asked for as such. Kept distinct from the parent
+ *                              value on purpose — the site is positioned 13+,
+ *                              most of the grade range is under 13, and these
+ *                              two records mean different things.
+ */
+const ALLOWED_SOURCES = new Set([
+  DEFAULT_SOURCE,
+  "smart-fella-test-parent",
+  "smart-fella-test-child",
+]);
 
 /**
  * Pragmatic server-side email shape check (the authority — the client does the
@@ -24,28 +44,13 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  * Best-effort in-memory rate limit, keyed by client IP. Serverless instances are
  * ephemeral and not shared, so this is a light abuse speed-bump per instance —
  * not a hard, distributed guarantee.
+ *
+ * The mechanism moved to lib/rate-limit.ts when the results email endpoint
+ * needed the same behaviour with different numbers. The limits below are
+ * unchanged from when they lived here.
  */
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX = 10;
-const hits = new Map<string, number[]>();
-
-function isRateLimited(ip: string): boolean {
-  const now = Date.now();
-  const recent = (hits.get(ip) ?? []).filter(
-    (t) => now - t < RATE_LIMIT_WINDOW_MS,
-  );
-  recent.push(now);
-  hits.set(ip, recent);
-
-  // Opportunistically bound memory so the map can't grow without limit.
-  if (hits.size > 5000) {
-    for (const [key, times] of hits) {
-      if (times.every((t) => now - t >= RATE_LIMIT_WINDOW_MS)) hits.delete(key);
-    }
-  }
-
-  return recent.length > RATE_LIMIT_MAX;
-}
 
 interface SignupBody {
   email?: unknown;
@@ -62,12 +67,12 @@ interface SignupBody {
  * to the client.
  */
 export async function POST(request: NextRequest) {
-  const ip =
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    request.headers.get("x-real-ip") ||
-    "unknown";
+  const ip = clientIp(request.headers);
 
-  if (isRateLimited(ip)) {
+  if (isRateLimited("access-signup", ip, {
+    windowMs: RATE_LIMIT_WINDOW_MS,
+    max: RATE_LIMIT_MAX,
+  })) {
     return NextResponse.json(
       { ok: false, error: "Too many attempts. Give it a minute and try again." },
       { status: 429 },
