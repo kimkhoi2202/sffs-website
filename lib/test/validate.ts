@@ -49,6 +49,19 @@ function validateItem(testId: string, item: TestItem): ValidationIssue[] {
   if (!item.placeholder && !item.explanation) {
     warn("no explanation — real content should always have one");
   }
+  if (!item.placeholder && !item.rule) {
+    warn("no rule — an item with no provenance is one nobody can account for");
+  }
+  // Every distractor names the mistake that produces it. This is the check the
+  // distractor framework in docs/test-content/rule-taxonomy.md turns on: an
+  // option nobody can write an error sentence for is decorative, and three
+  // decorative options are how a four-way item becomes a one-way item.
+  if (!item.placeholder) {
+    const mute = item.options.filter((o) => o.id !== item.answer && !o.why?.trim());
+    if (mute.length > 0) {
+      warn(`distractor(s) ${mute.map((o) => o.id).join(", ")} have no intended-error note`);
+    }
+  }
 
   switch (item.kind) {
     case "series": {
@@ -61,14 +74,19 @@ function validateItem(testId: string, item: TestItem): ValidationIssue[] {
     }
 
     case "figure": {
-      // matrix: [TL, TR, BL] and the player supplies BR.
+      // matrix: 3 cells is a 2x2 (the player supplies the fourth) and 8 is a
+      // 3x3 (the player supplies the ninth). BOTH are real: a 2x2 states a
+      // relation once, a 3x3 states it along two axes at once and is the only
+      // shape that can carry a distribution-of-three or a logical operator,
+      // which is where the top of the difficulty range lives.
       // analogy: A : B :: C : ?
       // classification: three that share a property, plus the one that joins.
       // odd-one-out: no stimulus at all — the options ARE the stimulus.
-      const expected = item.layout === "odd-one-out" ? 0 : 3;
-      if (item.cells.length !== expected) {
+      const expected =
+        item.layout === "odd-one-out" ? [0] : item.layout === "matrix" ? [3, 8] : [3];
+      if (!expected.includes(item.cells.length)) {
         err(
-          `figure layout "${item.layout}" expects ${expected} stimulus cells, found ${item.cells.length}`,
+          `figure layout "${item.layout}" expects ${expected.join(" or ")} stimulus cells, found ${item.cells.length}`,
         );
       }
 

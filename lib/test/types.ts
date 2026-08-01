@@ -293,6 +293,24 @@ export interface HoleCell {
 
 interface OptionBase {
   id: OptionId;
+  /**
+   * WHY A WRONG OPTION IS THERE: the specific mistake a solver who picks it
+   * made. Empty on the key.
+   *
+   * This is an authoring field, never shown to a player. It exists because the
+   * failure mode of a multiple-choice bank is four options where three are
+   * obviously silly, and the only reliable defence is the discipline of
+   * writing, for every distractor, the sentence "a solver who picks this made
+   * THIS error". An option whose sentence cannot be written is decorative and
+   * gets replaced — see the distractor framework in
+   * docs/test-content/rule-taxonomy.md.
+   *
+   * It lives ON THE OPTION rather than in a parallel review file so it cannot
+   * drift out of sync with the option it describes, and so `validateTest` can
+   * hold the bank to 100% coverage. The dev review page reads it; nothing in
+   * the player-facing flow does.
+   */
+  why?: string;
 }
 
 /** A text option. Keep it under ~24 characters so it fits a phone row. */

@@ -10,7 +10,8 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "verify:no-devtools": "node scripts/verify-no-devtools.mjs",
-    "verify:tests": "node --import ./scripts/ts-resolve-hook.mjs scripts/verify-tests.mjs"
+    "verify:tests": "node --import ./scripts/ts-resolve-hook.mjs scripts/verify-tests.mjs",
+    "audit:content": "node --import ./scripts/ts-resolve-hook.mjs scripts/audit-content.mjs"
   },
   "dependencies": {
     "@base-ui-components/react": "^1.0.0-rc.0",

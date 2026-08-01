@@ -3,6 +3,37 @@
 This is the authoring contract for every question in `lib/test/tests/`. Items are
 generated **from the rules below**, never from real published items.
 
+> **The rule ids the shipped items actually cite — `SC-1b`, `VA-R9`, `NA-3`,
+> `FM-6`, `SY-7` and the rest — are defined in
+> [`item-rule-taxonomy.md`](./item-rule-taxonomy.md), next to this file.** That
+> document is the full 89-rule vocabulary across fourteen item types, with
+> per-band difficulty markers, the four-family distractor framework and the
+> verification protocol. It is the specification the current bank was generated
+> from, and it lives in the repo because a `rule` field pointing at a document
+> nobody has is not a provenance record.
+>
+> This file remains the shorter statement of *why* the discipline exists and how
+> it binds the codebase. Read this one first, then that one to author.
+>
+> **Three deviations from it are in the shipped bank, all forced by the figure
+> vocabulary and all documented at the point of the deviation:**
+>
+> - `matRiks` can express `FM-3` (shading), `FM-4` (size), `FM-6`/`FM-10`
+>   (rotation) and `FM-12` (logical operators) in terms this schema can draw.
+>   It cannot express `FM-1` (shape identity), because its shape rule permutes
+>   among its own compound silhouettes rather than ours, nor `FM-2` (count),
+>   `FM-5` (position), `FM-7`/`FM-8` (line style and weight), `FM-9`
+>   (reflection) or `FM-11` (distribution-of-three). The grade 3 band is
+>   therefore built from `FM-3` and `FM-4` at one simultaneous rule rather than
+>   from `FM-1`–`FM-3`, and the adult hard block carries a three-rule matrix
+>   where the taxonomy asks for a Latin square.
+> - Figure series ship as three given terms plus the answer rather than four,
+>   because that is the shape the renderer and the validator support.
+> - Two glyphs — `crescent` and `lightning` — are barred from any item with a
+>   shading rule. Both are thin figures under a heavy keyline, so the stroke
+>   covers nearly all their ink and a fill changes almost nothing on screen.
+>   `scripts/audit-content.mjs` enforces it.
+
 ## Why this document exists at all
 
 The obvious way to write 50 aptitude questions is to find 40 real ones and make

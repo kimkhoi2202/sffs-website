@@ -1,0 +1,1428 @@
+
+/* ===== g3-m1 — 1 rule(s): rows shade, columns identity; key C (C) ===== */
+      cells: [
+        { shapes: [{ shape: "circle", size: 0.68 }] },
+        { shapes: [{ shape: "circle", filled: true, color: "var(--color-gray-300)", size: 0.68 }] },
+        { shapes: [{ shape: "circle", filled: true, size: 0.68 }] },
+        { shapes: [{ shape: "circle", size: 0.68 }] },
+        { shapes: [{ shape: "circle", filled: true, color: "var(--color-gray-300)", size: 0.68 }] },
+        { shapes: [{ shape: "circle", filled: true, size: 0.68 }] },
+        { shapes: [{ shape: "circle", size: 0.68 }] },
+        { shapes: [{ shape: "circle", filled: true, color: "var(--color-gray-300)", size: 0.68 }] },
+        { shapes: [{ shape: "circle", filled: true, size: 0.68 }] },
+      ],
+      options: [
+        // wp_copy
+        { id: "A", fig: { shapes: [{ shape: "circle", size: 0.68 }] } },
+        // ic_size
+        { id: "B", fig: { shapes: [{ shape: "circle", filled: true, size: 0.408 }] } },
+        // correct
+        { id: "C", fig: { shapes: [{ shape: "circle", filled: true, size: 0.68 }] } },
+        // r_left
+        { id: "D", fig: { shapes: [{ shape: "circle", filled: true, color: "var(--color-gray-300)", size: 0.68 }] } },
+      ],
+      answer: "C",
+
+/* ===== g3-m2 — 1 rule(s): rows identity, columns shade; key A (A) ===== */
+      cells: [
+        { shapes: [{ shape: "heart", size: 0.68 }] },
+        { shapes: [{ shape: "heart", size: 0.68 }] },
+        { shapes: [{ shape: "heart", size: 0.68 }] },
+        { shapes: [{ shape: "heart", filled: true, color: "var(--color-gray-300)", size: 0.68 }] },
+        { shapes: [{ shape: "heart", filled: true, color: "var(--color-gray-300)", size: 0.68 }] },
+        { shapes: [{ shape: "heart", filled: true, color: "var(--color-gray-300)", size: 0.68 }] },
+        { shapes: [{ shape: "heart", filled: true, size: 0.68 }] },
+        { shapes: [{ shape: "heart", filled: true, size: 0.68 }] },
+        { shapes: [{ shape: "heart", filled: true, size: 0.68 }] },
+      ],
+      options: [
+        // correct
+        { id: "A", fig: { shapes: [{ shape: "heart", filled: true, size: 0.68 }] } },
+        // wp_copy
+        { id: "B", fig: { shapes: [{ shape: "heart", size: 0.68 }] } },
+        // ic_size
+        { id: "C", fig: { shapes: [{ shape: "heart", filled: true, size: 0.408 }] } },
+        // r_top
+        { id: "D", fig: { shapes: [{ shape: "heart", filled: true, color: "var(--color-gray-300)", size: 0.68 }] } },
+      ],
+      answer: "A",
+
+/* ===== g3-m3 — 1 rule(s): rows size, columns identity; key D (D) ===== */
+      cells: [
+        { shapes: [{ shape: "star", size: 0.8 }] },
+        { shapes: [{ shape: "star", size: 0.57 }] },
+        { shapes: [{ shape: "star", size: 0.34 }] },
+        { shapes: [{ shape: "star", size: 0.8 }] },
+        { shapes: [{ shape: "star", size: 0.57 }] },
+        { shapes: [{ shape: "star", size: 0.34 }] },
+        { shapes: [{ shape: "star", size: 0.8 }] },
+        { shapes: [{ shape: "star", size: 0.57 }] },
+        { shapes: [{ shape: "star", size: 0.34 }] },
+      ],
+      options: [
+        // wp_copy
+        { id: "A", fig: { shapes: [{ shape: "star", size: 0.8 }] } },
+        // ic_size
+        { id: "B", fig: { shapes: [{ shape: "star", size: 0.204 }] } },
+        // r_left
+        { id: "C", fig: { shapes: [{ shape: "star", size: 0.57 }] } },
+        // correct
+        { id: "D", fig: { shapes: [{ shape: "star", size: 0.34 }] } },
+      ],
+      answer: "D",
+
+/* ===== g3-m4 — 1 rule(s): rows shade, columns identity; key B (B) ===== */
+      cells: [
+        { shapes: [{ shape: "square", size: 0.374 }, { shape: "circle", size: 0.374 }] },
+        {
+          shapes: [
+            { shape: "square", filled: true, color: "var(--color-gray-300)", size: 0.374 },
+            { shape: "circle", filled: true, color: "var(--color-gray-300)", size: 0.374 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "square", filled: true, size: 0.374 },
+            { shape: "circle", filled: true, size: 0.374 },
+          ],
+        },
+        { shapes: [{ shape: "square", size: 0.374 }, { shape: "circle", size: 0.374 }] },
+        {
+          shapes: [
+            { shape: "square", filled: true, color: "var(--color-gray-300)", size: 0.374 },
+            { shape: "circle", filled: true, color: "var(--color-gray-300)", size: 0.374 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "square", filled: true, size: 0.374 },
+            { shape: "circle", filled: true, size: 0.374 },
+          ],
+        },
+        { shapes: [{ shape: "square", size: 0.374 }, { shape: "circle", size: 0.374 }] },
+        {
+          shapes: [
+            { shape: "square", filled: true, color: "var(--color-gray-300)", size: 0.374 },
+            { shape: "circle", filled: true, color: "var(--color-gray-300)", size: 0.374 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "square", filled: true, size: 0.374 },
+            { shape: "circle", filled: true, size: 0.374 },
+          ],
+        },
+      ],
+      options: [
+        // wp_copy
+        { id: "A", fig: { shapes: [{ shape: "square", size: 0.374 }, { shape: "circle", size: 0.374 }] } },
+        // correct
+        { id: "B", fig: {
+          shapes: [
+            { shape: "square", filled: true, size: 0.374 },
+            { shape: "circle", filled: true, size: 0.374 },
+          ],
+        } },
+        // ic_size
+        { id: "C", fig: {
+          shapes: [
+            { shape: "square", filled: true, size: 0.224 },
+            { shape: "circle", filled: true, size: 0.224 },
+          ],
+        } },
+        // r_left
+        { id: "D", fig: {
+          shapes: [
+            { shape: "square", filled: true, color: "var(--color-gray-300)", size: 0.374 },
+            { shape: "circle", filled: true, color: "var(--color-gray-300)", size: 0.374 },
+          ],
+        } },
+      ],
+      answer: "B",
+
+/* ===== g3-m5 — 1 rule(s): rows identity, columns size; key D (D) ===== */
+      cells: [
+        { shapes: [{ shape: "arrow", size: 0.8 }] },
+        { shapes: [{ shape: "arrow", size: 0.8 }] },
+        { shapes: [{ shape: "arrow", size: 0.8 }] },
+        { shapes: [{ shape: "arrow", size: 0.57 }] },
+        { shapes: [{ shape: "arrow", size: 0.57 }] },
+        { shapes: [{ shape: "arrow", size: 0.57 }] },
+        { shapes: [{ shape: "arrow", size: 0.34 }] },
+        { shapes: [{ shape: "arrow", size: 0.34 }] },
+        { shapes: [{ shape: "arrow", size: 0.34 }] },
+      ],
+      options: [
+        // wp_copy
+        { id: "A", fig: { shapes: [{ shape: "arrow", size: 0.8 }] } },
+        // ic_size
+        { id: "B", fig: { shapes: [{ shape: "arrow", size: 0.204 }] } },
+        // r_top
+        { id: "C", fig: { shapes: [{ shape: "arrow", size: 0.57 }] } },
+        // correct
+        { id: "D", fig: { shapes: [{ shape: "arrow", size: 0.34 }] } },
+      ],
+      answer: "D",
+
+/* ===== g4-m1 — 1 rule(s): rows size, columns identity; key B (B) ===== */
+      cells: [
+        { shapes: [{ shape: "diamond", size: 0.8 }] },
+        { shapes: [{ shape: "diamond", size: 0.57 }] },
+        { shapes: [{ shape: "diamond", size: 0.34 }] },
+        { shapes: [{ shape: "diamond", size: 0.8 }] },
+        { shapes: [{ shape: "diamond", size: 0.57 }] },
+        { shapes: [{ shape: "diamond", size: 0.34 }] },
+        { shapes: [{ shape: "diamond", size: 0.8 }] },
+        { shapes: [{ shape: "diamond", size: 0.57 }] },
+        { shapes: [{ shape: "diamond", size: 0.34 }] },
+      ],
+      options: [
+        // wp_copy
+        { id: "A", fig: { shapes: [{ shape: "diamond", size: 0.8 }] } },
+        // correct
+        { id: "B", fig: { shapes: [{ shape: "diamond", size: 0.34 }] } },
+        // ic_size
+        { id: "C", fig: { shapes: [{ shape: "diamond", size: 0.204 }] } },
+        // r_left
+        { id: "D", fig: { shapes: [{ shape: "diamond", size: 0.57 }] } },
+      ],
+      answer: "B",
+
+/* ===== g4-m2 — 2 rule(s): rows shade, columns size; key D (D) ===== */
+      cells: [
+        { shapes: [{ shape: "teardrop", size: 0.8 }] },
+        {
+          shapes: [
+            { shape: "teardrop", filled: true, color: "var(--color-gray-300)", size: 0.8 },
+          ],
+        },
+        { shapes: [{ shape: "teardrop", filled: true, size: 0.8 }] },
+        { shapes: [{ shape: "teardrop", size: 0.57 }] },
+        {
+          shapes: [
+            { shape: "teardrop", filled: true, color: "var(--color-gray-300)", size: 0.57 },
+          ],
+        },
+        { shapes: [{ shape: "teardrop", filled: true, size: 0.57 }] },
+        { shapes: [{ shape: "teardrop", size: 0.34 }] },
+        {
+          shapes: [
+            { shape: "teardrop", filled: true, color: "var(--color-gray-300)", size: 0.34 },
+          ],
+        },
+        { shapes: [{ shape: "teardrop", filled: true, size: 0.34 }] },
+      ],
+      options: [
+        // wp_copy
+        { id: "A", fig: { shapes: [{ shape: "teardrop", size: 0.8 }] } },
+        // ic_neg
+        { id: "B", fig: { shapes: [{ shape: "teardrop", size: 0.34 }] } },
+        // r_left
+        { id: "C", fig: {
+          shapes: [
+            { shape: "teardrop", filled: true, color: "var(--color-gray-300)", size: 0.34 },
+          ],
+        } },
+        // correct
+        { id: "D", fig: { shapes: [{ shape: "teardrop", filled: true, size: 0.34 }] } },
+      ],
+      answer: "D",
+
+/* ===== g4-m3 — 2 rule(s): rows size, columns shade; key A (A) ===== */
+      cells: [
+        { shapes: [{ shape: "triangle", size: 0.44 }, { shape: "circle", size: 0.44 }] },
+        { shapes: [{ shape: "triangle", size: 0.34 }, { shape: "circle", size: 0.34 }] },
+        { shapes: [{ shape: "triangle", size: 0.24 }, { shape: "circle", size: 0.24 }] },
+        {
+          shapes: [
+            { shape: "triangle", filled: true, color: "var(--color-gray-300)", size: 0.44 },
+            { shape: "circle", filled: true, color: "var(--color-gray-300)", size: 0.44 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "triangle", filled: true, color: "var(--color-gray-300)", size: 0.34 },
+            { shape: "circle", filled: true, color: "var(--color-gray-300)", size: 0.34 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "triangle", filled: true, color: "var(--color-gray-300)", size: 0.24 },
+            { shape: "circle", filled: true, color: "var(--color-gray-300)", size: 0.24 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "triangle", filled: true, size: 0.44 },
+            { shape: "circle", filled: true, size: 0.44 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "triangle", filled: true, size: 0.34 },
+            { shape: "circle", filled: true, size: 0.34 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "triangle", filled: true, size: 0.24 },
+            { shape: "circle", filled: true, size: 0.24 },
+          ],
+        },
+      ],
+      options: [
+        // correct
+        { id: "A", fig: {
+          shapes: [
+            { shape: "triangle", filled: true, size: 0.24 },
+            { shape: "circle", filled: true, size: 0.24 },
+          ],
+        } },
+        // wp_copy
+        { id: "B", fig: { shapes: [{ shape: "triangle", size: 0.44 }, { shape: "circle", size: 0.44 }] } },
+        // ic_neg
+        { id: "C", fig: { shapes: [{ shape: "triangle", size: 0.24 }, { shape: "circle", size: 0.24 }] } },
+        // r_left
+        { id: "D", fig: {
+          shapes: [
+            { shape: "triangle", filled: true, size: 0.34 },
+            { shape: "circle", filled: true, size: 0.34 },
+          ],
+        } },
+      ],
+      answer: "A",
+
+/* ===== g4-m4 — 2 rule(s): rows shade, columns size; key C (C) ===== */
+      cells: [
+        { shapes: [{ shape: "cross", size: 0.8 }] },
+        { shapes: [{ shape: "cross", filled: true, color: "var(--color-gray-300)", size: 0.8 }] },
+        { shapes: [{ shape: "cross", filled: true, size: 0.8 }] },
+        { shapes: [{ shape: "cross", size: 0.57 }] },
+        { shapes: [{ shape: "cross", filled: true, color: "var(--color-gray-300)", size: 0.57 }] },
+        { shapes: [{ shape: "cross", filled: true, size: 0.57 }] },
+        { shapes: [{ shape: "cross", size: 0.34 }] },
+        { shapes: [{ shape: "cross", filled: true, color: "var(--color-gray-300)", size: 0.34 }] },
+        { shapes: [{ shape: "cross", filled: true, size: 0.34 }] },
+      ],
+      options: [
+        // wp_copy
+        { id: "A", fig: { shapes: [{ shape: "cross", size: 0.8 }] } },
+        // ic_neg
+        { id: "B", fig: { shapes: [{ shape: "cross", size: 0.34 }] } },
+        // correct
+        { id: "C", fig: { shapes: [{ shape: "cross", filled: true, size: 0.34 }] } },
+        // r_left
+        { id: "D", fig: { shapes: [{ shape: "cross", filled: true, color: "var(--color-gray-300)", size: 0.34 }] } },
+      ],
+      answer: "C",
+
+/* ===== g4-m5 — 2 rule(s): rows size, columns shade; key B (B) ===== */
+      cells: [
+        { shapes: [{ shape: "cross", size: 0.44 }, { shape: "teardrop", size: 0.44 }] },
+        { shapes: [{ shape: "cross", size: 0.34 }, { shape: "teardrop", size: 0.34 }] },
+        { shapes: [{ shape: "cross", size: 0.24 }, { shape: "teardrop", size: 0.24 }] },
+        {
+          shapes: [
+            { shape: "cross", filled: true, color: "var(--color-gray-300)", size: 0.44 },
+            { shape: "teardrop", filled: true, color: "var(--color-gray-300)", size: 0.44 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "cross", filled: true, color: "var(--color-gray-300)", size: 0.34 },
+            { shape: "teardrop", filled: true, color: "var(--color-gray-300)", size: 0.34 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "cross", filled: true, color: "var(--color-gray-300)", size: 0.24 },
+            { shape: "teardrop", filled: true, color: "var(--color-gray-300)", size: 0.24 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "cross", filled: true, size: 0.44 },
+            { shape: "teardrop", filled: true, size: 0.44 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "cross", filled: true, size: 0.34 },
+            { shape: "teardrop", filled: true, size: 0.34 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "cross", filled: true, size: 0.24 },
+            { shape: "teardrop", filled: true, size: 0.24 },
+          ],
+        },
+      ],
+      options: [
+        // wp_copy
+        { id: "A", fig: { shapes: [{ shape: "cross", size: 0.44 }, { shape: "teardrop", size: 0.44 }] } },
+        // correct
+        { id: "B", fig: {
+          shapes: [
+            { shape: "cross", filled: true, size: 0.24 },
+            { shape: "teardrop", filled: true, size: 0.24 },
+          ],
+        } },
+        // ic_neg
+        { id: "C", fig: { shapes: [{ shape: "cross", size: 0.24 }, { shape: "teardrop", size: 0.24 }] } },
+        // r_left
+        { id: "D", fig: {
+          shapes: [
+            { shape: "cross", filled: true, size: 0.34 },
+            { shape: "teardrop", filled: true, size: 0.34 },
+          ],
+        } },
+      ],
+      answer: "B",
+
+/* ===== g5-m1 — 2 rule(s): rows rotate, columns shade; key D (D) ===== */
+      cells: [
+        { shapes: [{ shape: "triangle", size: 0.68 }] },
+        { shapes: [{ shape: "triangle", rotate: 90, size: 0.68 }] },
+        { shapes: [{ shape: "triangle", rotate: 180, size: 0.68 }] },
+        {
+          shapes: [
+            { shape: "triangle", filled: true, color: "var(--color-gray-300)", size: 0.68 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "triangle", filled: true, color: "var(--color-gray-300)", rotate: 90, size: 0.68 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "triangle", filled: true, color: "var(--color-gray-300)", rotate: 180, size: 0.68 },
+          ],
+        },
+        { shapes: [{ shape: "triangle", filled: true, size: 0.68 }] },
+        { shapes: [{ shape: "triangle", filled: true, rotate: 90, size: 0.68 }] },
+        { shapes: [{ shape: "triangle", filled: true, rotate: 180, size: 0.68 }] },
+      ],
+      options: [
+        // wp_copy
+        { id: "A", fig: { shapes: [{ shape: "triangle", size: 0.68 }] } },
+        // ic_flip
+        { id: "B", fig: { shapes: [{ shape: "triangle", filled: true, rotate: 270, size: 0.68 }] } },
+        // r_left
+        { id: "C", fig: { shapes: [{ shape: "triangle", filled: true, rotate: 90, size: 0.68 }] } },
+        // correct
+        { id: "D", fig: { shapes: [{ shape: "triangle", filled: true, rotate: 180, size: 0.68 }] } },
+      ],
+      answer: "D",
+
+/* ===== g5-m2 — 2 rule(s): rows size, columns rotate; key C (C) ===== */
+      cells: [
+        { shapes: [{ shape: "arrow", size: 0.8 }] },
+        { shapes: [{ shape: "arrow", size: 0.57 }] },
+        { shapes: [{ shape: "arrow", size: 0.34 }] },
+        { shapes: [{ shape: "arrow", rotate: 90, size: 0.8 }] },
+        { shapes: [{ shape: "arrow", rotate: 90, size: 0.57 }] },
+        { shapes: [{ shape: "arrow", rotate: 90, size: 0.34 }] },
+        { shapes: [{ shape: "arrow", rotate: 180, size: 0.8 }] },
+        { shapes: [{ shape: "arrow", rotate: 180, size: 0.57 }] },
+        { shapes: [{ shape: "arrow", rotate: 180, size: 0.34 }] },
+      ],
+      options: [
+        // wp_copy
+        { id: "A", fig: { shapes: [{ shape: "arrow", size: 0.8 }] } },
+        // ic_flip
+        { id: "B", fig: { shapes: [{ shape: "arrow", rotate: 270, size: 0.34 }] } },
+        // correct
+        { id: "C", fig: { shapes: [{ shape: "arrow", rotate: 180, size: 0.34 }] } },
+        // r_left
+        { id: "D", fig: { shapes: [{ shape: "arrow", rotate: 180, size: 0.57 }] } },
+      ],
+      answer: "C",
+
+/* ===== g5-m3 — 2 rule(s): rows rotate, columns size; key B (B) ===== */
+      cells: [
+        { shapes: [{ shape: "teardrop", size: 0.44 }, { shape: "arrow", size: 0.44 }] },
+        {
+          shapes: [
+            { shape: "teardrop", rotate: 90, size: 0.44 },
+            { shape: "arrow", rotate: 90, size: 0.44 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "teardrop", rotate: 180, size: 0.44 },
+            { shape: "arrow", rotate: 180, size: 0.44 },
+          ],
+        },
+        { shapes: [{ shape: "teardrop", size: 0.34 }, { shape: "arrow", size: 0.34 }] },
+        {
+          shapes: [
+            { shape: "teardrop", rotate: 90, size: 0.34 },
+            { shape: "arrow", rotate: 90, size: 0.34 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "teardrop", rotate: 180, size: 0.34 },
+            { shape: "arrow", rotate: 180, size: 0.34 },
+          ],
+        },
+        { shapes: [{ shape: "teardrop", size: 0.24 }, { shape: "arrow", size: 0.24 }] },
+        {
+          shapes: [
+            { shape: "teardrop", rotate: 90, size: 0.24 },
+            { shape: "arrow", rotate: 90, size: 0.24 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "teardrop", rotate: 180, size: 0.24 },
+            { shape: "arrow", rotate: 180, size: 0.24 },
+          ],
+        },
+      ],
+      options: [
+        // wp_copy
+        { id: "A", fig: { shapes: [{ shape: "teardrop", size: 0.44 }, { shape: "arrow", size: 0.44 }] } },
+        // correct
+        { id: "B", fig: {
+          shapes: [
+            { shape: "teardrop", rotate: 180, size: 0.24 },
+            { shape: "arrow", rotate: 180, size: 0.24 },
+          ],
+        } },
+        // ic_flip
+        { id: "C", fig: {
+          shapes: [
+            { shape: "teardrop", rotate: 270, size: 0.24 },
+            { shape: "arrow", rotate: 270, size: 0.24 },
+          ],
+        } },
+        // r_left
+        { id: "D", fig: {
+          shapes: [
+            { shape: "teardrop", rotate: 90, size: 0.24 },
+            { shape: "arrow", rotate: 90, size: 0.24 },
+          ],
+        } },
+      ],
+      answer: "B",
+
+/* ===== g5-m4 — 2 rule(s): rows shade, columns rotate; key A (A) ===== */
+      cells: [
+        { shapes: [{ shape: "heart", size: 0.68 }] },
+        { shapes: [{ shape: "heart", filled: true, color: "var(--color-gray-300)", size: 0.68 }] },
+        { shapes: [{ shape: "heart", filled: true, size: 0.68 }] },
+        { shapes: [{ shape: "heart", rotate: 90, size: 0.68 }] },
+        {
+          shapes: [
+            { shape: "heart", filled: true, color: "var(--color-gray-300)", rotate: 90, size: 0.68 },
+          ],
+        },
+        { shapes: [{ shape: "heart", filled: true, rotate: 90, size: 0.68 }] },
+        { shapes: [{ shape: "heart", rotate: 180, size: 0.68 }] },
+        {
+          shapes: [
+            { shape: "heart", filled: true, color: "var(--color-gray-300)", rotate: 180, size: 0.68 },
+          ],
+        },
+        { shapes: [{ shape: "heart", filled: true, rotate: 180, size: 0.68 }] },
+      ],
+      options: [
+        // correct
+        { id: "A", fig: { shapes: [{ shape: "heart", filled: true, rotate: 180, size: 0.68 }] } },
+        // wp_copy
+        { id: "B", fig: { shapes: [{ shape: "heart", size: 0.68 }] } },
+        // ic_flip
+        { id: "C", fig: { shapes: [{ shape: "heart", filled: true, rotate: 270, size: 0.68 }] } },
+        // r_left
+        { id: "D", fig: {
+          shapes: [
+            { shape: "heart", filled: true, color: "var(--color-gray-300)", rotate: 180, size: 0.68 },
+          ],
+        } },
+      ],
+      answer: "A",
+
+/* ===== g5-m5 — 2 rule(s): rows rotate, columns shade; key C (C) ===== */
+      cells: [
+        { shapes: [{ shape: "triangle", size: 0.374 }, { shape: "teardrop", size: 0.374 }] },
+        {
+          shapes: [
+            { shape: "triangle", rotate: 90, size: 0.374 },
+            { shape: "teardrop", rotate: 90, size: 0.374 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "triangle", rotate: 180, size: 0.374 },
+            { shape: "teardrop", rotate: 180, size: 0.374 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "triangle", filled: true, color: "var(--color-gray-300)", size: 0.374 },
+            { shape: "teardrop", filled: true, color: "var(--color-gray-300)", size: 0.374 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "triangle", filled: true, color: "var(--color-gray-300)", rotate: 90, size: 0.374 },
+            { shape: "teardrop", filled: true, color: "var(--color-gray-300)", rotate: 90, size: 0.374 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "triangle", filled: true, color: "var(--color-gray-300)", rotate: 180, size: 0.374 },
+            { shape: "teardrop", filled: true, color: "var(--color-gray-300)", rotate: 180, size: 0.374 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "triangle", filled: true, size: 0.374 },
+            { shape: "teardrop", filled: true, size: 0.374 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "triangle", filled: true, rotate: 90, size: 0.374 },
+            { shape: "teardrop", filled: true, rotate: 90, size: 0.374 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "triangle", filled: true, rotate: 180, size: 0.374 },
+            { shape: "teardrop", filled: true, rotate: 180, size: 0.374 },
+          ],
+        },
+      ],
+      options: [
+        // wp_copy
+        { id: "A", fig: { shapes: [{ shape: "triangle", size: 0.374 }, { shape: "teardrop", size: 0.374 }] } },
+        // ic_flip
+        { id: "B", fig: {
+          shapes: [
+            { shape: "triangle", filled: true, rotate: 270, size: 0.374 },
+            { shape: "teardrop", filled: true, rotate: 270, size: 0.374 },
+          ],
+        } },
+        // correct
+        { id: "C", fig: {
+          shapes: [
+            { shape: "triangle", filled: true, rotate: 180, size: 0.374 },
+            { shape: "teardrop", filled: true, rotate: 180, size: 0.374 },
+          ],
+        } },
+        // r_left
+        { id: "D", fig: {
+          shapes: [
+            { shape: "triangle", filled: true, rotate: 90, size: 0.374 },
+            { shape: "teardrop", filled: true, rotate: 90, size: 0.374 },
+          ],
+        } },
+      ],
+      answer: "C",
+
+/* ===== g6-m1 — 2 rule(s): rows rotate, columns size; key A (A) ===== */
+      cells: [
+        { shapes: [{ shape: "teardrop", size: 0.8 }] },
+        { shapes: [{ shape: "teardrop", rotate: 45, size: 0.8 }] },
+        { shapes: [{ shape: "teardrop", rotate: 90, size: 0.8 }] },
+        { shapes: [{ shape: "teardrop", size: 0.57 }] },
+        { shapes: [{ shape: "teardrop", rotate: 45, size: 0.57 }] },
+        { shapes: [{ shape: "teardrop", rotate: 90, size: 0.57 }] },
+        { shapes: [{ shape: "teardrop", size: 0.34 }] },
+        { shapes: [{ shape: "teardrop", rotate: 45, size: 0.34 }] },
+        { shapes: [{ shape: "teardrop", rotate: 90, size: 0.34 }] },
+      ],
+      options: [
+        // correct
+        { id: "A", fig: { shapes: [{ shape: "teardrop", rotate: 90, size: 0.34 }] } },
+        // wp_copy
+        { id: "B", fig: { shapes: [{ shape: "teardrop", size: 0.8 }] } },
+        // ic_flip
+        { id: "C", fig: { shapes: [{ shape: "teardrop", rotate: 135, size: 0.34 }] } },
+        // r_left
+        { id: "D", fig: { shapes: [{ shape: "teardrop", rotate: 45, size: 0.34 }] } },
+      ],
+      answer: "A",
+
+/* ===== g6-m2 — 3 rule(s): rows shade+size, columns rotate; key C (C) ===== */
+      cells: [
+        { shapes: [{ shape: "arrow", size: 0.8 }] },
+        { shapes: [{ shape: "arrow", filled: true, color: "var(--color-gray-300)", size: 0.57 }] },
+        { shapes: [{ shape: "arrow", filled: true, size: 0.34 }] },
+        { shapes: [{ shape: "arrow", rotate: 90, size: 0.8 }] },
+        {
+          shapes: [
+            { shape: "arrow", filled: true, color: "var(--color-gray-300)", rotate: 90, size: 0.57 },
+          ],
+        },
+        { shapes: [{ shape: "arrow", filled: true, rotate: 90, size: 0.34 }] },
+        { shapes: [{ shape: "arrow", rotate: 180, size: 0.8 }] },
+        {
+          shapes: [
+            { shape: "arrow", filled: true, color: "var(--color-gray-300)", rotate: 180, size: 0.57 },
+          ],
+        },
+        { shapes: [{ shape: "arrow", filled: true, rotate: 180, size: 0.34 }] },
+      ],
+      options: [
+        // wp_copy
+        { id: "A", fig: { shapes: [{ shape: "arrow", size: 0.8 }] } },
+        // ic_flip
+        { id: "B", fig: { shapes: [{ shape: "arrow", filled: true, rotate: 270, size: 0.34 }] } },
+        // correct
+        { id: "C", fig: { shapes: [{ shape: "arrow", filled: true, rotate: 180, size: 0.34 }] } },
+        // r_left
+        { id: "D", fig: {
+          shapes: [
+            { shape: "arrow", filled: true, color: "var(--color-gray-300)", rotate: 180, size: 0.57 },
+          ],
+        } },
+      ],
+      answer: "C",
+
+/* ===== g6-m3 — 3 rule(s): rows rotate, columns shade+size; key D (D) ===== */
+      cells: [
+        { shapes: [{ shape: "teardrop", size: 0.44 }, { shape: "heart", size: 0.44 }] },
+        {
+          shapes: [
+            { shape: "teardrop", rotate: 90, size: 0.44 },
+            { shape: "heart", rotate: 90, size: 0.44 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "teardrop", rotate: 180, size: 0.44 },
+            { shape: "heart", rotate: 180, size: 0.44 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "teardrop", filled: true, color: "var(--color-gray-300)", size: 0.34 },
+            { shape: "heart", filled: true, color: "var(--color-gray-300)", size: 0.34 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "teardrop", filled: true, color: "var(--color-gray-300)", rotate: 90, size: 0.34 },
+            { shape: "heart", filled: true, color: "var(--color-gray-300)", rotate: 90, size: 0.34 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "teardrop", filled: true, color: "var(--color-gray-300)", rotate: 180, size: 0.34 },
+            { shape: "heart", filled: true, color: "var(--color-gray-300)", rotate: 180, size: 0.34 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "teardrop", filled: true, size: 0.24 },
+            { shape: "heart", filled: true, size: 0.24 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "teardrop", filled: true, rotate: 90, size: 0.24 },
+            { shape: "heart", filled: true, rotate: 90, size: 0.24 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "teardrop", filled: true, rotate: 180, size: 0.24 },
+            { shape: "heart", filled: true, rotate: 180, size: 0.24 },
+          ],
+        },
+      ],
+      options: [
+        // wp_copy
+        { id: "A", fig: { shapes: [{ shape: "teardrop", size: 0.44 }, { shape: "heart", size: 0.44 }] } },
+        // ic_flip
+        { id: "B", fig: {
+          shapes: [
+            { shape: "teardrop", filled: true, rotate: 270, size: 0.24 },
+            { shape: "heart", filled: true, rotate: 270, size: 0.24 },
+          ],
+        } },
+        // r_left
+        { id: "C", fig: {
+          shapes: [
+            { shape: "teardrop", filled: true, rotate: 90, size: 0.24 },
+            { shape: "heart", filled: true, rotate: 90, size: 0.24 },
+          ],
+        } },
+        // correct
+        { id: "D", fig: {
+          shapes: [
+            { shape: "teardrop", filled: true, rotate: 180, size: 0.24 },
+            { shape: "heart", filled: true, rotate: 180, size: 0.24 },
+          ],
+        } },
+      ],
+      answer: "D",
+
+/* ===== g6-m4 — 2 rule(s): rows rotate, columns shade; key B (B) ===== */
+      cells: [
+        { shapes: [{ shape: "heart", size: 0.68 }] },
+        { shapes: [{ shape: "heart", rotate: 45, size: 0.68 }] },
+        { shapes: [{ shape: "heart", rotate: 90, size: 0.68 }] },
+        { shapes: [{ shape: "heart", filled: true, color: "var(--color-gray-300)", size: 0.68 }] },
+        {
+          shapes: [
+            { shape: "heart", filled: true, color: "var(--color-gray-300)", rotate: 45, size: 0.68 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "heart", filled: true, color: "var(--color-gray-300)", rotate: 90, size: 0.68 },
+          ],
+        },
+        { shapes: [{ shape: "heart", filled: true, size: 0.68 }] },
+        { shapes: [{ shape: "heart", filled: true, rotate: 45, size: 0.68 }] },
+        { shapes: [{ shape: "heart", filled: true, rotate: 90, size: 0.68 }] },
+      ],
+      options: [
+        // wp_copy
+        { id: "A", fig: { shapes: [{ shape: "heart", size: 0.68 }] } },
+        // correct
+        { id: "B", fig: { shapes: [{ shape: "heart", filled: true, rotate: 90, size: 0.68 }] } },
+        // ic_flip
+        { id: "C", fig: { shapes: [{ shape: "heart", filled: true, rotate: 135, size: 0.68 }] } },
+        // r_left
+        { id: "D", fig: { shapes: [{ shape: "heart", filled: true, rotate: 45, size: 0.68 }] } },
+      ],
+      answer: "B",
+
+/* ===== g6-m5 — 3 rule(s): rows size+rotate, columns shade; key A (A) ===== */
+      cells: [
+        { shapes: [{ shape: "triangle", size: 0.44 }, { shape: "arrow", size: 0.44 }] },
+        {
+          shapes: [
+            { shape: "triangle", rotate: 90, size: 0.34 },
+            { shape: "arrow", rotate: 90, size: 0.34 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "triangle", rotate: 180, size: 0.24 },
+            { shape: "arrow", rotate: 180, size: 0.24 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "triangle", filled: true, color: "var(--color-gray-300)", size: 0.44 },
+            { shape: "arrow", filled: true, color: "var(--color-gray-300)", size: 0.44 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "triangle", filled: true, color: "var(--color-gray-300)", rotate: 90, size: 0.34 },
+            { shape: "arrow", filled: true, color: "var(--color-gray-300)", rotate: 90, size: 0.34 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "triangle", filled: true, color: "var(--color-gray-300)", rotate: 180, size: 0.24 },
+            { shape: "arrow", filled: true, color: "var(--color-gray-300)", rotate: 180, size: 0.24 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "triangle", filled: true, size: 0.44 },
+            { shape: "arrow", filled: true, size: 0.44 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "triangle", filled: true, rotate: 90, size: 0.34 },
+            { shape: "arrow", filled: true, rotate: 90, size: 0.34 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "triangle", filled: true, rotate: 180, size: 0.24 },
+            { shape: "arrow", filled: true, rotate: 180, size: 0.24 },
+          ],
+        },
+      ],
+      options: [
+        // correct
+        { id: "A", fig: {
+          shapes: [
+            { shape: "triangle", filled: true, rotate: 180, size: 0.24 },
+            { shape: "arrow", filled: true, rotate: 180, size: 0.24 },
+          ],
+        } },
+        // wp_copy
+        { id: "B", fig: { shapes: [{ shape: "triangle", size: 0.44 }, { shape: "arrow", size: 0.44 }] } },
+        // ic_flip
+        { id: "C", fig: {
+          shapes: [
+            { shape: "triangle", filled: true, rotate: 270, size: 0.24 },
+            { shape: "arrow", filled: true, rotate: 270, size: 0.24 },
+          ],
+        } },
+        // r_left
+        { id: "D", fig: {
+          shapes: [
+            { shape: "triangle", filled: true, rotate: 90, size: 0.34 },
+            { shape: "arrow", filled: true, rotate: 90, size: 0.34 },
+          ],
+        } },
+      ],
+      answer: "A",
+
+/* ===== g78-m1 — 3 rule(s): rows shade+size, columns rotate; key B (B) ===== */
+      cells: [
+        { shapes: [{ shape: "heart", size: 0.8 }] },
+        { shapes: [{ shape: "heart", filled: true, color: "var(--color-gray-300)", size: 0.57 }] },
+        { shapes: [{ shape: "heart", filled: true, size: 0.34 }] },
+        { shapes: [{ shape: "heart", rotate: 90, size: 0.8 }] },
+        {
+          shapes: [
+            { shape: "heart", filled: true, color: "var(--color-gray-300)", rotate: 90, size: 0.57 },
+          ],
+        },
+        { shapes: [{ shape: "heart", filled: true, rotate: 90, size: 0.34 }] },
+        { shapes: [{ shape: "heart", rotate: 180, size: 0.8 }] },
+        {
+          shapes: [
+            { shape: "heart", filled: true, color: "var(--color-gray-300)", rotate: 180, size: 0.57 },
+          ],
+        },
+        { shapes: [{ shape: "heart", filled: true, rotate: 180, size: 0.34 }] },
+      ],
+      options: [
+        // wp_copy
+        { id: "A", fig: { shapes: [{ shape: "heart", size: 0.8 }] } },
+        // correct
+        { id: "B", fig: { shapes: [{ shape: "heart", filled: true, rotate: 180, size: 0.34 }] } },
+        // ic_flip
+        { id: "C", fig: { shapes: [{ shape: "heart", filled: true, rotate: 270, size: 0.34 }] } },
+        // r_left
+        { id: "D", fig: {
+          shapes: [
+            { shape: "heart", filled: true, color: "var(--color-gray-300)", rotate: 180, size: 0.57 },
+          ],
+        } },
+      ],
+      answer: "B",
+
+/* ===== g78-m2 — 1 rule(s): rows XOR, columns identity; key D (D) ===== */
+      cells: [
+        {
+          shapes: [
+            { shape: "circle", size: 0.357, x: 0.29, y: 0.29 },
+            { shape: "square", size: 0.357, x: 0.71, y: 0.29 },
+            { shape: "triangle", size: 0.357, x: 0.29, y: 0.71 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "circle", size: 0.357, x: 0.29, y: 0.29 },
+            { shape: "triangle", size: 0.357, x: 0.29, y: 0.71 },
+            { shape: "star", size: 0.357, x: 0.71, y: 0.71 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "square", size: 0.357, x: 0.71, y: 0.29 },
+            { shape: "star", size: 0.357, x: 0.71, y: 0.71 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "circle", size: 0.357, x: 0.29, y: 0.29 },
+            { shape: "square", size: 0.357, x: 0.71, y: 0.29 },
+            { shape: "triangle", size: 0.357, x: 0.29, y: 0.71 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "square", size: 0.357, x: 0.71, y: 0.29 },
+            { shape: "triangle", size: 0.357, x: 0.29, y: 0.71 },
+            { shape: "star", size: 0.357, x: 0.71, y: 0.71 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "circle", size: 0.357, x: 0.29, y: 0.29 },
+            { shape: "star", size: 0.357, x: 0.71, y: 0.71 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "circle", size: 0.357, x: 0.29, y: 0.29 },
+            { shape: "square", size: 0.357, x: 0.71, y: 0.29 },
+            { shape: "star", size: 0.357, x: 0.71, y: 0.71 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "circle", size: 0.357, x: 0.29, y: 0.29 },
+            { shape: "triangle", size: 0.357, x: 0.29, y: 0.71 },
+            { shape: "star", size: 0.357, x: 0.71, y: 0.71 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "square", size: 0.357, x: 0.71, y: 0.29 },
+            { shape: "triangle", size: 0.357, x: 0.29, y: 0.71 },
+          ],
+        },
+      ],
+      options: [
+        // wp-union
+        { id: "A", fig: {
+          shapes: [
+            { shape: "circle", size: 0.357, x: 0.29, y: 0.29 },
+            { shape: "square", size: 0.357, x: 0.71, y: 0.29 },
+            { shape: "triangle", size: 0.357, x: 0.29, y: 0.71 },
+            { shape: "star", size: 0.357, x: 0.71, y: 0.71 },
+          ],
+        } },
+        // ic-dropped
+        { id: "B", fig: { shapes: [{ shape: "square", size: 0.357, x: 0.71, y: 0.29 }] } },
+        // r_left
+        { id: "C", fig: {
+          shapes: [
+            { shape: "circle", size: 0.357, x: 0.29, y: 0.29 },
+            { shape: "triangle", size: 0.357, x: 0.29, y: 0.71 },
+            { shape: "star", size: 0.357, x: 0.71, y: 0.71 },
+          ],
+        } },
+        // correct
+        { id: "D", fig: {
+          shapes: [
+            { shape: "square", size: 0.357, x: 0.71, y: 0.29 },
+            { shape: "triangle", size: 0.357, x: 0.29, y: 0.71 },
+          ],
+        } },
+      ],
+      answer: "D",
+
+/* ===== g78-m3 — 3 rule(s): rows rotate+size, columns shade; key C (C) ===== */
+      cells: [
+        { shapes: [{ shape: "arrow", size: 0.44 }, { shape: "teardrop", size: 0.44 }] },
+        {
+          shapes: [
+            { shape: "arrow", rotate: 45, size: 0.34 },
+            { shape: "teardrop", rotate: 45, size: 0.34 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "arrow", rotate: 90, size: 0.24 },
+            { shape: "teardrop", rotate: 90, size: 0.24 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "arrow", filled: true, color: "var(--color-gray-300)", size: 0.44 },
+            { shape: "teardrop", filled: true, color: "var(--color-gray-300)", size: 0.44 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "arrow", filled: true, color: "var(--color-gray-300)", rotate: 45, size: 0.34 },
+            { shape: "teardrop", filled: true, color: "var(--color-gray-300)", rotate: 45, size: 0.34 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "arrow", filled: true, color: "var(--color-gray-300)", rotate: 90, size: 0.24 },
+            { shape: "teardrop", filled: true, color: "var(--color-gray-300)", rotate: 90, size: 0.24 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "arrow", filled: true, size: 0.44 },
+            { shape: "teardrop", filled: true, size: 0.44 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "arrow", filled: true, rotate: 45, size: 0.34 },
+            { shape: "teardrop", filled: true, rotate: 45, size: 0.34 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "arrow", filled: true, rotate: 90, size: 0.24 },
+            { shape: "teardrop", filled: true, rotate: 90, size: 0.24 },
+          ],
+        },
+      ],
+      options: [
+        // wp_copy
+        { id: "A", fig: { shapes: [{ shape: "arrow", size: 0.44 }, { shape: "teardrop", size: 0.44 }] } },
+        // ic_flip
+        { id: "B", fig: {
+          shapes: [
+            { shape: "arrow", filled: true, rotate: 135, size: 0.24 },
+            { shape: "teardrop", filled: true, rotate: 135, size: 0.24 },
+          ],
+        } },
+        // correct
+        { id: "C", fig: {
+          shapes: [
+            { shape: "arrow", filled: true, rotate: 90, size: 0.24 },
+            { shape: "teardrop", filled: true, rotate: 90, size: 0.24 },
+          ],
+        } },
+        // r_left
+        { id: "D", fig: {
+          shapes: [
+            { shape: "arrow", filled: true, rotate: 45, size: 0.34 },
+            { shape: "teardrop", filled: true, rotate: 45, size: 0.34 },
+          ],
+        } },
+      ],
+      answer: "C",
+
+/* ===== g78-m4 — 1 rule(s): rows AND, columns identity; key A (A) ===== */
+      cells: [
+        {
+          shapes: [
+            { shape: "heart", size: 0.357, x: 0.29, y: 0.29 },
+            { shape: "cross", size: 0.357, x: 0.71, y: 0.29 },
+            { shape: "diamond", size: 0.357, x: 0.29, y: 0.71 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "heart", size: 0.357, x: 0.29, y: 0.29 },
+            { shape: "diamond", size: 0.357, x: 0.29, y: 0.71 },
+            { shape: "lightning", size: 0.357, x: 0.71, y: 0.71 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "heart", size: 0.357, x: 0.29, y: 0.29 },
+            { shape: "diamond", size: 0.357, x: 0.29, y: 0.71 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "heart", size: 0.357, x: 0.29, y: 0.29 },
+            { shape: "cross", size: 0.357, x: 0.71, y: 0.29 },
+            { shape: "diamond", size: 0.357, x: 0.29, y: 0.71 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "cross", size: 0.357, x: 0.71, y: 0.29 },
+            { shape: "diamond", size: 0.357, x: 0.29, y: 0.71 },
+            { shape: "lightning", size: 0.357, x: 0.71, y: 0.71 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "cross", size: 0.357, x: 0.71, y: 0.29 },
+            { shape: "diamond", size: 0.357, x: 0.29, y: 0.71 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "heart", size: 0.357, x: 0.29, y: 0.29 },
+            { shape: "cross", size: 0.357, x: 0.71, y: 0.29 },
+            { shape: "lightning", size: 0.357, x: 0.71, y: 0.71 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "heart", size: 0.357, x: 0.29, y: 0.29 },
+            { shape: "diamond", size: 0.357, x: 0.29, y: 0.71 },
+            { shape: "lightning", size: 0.357, x: 0.71, y: 0.71 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "heart", size: 0.357, x: 0.29, y: 0.29 },
+            { shape: "lightning", size: 0.357, x: 0.71, y: 0.71 },
+          ],
+        },
+      ],
+      options: [
+        // correct
+        { id: "A", fig: {
+          shapes: [
+            { shape: "heart", size: 0.357, x: 0.29, y: 0.29 },
+            { shape: "lightning", size: 0.357, x: 0.71, y: 0.71 },
+          ],
+        } },
+        // wp-union
+        { id: "B", fig: {
+          shapes: [
+            { shape: "heart", size: 0.357, x: 0.29, y: 0.29 },
+            { shape: "cross", size: 0.357, x: 0.71, y: 0.29 },
+            { shape: "diamond", size: 0.357, x: 0.29, y: 0.71 },
+            { shape: "lightning", size: 0.357, x: 0.71, y: 0.71 },
+          ],
+        } },
+        // ic-dropped
+        { id: "C", fig: { shapes: [{ shape: "heart", size: 0.357, x: 0.29, y: 0.29 }] } },
+        // r_left
+        { id: "D", fig: {
+          shapes: [
+            { shape: "heart", size: 0.357, x: 0.29, y: 0.29 },
+            { shape: "diamond", size: 0.357, x: 0.29, y: 0.71 },
+            { shape: "lightning", size: 0.357, x: 0.71, y: 0.71 },
+          ],
+        } },
+      ],
+      answer: "A",
+
+/* ===== g78-m5 — 3 rule(s): rows shade+rotate, columns size; key D (D) ===== */
+      cells: [
+        { shapes: [{ shape: "teardrop", size: 0.8 }] },
+        {
+          shapes: [
+            { shape: "teardrop", filled: true, color: "var(--color-gray-300)", rotate: 45, size: 0.8 },
+          ],
+        },
+        { shapes: [{ shape: "teardrop", filled: true, rotate: 90, size: 0.8 }] },
+        { shapes: [{ shape: "teardrop", size: 0.57 }] },
+        {
+          shapes: [
+            { shape: "teardrop", filled: true, color: "var(--color-gray-300)", rotate: 45, size: 0.57 },
+          ],
+        },
+        { shapes: [{ shape: "teardrop", filled: true, rotate: 90, size: 0.57 }] },
+        { shapes: [{ shape: "teardrop", size: 0.34 }] },
+        {
+          shapes: [
+            { shape: "teardrop", filled: true, color: "var(--color-gray-300)", rotate: 45, size: 0.34 },
+          ],
+        },
+        { shapes: [{ shape: "teardrop", filled: true, rotate: 90, size: 0.34 }] },
+      ],
+      options: [
+        // wp_copy
+        { id: "A", fig: { shapes: [{ shape: "teardrop", size: 0.8 }] } },
+        // ic_flip
+        { id: "B", fig: { shapes: [{ shape: "teardrop", filled: true, rotate: 135, size: 0.34 }] } },
+        // r_left
+        { id: "C", fig: {
+          shapes: [
+            { shape: "teardrop", filled: true, color: "var(--color-gray-300)", rotate: 45, size: 0.34 },
+          ],
+        } },
+        // correct
+        { id: "D", fig: { shapes: [{ shape: "teardrop", filled: true, rotate: 90, size: 0.34 }] } },
+      ],
+      answer: "D",
+
+/* ===== a-m1 — 2 rule(s): rows rotate, columns shade; key B (B) ===== */
+      cells: [
+        { shapes: [{ shape: "arrow", size: 0.374 }, { shape: "teardrop", size: 0.374 }] },
+        {
+          shapes: [
+            { shape: "arrow", rotate: 90, size: 0.374 },
+            { shape: "teardrop", rotate: 90, size: 0.374 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "arrow", rotate: 180, size: 0.374 },
+            { shape: "teardrop", rotate: 180, size: 0.374 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "arrow", filled: true, color: "var(--color-gray-300)", size: 0.374 },
+            { shape: "teardrop", filled: true, color: "var(--color-gray-300)", size: 0.374 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "arrow", filled: true, color: "var(--color-gray-300)", rotate: 90, size: 0.374 },
+            { shape: "teardrop", filled: true, color: "var(--color-gray-300)", rotate: 90, size: 0.374 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "arrow", filled: true, color: "var(--color-gray-300)", rotate: 180, size: 0.374 },
+            { shape: "teardrop", filled: true, color: "var(--color-gray-300)", rotate: 180, size: 0.374 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "arrow", filled: true, size: 0.374 },
+            { shape: "teardrop", filled: true, size: 0.374 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "arrow", filled: true, rotate: 90, size: 0.374 },
+            { shape: "teardrop", filled: true, rotate: 90, size: 0.374 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "arrow", filled: true, rotate: 180, size: 0.374 },
+            { shape: "teardrop", filled: true, rotate: 180, size: 0.374 },
+          ],
+        },
+      ],
+      options: [
+        // wp_copy
+        { id: "A", fig: { shapes: [{ shape: "arrow", size: 0.374 }, { shape: "teardrop", size: 0.374 }] } },
+        // correct
+        { id: "B", fig: {
+          shapes: [
+            { shape: "arrow", filled: true, rotate: 180, size: 0.374 },
+            { shape: "teardrop", filled: true, rotate: 180, size: 0.374 },
+          ],
+        } },
+        // ic_flip
+        { id: "C", fig: {
+          shapes: [
+            { shape: "arrow", filled: true, rotate: 270, size: 0.374 },
+            { shape: "teardrop", filled: true, rotate: 270, size: 0.374 },
+          ],
+        } },
+        // r_left
+        { id: "D", fig: {
+          shapes: [
+            { shape: "arrow", filled: true, rotate: 90, size: 0.374 },
+            { shape: "teardrop", filled: true, rotate: 90, size: 0.374 },
+          ],
+        } },
+      ],
+      answer: "B",
+
+/* ===== a-m2 — 3 rule(s): rows shade+size, columns rotate; key D (D) ===== */
+      cells: [
+        { shapes: [{ shape: "teardrop", size: 0.8 }] },
+        {
+          shapes: [
+            { shape: "teardrop", filled: true, color: "var(--color-gray-300)", size: 0.57 },
+          ],
+        },
+        { shapes: [{ shape: "teardrop", filled: true, size: 0.34 }] },
+        { shapes: [{ shape: "teardrop", rotate: 45, size: 0.8 }] },
+        {
+          shapes: [
+            { shape: "teardrop", filled: true, color: "var(--color-gray-300)", rotate: 45, size: 0.57 },
+          ],
+        },
+        { shapes: [{ shape: "teardrop", filled: true, rotate: 45, size: 0.34 }] },
+        { shapes: [{ shape: "teardrop", rotate: 90, size: 0.8 }] },
+        {
+          shapes: [
+            { shape: "teardrop", filled: true, color: "var(--color-gray-300)", rotate: 90, size: 0.57 },
+          ],
+        },
+        { shapes: [{ shape: "teardrop", filled: true, rotate: 90, size: 0.34 }] },
+      ],
+      options: [
+        // wp_copy
+        { id: "A", fig: { shapes: [{ shape: "teardrop", size: 0.8 }] } },
+        // ic_flip
+        { id: "B", fig: { shapes: [{ shape: "teardrop", filled: true, rotate: 135, size: 0.34 }] } },
+        // r_left
+        { id: "C", fig: {
+          shapes: [
+            { shape: "teardrop", filled: true, color: "var(--color-gray-300)", rotate: 90, size: 0.57 },
+          ],
+        } },
+        // correct
+        { id: "D", fig: { shapes: [{ shape: "teardrop", filled: true, rotate: 90, size: 0.34 }] } },
+      ],
+      answer: "D",
+
+/* ===== a-m3 — 1 rule(s): rows XOR, columns identity; key A (A) ===== */
+      cells: [
+        {
+          shapes: [
+            { shape: "crescent", size: 0.357, x: 0.29, y: 0.29 },
+            { shape: "diamond", size: 0.357, x: 0.71, y: 0.29 },
+            { shape: "cross", size: 0.357, x: 0.29, y: 0.71 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "crescent", size: 0.357, x: 0.29, y: 0.29 },
+            { shape: "cross", size: 0.357, x: 0.29, y: 0.71 },
+            { shape: "triangle", size: 0.357, x: 0.71, y: 0.71 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "diamond", size: 0.357, x: 0.71, y: 0.29 },
+            { shape: "triangle", size: 0.357, x: 0.71, y: 0.71 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "crescent", size: 0.357, x: 0.29, y: 0.29 },
+            { shape: "diamond", size: 0.357, x: 0.71, y: 0.29 },
+            { shape: "cross", size: 0.357, x: 0.29, y: 0.71 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "diamond", size: 0.357, x: 0.71, y: 0.29 },
+            { shape: "cross", size: 0.357, x: 0.29, y: 0.71 },
+            { shape: "triangle", size: 0.357, x: 0.71, y: 0.71 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "crescent", size: 0.357, x: 0.29, y: 0.29 },
+            { shape: "triangle", size: 0.357, x: 0.71, y: 0.71 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "crescent", size: 0.357, x: 0.29, y: 0.29 },
+            { shape: "diamond", size: 0.357, x: 0.71, y: 0.29 },
+            { shape: "triangle", size: 0.357, x: 0.71, y: 0.71 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "crescent", size: 0.357, x: 0.29, y: 0.29 },
+            { shape: "cross", size: 0.357, x: 0.29, y: 0.71 },
+            { shape: "triangle", size: 0.357, x: 0.71, y: 0.71 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "diamond", size: 0.357, x: 0.71, y: 0.29 },
+            { shape: "cross", size: 0.357, x: 0.29, y: 0.71 },
+          ],
+        },
+      ],
+      options: [
+        // correct
+        { id: "A", fig: {
+          shapes: [
+            { shape: "diamond", size: 0.357, x: 0.71, y: 0.29 },
+            { shape: "cross", size: 0.357, x: 0.29, y: 0.71 },
+          ],
+        } },
+        // wp-union
+        { id: "B", fig: {
+          shapes: [
+            { shape: "crescent", size: 0.357, x: 0.29, y: 0.29 },
+            { shape: "diamond", size: 0.357, x: 0.71, y: 0.29 },
+            { shape: "cross", size: 0.357, x: 0.29, y: 0.71 },
+            { shape: "triangle", size: 0.357, x: 0.71, y: 0.71 },
+          ],
+        } },
+        // ic-dropped
+        { id: "C", fig: { shapes: [{ shape: "diamond", size: 0.357, x: 0.71, y: 0.29 }] } },
+        // r_left
+        { id: "D", fig: {
+          shapes: [
+            { shape: "crescent", size: 0.357, x: 0.29, y: 0.29 },
+            { shape: "cross", size: 0.357, x: 0.29, y: 0.71 },
+            { shape: "triangle", size: 0.357, x: 0.71, y: 0.71 },
+          ],
+        } },
+      ],
+      answer: "A",

@@ -14,6 +14,7 @@
 
 import { useEffect, useState } from "react";
 
+import { ItemReview } from "./item-review";
 import type { FlowDevApi } from "../test-flow";
 import { STEP_ORDER } from "../test-flow";
 import { setForceSendFailure } from "@/lib/test/dev-flags";
@@ -104,6 +105,7 @@ function Chip({
 
 export function DevToolsPanel({ api }: { api: FlowDevApi }) {
   const [open, setOpen] = useState(false);
+  const [review, setReview] = useState(false);
   // Mirrors the module flag in lib/test/dev-flags.ts so the chip can show its
   // state. The module is the source of truth that the email box reads.
   const [failSends, setFailSends] = useState(false);
@@ -111,9 +113,17 @@ export function DevToolsPanel({ api }: { api: FlowDevApi }) {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "d") {
+      if (!e.ctrlKey || !e.shiftKey) return;
+      const k = e.key.toLowerCase();
+      if (k === "d") {
         e.preventDefault();
         setOpen((o) => !o);
+      }
+      // The review surface gets its own shortcut because it is the thing most
+      // often wanted on its own, without the flow underneath it.
+      if (k === "r") {
+        e.preventDefault();
+        setReview((r) => !r);
       }
     };
     window.addEventListener("keydown", onKey);
@@ -153,6 +163,8 @@ export function DevToolsPanel({ api }: { api: FlowDevApi }) {
       ...(step === "results" ? { finishedAt: state.finishedAt ?? now } : {}),
     });
   }
+
+  if (review) return <ItemReview onClose={() => setReview(false)} />;
 
   if (!open) {
     return (
@@ -196,6 +208,16 @@ export function DevToolsPanel({ api }: { api: FlowDevApi }) {
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-3">
+        {/* Every question in every bank, rendered as a player sees it, with the
+            rule, the key and each distractor's intended error. It is the only
+            way to review the figural half, and the only way to look at the
+            difficulty gradient across the grades. */}
+        <Row label="Content">
+          <Chip wide onClick={() => setReview(true)}>
+            review all 125 items (Ctrl+Shift+R)
+          </Chip>
+        </Row>
+
         <Row label="Jump to step">
           {STEP_ORDER.map((step) => (
             <Chip key={step} onClick={() => jumpTo(step)} active={state.step === step}>
