@@ -60,7 +60,13 @@ export type VerdictId =
   | "mostly-smart-fella"
   | "borderline"
   | "mostly-fart-smella"
-  | "certified-fart-smella";
+  | "certified-fart-smella"
+  /**
+   * Not a band. The placeholder the gated screen carries so that the object it
+   * renders has no verdict in it at all — see `maskedResult`. `verdictFor`
+   * never returns this and no scored result ever holds it.
+   */
+  | "masked";
 
 /**
  * The bands, high to low. `min` is the inclusive lower bound as a percentage.
@@ -133,7 +139,15 @@ export function verdictFor(percent: number, audience: Audience): Verdict {
 export const VERDICT_BANDS = VERDICTS.map((v) => ({ id: v.id, min: v.min, title: v.title }));
 
 /**
- * A PLAUSIBLE FAKE RESULT, for the blurred state behind the email gate.
+ * The token that stands in for every hidden value on the gated screen.
+ *
+ * One string, used everywhere something is withheld, so the masking reads as a
+ * deliberate treatment rather than as several unrelated blanks.
+ */
+export const MASKED_VALUE = "???";
+
+/**
+ * A STRUCTURE-ONLY RESULT for the blurred state behind the email gate.
  *
  * ===========================================================================
  * WHY THIS EXISTS: BLUR IS COSMETIC
@@ -144,56 +158,50 @@ export const VERDICT_BANDS = VERDICTS.map((v) => ({ id: v.id, min: v.min, title:
  * weak enough to still look deliberate. Raising the radius until the numerals
  * are unrecoverable produces a smear that reads as a rendering bug.
  *
- * So the gated view never receives the real numbers at all. It renders THIS,
- * and the true result exists only on the page behind the emailed token. That
- * turns the blur from decoration into an actual gate, and it means a light,
- * pretty blur is now enough, because there is nothing legible to recover.
+ * So the gated view never receives the real numbers at all. It receives THIS,
+ * and the true result exists only on the page behind the emailed token.
  *
  * ===========================================================================
- * WHAT MAKES A GOOD DECOY
+ * WHY IT IS A MASK AND NOT A DECOY
  * ===========================================================================
- * PLAUSIBLE, not obviously fake. "XX / 15" or lorem breaks the illusion that
- * their result is sitting right there, and that illusion is the entire reason
- * anyone hands over an address. This lands a believable mid-band score with a
- * real verdict and a real-looking breakdown.
+ * This used to return a plausible fake — a believable mid-band score with a
+ * real verdict attached, on the reasoning that "??? / 15" would break the
+ * illusion that the result was sitting right there.
  *
- * STRUCTURALLY IDENTICAL, so the reveal does not jump. Same items in the same
- * order, same tiers, same domain rows, same number of digits in the score as
- * the maximum. What it cannot match exactly is the per-question explanation
- * lines, which only render under a wrong answer and therefore depend on which
- * ones were actually wrong; that part of the list sits well below the gated
- * view's height cap, so it is never on screen to compare.
+ * That was a bad trade. It is a small deception, and it is one the person
+ * catches: they read "10 / 15" through the blur, open the email, and find 3.
+ * Nothing about that reads as a privacy measure — it reads as a bug, or as a
+ * site that lies. The credibility cost lands at the exact moment the product is
+ * asking to be trusted with an address.
  *
- * DETERMINISTIC per test, so it does not reshuffle between renders.
+ * `???` says "hidden" out loud and gates the score just as completely. It is
+ * also strictly simpler: there is no fake to generate, nothing to keep
+ * plausible, and no second value that can drift away from the real one.
+ *
+ * WHAT IS NOT MASKED: the DENOMINATOR. "??? out of 15" is honest and grounded;
+ * "??? out of ???" is theatre, and the number of questions is not a secret —
+ * they just answered them. The same rule runs through the breakdown: every
+ * total is real, every count of theirs is hidden.
+ *
+ * The object below therefore carries the SHAPE of a result and none of its
+ * values: the same items in the same order, so the row count, the tier labels
+ * and the domain rows are all exactly what the real page will show, and nothing
+ * moves when it loads. `score`, `percent` and `answered` are zeroes that
+ * `ResultsView` never reads in masked mode; they exist because `TestResult`
+ * has the fields, not because anything renders them.
  */
 export function maskedResult(test: Test): TestResult {
-  // A cheap stable hash of the test id, so two tests do not show the same
-  // pattern and the same test always shows its own.
-  let seed = 0;
-  for (const ch of test.id) seed = (seed * 31 + ch.charCodeAt(0)) & 0xffff;
-
-  const items: ScoredItem[] = test.items.map((item, i) => {
-    // Roughly two in three "correct", which lands mid-band: high enough to look
-    // like a real attempt, not so high it reads as a boast.
-    const correct = (i * 7 + seed) % 3 !== 0;
-    return {
-      item,
-      picked: correct ? item.answer : (item.options.find((o) => o.id !== item.answer)?.id ?? null),
-      correct,
-    };
-  });
-
-  const score = items.filter((i) => i.correct).length;
-  const max = test.items.length;
-  const percent = max === 0 ? 0 : Math.round((score / max) * 100);
-
   return {
-    score,
-    max,
-    percent,
-    answered: max,
-    verdict: verdictFor(percent, test.audience),
-    items,
+    score: 0,
+    max: test.items.length,
+    percent: 0,
+    answered: 0,
+    verdict: {
+      id: "masked",
+      title: MASKED_VALUE,
+      subline: "Your verdict is in the email.",
+    },
+    items: test.items.map((item) => ({ item, picked: null, correct: false })),
   };
 }
 

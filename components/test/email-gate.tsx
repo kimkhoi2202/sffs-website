@@ -115,9 +115,17 @@ export interface EmailGateProps {
   source: string;
   /** The stored result's token. Null until the server has created the record. */
   token: string | null;
+  /** Throw the attempt away and go back to the start. Rendered inside the card. */
+  onRestart: () => void;
 }
 
-export function EmailGate({ audience, testId, source, token }: EmailGateProps) {
+export function EmailGate({
+  audience,
+  testId,
+  source,
+  token,
+  onRestart,
+}: EmailGateProps) {
   const inputId = useId();
   const errorId = useId();
   const copy = COPY[audience === "child" ? "child" : "adult"];
@@ -272,6 +280,7 @@ export function EmailGate({ audience, testId, source, token }: EmailGateProps) {
         </div>
 
         <Footnote />
+        <StartOver onRestart={onRestart} />
       </Card>
     );
   }
@@ -363,7 +372,35 @@ export function EmailGate({ audience, testId, source, token }: EmailGateProps) {
       </form>
 
       <Footnote />
+      <StartOver onRestart={onRestart} />
     </Card>
+  );
+}
+
+/**
+ * The way out, and deliberately the smallest thing on the card.
+ *
+ * It is inside the card because the blurred results behind it are `inert`, so
+ * the card is the only interactive surface on the screen and a control floating
+ * outside it broke that. It is a text button rather than a filled one because
+ * the card already has a green primary and a paper secondary above it, and a
+ * third button-shaped object turns a single obvious next step into a menu.
+ *
+ * It also discards a finished attempt, which is the one irreversible thing a
+ * person can do here, so it should take a deliberate tap rather than an idle
+ * one. Still a full 44px target: quiet is not the same as fiddly.
+ */
+function StartOver({ onRestart }: { onRestart: () => void }) {
+  return (
+    <div className="mt-1 flex justify-center">
+      <button
+        type="button"
+        onClick={onRestart}
+        className="min-h-11 cursor-pointer px-2 text-center text-xs font-bold uppercase tracking-wide text-ink/45 underline decoration-2 underline-offset-2 transition-colors hover:text-ink/70"
+      >
+        Start over
+      </button>
+    </div>
   );
 }
 

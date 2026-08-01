@@ -30,7 +30,7 @@
  * the domains, and a joke.
  */
 import { ShareToChild } from "./share-to-child";
-import type { TestResult } from "@/lib/test/scoring";
+import { MASKED_VALUE, type TestResult } from "@/lib/test/scoring";
 import type { Domain, Test } from "@/lib/test/types";
 import { cn } from "@/lib/utils";
 
@@ -47,11 +47,25 @@ export function ResultsView({
   test,
   result,
   timedOut,
+  masked,
   className,
 }: {
   test: Test;
   result: TestResult;
   timedOut: boolean;
+  /**
+   * WITHHOLD EVERY VALUE THE PLAYER EARNED, and show that it is being withheld.
+   *
+   * Set only by the gated screen. In this mode nothing reads `result.score`,
+   * `result.percent`, `result.verdict`, `result.answered` or any item's
+   * `correct` flag — the caller does not have them (see `maskedResult`), and
+   * the markup below does not go looking.
+   *
+   * Every total STAYS REAL and every element keeps its box, so the page holds
+   * its exact shape and nothing jumps when the unmasked version loads from the
+   * emailed link.
+   */
+  masked?: boolean;
   className?: string;
 }) {
   const byDomain = DOMAIN_ORDER.map((d) => {
@@ -67,7 +81,10 @@ export function ResultsView({
           {timedOut ? "Time ran out" : "Your score"}
         </span>
         <p className="font-display text-[clamp(3.5rem,18vw,6rem)] leading-[0.85] tracking-[-0.02em]">
-          {result.score}
+          {/* The numerator is the thing being withheld. The denominator is not
+              a secret and keeping it real is what stops the mask reading as an
+              error state. */}
+          {masked ? MASKED_VALUE : result.score}
           <span className="text-ink/40">/{result.max}</span>
         </p>
         <h1 className="text-balance font-display text-[clamp(1.5rem,7vw,2.5rem)] uppercase leading-[1.02] tracking-[-0.015em]">
@@ -78,7 +95,8 @@ export function ResultsView({
         </p>
         {timedOut ? (
           <p className="text-pretty text-xs font-bold uppercase leading-snug tracking-wide text-ink/60">
-            {result.answered} of {result.max} answered before the clock stopped.
+            {masked ? MASKED_VALUE : result.answered} of {result.max} answered before the
+            clock stopped.
           </p>
         ) : null}
       </div>
@@ -92,17 +110,20 @@ export function ResultsView({
               <span className="w-[7.5rem] shrink-0 text-[0.85rem] font-bold leading-tight text-ink">
                 {DOMAIN_LABEL[row.domain]}
               </span>
+              {/* An empty track, not a plausible fill. A bar at 60% is a
+                  number stated in pixels, and it is the same fake the score
+                  used to be. */}
               <span
                 aria-hidden="true"
                 className="h-3 flex-1 rounded-full border-[2px] border-ink bg-gray-100"
               >
                 <span
                   className="block h-full rounded-full bg-blue"
-                  style={{ width: `${(row.correct / row.total) * 100}%` }}
+                  style={{ width: masked ? "0%" : `${(row.correct / row.total) * 100}%` }}
                 />
               </span>
               <span className="w-11 shrink-0 text-right font-mono text-sm font-bold tabular-nums text-ink">
-                {row.correct}/{row.total}
+                {masked ? "?" : row.correct}/{row.total}
               </span>
             </div>
           ))}
@@ -115,31 +136,47 @@ export function ResultsView({
         <ol className="flex flex-col gap-1.5">
           {result.items.map((scored, i) => (
             <li key={scored.item.id} className="flex items-start gap-2.5 py-1">
+              {/* Masked: one neutral chip per question rather than a made-up
+                  run of ticks and crosses. Same chip, same size, same row
+                  height, so the list does not reflow on the real page. */}
               <span
                 aria-hidden="true"
                 className={cn(
                   "mt-0.5 grid size-6 shrink-0 place-items-center rounded-full border-[2.5px] border-ink text-xs font-black leading-none",
-                  scored.correct
-                    ? "bg-mint"
-                    : scored.picked === null
-                      ? "bg-gray-200"
-                      : "bg-coral",
+                  masked
+                    ? "bg-cream text-ink/50"
+                    : scored.correct
+                      ? "bg-mint"
+                      : scored.picked === null
+                        ? "bg-gray-200"
+                        : "bg-coral",
                 )}
               >
-                {scored.correct ? "\u2713" : scored.picked === null ? "\u2013" : "\u2715"}
+                {masked
+                  ? "?"
+                  : scored.correct
+                    ? "\u2713"
+                    : scored.picked === null
+                      ? "\u2013"
+                      : "\u2715"}
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block text-[0.8rem] font-extrabold uppercase leading-tight tracking-wide text-ink/60">
                   {i + 1}. {scored.item.tier}
-                  <span className="sr-only">
-                    {scored.correct
-                      ? " \u2014 correct"
-                      : scored.picked === null
-                        ? " \u2014 not answered"
-                        : " \u2014 incorrect"}
-                  </span>
+                  {masked ? null : (
+                    <span className="sr-only">
+                      {scored.correct
+                        ? " \u2014 correct"
+                        : scored.picked === null
+                          ? " \u2014 not answered"
+                          : " \u2014 incorrect"}
+                    </span>
+                  )}
                 </span>
-                {!scored.correct && scored.item.explanation ? (
+                {/* The explanation only appears under a wrong answer, so in
+                    masked mode showing it would both invent an outcome and
+                    hand over the reasoning for every question at once. */}
+                {!masked && !scored.correct && scored.item.explanation ? (
                   <span className="mt-0.5 block text-pretty text-[0.85rem] font-medium leading-snug text-ink/75">
                     {scored.item.explanation}
                   </span>

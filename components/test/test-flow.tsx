@@ -344,8 +344,9 @@ export function TestFlow() {
 
   /*
    * The real result is computed only for the analytics event fired at finish,
-   * never for the gated screen. GatedResults renders a decoy — see the note on
-   * `maskedResult` in lib/test/scoring.ts.
+   * never for the gated screen. GatedResults renders the SHAPE of the results
+   * with every earned value masked — see the note on `maskedResult` in
+   * lib/test/scoring.ts.
    */
   const onResults = state.step === "results" && test !== null;
 
