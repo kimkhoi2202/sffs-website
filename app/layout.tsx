@@ -3,7 +3,6 @@ import { DM_Sans, Anton, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SmoothScroll } from "@/components/quiz/smooth-scroll";
 import { MusicToggle } from "@/components/quiz/music-toggle";
-import { SiteFooter } from "@/components/sections/site-footer";
 import { PageShapes } from "@/components/quiz/page-shapes";
 import { PostHogProvider } from "@/components/analytics/posthog-provider";
 import { EngagementTracker } from "@/components/analytics/engagement-tracker";
@@ -89,9 +88,15 @@ export default function RootLayout({
           >
             Skip to content
           </a>
+          {/*
+            The SITE FOOTER IS NOT HERE. It lives in app/(site)/layout.tsx,
+            because the v3 test flow must not have it: its negative top margin
+            reaches back over the previous section and eats the bottom of a
+            one-viewport screen. Content pages get it from that group; the
+            homepage brings its own when the active version wants one.
+          */}
           <SmoothScroll>
             {children}
-            <SiteFooter />
             <MusicToggle />
           </SmoothScroll>
           {/* Page-level draggable shape field — a document-glued overlay mounted

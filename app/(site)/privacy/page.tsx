@@ -11,6 +11,13 @@ import { Card } from "@/components/ui/card";
 const LEGAL_ENTITY = "Kim Khoi Lam";
 const BUSINESS_ADDRESS = "1143 Sultana Spgs Ct, Houston, TX 77090";
 const EFFECTIVE_DATE = "July 25, 2026";
+/**
+ * Kept separate from the effective date on purpose. The policy took effect in
+ * July; this revision adds the section describing the test on this website,
+ * which children take. A page that says "last updated" and means "first
+ * published" is a page nobody can tell has changed.
+ */
+const LAST_UPDATED = "August 1, 2026";
 const SUPPORT_EMAIL = "smartfellaorfartsmella123@gmail.com";
 
 export const metadata: Metadata = {
@@ -48,7 +55,7 @@ const SECTIONS: LegalSection[] = [
         <p>
           <strong>Effective date: {EFFECTIVE_DATE}</strong>
           <br />
-          <strong>Last updated: {EFFECTIVE_DATE}</strong>
+          <strong>Last updated: {LAST_UPDATED}</strong>
         </p>
         <p>
           This Privacy Policy is provided by {LEGAL_ENTITY}, the operator of the
@@ -100,7 +107,16 @@ const SECTIONS: LegalSection[] = [
             </li>
             <li>
               The app is made for teens and adults, and it is not directed to
-              children under 13.
+              children under 13. The free test on this website is different:
+              children do take it, and we never ask a child for their own
+              contact details. See{" "}
+              <a
+                href="#the-test"
+                className="font-semibold text-ink underline decoration-2 underline-offset-2"
+              >
+                the test on this website
+              </a>
+              .
             </li>
             <li>
               You can ask us to delete your data at any time through our{" "}
@@ -132,6 +148,13 @@ const SECTIONS: LegalSection[] = [
           We do not knowingly collect personal information from children under
           13. If you believe a child under 13 has provided us personal
           information, contact us and we will delete it.
+        </p>
+        <p>
+          <strong>The free test on this website is a separate thing.</strong>{" "}
+          It is offered from Grade 3 upward, so children plainly do take it, and
+          we have designed it so that we never ask a child for their own contact
+          details. What that means in practice is set out in{" "}
+          <a href="#the-test">The test on this website</a> below.
         </p>
       </>
     ),
@@ -334,8 +357,19 @@ const SECTIONS: LegalSection[] = [
     body: (
       <>
         <p>
-          The app is not designed for or directed to children under 13, and it
-          is not enrolled in Apple&rsquo;s Kids Category.
+          <strong>The app.</strong> It is not designed for or directed to
+          children under 13, and it is not enrolled in Apple&rsquo;s Kids
+          Category.
+        </p>
+        <p>
+          <strong>The test on this website.</strong> This one is offered from
+          Grade 3 upward and children do take it. We do not ask a child to sign
+          in, we do not ask a child for their name, their age or their email
+          address, and we do not ask for anything that identifies them. To see
+          the results, the test asks for a parent or guardian&rsquo;s email
+          address, and it says so on the screen in words a child can read. The
+          full detail is in <a href="#the-test">The test on this website</a>{" "}
+          below.
         </p>
         <Card color="blue" shadow="md" padding="lg" className="not-prose">
           <ul className="list-disc space-y-2.5 pl-6 text-[1.02rem] leading-relaxed marker:text-ink">
@@ -501,12 +535,19 @@ const SECTIONS: LegalSection[] = [
           recordings to keep.
         </p>
         <p>
-          <strong>Waitlist emails.</strong>{" "}
-          This one works differently. The copy of the waitlist list in PostHog
-          is a mirror of our own database, refreshed hourly, and it keeps no
-          history: each refresh replaces the whole list rather than adding to
-          it. So unlike the analytics data above, deleting your email from our
-          database does remove it from PostHog, at the next refresh.
+          <strong>Email addresses.</strong>{" "}
+          This one works differently. The copy of the list in PostHog is a
+          mirror of our own database, refreshed hourly, and it keeps no history:
+          each refresh replaces the whole list rather than adding to it. So
+          unlike the analytics data above, deleting your email from our database
+          does remove it from PostHog, at the next refresh.
+        </p>
+        <p>
+          <strong>Test results.</strong>{" "}
+          A saved result from the test on this website is deleted twelve months
+          after the test was taken. It holds a score and the answers given, is
+          reachable only through the random link we email, and carries no email
+          address. See <a href="#the-test">The test on this website</a>.
         </p>
       </>
     ),
@@ -630,12 +671,86 @@ const SECTIONS: LegalSection[] = [
     ),
   },
   {
+    id: "the-test",
+    heading: "The test on this website",
+    body: (
+      <>
+        <p>
+          This website offers a free timed reasoning test. There is a version
+          for grown-ups and a shorter version for children, offered from Grade 3
+          upward. Children take it, usually because a parent handed them the
+          phone, so this section says plainly what happens to their information.
+          It is separate from the app described above.
+        </p>
+        <p>
+          <strong>Nothing identifies the child.</strong> There is no sign-in and
+          no account. We do not ask for a name, an age, a birthday, a school, or
+          a child&rsquo;s own email address, and there is no free-text box for
+          one to be typed into.
+        </p>
+        <Card color="mint" shadow="sm" padding="lg" className="not-prose">
+          <p className="mb-3 text-[1.02rem] font-bold leading-relaxed">
+            What we handle when someone takes the test
+          </p>
+          <ul className="list-disc space-y-2.5 pl-6 text-[1.02rem] leading-relaxed marker:text-ink">
+            <li>
+              <strong>The grade that was picked</strong>, so we know which set
+              of questions to show.
+            </li>
+            <li>
+              <strong>The answers given and the score</strong>. These are saved
+              so the results page can be reopened from the link we email. They
+              are held against a random link and are not attached to a name or
+              an email address.
+            </li>
+            <li>
+              <strong>A parent or guardian&rsquo;s email address</strong>, given
+              at the end so the results can be sent. On the children&rsquo;s
+              version the screen asks for a parent&rsquo;s address in so many
+              words. This address joins the same list as any other signup on
+              this site, tagged so we can tell which part of the site it came
+              from.
+            </li>
+            <li>
+              <strong>Anonymous usage events</strong>, which record that a test
+              was started and finished, the score, the grade band and how long
+              it took. They never carry an email address, and we deliberately do
+              not record which option was chosen on each individual question.
+            </li>
+          </ul>
+        </Card>
+        <p>
+          <strong>How long results are kept.</strong> A saved result is deleted
+          twelve months after the test was taken, and after that the emailed
+          link stops working and says so. The link is a random string that
+          reveals nothing about the result and cannot be guessed from another
+          one.
+        </p>
+        <p>
+          <strong>The email address and the result are never stored
+          together.</strong> The address goes to our signup list and the score
+          goes to the results store, and the only moment the two are in the same
+          place is inside the request that sends the email. That means a saved
+          result is not attached to a person, and it is why asking us to send
+          the results again requires typing the address in again rather than us
+          looking one up.
+        </p>
+        <p>
+          You can ask us to delete a signup address at any time through our{" "}
+          <a href="/support">support page</a>. Because a saved result holds no
+          address, tell us the link from the email if you also want that record
+          removed before its twelve months are up.
+        </p>
+      </>
+    ),
+  },
+  {
     id: "about-this-website",
     heading: "About this website (separate from the app)",
     body: (
       <>
         <p>
-          The section below is about this marketing website
+          This section and the one before it are about this website
           (smartfellaorfartsmella.com), which is separate from the app described
           above. Both the website and the app use PostHog for analytics,
           configured differently: the website&rsquo;s setup is described here,
@@ -661,14 +776,16 @@ const SECTIONS: LegalSection[] = [
               installed.
             </li>
             <li>
-              <strong>Waitlist emails.</strong>{" "}
-              If you give us your email through the waitlist form, we store it
-              in our own database and also mirror it into PostHog&rsquo;s data
-              warehouse as a separate list, so we can query signups internally.
-              That list stands on its own: it is not
-              linked to the anonymous analytics above, it is not joined to any
-              profile or to anyone&rsquo;s browsing behavior, it is not used for
-              advertising, and it is not sold.
+              <strong>Email addresses.</strong>{" "}
+              If you give us your email address, whether at the end of the test
+              or through a signup form, we store it in our own database and also
+              mirror it into PostHog&rsquo;s data warehouse as a separate list,
+              so we can query signups internally. Each address is tagged with
+              the part of the site it came from, which is how we tell those
+              routes apart. That list stands on its own: it is not linked to the
+              anonymous analytics above, it is not joined to any profile or to
+              anyone&rsquo;s browsing behavior, it is not used for advertising,
+              and it is not sold.
             </li>
             <li>
               <strong>SFFS Creator Studio (our own posting tool).</strong> We
@@ -697,7 +814,7 @@ export default function PrivacyPage() {
   return (
     <LegalPage
       title="Privacy Policy"
-      lastUpdated={EFFECTIVE_DATE}
+      lastUpdated={LAST_UPDATED}
       intro={
         <p>
           Smart Fella or Fart Smella is part brain workout and part arcade, with

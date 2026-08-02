@@ -1,72 +1,105 @@
 import type { Metadata } from "next";
 
-import { HomeSignup } from "@/components/sections/home-signup";
+import { TestFlow } from "@/components/test/test-flow";
+import { HomeV1 } from "@/components/versions/home-v1";
+import { HomeV2 } from "@/components/versions/home-v2";
+import { resolveSiteVersion, VERSION_META } from "@/lib/site-version";
 
 /*
   ============================================================================
-  THE OLD HOMEPAGE IS ARCHIVED, NOT DELETED. HERE IS HOW TO GET IT BACK.
+  THREE HOMEPAGES LIVE IN THE TREE AT ONCE. SITE_VERSION PICKS ONE.
   ============================================================================
 
-  Until 2026-07-30 this route was a long scrolling landing page: animated hero,
-  three steps, "which one are you" comparison, feature grid, testimonial
-  marquee, waitlist band, FAQ, brand closer, video showcase. It produced one
-  real signup, so it was replaced with the single-purpose email-capture screen
-  below. This is meant to be reversible.
+    v1  the original multi-section marketing site  (components/versions/home-v1)
+    v2  the single-screen waitlist page            (components/versions/home-v2)
+    v3  the Official Smart Fella Test flow         (components/test/test-flow)
 
-  The old page is preserved at BOTH of these, which point at the same commit:
+  Set SITE_VERSION in the environment; it defaults to v3. In development,
+  `?v=1` / `?v=2` / `?v=3` overrides it without a restart. The reasoning for
+  all of that, including why a bad value falls back rather than throwing, is in
+  lib/site-version.ts.
 
-    tag     homepage-archive-2026-07-30   (annotated, pushed to origin)
-    branch  archive/homepage-2026-07-30   (pushed to origin)
+  Nothing else changes with the version. /privacy, /terms, /support, /about,
+  /app-store-copy, /internal and every redirect are live in all three: they are
+  not part of a version, they are the site.
 
-  Restore it with one command, from main:
+  ----------------------------------------------------------------------------
+  ARCHIVES, for the record. Both are tags AND branches on the same commit:
 
-    git checkout homepage-archive-2026-07-30 -- app/page.tsx
+    v1  tag homepage-archive-2026-07-30  branch archive/homepage-2026-07-30
+    v2  tag homepage-archive-2026-08-01  branch archive/homepage-2026-08-01
 
-  That is the whole restore. Every section component the old page imported
-  (steps, comparison, feature-grid, testimonials, waitlist, faq,
-  video-showcase, section-divider, smart-fart-hero, quiz-nav) is still in the
-  tree untouched, so the restored file compiles as-is. Nothing else has to be
-  reverted, and /about keeps using comparison + faq either way.
+  Neither is needed to restore a version any more — all three are in the tree —
+  but they are the provenance of what v1 and v2 originally were.
+
+  ----------------------------------------------------------------------------
+  THE FOOTER. v1 and v2 render their own <SiteFooter />. v3 does not, and the
+  root layout no longer renders one for anybody: it moved to
+  app/(site)/layout.tsx, which the flow is deliberately not part of. See the
+  note in components/test/step-shell.tsx for why the flow cannot have it.
 */
 
-// Metadata is held to the SAME honesty rule as the page copy: it may say the
-// game is finished and it may say we will get you in, but it must not imply
-// that handing over an email delivers anything. No "early", no percentage, no
-// discount, no claim that a link is on its way.
-const SHARE_DESCRIPTION =
-  "The dumb little brain game that knows exactly how smart you are. The game is ready. Drop your email and we'll get you in.";
+/**
+ * Metadata follows the ACTIVE VERSION.
+ *
+ * A marketing site, a waitlist and a test are three different promises. A v3
+ * site serving v2's share card would mean every link posted to TikTok
+ * advertising a waitlist that the page no longer is — worse than having no
+ * switch at all.
+ *
+ * `generateMetadata` rather than a static export because the value is only
+ * known at request time (the env var, and the dev query override).
+ */
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ v?: string | string[] }>;
+}): Promise<Metadata> {
+  const version = resolveSiteVersion(await searchParams);
+  const { title, description } = VERSION_META[version];
 
-export const metadata: Metadata = {
-  title: { absolute: "Smart Fella or Fart Smella? The dumb little brain game" },
-  description: SHARE_DESCRIPTION,
-  // Page-level Open Graph REPLACES the root layout's object rather than merging
-  // into it, so type/siteName/url are restated here. Images are deliberately
-  // omitted so the generated app/opengraph-image card still applies.
-  openGraph: {
-    type: "website",
-    siteName: "Smart Fella or Fart Smella",
-    title: "Smart Fella or Fart Smella?",
-    description: SHARE_DESCRIPTION,
-    url: "/",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Smart Fella or Fart Smella?",
-    description: SHARE_DESCRIPTION,
-  },
-};
+  return {
+    title: { absolute: title },
+    description,
+    // Page-level Open Graph REPLACES the root layout's object rather than
+    // merging into it, so type/siteName/url are restated. Images are
+    // deliberately omitted so the generated app/opengraph-image card applies.
+    openGraph: {
+      type: "website",
+      siteName: "Smart Fella or Fart Smella",
+      title,
+      description,
+      url: "/",
+    },
+    twitter: { card: "summary_large_image", title, description },
+  };
+}
 
-export default function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ v?: string | string[] }>;
+}) {
+  const version = resolveSiteVersion(await searchParams);
+
+  if (version === "v1") return <HomeV1 />;
+  if (version === "v2") return <HomeV2 />;
+
   return (
     /*
-      `data-landing` is what components/analytics/engagement-tracker.tsx gates
-      on. It is a marker whose only job is to be a marker, so that scroll-depth
-      and section-view tracking cannot silently die the next time this page is
-      redesigned, which is exactly how it died on 2026-07-30: the tracker was
-      still keyed to the old hero's class name.
+      `data-flow` does two jobs, both of them removing blue from a page that has
+      none: globals.css keys the root's overscroll canvas off it (the canvas is
+      blue only because the footer is, and this flow has no footer), and it
+      marks the subtree as the flow for anything else that needs to know.
+
+      `data-landing` is the marker components/analytics/engagement-tracker.tsx
+      gates scroll-depth and section-view tracking on. It is a marker whose only
+      job is to be a marker, so tracking cannot silently die the next time this
+      page is redesigned — which is exactly how it died on 2026-07-30, when the
+      tracker was still keyed to a hero class name that had been deleted.
     */
-    <main id="main" data-landing className="flex-1">
-      <HomeSignup />
+    <main id="main" data-flow data-landing className="flex flex-1 flex-col">
+      <TestFlow />
     </main>
   );
 }

@@ -1,0 +1,3182 @@
+{
+  "g4-m2": {
+    "id": "g4-m2",
+    "hrules": "shade",
+    "vrules": "size",
+    "glyphs": "teardrop",
+    "rot": 1,
+    "base": {
+      "shape": "circle",
+      "size": 10,
+      "rotation": 0,
+      "shade": "none",
+      "visible": 1
+    },
+    "cells": [
+      {
+        "shape": "circle",
+        "size": 11.111111,
+        "rotation": 0,
+        "shade": "white",
+        "visible": 1
+      },
+      {
+        "shape": "circle",
+        "size": 11.111111,
+        "rotation": 0,
+        "shade": "grey",
+        "visible": 1
+      },
+      {
+        "shape": "circle",
+        "size": 11.111111,
+        "rotation": 0,
+        "shade": "black",
+        "visible": 1
+      },
+      {
+        "shape": "circle",
+        "size": 5.555556,
+        "rotation": 0,
+        "shade": "white",
+        "visible": 1
+      },
+      {
+        "shape": "circle",
+        "size": 5.555556,
+        "rotation": 0,
+        "shade": "grey",
+        "visible": 1
+      },
+      {
+        "shape": "circle",
+        "size": 5.555556,
+        "rotation": 0,
+        "shade": "black",
+        "visible": 1
+      },
+      {
+        "shape": "circle",
+        "size": 3.703704,
+        "rotation": 0,
+        "shade": "white",
+        "visible": 1
+      },
+      {
+        "shape": "circle",
+        "size": 3.703704,
+        "rotation": 0,
+        "shade": "grey",
+        "visible": 1
+      },
+      {
+        "shape": "circle",
+        "size": 3.703704,
+        "rotation": 0,
+        "shade": "black",
+        "visible": 1
+      }
+    ],
+    "responses": {
+      "correct": {
+        "shape": "circle",
+        "size": 3.703704,
+        "rotation": 0,
+        "shade": "black",
+        "visible": 1
+      },
+      "r_diag": {
+        "shape": "circle",
+        "size": 5.555556,
+        "rotation": 0,
+        "shade": "grey",
+        "visible": 1
+      },
+      "r_left": {
+        "shape": "circle",
+        "size": 3.703704,
+        "rotation": 0,
+        "shade": "grey",
+        "visible": 1
+      },
+      "r_top": {
+        "shape": "circle",
+        "size": 5.555556,
+        "rotation": 0,
+        "shade": "black",
+        "visible": 1
+      },
+      "wp_copy": {
+        "shape": "circle",
+        "size": 11.111111,
+        "rotation": 0,
+        "shade": "white",
+        "visible": 1
+      },
+      "wp_matrix": {
+        "shape": ["circle", "circle"],
+        "size": [11.111111, 3.08642],
+        "rotation": [0, 0],
+        "shade": ["white", "grey"],
+        "visible": [1, 1]
+      },
+      "difference": {
+        "shape": ["circle", "s_maxi"],
+        "size": [11.111111, 4, 8, 4, 8],
+        "rotation": [0, -3.141593, -3.141593, -3.141593, 3.141593],
+        "shade": ["white", "none"],
+        "visible": [1, 1]
+      },
+      "ic_neg": {
+        "shape": "circle",
+        "size": 3.703704,
+        "rotation": 0,
+        "shade": "white",
+        "visible": 1
+      },
+      "ic_flip": {
+        "shape": ["circle", "X"],
+        "size": [3.703704, 19.091883, 19.091883],
+        "rotation": [0, 2.356194, 3.926991],
+        "shade": ["black", "none"],
+        "visible": [1, 1]
+      },
+      "ic_size": {
+        "shape": "circle",
+        "size": 1.371742,
+        "rotation": 0,
+        "shade": "black",
+        "visible": 1
+      },
+      "ic_inc": {
+        "shape": ["circle", "X"],
+        "size": [3.703704, 19.091883, 19.091883],
+        "rotation": [0, 2.356194, 3.926991],
+        "shade": ["black", "none"],
+        "visible": [1, 1]
+      }
+    },
+    "warnings": ["Can't rotate, sorry!", "IC-Inc cannot be obtained with a single figure"]
+  },
+  "g4-m4": {
+    "id": "g4-m4",
+    "hrules": "shade",
+    "vrules": "size",
+    "glyphs": "cross",
+    "rot": 1,
+    "base": {
+      "shape": "pentagon",
+      "size": 15,
+      "rotation": 1.570796,
+      "shade": "none",
+      "visible": 1
+    },
+    "cells": [
+      {
+        "shape": "pentagon",
+        "size": 16.666667,
+        "rotation": 1.570796,
+        "shade": "white",
+        "visible": 1
+      },
+      {
+        "shape": "pentagon",
+        "size": 16.666667,
+        "rotation": 1.570796,
+        "shade": "grey",
+        "visible": 1
+      },
+      {
+        "shape": "pentagon",
+        "size": 16.666667,
+        "rotation": 1.570796,
+        "shade": "black",
+        "visible": 1
+      },
+      {
+        "shape": "pentagon",
+        "size": 8.333333,
+        "rotation": 1.570796,
+        "shade": "white",
+        "visible": 1
+      },
+      {
+        "shape": "pentagon",
+        "size": 8.333333,
+        "rotation": 1.570796,
+        "shade": "grey",
+        "visible": 1
+      },
+      {
+        "shape": "pentagon",
+        "size": 8.333333,
+        "rotation": 1.570796,
+        "shade": "black",
+        "visible": 1
+      },
+      {
+        "shape": "pentagon",
+        "size": 5.555556,
+        "rotation": 1.570796,
+        "shade": "white",
+        "visible": 1
+      },
+      {
+        "shape": "pentagon",
+        "size": 5.555556,
+        "rotation": 1.570796,
+        "shade": "grey",
+        "visible": 1
+      },
+      {
+        "shape": "pentagon",
+        "size": 5.555556,
+        "rotation": 1.570796,
+        "shade": "black",
+        "visible": 1
+      }
+    ],
+    "responses": {
+      "correct": {
+        "shape": "pentagon",
+        "size": 5.555556,
+        "rotation": 1.570796,
+        "shade": "black",
+        "visible": 1
+      },
+      "r_diag": {
+        "shape": "pentagon",
+        "size": 8.333333,
+        "rotation": 1.570796,
+        "shade": "grey",
+        "visible": 1
+      },
+      "r_left": {
+        "shape": "pentagon",
+        "size": 5.555556,
+        "rotation": 1.570796,
+        "shade": "grey",
+        "visible": 1
+      },
+      "r_top": {
+        "shape": "pentagon",
+        "size": 8.333333,
+        "rotation": 1.570796,
+        "shade": "black",
+        "visible": 1
+      },
+      "wp_copy": {
+        "shape": "pentagon",
+        "size": 16.666667,
+        "rotation": 1.570796,
+        "shade": "white",
+        "visible": 1
+      },
+      "wp_matrix": {
+        "shape": ["pentagon", "pentagon"],
+        "size": [4.62963, 16.666667],
+        "rotation": [1.570796, 3.926991],
+        "shade": ["grey", "white"],
+        "visible": [1, 1]
+      },
+      "difference": {
+        "shape": ["pentagon", "s_maxi"],
+        "size": [16.666667, 4, 8, 4, 8],
+        "rotation": [1.570796, -3.141593, -3.141593, -3.141593, 3.141593],
+        "shade": ["white", "none"],
+        "visible": [1, 1]
+      },
+      "ic_neg": {
+        "shape": "pentagon",
+        "size": 5.555556,
+        "rotation": 1.570796,
+        "shade": "white",
+        "visible": 1
+      },
+      "ic_flip": {
+        "shape": "pentagon",
+        "size": 5.555556,
+        "rotation": 2.356194,
+        "shade": "black",
+        "visible": 1
+      },
+      "ic_size": {
+        "shape": "pentagon",
+        "size": 2.057613,
+        "rotation": 1.570796,
+        "shade": "black",
+        "visible": 1
+      },
+      "ic_inc": {
+        "shape": ["pentagon", "X"],
+        "size": [5.555556, 19.091883, 19.091883],
+        "rotation": [1.570796, 2.356194, 3.926991],
+        "shade": ["black", "none"],
+        "visible": [1, 1]
+      }
+    },
+    "warnings": "IC-Inc cannot be obtained with a single figure"
+  },
+  "g5-m1": {
+    "id": "g5-m1",
+    "hrules": "rotate",
+    "vrules": "shade",
+    "glyphs": "triangle",
+    "rot": 2,
+    "base": {
+      "shape": "triangle",
+      "size": 10,
+      "rotation": 1.570796,
+      "shade": "none",
+      "visible": 1
+    },
+    "cells": [
+      {
+        "shape": "triangle",
+        "size": 10,
+        "rotation": 1.570796,
+        "shade": "white",
+        "visible": 1
+      },
+      {
+        "shape": "triangle",
+        "size": 10,
+        "rotation": 2.356194,
+        "shade": "white",
+        "visible": 1
+      },
+      {
+        "shape": "triangle",
+        "size": 10,
+        "rotation": 3.141593,
+        "shade": "white",
+        "visible": 1
+      },
+      {
+        "shape": "triangle",
+        "size": 10,
+        "rotation": 1.570796,
+        "shade": "grey",
+        "visible": 1
+      },
+      {
+        "shape": "triangle",
+        "size": 10,
+        "rotation": 2.356194,
+        "shade": "grey",
+        "visible": 1
+      },
+      {
+        "shape": "triangle",
+        "size": 10,
+        "rotation": 3.141593,
+        "shade": "grey",
+        "visible": 1
+      },
+      {
+        "shape": "triangle",
+        "size": 10,
+        "rotation": 1.570796,
+        "shade": "black",
+        "visible": 1
+      },
+      {
+        "shape": "triangle",
+        "size": 10,
+        "rotation": 2.356194,
+        "shade": "black",
+        "visible": 1
+      },
+      {
+        "shape": "triangle",
+        "size": 10,
+        "rotation": 3.141593,
+        "shade": "black",
+        "visible": 1
+      }
+    ],
+    "responses": {
+      "correct": {
+        "shape": "triangle",
+        "size": 10,
+        "rotation": 3.141593,
+        "shade": "black",
+        "visible": 1
+      },
+      "r_diag": {
+        "shape": "triangle",
+        "size": 10,
+        "rotation": 2.356194,
+        "shade": "grey",
+        "visible": 1
+      },
+      "r_left": {
+        "shape": "triangle",
+        "size": 10,
+        "rotation": 2.356194,
+        "shade": "black",
+        "visible": 1
+      },
+      "r_top": {
+        "shape": "triangle",
+        "size": 10,
+        "rotation": 3.141593,
+        "shade": "grey",
+        "visible": 1
+      },
+      "wp_copy": {
+        "shape": "triangle",
+        "size": 10,
+        "rotation": 1.570796,
+        "shade": "white",
+        "visible": 1
+      },
+      "wp_matrix": {
+        "shape": ["triangle", "triangle"],
+        "size": [5.555556, 10],
+        "rotation": [2.356194, 3.926991],
+        "shade": ["grey", "white"],
+        "visible": [1, 1]
+      },
+      "difference": {
+        "shape": ["triangle", "s_maxi"],
+        "size": [10, 4, 8, 4, 8],
+        "rotation": [1.570796, -3.141593, -3.141593, -3.141593, 3.141593],
+        "shade": ["white", "none"],
+        "visible": [1, 1]
+      },
+      "ic_neg": {
+        "shape": "triangle",
+        "size": 10,
+        "rotation": 3.141593,
+        "shade": "white",
+        "visible": 1
+      },
+      "ic_flip": {
+        "shape": "triangle",
+        "size": 10,
+        "rotation": 3.926991,
+        "shade": "black",
+        "visible": 1
+      },
+      "ic_size": {
+        "shape": "triangle",
+        "size": 3.703704,
+        "rotation": 3.141593,
+        "shade": "black",
+        "visible": 1
+      },
+      "ic_inc": {
+        "shape": ["triangle", "X"],
+        "size": [10, 19.091883, 19.091883],
+        "rotation": [3.141593, 2.356194, 3.926991],
+        "shade": ["black", "none"],
+        "visible": [1, 1]
+      }
+    },
+    "warnings": "IC-Inc cannot be obtained with a single figure"
+  },
+  "g5-m2": {
+    "id": "g5-m2",
+    "hrules": "size",
+    "vrules": "rotate",
+    "glyphs": "arrow",
+    "rot": 2,
+    "base": {
+      "shape": "pentagon",
+      "size": 15,
+      "rotation": 1.570796,
+      "shade": "none",
+      "visible": 1
+    },
+    "cells": [
+      {
+        "shape": "pentagon",
+        "size": 16.666667,
+        "rotation": 1.570796,
+        "shade": "none",
+        "visible": 1
+      },
+      {
+        "shape": "pentagon",
+        "size": 8.333333,
+        "rotation": 1.570796,
+        "shade": "none",
+        "visible": 1
+      },
+      {
+        "shape": "pentagon",
+        "size": 5.555556,
+        "rotation": 1.570796,
+        "shade": "none",
+        "visible": 1
+      },
+      {
+        "shape": "pentagon",
+        "size": 16.666667,
+        "rotation": 2.356194,
+        "shade": "none",
+        "visible": 1
+      },
+      {
+        "shape": "pentagon",
+        "size": 8.333333,
+        "rotation": 2.356194,
+        "shade": "none",
+        "visible": 1
+      },
+      {
+        "shape": "pentagon",
+        "size": 5.555556,
+        "rotation": 2.356194,
+        "shade": "none",
+        "visible": 1
+      },
+      {
+        "shape": "pentagon",
+        "size": 16.666667,
+        "rotation": 3.141593,
+        "shade": "none",
+        "visible": 1
+      },
+      {
+        "shape": "pentagon",
+        "size": 8.333333,
+        "rotation": 3.141593,
+        "shade": "none",
+        "visible": 1
+      },
+      {
+        "shape": "pentagon",
+        "size": 5.555556,
+        "rotation": 3.141593,
+        "shade": "none",
+        "visible": 1
+      }
+    ],
+    "responses": {
+      "correct": {
+        "shape": "pentagon",
+        "size": 5.555556,
+        "rotation": 3.141593,
+        "shade": "none",
+        "visible": 1
+      },
+      "r_diag": {
+        "shape": "pentagon",
+        "size": 8.333333,
+        "rotation": 2.356194,
+        "shade": "none",
+        "visible": 1
+      },
+      "r_left": {
+        "shape": "pentagon",
+        "size": 8.333333,
+        "rotation": 3.141593,
+        "shade": "none",
+        "visible": 1
+      },
+      "r_top": {
+        "shape": "pentagon",
+        "size": 5.555556,
+        "rotation": 2.356194,
+        "shade": "none",
+        "visible": 1
+      },
+      "wp_copy": {
+        "shape": "pentagon",
+        "size": 16.666667,
+        "rotation": 1.570796,
+        "shade": "none",
+        "visible": 1
+      },
+      "wp_matrix": {
+        "shape": ["pentagon", "pentagon"],
+        "size": [4.62963, 16.666667],
+        "rotation": [2.356194, 3.926991],
+        "shade": ["none", "none"],
+        "visible": [1, 1]
+      },
+      "difference": {
+        "shape": ["pentagon", "s_maxi"],
+        "size": [16.666667, 4, 8, 4, 8],
+        "rotation": [1.570796, -3.141593, -3.141593, -3.141593, 3.141593],
+        "shade": ["none", "none"],
+        "visible": [1, 1]
+      },
+      "ic_neg": {
+        "shape": "pentagon",
+        "size": 5.555556,
+        "rotation": 3.141593,
+        "shade": "black",
+        "visible": 1
+      },
+      "ic_flip": {
+        "shape": "pentagon",
+        "size": 5.555556,
+        "rotation": 3.926991,
+        "shade": "none",
+        "visible": 1
+      },
+      "ic_size": {
+        "shape": "pentagon",
+        "size": 2.057613,
+        "rotation": 3.141593,
+        "shade": "none",
+        "visible": 1
+      },
+      "ic_inc": {
+        "shape": ["pentagon", "X"],
+        "size": [5.555556, 19.091883, 19.091883],
+        "rotation": [3.141593, 2.356194, 3.926991],
+        "shade": ["none", "none"],
+        "visible": [1, 1]
+      }
+    },
+    "warnings": "IC-Inc cannot be obtained with a single figure"
+  },
+  "g5-m3": {
+    "id": "g5-m3",
+    "hrules": "rotate",
+    "vrules": "size",
+    "glyphs": ["teardrop", "arrow"],
+    "rot": 2,
+    "base": {
+      "shape": ["circle", "triangle"],
+      "size": [10, 10],
+      "rotation": [0, 1.570796],
+      "shade": ["none", "none"],
+      "visible": [1, 1]
+    },
+    "cells": [
+      {
+        "shape": ["circle", "triangle"],
+        "size": [11.111111, 11.111111],
+        "rotation": [0, 1.570796],
+        "shade": ["none", "none"],
+        "visible": [1, 1]
+      },
+      {
+        "shape": ["circle", "triangle"],
+        "size": [11.111111, 11.111111],
+        "rotation": [0.785398, 2.356194],
+        "shade": ["none", "none"],
+        "visible": [1, 1]
+      },
+      {
+        "shape": ["circle", "triangle"],
+        "size": [11.111111, 11.111111],
+        "rotation": [1.570796, 3.141593],
+        "shade": ["none", "none"],
+        "visible": [1, 1]
+      },
+      {
+        "shape": ["circle", "triangle"],
+        "size": [5.555556, 5.555556],
+        "rotation": [0, 1.570796],
+        "shade": ["none", "none"],
+        "visible": [1, 1]
+      },
+      {
+        "shape": ["circle", "triangle"],
+        "size": [5.555556, 5.555556],
+        "rotation": [0.785398, 2.356194],
+        "shade": ["none", "none"],
+        "visible": [1, 1]
+      },
+      {
+        "shape": ["circle", "triangle"],
+        "size": [5.555556, 5.555556],
+        "rotation": [1.570796, 3.141593],
+        "shade": ["none", "none"],
+        "visible": [1, 1]
+      },
+      {
+        "shape": ["circle", "triangle"],
+        "size": [3.703704, 3.703704],
+        "rotation": [0, 1.570796],
+        "shade": ["none", "none"],
+        "visible": [1, 1]
+      },
+      {
+        "shape": ["circle", "triangle"],
+        "size": [3.703704, 3.703704],
+        "rotation": [0.785398, 2.356194],
+        "shade": ["none", "none"],
+        "visible": [1, 1]
+      },
+      {
+        "shape": ["circle", "triangle"],
+        "size": [3.703704, 3.703704],
+        "rotation": [1.570796, 3.141593],
+        "shade": ["none", "none"],
+        "visible": [1, 1]
+      }
+    ],
+    "responses": {
+      "correct": {
+        "shape": ["circle", "triangle"],
+        "size": [3.703704, 3.703704],
+        "rotation": [1.570796, 3.141593],
+        "shade": ["none", "none"],
+        "visible": [1, 1]
+      },
+      "r_diag": {
+        "shape": ["circle", "triangle"],
+        "size": [5.555556, 5.555556],
+        "rotation": [0.785398, 2.356194],
+        "shade": ["none", "none"],
+        "visible": [1, 1]
+      },
+      "r_left": {
+        "shape": ["circle", "triangle"],
+        "size": [3.703704, 3.703704],
+        "rotation": [0.785398, 2.356194],
+        "shade": ["none", "none"],
+        "visible": [1, 1]
+      },
+      "r_top": {
+        "shape": ["circle", "triangle"],
+        "size": [5.555556, 5.555556],
+        "rotation": [1.570796, 3.141593],
+        "shade": ["none", "none"],
+        "visible": [1, 1]
+      },
+      "wp_copy": {
+        "shape": ["circle", "triangle"],
+        "size": [11.111111, 11.111111],
+        "rotation": [0, 1.570796],
+        "shade": ["none", "none"],
+        "visible": [1, 1]
+      },
+      "wp_matrix": {
+        "shape": ["circle", "triangle", "circle", "triangle"],
+        "size": [11.111111, 11.111111, 3.08642, 3.08642],
+        "rotation": [0, 1.570796, 0.785398, 2.356194],
+        "shade": ["none", "none", "none", "none"],
+        "visible": [1, 1, 1, 1]
+      },
+      "difference": {
+        "shape": ["circle", "triangle", "s_maxi"],
+        "size": [11.111111, 11.111111, 4, 8, 4, 8],
+        "rotation": [0, 1.570796, -3.141593, -3.141593, -3.141593, 3.141593],
+        "shade": ["none", "none", "none"],
+        "visible": [1, 1, 1]
+      },
+      "ic_neg": {
+        "shape": ["circle", "triangle"],
+        "size": [3.703704, 3.703704],
+        "rotation": [1.570796, 3.141593],
+        "shade": ["black", "black"],
+        "visible": [1, 1]
+      },
+      "ic_flip": {
+        "shape": ["circle", "triangle"],
+        "size": [3.703704, 3.703704],
+        "rotation": [2.356194, 3.926991],
+        "shade": ["none", "none"],
+        "visible": [1, 1]
+      },
+      "ic_size": {
+        "shape": ["circle", "triangle"],
+        "size": [1.371742, 1.371742],
+        "rotation": [1.570796, 3.141593],
+        "shade": ["none", "none"],
+        "visible": [1, 1]
+      },
+      "ic_inc": {
+        "shape": ["circle", "triangle", "X"],
+        "size": [3.703704, 3.703704, 19.091883, 19.091883],
+        "rotation": [1.570796, 3.141593, 2.356194, 3.926991],
+        "shade": ["none", "none", "none"],
+        "visible": [1, 1, 1]
+      }
+    },
+    "warnings": "IC-Inc cannot be obtained with a single figure"
+  },
+  "g5-m4": {
+    "id": "g5-m4",
+    "hrules": "shade",
+    "vrules": "rotate",
+    "glyphs": "heart",
+    "rot": 2,
+    "base": {
+      "shape": "square",
+      "size": 15,
+      "rotation": 0.785398,
+      "shade": "none",
+      "visible": 1
+    },
+    "cells": [
+      {
+        "shape": "square",
+        "size": 15,
+        "rotation": 0.785398,
+        "shade": "white",
+        "visible": 1
+      },
+      {
+        "shape": "square",
+        "size": 15,
+        "rotation": 0.785398,
+        "shade": "grey",
+        "visible": 1
+      },
+      {
+        "shape": "square",
+        "size": 15,
+        "rotation": 0.785398,
+        "shade": "black",
+        "visible": 1
+      },
+      {
+        "shape": "square",
+        "size": 15,
+        "rotation": 1.570796,
+        "shade": "white",
+        "visible": 1
+      },
+      {
+        "shape": "square",
+        "size": 15,
+        "rotation": 1.570796,
+        "shade": "grey",
+        "visible": 1
+      },
+      {
+        "shape": "square",
+        "size": 15,
+        "rotation": 1.570796,
+        "shade": "black",
+        "visible": 1
+      },
+      {
+        "shape": "square",
+        "size": 15,
+        "rotation": 2.356194,
+        "shade": "white",
+        "visible": 1
+      },
+      {
+        "shape": "square",
+        "size": 15,
+        "rotation": 2.356194,
+        "shade": "grey",
+        "visible": 1
+      },
+      {
+        "shape": "square",
+        "size": 15,
+        "rotation": 2.356194,
+        "shade": "black",
+        "visible": 1
+      }
+    ],
+    "responses": {
+      "correct": {
+        "shape": "square",
+        "size": 15,
+        "rotation": 2.356194,
+        "shade": "black",
+        "visible": 1
+      },
+      "r_diag": {
+        "shape": "square",
+        "size": 15,
+        "rotation": 1.570796,
+        "shade": "grey",
+        "visible": 1
+      },
+      "r_left": {
+        "shape": "square",
+        "size": 15,
+        "rotation": 2.356194,
+        "shade": "grey",
+        "visible": 1
+      },
+      "r_top": {
+        "shape": "square",
+        "size": 15,
+        "rotation": 1.570796,
+        "shade": "black",
+        "visible": 1
+      },
+      "wp_copy": {
+        "shape": "square",
+        "size": 15,
+        "rotation": 0.785398,
+        "shade": "white",
+        "visible": 1
+      },
+      "wp_matrix": {
+        "shape": ["square", "square"],
+        "size": [8.333333, 15],
+        "rotation": [1.570796, 3.141593],
+        "shade": ["grey", "white"],
+        "visible": [1, 1]
+      },
+      "difference": {
+        "shape": ["square", "s_maxi"],
+        "size": [15, 4, 8, 4, 8],
+        "rotation": [0.785398, -3.141593, -3.141593, -3.141593, 3.141593],
+        "shade": ["white", "none"],
+        "visible": [1, 1]
+      },
+      "ic_neg": {
+        "shape": "square",
+        "size": 15,
+        "rotation": 2.356194,
+        "shade": "white",
+        "visible": 1
+      },
+      "ic_flip": {
+        "shape": "square",
+        "size": 15,
+        "rotation": 3.141593,
+        "shade": "black",
+        "visible": 1
+      },
+      "ic_size": {
+        "shape": "square",
+        "size": 5.555556,
+        "rotation": 2.356194,
+        "shade": "black",
+        "visible": 1
+      },
+      "ic_inc": {
+        "shape": ["square", "X"],
+        "size": [15, 19.091883, 19.091883],
+        "rotation": [2.356194, 2.356194, 3.926991],
+        "shade": ["black", "none"],
+        "visible": [1, 1]
+      }
+    },
+    "warnings": "IC-Inc cannot be obtained with a single figure"
+  },
+  "g5-m5": {
+    "id": "g5-m5",
+    "hrules": ["rotate", "size"],
+    "vrules": "shade",
+    "glyphs": ["triangle", "teardrop"],
+    "rot": 2,
+    "base": {
+      "shape": ["triangle", "square"],
+      "size": [10, 15],
+      "rotation": [1.570796, 0.785398],
+      "shade": ["none", "none"],
+      "visible": [1, 1]
+    },
+    "cells": [
+      {
+        "shape": ["triangle", "square"],
+        "size": [11.111111, 16.666667],
+        "rotation": [1.570796, 0.785398],
+        "shade": ["white", "white"],
+        "visible": [1, 1]
+      },
+      {
+        "shape": ["triangle", "square"],
+        "size": [5.555556, 8.333333],
+        "rotation": [2.356194, 1.570796],
+        "shade": ["white", "white"],
+        "visible": [1, 1]
+      },
+      {
+        "shape": ["triangle", "square"],
+        "size": [3.703704, 5.555556],
+        "rotation": [3.141593, 2.356194],
+        "shade": ["white", "white"],
+        "visible": [1, 1]
+      },
+      {
+        "shape": ["triangle", "square"],
+        "size": [11.111111, 16.666667],
+        "rotation": [1.570796, 0.785398],
+        "shade": ["grey", "grey"],
+        "visible": [1, 1]
+      },
+      {
+        "shape": ["triangle", "square"],
+        "size": [5.555556, 8.333333],
+        "rotation": [2.356194, 1.570796],
+        "shade": ["grey", "grey"],
+        "visible": [1, 1]
+      },
+      {
+        "shape": ["triangle", "square"],
+        "size": [3.703704, 5.555556],
+        "rotation": [3.141593, 2.356194],
+        "shade": ["grey", "grey"],
+        "visible": [1, 1]
+      },
+      {
+        "shape": ["triangle", "square"],
+        "size": [11.111111, 16.666667],
+        "rotation": [1.570796, 0.785398],
+        "shade": ["black", "black"],
+        "visible": [1, 1]
+      },
+      {
+        "shape": ["triangle", "square"],
+        "size": [5.555556, 8.333333],
+        "rotation": [2.356194, 1.570796],
+        "shade": ["black", "black"],
+        "visible": [1, 1]
+      },
+      {
+        "shape": ["triangle", "square"],
+        "size": [3.703704, 5.555556],
+        "rotation": [3.141593, 2.356194],
+        "shade": ["black", "black"],
+        "visible": [1, 1]
+      }
+    ],
+    "responses": {
+      "correct": {
+        "shape": ["triangle", "square"],
+        "size": [3.703704, 5.555556],
+        "rotation": [3.141593, 2.356194],
+        "shade": ["black", "black"],
+        "visible": [1, 1]
+      },
+      "r_diag": {
+        "shape": ["triangle", "square"],
+        "size": [5.555556, 8.333333],
+        "rotation": [2.356194, 1.570796],
+        "shade": ["grey", "grey"],
+        "visible": [1, 1]
+      },
+      "r_left": {
+        "shape": ["triangle", "square"],
+        "size": [5.555556, 8.333333],
+        "rotation": [2.356194, 1.570796],
+        "shade": ["black", "black"],
+        "visible": [1, 1]
+      },
+      "r_top": {
+        "shape": ["triangle", "square"],
+        "size": [3.703704, 5.555556],
+        "rotation": [3.141593, 2.356194],
+        "shade": ["grey", "grey"],
+        "visible": [1, 1]
+      },
+      "wp_copy": {
+        "shape": ["triangle", "square"],
+        "size": [11.111111, 16.666667],
+        "rotation": [1.570796, 0.785398],
+        "shade": ["white", "white"],
+        "visible": [1, 1]
+      },
+      "wp_matrix": {
+        "shape": ["triangle", "square", "triangle", "square"],
+        "size": [3.08642, 4.62963, 11.111111, 16.666667],
+        "rotation": [2.356194, 1.570796, 3.926991, 3.141593],
+        "shade": ["grey", "grey", "white", "white"],
+        "visible": [1, 1, 1, 1]
+      },
+      "difference": {
+        "shape": ["triangle", "square", "s_maxi"],
+        "size": [11.111111, 16.666667, 4, 8, 4, 8],
+        "rotation": [1.570796, 0.785398, -3.141593, -3.141593, -3.141593, 3.141593],
+        "shade": ["white", "white", "none"],
+        "visible": [1, 1, 1]
+      },
+      "ic_neg": {
+        "shape": ["triangle", "square"],
+        "size": [3.703704, 5.555556],
+        "rotation": [3.141593, 2.356194],
+        "shade": ["white", "white"],
+        "visible": [1, 1]
+      },
+      "ic_flip": {
+        "shape": ["triangle", "square"],
+        "size": [3.703704, 5.555556],
+        "rotation": [3.926991, 3.141593],
+        "shade": ["black", "black"],
+        "visible": [1, 1]
+      },
+      "ic_size": {
+        "shape": ["triangle", "square"],
+        "size": [1.371742, 2.057613],
+        "rotation": [3.141593, 2.356194],
+        "shade": ["black", "black"],
+        "visible": [1, 1]
+      },
+      "ic_inc": {
+        "shape": ["triangle", "square", "X"],
+        "size": [3.703704, 5.555556, 19.091883, 19.091883],
+        "rotation": [3.141593, 2.356194, 2.356194, 3.926991],
+        "shade": ["black", "black", "none"],
+        "visible": [1, 1, 1]
+      }
+    },
+    "warnings": "IC-Inc cannot be obtained with a single figure"
+  },
+  "g6-m1": {
+    "id": "g6-m1",
+    "hrules": "rotate",
+    "vrules": "size",
+    "glyphs": "teardrop",
+    "rot": 1,
+    "base": {
+      "shape": "triangle",
+      "size": 10,
+      "rotation": 1.570796,
+      "shade": "none",
+      "visible": 1
+    },
+    "cells": [
+      {
+        "shape": "triangle",
+        "size": 11.111111,
+        "rotation": 1.570796,
+        "shade": "none",
+        "visible": 1
+      },
+      {
+        "shape": "triangle",
+        "size": 11.111111,
+        "rotation": 2.356194,
+        "shade": "none",
+        "visible": 1
+      },
+      {
+        "shape": "triangle",
+        "size": 11.111111,
+        "rotation": 3.141593,
+        "shade": "none",
+        "visible": 1
+      },
+      {
+        "shape": "triangle",
+        "size": 5.555556,
+        "rotation": 1.570796,
+        "shade": "none",
+        "visible": 1
+      },
+      {
+        "shape": "triangle",
+        "size": 5.555556,
+        "rotation": 2.356194,
+        "shade": "none",
+        "visible": 1
+      },
+      {
+        "shape": "triangle",
+        "size": 5.555556,
+        "rotation": 3.141593,
+        "shade": "none",
+        "visible": 1
+      },
+      {
+        "shape": "triangle",
+        "size": 3.703704,
+        "rotation": 1.570796,
+        "shade": "none",
+        "visible": 1
+      },
+      {
+        "shape": "triangle",
+        "size": 3.703704,
+        "rotation": 2.356194,
+        "shade": "none",
+        "visible": 1
+      },
+      {
+        "shape": "triangle",
+        "size": 3.703704,
+        "rotation": 3.141593,
+        "shade": "none",
+        "visible": 1
+      }
+    ],
+    "responses": {
+      "correct": {
+        "shape": "triangle",
+        "size": 3.703704,
+        "rotation": 3.141593,
+        "shade": "none",
+        "visible": 1
+      },
+      "r_diag": {
+        "shape": "triangle",
+        "size": 5.555556,
+        "rotation": 2.356194,
+        "shade": "none",
+        "visible": 1
+      },
+      "r_left": {
+        "shape": "triangle",
+        "size": 3.703704,
+        "rotation": 2.356194,
+        "shade": "none",
+        "visible": 1
+      },
+      "r_top": {
+        "shape": "triangle",
+        "size": 5.555556,
+        "rotation": 3.141593,
+        "shade": "none",
+        "visible": 1
+      },
+      "wp_copy": {
+        "shape": "triangle",
+        "size": 11.111111,
+        "rotation": 1.570796,
+        "shade": "none",
+        "visible": 1
+      },
+      "wp_matrix": {
+        "shape": ["triangle", "triangle"],
+        "size": [3.08642, 11.111111],
+        "rotation": [2.356194, 3.926991],
+        "shade": ["none", "none"],
+        "visible": [1, 1]
+      },
+      "difference": {
+        "shape": ["triangle", "s_maxi"],
+        "size": [11.111111, 4, 8, 4, 8],
+        "rotation": [1.570796, -3.141593, -3.141593, -3.141593, 3.141593],
+        "shade": ["none", "none"],
+        "visible": [1, 1]
+      },
+      "ic_neg": {
+        "shape": "triangle",
+        "size": 3.703704,
+        "rotation": 3.141593,
+        "shade": "black",
+        "visible": 1
+      },
+      "ic_flip": {
+        "shape": "triangle",
+        "size": 3.703704,
+        "rotation": 3.926991,
+        "shade": "none",
+        "visible": 1
+      },
+      "ic_size": {
+        "shape": "triangle",
+        "size": 1.371742,
+        "rotation": 3.141593,
+        "shade": "none",
+        "visible": 1
+      },
+      "ic_inc": {
+        "shape": ["triangle", "X"],
+        "size": [3.703704, 19.091883, 19.091883],
+        "rotation": [3.141593, 2.356194, 3.926991],
+        "shade": ["none", "none"],
+        "visible": [1, 1]
+      }
+    },
+    "warnings": "IC-Inc cannot be obtained with a single figure"
+  },
+  "g6-m2": {
+    "id": "g6-m2",
+    "hrules": "rotate",
+    "vrules": "shade",
+    "glyphs": "arrow",
+    "rot": 2,
+    "base": {
+      "shape": "square",
+      "size": 15,
+      "rotation": 0.785398,
+      "shade": "none",
+      "visible": 1
+    },
+    "cells": [
+      {
+        "shape": "square",
+        "size": 15,
+        "rotation": 0.785398,
+        "shade": "white",
+        "visible": 1
+      },
+      {
+        "shape": "square",
+        "size": 15,
+        "rotation": 1.570796,
+        "shade": "white",
+        "visible": 1
+      },
+      {
+        "shape": "square",
+        "size": 15,
+        "rotation": 2.356194,
+        "shade": "white",
+        "visible": 1
+      },
+      {
+        "shape": "square",
+        "size": 15,
+        "rotation": 0.785398,
+        "shade": "grey",
+        "visible": 1
+      },
+      {
+        "shape": "square",
+        "size": 15,
+        "rotation": 1.570796,
+        "shade": "grey",
+        "visible": 1
+      },
+      {
+        "shape": "square",
+        "size": 15,
+        "rotation": 2.356194,
+        "shade": "grey",
+        "visible": 1
+      },
+      {
+        "shape": "square",
+        "size": 15,
+        "rotation": 0.785398,
+        "shade": "black",
+        "visible": 1
+      },
+      {
+        "shape": "square",
+        "size": 15,
+        "rotation": 1.570796,
+        "shade": "black",
+        "visible": 1
+      },
+      {
+        "shape": "square",
+        "size": 15,
+        "rotation": 2.356194,
+        "shade": "black",
+        "visible": 1
+      }
+    ],
+    "responses": {
+      "correct": {
+        "shape": "square",
+        "size": 15,
+        "rotation": 2.356194,
+        "shade": "black",
+        "visible": 1
+      },
+      "r_diag": {
+        "shape": "square",
+        "size": 15,
+        "rotation": 1.570796,
+        "shade": "grey",
+        "visible": 1
+      },
+      "r_left": {
+        "shape": "square",
+        "size": 15,
+        "rotation": 1.570796,
+        "shade": "black",
+        "visible": 1
+      },
+      "r_top": {
+        "shape": "square",
+        "size": 15,
+        "rotation": 2.356194,
+        "shade": "grey",
+        "visible": 1
+      },
+      "wp_copy": {
+        "shape": "square",
+        "size": 15,
+        "rotation": 0.785398,
+        "shade": "white",
+        "visible": 1
+      },
+      "wp_matrix": {
+        "shape": ["square", "square"],
+        "size": [8.333333, 15],
+        "rotation": [1.570796, 3.141593],
+        "shade": ["grey", "white"],
+        "visible": [1, 1]
+      },
+      "difference": {
+        "shape": ["square", "s_maxi"],
+        "size": [15, 4, 8, 4, 8],
+        "rotation": [0.785398, -3.141593, -3.141593, -3.141593, 3.141593],
+        "shade": ["white", "none"],
+        "visible": [1, 1]
+      },
+      "ic_neg": {
+        "shape": "square",
+        "size": 15,
+        "rotation": 2.356194,
+        "shade": "white",
+        "visible": 1
+      },
+      "ic_flip": {
+        "shape": "square",
+        "size": 15,
+        "rotation": 3.141593,
+        "shade": "black",
+        "visible": 1
+      },
+      "ic_size": {
+        "shape": "square",
+        "size": 5.555556,
+        "rotation": 2.356194,
+        "shade": "black",
+        "visible": 1
+      },
+      "ic_inc": {
+        "shape": ["square", "X"],
+        "size": [15, 19.091883, 19.091883],
+        "rotation": [2.356194, 2.356194, 3.926991],
+        "shade": ["black", "none"],
+        "visible": [1, 1]
+      }
+    },
+    "warnings": "IC-Inc cannot be obtained with a single figure"
+  },
+  "g6-m3": {
+    "id": "g6-m3",
+    "hrules": "rotate",
+    "vrules": ["shade", "size"],
+    "glyphs": ["teardrop", "heart"],
+    "rot": 2,
+    "base": {
+      "shape": ["circle", "square"],
+      "size": [10, 15],
+      "rotation": [0, 0.785398],
+      "shade": ["none", "none"],
+      "visible": [1, 1]
+    },
+    "cells": [
+      {
+        "shape": ["circle", "square"],
+        "size": [11.111111, 16.666667],
+        "rotation": [0, 0.785398],
+        "shade": ["white", "white"],
+        "visible": [1, 1]
+      },
+      {
+        "shape": ["circle", "square"],
+        "size": [11.111111, 16.666667],
+        "rotation": [0.785398, 1.570796],
+        "shade": ["white", "white"],
+        "visible": [1, 1]
+      },
+      {
+        "shape": ["circle", "square"],
+        "size": [11.111111, 16.666667],
+        "rotation": [1.570796, 2.356194],
+        "shade": ["white", "white"],
+        "visible": [1, 1]
+      },
+      {
+        "shape": ["circle", "square"],
+        "size": [5.555556, 8.333333],
+        "rotation": [0, 0.785398],
+        "shade": ["grey", "grey"],
+        "visible": [1, 1]
+      },
+      {
+        "shape": ["circle", "square"],
+        "size": [5.555556, 8.333333],
+        "rotation": [0.785398, 1.570796],
+        "shade": ["grey", "grey"],
+        "visible": [1, 1]
+      },
+      {
+        "shape": ["circle", "square"],
+        "size": [5.555556, 8.333333],
+        "rotation": [1.570796, 2.356194],
+        "shade": ["grey", "grey"],
+        "visible": [1, 1]
+      },
+      {
+        "shape": ["circle", "square"],
+        "size": [3.703704, 5.555556],
+        "rotation": [0, 0.785398],
+        "shade": ["black", "black"],
+        "visible": [1, 1]
+      },
+      {
+        "shape": ["circle", "square"],
+        "size": [3.703704, 5.555556],
+        "rotation": [0.785398, 1.570796],
+        "shade": ["black", "black"],
+        "visible": [1, 1]
+      },
+      {
+        "shape": ["circle", "square"],
+        "size": [3.703704, 5.555556],
+        "rotation": [1.570796, 2.356194],
+        "shade": ["black", "black"],
+        "visible": [1, 1]
+      }
+    ],
+    "responses": {
+      "correct": {
+        "shape": ["circle", "square"],
+        "size": [3.703704, 5.555556],
+        "rotation": [1.570796, 2.356194],
+        "shade": ["black", "black"],
+        "visible": [1, 1]
+      },
+      "r_diag": {
+        "shape": ["circle", "square"],
+        "size": [5.555556, 8.333333],
+        "rotation": [0.785398, 1.570796],
+        "shade": ["grey", "grey"],
+        "visible": [1, 1]
+      },
+      "r_left": {
+        "shape": ["circle", "square"],
+        "size": [3.703704, 5.555556],
+        "rotation": [0.785398, 1.570796],
+        "shade": ["black", "black"],
+        "visible": [1, 1]
+      },
+      "r_top": {
+        "shape": ["circle", "square"],
+        "size": [5.555556, 8.333333],
+        "rotation": [1.570796, 2.356194],
+        "shade": ["grey", "grey"],
+        "visible": [1, 1]
+      },
+      "wp_copy": {
+        "shape": ["circle", "square"],
+        "size": [11.111111, 16.666667],
+        "rotation": [0, 0.785398],
+        "shade": ["white", "white"],
+        "visible": [1, 1]
+      },
+      "wp_matrix": {
+        "shape": ["circle", "square", "circle", "square"],
+        "size": [11.111111, 16.666667, 3.08642, 4.62963],
+        "rotation": [0, 0.785398, 0.785398, 1.570796],
+        "shade": ["white", "white", "grey", "grey"],
+        "visible": [1, 1, 1, 1]
+      },
+      "difference": {
+        "shape": ["circle", "square", "s_maxi"],
+        "size": [11.111111, 16.666667, 4, 8, 4, 8],
+        "rotation": [0, 0.785398, -3.141593, -3.141593, -3.141593, 3.141593],
+        "shade": ["white", "white", "none"],
+        "visible": [1, 1, 1]
+      },
+      "ic_neg": {
+        "shape": ["circle", "square"],
+        "size": [3.703704, 5.555556],
+        "rotation": [1.570796, 2.356194],
+        "shade": ["white", "white"],
+        "visible": [1, 1]
+      },
+      "ic_flip": {
+        "shape": ["circle", "square"],
+        "size": [3.703704, 5.555556],
+        "rotation": [2.356194, 3.141593],
+        "shade": ["black", "black"],
+        "visible": [1, 1]
+      },
+      "ic_size": {
+        "shape": ["circle", "square"],
+        "size": [1.371742, 2.057613],
+        "rotation": [1.570796, 2.356194],
+        "shade": ["black", "black"],
+        "visible": [1, 1]
+      },
+      "ic_inc": {
+        "shape": ["circle", "square", "X"],
+        "size": [3.703704, 5.555556, 19.091883, 19.091883],
+        "rotation": [1.570796, 2.356194, 2.356194, 3.926991],
+        "shade": ["black", "black", "none"],
+        "visible": [1, 1, 1]
+      }
+    },
+    "warnings": "IC-Inc cannot be obtained with a single figure"
+  },
+  "g6-m4": {
+    "id": "g6-m4",
+    "hrules": ["shade", "size"],
+    "vrules": "rotate",
+    "glyphs": "heart",
+    "rot": 1,
+    "base": {
+      "shape": "pentagon",
+      "size": 15,
+      "rotation": 1.570796,
+      "shade": "none",
+      "visible": 1
+    },
+    "cells": [
+      {
+        "shape": "pentagon",
+        "size": 16.666667,
+        "rotation": 1.570796,
+        "shade": "white",
+        "visible": 1
+      },
+      {
+        "shape": "pentagon",
+        "size": 8.333333,
+        "rotation": 1.570796,
+        "shade": "grey",
+        "visible": 1
+      },
+      {
+        "shape": "pentagon",
+        "size": 5.555556,
+        "rotation": 1.570796,
+        "shade": "black",
+        "visible": 1
+      },
+      {
+        "shape": "pentagon",
+        "size": 16.666667,
+        "rotation": 2.356194,
+        "shade": "white",
+        "visible": 1
+      },
+      {
+        "shape": "pentagon",
+        "size": 8.333333,
+        "rotation": 2.356194,
+        "shade": "grey",
+        "visible": 1
+      },
+      {
+        "shape": "pentagon",
+        "size": 5.555556,
+        "rotation": 2.356194,
+        "shade": "black",
+        "visible": 1
+      },
+      {
+        "shape": "pentagon",
+        "size": 16.666667,
+        "rotation": 3.141593,
+        "shade": "white",
+        "visible": 1
+      },
+      {
+        "shape": "pentagon",
+        "size": 8.333333,
+        "rotation": 3.141593,
+        "shade": "grey",
+        "visible": 1
+      },
+      {
+        "shape": "pentagon",
+        "size": 5.555556,
+        "rotation": 3.141593,
+        "shade": "black",
+        "visible": 1
+      }
+    ],
+    "responses": {
+      "correct": {
+        "shape": "pentagon",
+        "size": 5.555556,
+        "rotation": 3.141593,
+        "shade": "black",
+        "visible": 1
+      },
+      "r_diag": {
+        "shape": "pentagon",
+        "size": 8.333333,
+        "rotation": 2.356194,
+        "shade": "grey",
+        "visible": 1
+      },
+      "r_left": {
+        "shape": "pentagon",
+        "size": 8.333333,
+        "rotation": 3.141593,
+        "shade": "grey",
+        "visible": 1
+      },
+      "r_top": {
+        "shape": "pentagon",
+        "size": 5.555556,
+        "rotation": 2.356194,
+        "shade": "black",
+        "visible": 1
+      },
+      "wp_copy": {
+        "shape": "pentagon",
+        "size": 16.666667,
+        "rotation": 1.570796,
+        "shade": "white",
+        "visible": 1
+      },
+      "wp_matrix": {
+        "shape": ["pentagon", "pentagon"],
+        "size": [4.62963, 16.666667],
+        "rotation": [2.356194, 3.926991],
+        "shade": ["grey", "white"],
+        "visible": [1, 1]
+      },
+      "difference": {
+        "shape": ["pentagon", "s_maxi"],
+        "size": [16.666667, 4, 8, 4, 8],
+        "rotation": [1.570796, -3.141593, -3.141593, -3.141593, 3.141593],
+        "shade": ["white", "none"],
+        "visible": [1, 1]
+      },
+      "ic_neg": {
+        "shape": "pentagon",
+        "size": 5.555556,
+        "rotation": 3.141593,
+        "shade": "white",
+        "visible": 1
+      },
+      "ic_flip": {
+        "shape": "pentagon",
+        "size": 5.555556,
+        "rotation": 3.926991,
+        "shade": "black",
+        "visible": 1
+      },
+      "ic_size": {
+        "shape": "pentagon",
+        "size": 2.057613,
+        "rotation": 3.141593,
+        "shade": "black",
+        "visible": 1
+      },
+      "ic_inc": {
+        "shape": ["pentagon", "X"],
+        "size": [5.555556, 19.091883, 19.091883],
+        "rotation": [3.141593, 2.356194, 3.926991],
+        "shade": ["black", "none"],
+        "visible": [1, 1]
+      }
+    },
+    "warnings": "IC-Inc cannot be obtained with a single figure"
+  },
+  "g6-m5": {
+    "id": "g6-m5",
+    "hrules": ["size", "rotate"],
+    "vrules": "shade",
+    "glyphs": ["triangle", "arrow"],
+    "rot": 2,
+    "base": {
+      "shape": ["triangle", "circle"],
+      "size": [10, 10],
+      "rotation": [1.570796, 0],
+      "shade": ["none", "none"],
+      "visible": [1, 1]
+    },
+    "cells": [
+      {
+        "shape": ["triangle", "circle"],
+        "size": [11.111111, 11.111111],
+        "rotation": [1.570796, 0],
+        "shade": ["white", "white"],
+        "visible": [1, 1]
+      },
+      {
+        "shape": ["triangle", "circle"],
+        "size": [5.555556, 5.555556],
+        "rotation": [2.356194, 0.785398],
+        "shade": ["white", "white"],
+        "visible": [1, 1]
+      },
+      {
+        "shape": ["triangle", "circle"],
+        "size": [3.703704, 3.703704],
+        "rotation": [3.141593, 1.570796],
+        "shade": ["white", "white"],
+        "visible": [1, 1]
+      },
+      {
+        "shape": ["triangle", "circle"],
+        "size": [11.111111, 11.111111],
+        "rotation": [1.570796, 0],
+        "shade": ["grey", "grey"],
+        "visible": [1, 1]
+      },
+      {
+        "shape": ["triangle", "circle"],
+        "size": [5.555556, 5.555556],
+        "rotation": [2.356194, 0.785398],
+        "shade": ["grey", "grey"],
+        "visible": [1, 1]
+      },
+      {
+        "shape": ["triangle", "circle"],
+        "size": [3.703704, 3.703704],
+        "rotation": [3.141593, 1.570796],
+        "shade": ["grey", "grey"],
+        "visible": [1, 1]
+      },
+      {
+        "shape": ["triangle", "circle"],
+        "size": [11.111111, 11.111111],
+        "rotation": [1.570796, 0],
+        "shade": ["black", "black"],
+        "visible": [1, 1]
+      },
+      {
+        "shape": ["triangle", "circle"],
+        "size": [5.555556, 5.555556],
+        "rotation": [2.356194, 0.785398],
+        "shade": ["black", "black"],
+        "visible": [1, 1]
+      },
+      {
+        "shape": ["triangle", "circle"],
+        "size": [3.703704, 3.703704],
+        "rotation": [3.141593, 1.570796],
+        "shade": ["black", "black"],
+        "visible": [1, 1]
+      }
+    ],
+    "responses": {
+      "correct": {
+        "shape": ["triangle", "circle"],
+        "size": [3.703704, 3.703704],
+        "rotation": [3.141593, 1.570796],
+        "shade": ["black", "black"],
+        "visible": [1, 1]
+      },
+      "r_diag": {
+        "shape": ["triangle", "circle"],
+        "size": [5.555556, 5.555556],
+        "rotation": [2.356194, 0.785398],
+        "shade": ["grey", "grey"],
+        "visible": [1, 1]
+      },
+      "r_left": {
+        "shape": ["triangle", "circle"],
+        "size": [5.555556, 5.555556],
+        "rotation": [2.356194, 0.785398],
+        "shade": ["black", "black"],
+        "visible": [1, 1]
+      },
+      "r_top": {
+        "shape": ["triangle", "circle"],
+        "size": [3.703704, 3.703704],
+        "rotation": [3.141593, 1.570796],
+        "shade": ["grey", "grey"],
+        "visible": [1, 1]
+      },
+      "wp_copy": {
+        "shape": ["triangle", "circle"],
+        "size": [11.111111, 11.111111],
+        "rotation": [1.570796, 0],
+        "shade": ["white", "white"],
+        "visible": [1, 1]
+      },
+      "wp_matrix": {
+        "shape": ["triangle", "circle", "triangle", "circle"],
+        "size": [11.111111, 11.111111, 3.08642, 3.08642],
+        "rotation": [1.570796, 0, 2.356194, 0.785398],
+        "shade": ["white", "white", "grey", "grey"],
+        "visible": [1, 1, 1, 1]
+      },
+      "difference": {
+        "shape": ["triangle", "circle", "s_maxi"],
+        "size": [11.111111, 11.111111, 4, 8, 4, 8],
+        "rotation": [1.570796, 0, -3.141593, -3.141593, -3.141593, 3.141593],
+        "shade": ["white", "white", "none"],
+        "visible": [1, 1, 1]
+      },
+      "ic_neg": {
+        "shape": ["triangle", "circle"],
+        "size": [3.703704, 3.703704],
+        "rotation": [3.141593, 1.570796],
+        "shade": ["white", "white"],
+        "visible": [1, 1]
+      },
+      "ic_flip": {
+        "shape": ["triangle", "circle"],
+        "size": [3.703704, 3.703704],
+        "rotation": [3.926991, 2.356194],
+        "shade": ["black", "black"],
+        "visible": [1, 1]
+      },
+      "ic_size": {
+        "shape": ["triangle", "circle"],
+        "size": [1.371742, 1.371742],
+        "rotation": [3.141593, 1.570796],
+        "shade": ["black", "black"],
+        "visible": [1, 1]
+      },
+      "ic_inc": {
+        "shape": ["triangle", "circle", "X"],
+        "size": [3.703704, 3.703704, 19.091883, 19.091883],
+        "rotation": [3.141593, 1.570796, 2.356194, 3.926991],
+        "shade": ["black", "black", "none"],
+        "visible": [1, 1, 1]
+      }
+    },
+    "warnings": "IC-Inc cannot be obtained with a single figure"
+  },
+  "g78-m1": {
+    "id": "g78-m1",
+    "hrules": ["shade", "size"],
+    "vrules": "rotate",
+    "glyphs": "heart",
+    "rot": 2,
+    "base": {
+      "shape": "square",
+      "size": 15,
+      "rotation": 0.785398,
+      "shade": "none",
+      "visible": 1
+    },
+    "cells": [
+      {
+        "shape": "square",
+        "size": 16.666667,
+        "rotation": 0.785398,
+        "shade": "white",
+        "visible": 1
+      },
+      {
+        "shape": "square",
+        "size": 8.333333,
+        "rotation": 0.785398,
+        "shade": "grey",
+        "visible": 1
+      },
+      {
+        "shape": "square",
+        "size": 5.555556,
+        "rotation": 0.785398,
+        "shade": "black",
+        "visible": 1
+      },
+      {
+        "shape": "square",
+        "size": 16.666667,
+        "rotation": 1.570796,
+        "shade": "white",
+        "visible": 1
+      },
+      {
+        "shape": "square",
+        "size": 8.333333,
+        "rotation": 1.570796,
+        "shade": "grey",
+        "visible": 1
+      },
+      {
+        "shape": "square",
+        "size": 5.555556,
+        "rotation": 1.570796,
+        "shade": "black",
+        "visible": 1
+      },
+      {
+        "shape": "square",
+        "size": 16.666667,
+        "rotation": 2.356194,
+        "shade": "white",
+        "visible": 1
+      },
+      {
+        "shape": "square",
+        "size": 8.333333,
+        "rotation": 2.356194,
+        "shade": "grey",
+        "visible": 1
+      },
+      {
+        "shape": "square",
+        "size": 5.555556,
+        "rotation": 2.356194,
+        "shade": "black",
+        "visible": 1
+      }
+    ],
+    "responses": {
+      "correct": {
+        "shape": "square",
+        "size": 5.555556,
+        "rotation": 2.356194,
+        "shade": "black",
+        "visible": 1
+      },
+      "r_diag": {
+        "shape": "square",
+        "size": 8.333333,
+        "rotation": 1.570796,
+        "shade": "grey",
+        "visible": 1
+      },
+      "r_left": {
+        "shape": "square",
+        "size": 8.333333,
+        "rotation": 2.356194,
+        "shade": "grey",
+        "visible": 1
+      },
+      "r_top": {
+        "shape": "square",
+        "size": 5.555556,
+        "rotation": 1.570796,
+        "shade": "black",
+        "visible": 1
+      },
+      "wp_copy": {
+        "shape": "square",
+        "size": 16.666667,
+        "rotation": 0.785398,
+        "shade": "white",
+        "visible": 1
+      },
+      "wp_matrix": {
+        "shape": ["square", "square"],
+        "size": [4.62963, 16.666667],
+        "rotation": [1.570796, 3.141593],
+        "shade": ["grey", "white"],
+        "visible": [1, 1]
+      },
+      "difference": {
+        "shape": ["square", "s_maxi"],
+        "size": [16.666667, 4, 8, 4, 8],
+        "rotation": [0.785398, -3.141593, -3.141593, -3.141593, 3.141593],
+        "shade": ["white", "none"],
+        "visible": [1, 1]
+      },
+      "ic_neg": {
+        "shape": "square",
+        "size": 5.555556,
+        "rotation": 2.356194,
+        "shade": "white",
+        "visible": 1
+      },
+      "ic_flip": {
+        "shape": "square",
+        "size": 5.555556,
+        "rotation": 3.141593,
+        "shade": "black",
+        "visible": 1
+      },
+      "ic_size": {
+        "shape": "square",
+        "size": 2.057613,
+        "rotation": 2.356194,
+        "shade": "black",
+        "visible": 1
+      },
+      "ic_inc": {
+        "shape": ["square", "X"],
+        "size": [5.555556, 19.091883, 19.091883],
+        "rotation": [2.356194, 2.356194, 3.926991],
+        "shade": ["black", "none"],
+        "visible": [1, 1]
+      }
+    },
+    "warnings": "IC-Inc cannot be obtained with a single figure"
+  },
+  "g78-m2": {
+    "id": "g78-m2",
+    "hrules": ["rotate", "size"],
+    "vrules": "shade",
+    "glyphs": ["arrow", "teardrop"],
+    "rot": 1,
+    "base": {
+      "shape": ["triangle", "circle"],
+      "size": [10, 10],
+      "rotation": [1.570796, 0],
+      "shade": ["none", "none"],
+      "visible": [1, 1]
+    },
+    "cells": [
+      {
+        "shape": ["triangle", "circle"],
+        "size": [11.111111, 11.111111],
+        "rotation": [1.570796, 0],
+        "shade": ["white", "white"],
+        "visible": [1, 1]
+      },
+      {
+        "shape": ["triangle", "circle"],
+        "size": [5.555556, 5.555556],
+        "rotation": [2.356194, 0.785398],
+        "shade": ["white", "white"],
+        "visible": [1, 1]
+      },
+      {
+        "shape": ["triangle", "circle"],
+        "size": [3.703704, 3.703704],
+        "rotation": [3.141593, 1.570796],
+        "shade": ["white", "white"],
+        "visible": [1, 1]
+      },
+      {
+        "shape": ["triangle", "circle"],
+        "size": [11.111111, 11.111111],
+        "rotation": [1.570796, 0],
+        "shade": ["grey", "grey"],
+        "visible": [1, 1]
+      },
+      {
+        "shape": ["triangle", "circle"],
+        "size": [5.555556, 5.555556],
+        "rotation": [2.356194, 0.785398],
+        "shade": ["grey", "grey"],
+        "visible": [1, 1]
+      },
+      {
+        "shape": ["triangle", "circle"],
+        "size": [3.703704, 3.703704],
+        "rotation": [3.141593, 1.570796],
+        "shade": ["grey", "grey"],
+        "visible": [1, 1]
+      },
+      {
+        "shape": ["triangle", "circle"],
+        "size": [11.111111, 11.111111],
+        "rotation": [1.570796, 0],
+        "shade": ["black", "black"],
+        "visible": [1, 1]
+      },
+      {
+        "shape": ["triangle", "circle"],
+        "size": [5.555556, 5.555556],
+        "rotation": [2.356194, 0.785398],
+        "shade": ["black", "black"],
+        "visible": [1, 1]
+      },
+      {
+        "shape": ["triangle", "circle"],
+        "size": [3.703704, 3.703704],
+        "rotation": [3.141593, 1.570796],
+        "shade": ["black", "black"],
+        "visible": [1, 1]
+      }
+    ],
+    "responses": {
+      "correct": {
+        "shape": ["triangle", "circle"],
+        "size": [3.703704, 3.703704],
+        "rotation": [3.141593, 1.570796],
+        "shade": ["black", "black"],
+        "visible": [1, 1]
+      },
+      "r_diag": {
+        "shape": ["triangle", "circle"],
+        "size": [5.555556, 5.555556],
+        "rotation": [2.356194, 0.785398],
+        "shade": ["grey", "grey"],
+        "visible": [1, 1]
+      },
+      "r_left": {
+        "shape": ["triangle", "circle"],
+        "size": [5.555556, 5.555556],
+        "rotation": [2.356194, 0.785398],
+        "shade": ["black", "black"],
+        "visible": [1, 1]
+      },
+      "r_top": {
+        "shape": ["triangle", "circle"],
+        "size": [3.703704, 3.703704],
+        "rotation": [3.141593, 1.570796],
+        "shade": ["grey", "grey"],
+        "visible": [1, 1]
+      },
+      "wp_copy": {
+        "shape": ["triangle", "circle"],
+        "size": [11.111111, 11.111111],
+        "rotation": [1.570796, 0],
+        "shade": ["white", "white"],
+        "visible": [1, 1]
+      },
+      "wp_matrix": {
+        "shape": ["triangle", "circle", "triangle", "circle"],
+        "size": [11.111111, 11.111111, 3.08642, 3.08642],
+        "rotation": [1.570796, 0, 2.356194, 0.785398],
+        "shade": ["white", "white", "grey", "grey"],
+        "visible": [1, 1, 1, 1]
+      },
+      "difference": {
+        "shape": ["triangle", "circle", "s_maxi"],
+        "size": [11.111111, 11.111111, 4, 8, 4, 8],
+        "rotation": [1.570796, 0, -3.141593, -3.141593, -3.141593, 3.141593],
+        "shade": ["white", "white", "none"],
+        "visible": [1, 1, 1]
+      },
+      "ic_neg": {
+        "shape": ["triangle", "circle"],
+        "size": [3.703704, 3.703704],
+        "rotation": [3.141593, 1.570796],
+        "shade": ["white", "white"],
+        "visible": [1, 1]
+      },
+      "ic_flip": {
+        "shape": ["triangle", "circle"],
+        "size": [3.703704, 3.703704],
+        "rotation": [3.926991, 2.356194],
+        "shade": ["black", "black"],
+        "visible": [1, 1]
+      },
+      "ic_size": {
+        "shape": ["triangle", "circle"],
+        "size": [1.371742, 1.371742],
+        "rotation": [3.141593, 1.570796],
+        "shade": ["black", "black"],
+        "visible": [1, 1]
+      },
+      "ic_inc": {
+        "shape": ["triangle", "circle", "X"],
+        "size": [3.703704, 3.703704, 19.091883, 19.091883],
+        "rotation": [3.141593, 1.570796, 2.356194, 3.926991],
+        "shade": ["black", "black", "none"],
+        "visible": [1, 1, 1]
+      }
+    },
+    "warnings": "IC-Inc cannot be obtained with a single figure"
+  },
+  "g78-m3": {
+    "id": "g78-m3",
+    "hrules": ["shade", "rotate"],
+    "vrules": "size",
+    "glyphs": "teardrop",
+    "rot": 1,
+    "base": {
+      "shape": "pentagon",
+      "size": 15,
+      "rotation": 1.570796,
+      "shade": "none",
+      "visible": 1
+    },
+    "cells": [
+      {
+        "shape": "pentagon",
+        "size": 16.666667,
+        "rotation": 1.570796,
+        "shade": "white",
+        "visible": 1
+      },
+      {
+        "shape": "pentagon",
+        "size": 16.666667,
+        "rotation": 2.356194,
+        "shade": "grey",
+        "visible": 1
+      },
+      {
+        "shape": "pentagon",
+        "size": 16.666667,
+        "rotation": 3.141593,
+        "shade": "black",
+        "visible": 1
+      },
+      {
+        "shape": "pentagon",
+        "size": 8.333333,
+        "rotation": 1.570796,
+        "shade": "white",
+        "visible": 1
+      },
+      {
+        "shape": "pentagon",
+        "size": 8.333333,
+        "rotation": 2.356194,
+        "shade": "grey",
+        "visible": 1
+      },
+      {
+        "shape": "pentagon",
+        "size": 8.333333,
+        "rotation": 3.141593,
+        "shade": "black",
+        "visible": 1
+      },
+      {
+        "shape": "pentagon",
+        "size": 5.555556,
+        "rotation": 1.570796,
+        "shade": "white",
+        "visible": 1
+      },
+      {
+        "shape": "pentagon",
+        "size": 5.555556,
+        "rotation": 2.356194,
+        "shade": "grey",
+        "visible": 1
+      },
+      {
+        "shape": "pentagon",
+        "size": 5.555556,
+        "rotation": 3.141593,
+        "shade": "black",
+        "visible": 1
+      }
+    ],
+    "responses": {
+      "correct": {
+        "shape": "pentagon",
+        "size": 5.555556,
+        "rotation": 3.141593,
+        "shade": "black",
+        "visible": 1
+      },
+      "r_diag": {
+        "shape": "pentagon",
+        "size": 8.333333,
+        "rotation": 2.356194,
+        "shade": "grey",
+        "visible": 1
+      },
+      "r_left": {
+        "shape": "pentagon",
+        "size": 5.555556,
+        "rotation": 2.356194,
+        "shade": "grey",
+        "visible": 1
+      },
+      "r_top": {
+        "shape": "pentagon",
+        "size": 8.333333,
+        "rotation": 3.141593,
+        "shade": "black",
+        "visible": 1
+      },
+      "wp_copy": {
+        "shape": "pentagon",
+        "size": 16.666667,
+        "rotation": 1.570796,
+        "shade": "white",
+        "visible": 1
+      },
+      "wp_matrix": {
+        "shape": ["pentagon", "pentagon"],
+        "size": [4.62963, 16.666667],
+        "rotation": [2.356194, 3.926991],
+        "shade": ["grey", "white"],
+        "visible": [1, 1]
+      },
+      "difference": {
+        "shape": ["pentagon", "s_maxi"],
+        "size": [16.666667, 4, 8, 4, 8],
+        "rotation": [1.570796, -3.141593, -3.141593, -3.141593, 3.141593],
+        "shade": ["white", "none"],
+        "visible": [1, 1]
+      },
+      "ic_neg": {
+        "shape": "pentagon",
+        "size": 5.555556,
+        "rotation": 3.141593,
+        "shade": "white",
+        "visible": 1
+      },
+      "ic_flip": {
+        "shape": "pentagon",
+        "size": 5.555556,
+        "rotation": 3.926991,
+        "shade": "black",
+        "visible": 1
+      },
+      "ic_size": {
+        "shape": "pentagon",
+        "size": 2.057613,
+        "rotation": 3.141593,
+        "shade": "black",
+        "visible": 1
+      },
+      "ic_inc": {
+        "shape": ["pentagon", "X"],
+        "size": [5.555556, 19.091883, 19.091883],
+        "rotation": [3.141593, 2.356194, 3.926991],
+        "shade": ["black", "none"],
+        "visible": [1, 1]
+      }
+    },
+    "warnings": "IC-Inc cannot be obtained with a single figure"
+  },
+  "g78-m4": {
+    "id": "g78-m4",
+    "hrules": "XOR",
+    "vrules": "identity",
+    "glyphs": ["circle", "square", "triangle", "star"],
+    "rot": 1,
+    "base": {
+      "shape": ["circle", "square", "triangle", "pentagon"],
+      "size": [10, 15, 10, 15],
+      "rotation": [0, 0.785398, 1.570796, 1.570796],
+      "shade": ["none", "none", "none", "none"],
+      "visible": [1, 1, 1, 1]
+    },
+    "cells": [
+      {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15],
+        "rotation": [0, 0.785398, 1.570796, 1.570796],
+        "shade": ["none", "none", "none", "none"],
+        "visible": [1, 1, 1, 0]
+      },
+      {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15],
+        "rotation": [0, 0.785398, 1.570796, 1.570796],
+        "shade": ["none", "none", "none", "none"],
+        "visible": [1, 0, 1, 1]
+      },
+      {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15],
+        "rotation": [0, 0.785398, 1.570796, 1.570796],
+        "shade": ["none", "none", "none", "none"],
+        "visible": [0, 1, 0, 1]
+      },
+      {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15],
+        "rotation": [0, 0.785398, 1.570796, 1.570796],
+        "shade": ["none", "none", "none", "none"],
+        "visible": [1, 1, 1, 0]
+      },
+      {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15],
+        "rotation": [0, 0.785398, 1.570796, 1.570796],
+        "shade": ["none", "none", "none", "none"],
+        "visible": [0, 1, 1, 1]
+      },
+      {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15],
+        "rotation": [0, 0.785398, 1.570796, 1.570796],
+        "shade": ["none", "none", "none", "none"],
+        "visible": [1, 0, 0, 1]
+      },
+      {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15],
+        "rotation": [0, 0.785398, 1.570796, 1.570796],
+        "shade": ["none", "none", "none", "none"],
+        "visible": [1, 1, 0, 1]
+      },
+      {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15],
+        "rotation": [0, 0.785398, 1.570796, 1.570796],
+        "shade": ["none", "none", "none", "none"],
+        "visible": [1, 0, 1, 1]
+      },
+      {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15],
+        "rotation": [0, 0.785398, 1.570796, 1.570796],
+        "shade": ["none", "none", "none", "none"],
+        "visible": [0, 1, 1, 0]
+      }
+    ],
+    "responses": {
+      "correct": {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15],
+        "rotation": [0, 0.785398, 1.570796, 1.570796],
+        "shade": ["none", "none", "none", "none"],
+        "visible": [0, 1, 1, 0]
+      },
+      "r_diag": {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15],
+        "rotation": [0, 0.785398, 1.570796, 1.570796],
+        "shade": ["none", "none", "none", "none"],
+        "visible": [0, 1, 1, 1]
+      },
+      "r_left": {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15],
+        "rotation": [0, 0.785398, 1.570796, 1.570796],
+        "shade": ["none", "none", "none", "none"],
+        "visible": [1, 0, 1, 1]
+      },
+      "r_top": {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15],
+        "rotation": [0, 0.785398, 1.570796, 1.570796],
+        "shade": ["none", "none", "none", "none"],
+        "visible": [1, 0, 0, 1]
+      },
+      "wp_copy": {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15],
+        "rotation": [0, 0.785398, 1.570796, 1.570796],
+        "shade": ["none", "none", "none", "none"],
+        "visible": [1, 1, 1, 0]
+      },
+      "wp_matrix": {
+        "shape": ["circle", "square", "triangle", "pentagon", "circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15, 5.555556, 8.333333, 5.555556, 8.333333],
+        "rotation": [0, 0.785398, 1.570796, 1.570796, 0, 0.785398, 1.570796, 1.570796],
+        "shade": ["none", "none", "none", "none", "none", "none", "none", "none"],
+        "visible": [1, 1, 1, 0, 0, 1, 1, 1]
+      },
+      "difference": {
+        "shape": ["circle", "square", "triangle", "pentagon", "s_maxi"],
+        "size": [10, 15, 10, 15, 4, 8, 4, 8],
+        "rotation": [0, 0.785398, 1.570796, 1.570796, -3.141593, -3.141593, -3.141593, 3.141593],
+        "shade": ["none", "none", "none", "none", "none"],
+        "visible": [1, 1, 1, 0, 1]
+      },
+      "ic_neg": {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15],
+        "rotation": [0, 0.785398, 1.570796, 1.570796],
+        "shade": ["black", "black", "black", "black"],
+        "visible": [0, 1, 1, 0]
+      },
+      "ic_flip": {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15],
+        "rotation": [0, 0.785398, 3.926991, 1.570796],
+        "shade": ["none", "none", "none", "none"],
+        "visible": [0, 1, 1, 0]
+      },
+      "ic_size": {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [3.703704, 5.555556, 3.703704, 5.555556],
+        "rotation": [0, 0.785398, 1.570796, 1.570796],
+        "shade": ["none", "none", "none", "none"],
+        "visible": [0, 1, 1, 0]
+      },
+      "ic_inc": {
+        "shape": ["circle", "square", "triangle", "pentagon", "X"],
+        "size": [10, 15, 10, 15, 19.091883, 19.091883],
+        "rotation": [0, 0.785398, 1.570796, 1.570796, 2.356194, 3.926991],
+        "shade": ["none", "none", "none", "none", "none"],
+        "visible": [0, 1, 1, 0, 1]
+      }
+    },
+    "warnings": "IC-Inc cannot be obtained with a single figure"
+  },
+  "g78-m5": {
+    "id": "g78-m5",
+    "hrules": "AND",
+    "vrules": "identity",
+    "glyphs": ["heart", "cross", "diamond", "lightning"],
+    "rot": 1,
+    "base": {
+      "shape": ["circle", "square", "triangle", "pentagon"],
+      "size": [10, 15, 10, 15],
+      "rotation": [0, 0.785398, 1.570796, 1.570796],
+      "shade": ["none", "none", "none", "none"],
+      "visible": [1, 1, 1, 1]
+    },
+    "cells": [
+      {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15],
+        "rotation": [0, 0.785398, 1.570796, 1.570796],
+        "shade": ["none", "none", "none", "none"],
+        "visible": [1, 1, 1, 0]
+      },
+      {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15],
+        "rotation": [0, 0.785398, 1.570796, 1.570796],
+        "shade": ["none", "none", "none", "none"],
+        "visible": [1, 0, 1, 1]
+      },
+      {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15],
+        "rotation": [0, 0.785398, 1.570796, 1.570796],
+        "shade": ["none", "none", "none", "none"],
+        "visible": [1, 0, 1, 0]
+      },
+      {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15],
+        "rotation": [0, 0.785398, 1.570796, 1.570796],
+        "shade": ["none", "none", "none", "none"],
+        "visible": [1, 1, 1, 0]
+      },
+      {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15],
+        "rotation": [0, 0.785398, 1.570796, 1.570796],
+        "shade": ["none", "none", "none", "none"],
+        "visible": [0, 1, 1, 1]
+      },
+      {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15],
+        "rotation": [0, 0.785398, 1.570796, 1.570796],
+        "shade": ["none", "none", "none", "none"],
+        "visible": [0, 1, 1, 0]
+      },
+      {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15],
+        "rotation": [0, 0.785398, 1.570796, 1.570796],
+        "shade": ["none", "none", "none", "none"],
+        "visible": [1, 1, 0, 1]
+      },
+      {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15],
+        "rotation": [0, 0.785398, 1.570796, 1.570796],
+        "shade": ["none", "none", "none", "none"],
+        "visible": [1, 0, 1, 1]
+      },
+      {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15],
+        "rotation": [0, 0.785398, 1.570796, 1.570796],
+        "shade": ["none", "none", "none", "none"],
+        "visible": [1, 0, 0, 1]
+      }
+    ],
+    "responses": {
+      "correct": {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15],
+        "rotation": [0, 0.785398, 1.570796, 1.570796],
+        "shade": ["none", "none", "none", "none"],
+        "visible": [1, 0, 0, 1]
+      },
+      "r_diag": {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15],
+        "rotation": [0, 0.785398, 1.570796, 1.570796],
+        "shade": ["none", "none", "none", "none"],
+        "visible": [0, 1, 1, 1]
+      },
+      "r_left": {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15],
+        "rotation": [0, 0.785398, 1.570796, 1.570796],
+        "shade": ["none", "none", "none", "none"],
+        "visible": [1, 0, 1, 1]
+      },
+      "r_top": {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15],
+        "rotation": [0, 0.785398, 1.570796, 1.570796],
+        "shade": ["none", "none", "none", "none"],
+        "visible": [0, 1, 1, 0]
+      },
+      "wp_copy": {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15],
+        "rotation": [0, 0.785398, 1.570796, 1.570796],
+        "shade": ["none", "none", "none", "none"],
+        "visible": [1, 1, 1, 0]
+      },
+      "wp_matrix": {
+        "shape": ["circle", "square", "triangle", "pentagon", "circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15, 5.555556, 8.333333, 5.555556, 8.333333],
+        "rotation": [0, 0.785398, 1.570796, 1.570796, 0, 0.785398, 1.570796, 1.570796],
+        "shade": ["none", "none", "none", "none", "none", "none", "none", "none"],
+        "visible": [1, 1, 1, 0, 0, 1, 1, 1]
+      },
+      "difference": {
+        "shape": ["circle", "square", "triangle", "pentagon", "s_maxi"],
+        "size": [10, 15, 10, 15, 4, 8, 4, 8],
+        "rotation": [0, 0.785398, 1.570796, 1.570796, -3.141593, -3.141593, -3.141593, 3.141593],
+        "shade": ["none", "none", "none", "none", "none"],
+        "visible": [1, 1, 1, 0, 1]
+      },
+      "ic_neg": {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15],
+        "rotation": [0, 0.785398, 1.570796, 1.570796],
+        "shade": ["black", "black", "black", "black"],
+        "visible": [1, 0, 0, 1]
+      },
+      "ic_flip": {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15],
+        "rotation": [0, 0.785398, 1.570796, 3.926991],
+        "shade": ["none", "none", "none", "none"],
+        "visible": [1, 0, 0, 1]
+      },
+      "ic_size": {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [3.703704, 5.555556, 3.703704, 5.555556],
+        "rotation": [0, 0.785398, 1.570796, 1.570796],
+        "shade": ["none", "none", "none", "none"],
+        "visible": [1, 0, 0, 1]
+      },
+      "ic_inc": {
+        "shape": ["circle", "square", "triangle", "pentagon", "X"],
+        "size": [10, 15, 10, 15, 19.091883, 19.091883],
+        "rotation": [0, 0.785398, 1.570796, 1.570796, 2.356194, 3.926991],
+        "shade": ["none", "none", "none", "none", "none"],
+        "visible": [1, 0, 0, 1, 1]
+      }
+    },
+    "warnings": "IC-Inc cannot be obtained with a single figure"
+  },
+  "a-m1": {
+    "id": "a-m1",
+    "hrules": "rotate",
+    "vrules": "shade",
+    "glyphs": ["arrow", "teardrop"],
+    "rot": 2,
+    "base": {
+      "shape": ["triangle", "circle"],
+      "size": [10, 10],
+      "rotation": [1.570796, 0],
+      "shade": ["none", "none"],
+      "visible": [1, 1]
+    },
+    "cells": [
+      {
+        "shape": ["triangle", "circle"],
+        "size": [10, 10],
+        "rotation": [1.570796, 0],
+        "shade": ["white", "white"],
+        "visible": [1, 1]
+      },
+      {
+        "shape": ["triangle", "circle"],
+        "size": [10, 10],
+        "rotation": [2.356194, 0.785398],
+        "shade": ["white", "white"],
+        "visible": [1, 1]
+      },
+      {
+        "shape": ["triangle", "circle"],
+        "size": [10, 10],
+        "rotation": [3.141593, 1.570796],
+        "shade": ["white", "white"],
+        "visible": [1, 1]
+      },
+      {
+        "shape": ["triangle", "circle"],
+        "size": [10, 10],
+        "rotation": [1.570796, 0],
+        "shade": ["grey", "grey"],
+        "visible": [1, 1]
+      },
+      {
+        "shape": ["triangle", "circle"],
+        "size": [10, 10],
+        "rotation": [2.356194, 0.785398],
+        "shade": ["grey", "grey"],
+        "visible": [1, 1]
+      },
+      {
+        "shape": ["triangle", "circle"],
+        "size": [10, 10],
+        "rotation": [3.141593, 1.570796],
+        "shade": ["grey", "grey"],
+        "visible": [1, 1]
+      },
+      {
+        "shape": ["triangle", "circle"],
+        "size": [10, 10],
+        "rotation": [1.570796, 0],
+        "shade": ["black", "black"],
+        "visible": [1, 1]
+      },
+      {
+        "shape": ["triangle", "circle"],
+        "size": [10, 10],
+        "rotation": [2.356194, 0.785398],
+        "shade": ["black", "black"],
+        "visible": [1, 1]
+      },
+      {
+        "shape": ["triangle", "circle"],
+        "size": [10, 10],
+        "rotation": [3.141593, 1.570796],
+        "shade": ["black", "black"],
+        "visible": [1, 1]
+      }
+    ],
+    "responses": {
+      "correct": {
+        "shape": ["triangle", "circle"],
+        "size": [10, 10],
+        "rotation": [3.141593, 1.570796],
+        "shade": ["black", "black"],
+        "visible": [1, 1]
+      },
+      "r_diag": {
+        "shape": ["triangle", "circle"],
+        "size": [10, 10],
+        "rotation": [2.356194, 0.785398],
+        "shade": ["grey", "grey"],
+        "visible": [1, 1]
+      },
+      "r_left": {
+        "shape": ["triangle", "circle"],
+        "size": [10, 10],
+        "rotation": [2.356194, 0.785398],
+        "shade": ["black", "black"],
+        "visible": [1, 1]
+      },
+      "r_top": {
+        "shape": ["triangle", "circle"],
+        "size": [10, 10],
+        "rotation": [3.141593, 1.570796],
+        "shade": ["grey", "grey"],
+        "visible": [1, 1]
+      },
+      "wp_copy": {
+        "shape": ["triangle", "circle"],
+        "size": [10, 10],
+        "rotation": [1.570796, 0],
+        "shade": ["white", "white"],
+        "visible": [1, 1]
+      },
+      "wp_matrix": {
+        "shape": ["triangle", "circle", "triangle", "circle"],
+        "size": [10, 10, 5.555556, 5.555556],
+        "rotation": [1.570796, 0, 2.356194, 0.785398],
+        "shade": ["white", "white", "grey", "grey"],
+        "visible": [1, 1, 1, 1]
+      },
+      "difference": {
+        "shape": ["triangle", "circle", "s_maxi"],
+        "size": [10, 10, 4, 8, 4, 8],
+        "rotation": [1.570796, 0, -3.141593, -3.141593, -3.141593, 3.141593],
+        "shade": ["white", "white", "none"],
+        "visible": [1, 1, 1]
+      },
+      "ic_neg": {
+        "shape": ["triangle", "circle"],
+        "size": [10, 10],
+        "rotation": [3.141593, 1.570796],
+        "shade": ["white", "white"],
+        "visible": [1, 1]
+      },
+      "ic_flip": {
+        "shape": ["triangle", "circle"],
+        "size": [10, 10],
+        "rotation": [3.926991, 2.356194],
+        "shade": ["black", "black"],
+        "visible": [1, 1]
+      },
+      "ic_size": {
+        "shape": ["triangle", "circle"],
+        "size": [3.703704, 3.703704],
+        "rotation": [3.141593, 1.570796],
+        "shade": ["black", "black"],
+        "visible": [1, 1]
+      },
+      "ic_inc": {
+        "shape": ["triangle", "circle", "X"],
+        "size": [10, 10, 19.091883, 19.091883],
+        "rotation": [3.141593, 1.570796, 2.356194, 3.926991],
+        "shade": ["black", "black", "none"],
+        "visible": [1, 1, 1]
+      }
+    },
+    "warnings": "IC-Inc cannot be obtained with a single figure"
+  },
+  "a-m2": {
+    "id": "a-m2",
+    "hrules": ["shade", "size"],
+    "vrules": "rotate",
+    "glyphs": "teardrop",
+    "rot": 1,
+    "base": {
+      "shape": "square",
+      "size": 15,
+      "rotation": 0.785398,
+      "shade": "none",
+      "visible": 1
+    },
+    "cells": [
+      {
+        "shape": "square",
+        "size": 16.666667,
+        "rotation": 0.785398,
+        "shade": "white",
+        "visible": 1
+      },
+      {
+        "shape": "square",
+        "size": 8.333333,
+        "rotation": 0.785398,
+        "shade": "grey",
+        "visible": 1
+      },
+      {
+        "shape": "square",
+        "size": 5.555556,
+        "rotation": 0.785398,
+        "shade": "black",
+        "visible": 1
+      },
+      {
+        "shape": "square",
+        "size": 16.666667,
+        "rotation": 1.570796,
+        "shade": "white",
+        "visible": 1
+      },
+      {
+        "shape": "square",
+        "size": 8.333333,
+        "rotation": 1.570796,
+        "shade": "grey",
+        "visible": 1
+      },
+      {
+        "shape": "square",
+        "size": 5.555556,
+        "rotation": 1.570796,
+        "shade": "black",
+        "visible": 1
+      },
+      {
+        "shape": "square",
+        "size": 16.666667,
+        "rotation": 2.356194,
+        "shade": "white",
+        "visible": 1
+      },
+      {
+        "shape": "square",
+        "size": 8.333333,
+        "rotation": 2.356194,
+        "shade": "grey",
+        "visible": 1
+      },
+      {
+        "shape": "square",
+        "size": 5.555556,
+        "rotation": 2.356194,
+        "shade": "black",
+        "visible": 1
+      }
+    ],
+    "responses": {
+      "correct": {
+        "shape": "square",
+        "size": 5.555556,
+        "rotation": 2.356194,
+        "shade": "black",
+        "visible": 1
+      },
+      "r_diag": {
+        "shape": "square",
+        "size": 8.333333,
+        "rotation": 1.570796,
+        "shade": "grey",
+        "visible": 1
+      },
+      "r_left": {
+        "shape": "square",
+        "size": 8.333333,
+        "rotation": 2.356194,
+        "shade": "grey",
+        "visible": 1
+      },
+      "r_top": {
+        "shape": "square",
+        "size": 5.555556,
+        "rotation": 1.570796,
+        "shade": "black",
+        "visible": 1
+      },
+      "wp_copy": {
+        "shape": "square",
+        "size": 16.666667,
+        "rotation": 0.785398,
+        "shade": "white",
+        "visible": 1
+      },
+      "wp_matrix": {
+        "shape": ["square", "square"],
+        "size": [4.62963, 16.666667],
+        "rotation": [1.570796, 3.141593],
+        "shade": ["grey", "white"],
+        "visible": [1, 1]
+      },
+      "difference": {
+        "shape": ["square", "s_maxi"],
+        "size": [16.666667, 4, 8, 4, 8],
+        "rotation": [0.785398, -3.141593, -3.141593, -3.141593, 3.141593],
+        "shade": ["white", "none"],
+        "visible": [1, 1]
+      },
+      "ic_neg": {
+        "shape": "square",
+        "size": 5.555556,
+        "rotation": 2.356194,
+        "shade": "white",
+        "visible": 1
+      },
+      "ic_flip": {
+        "shape": "square",
+        "size": 5.555556,
+        "rotation": 3.141593,
+        "shade": "black",
+        "visible": 1
+      },
+      "ic_size": {
+        "shape": "square",
+        "size": 2.057613,
+        "rotation": 2.356194,
+        "shade": "black",
+        "visible": 1
+      },
+      "ic_inc": {
+        "shape": ["square", "X"],
+        "size": [5.555556, 19.091883, 19.091883],
+        "rotation": [2.356194, 2.356194, 3.926991],
+        "shade": ["black", "none"],
+        "visible": [1, 1]
+      }
+    },
+    "warnings": "IC-Inc cannot be obtained with a single figure"
+  },
+  "a-m3": {
+    "id": "a-m3",
+    "hrules": "XOR",
+    "vrules": "identity",
+    "glyphs": ["crescent", "diamond", "cross", "triangle"],
+    "rot": 1,
+    "base": {
+      "shape": ["circle", "square", "triangle", "pentagon"],
+      "size": [10, 15, 10, 15],
+      "rotation": [0, 0.785398, 1.570796, 1.570796],
+      "shade": ["none", "none", "none", "none"],
+      "visible": [1, 1, 1, 1]
+    },
+    "cells": [
+      {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15],
+        "rotation": [0, 0.785398, 1.570796, 1.570796],
+        "shade": ["none", "none", "none", "none"],
+        "visible": [1, 1, 1, 0]
+      },
+      {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15],
+        "rotation": [0, 0.785398, 1.570796, 1.570796],
+        "shade": ["none", "none", "none", "none"],
+        "visible": [1, 0, 1, 1]
+      },
+      {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15],
+        "rotation": [0, 0.785398, 1.570796, 1.570796],
+        "shade": ["none", "none", "none", "none"],
+        "visible": [0, 1, 0, 1]
+      },
+      {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15],
+        "rotation": [0, 0.785398, 1.570796, 1.570796],
+        "shade": ["none", "none", "none", "none"],
+        "visible": [1, 1, 1, 0]
+      },
+      {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15],
+        "rotation": [0, 0.785398, 1.570796, 1.570796],
+        "shade": ["none", "none", "none", "none"],
+        "visible": [0, 1, 1, 1]
+      },
+      {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15],
+        "rotation": [0, 0.785398, 1.570796, 1.570796],
+        "shade": ["none", "none", "none", "none"],
+        "visible": [1, 0, 0, 1]
+      },
+      {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15],
+        "rotation": [0, 0.785398, 1.570796, 1.570796],
+        "shade": ["none", "none", "none", "none"],
+        "visible": [1, 1, 0, 1]
+      },
+      {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15],
+        "rotation": [0, 0.785398, 1.570796, 1.570796],
+        "shade": ["none", "none", "none", "none"],
+        "visible": [1, 0, 1, 1]
+      },
+      {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15],
+        "rotation": [0, 0.785398, 1.570796, 1.570796],
+        "shade": ["none", "none", "none", "none"],
+        "visible": [0, 1, 1, 0]
+      }
+    ],
+    "responses": {
+      "correct": {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15],
+        "rotation": [0, 0.785398, 1.570796, 1.570796],
+        "shade": ["none", "none", "none", "none"],
+        "visible": [0, 1, 1, 0]
+      },
+      "r_diag": {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15],
+        "rotation": [0, 0.785398, 1.570796, 1.570796],
+        "shade": ["none", "none", "none", "none"],
+        "visible": [0, 1, 1, 1]
+      },
+      "r_left": {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15],
+        "rotation": [0, 0.785398, 1.570796, 1.570796],
+        "shade": ["none", "none", "none", "none"],
+        "visible": [1, 0, 1, 1]
+      },
+      "r_top": {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15],
+        "rotation": [0, 0.785398, 1.570796, 1.570796],
+        "shade": ["none", "none", "none", "none"],
+        "visible": [1, 0, 0, 1]
+      },
+      "wp_copy": {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15],
+        "rotation": [0, 0.785398, 1.570796, 1.570796],
+        "shade": ["none", "none", "none", "none"],
+        "visible": [1, 1, 1, 0]
+      },
+      "wp_matrix": {
+        "shape": ["circle", "square", "triangle", "pentagon", "circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15, 5.555556, 8.333333, 5.555556, 8.333333],
+        "rotation": [0, 0.785398, 1.570796, 1.570796, 0, 0.785398, 1.570796, 1.570796],
+        "shade": ["none", "none", "none", "none", "none", "none", "none", "none"],
+        "visible": [1, 1, 1, 0, 0, 1, 1, 1]
+      },
+      "difference": {
+        "shape": ["circle", "square", "triangle", "pentagon", "s_maxi"],
+        "size": [10, 15, 10, 15, 4, 8, 4, 8],
+        "rotation": [0, 0.785398, 1.570796, 1.570796, -3.141593, -3.141593, -3.141593, 3.141593],
+        "shade": ["none", "none", "none", "none", "none"],
+        "visible": [1, 1, 1, 0, 1]
+      },
+      "ic_neg": {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15],
+        "rotation": [0, 0.785398, 1.570796, 1.570796],
+        "shade": ["black", "black", "black", "black"],
+        "visible": [0, 1, 1, 0]
+      },
+      "ic_flip": {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [10, 15, 10, 15],
+        "rotation": [0, 0.785398, 3.926991, 1.570796],
+        "shade": ["none", "none", "none", "none"],
+        "visible": [0, 1, 1, 0]
+      },
+      "ic_size": {
+        "shape": ["circle", "square", "triangle", "pentagon"],
+        "size": [3.703704, 5.555556, 3.703704, 5.555556],
+        "rotation": [0, 0.785398, 1.570796, 1.570796],
+        "shade": ["none", "none", "none", "none"],
+        "visible": [0, 1, 1, 0]
+      },
+      "ic_inc": {
+        "shape": ["circle", "square", "triangle", "pentagon", "X"],
+        "size": [10, 15, 10, 15, 19.091883, 19.091883],
+        "rotation": [0, 0.785398, 1.570796, 1.570796, 2.356194, 3.926991],
+        "shade": ["none", "none", "none", "none", "none"],
+        "visible": [0, 1, 1, 0, 1]
+      }
+    },
+    "warnings": "IC-Inc cannot be obtained with a single figure"
+  }
+}

@@ -51,3 +51,9 @@ yarn-error.log*
 .DS_Store
 *.pem
 .gstack/
+
+# Local result store (results keyed by token). Gitignored.
+/.data/
+
+# Local screenshot output (verification only)
+/.shots/

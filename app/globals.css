@@ -105,6 +105,24 @@
     overflow-x: clip;
   }
 
+  /*
+    THE OVERSCROLL CANVAS IS BLUE ONLY BECAUSE THE FOOTER IS.
+
+    The rule above paints the root blue so that any residual overscroll shows
+    an on-brand colour matching the page's blue footer instead of a white
+    gutter. The v3 test flow has no footer and no blue anywhere, so on those
+    routes the same rule is the bug: rubber-band on iOS, or any moment the body
+    does not cover the root, and a slab of blue appears under a page that is
+    otherwise paper.
+
+    `[data-flow]` is set on the flow's own wrapper, and :has() lets the root
+    follow it. Scoped this way rather than by pathname so it cannot fall out of
+    step with which routes are actually the flow.
+  */
+  html:has([data-flow]) {
+    background-color: var(--color-paper);
+  }
+
   body {
     background-color: var(--color-paper);
     color: var(--color-ink);
@@ -176,6 +194,63 @@
 */
 @utility scroll-mt-nav {
   scroll-margin-top: calc(var(--nav-h, 4.5rem) - 2px);
+}
+
+/*
+  ============================================================================
+  THE SURFACES YOU STARE AT ARE FLAT. Everything else keeps the hard shadow.
+  ============================================================================
+  The hard offset shadow is the brand's signature and it is what makes a surface
+  feel like this product rather than a generic form. It stays on almost
+  everything: the fork cards, the grade picker, every button you press, the
+  results cards, the marketing and legal pages.
+
+  It comes off a SHORT LIST, and the test for membership is how long somebody
+  looks at the thing:
+
+    the question stem card      you read it under a clock
+    the four option cards       four floating slabs per question, fifty
+                                questions running, is heavy by question three
+    the intro bullet cards      three statements you read once and never again
+    the clock pill              passive chrome, not a control
+
+  Note what that leaves INSIDE the intro screen: flat bullets with a shadowed
+  Start button under them. That is the rule working, not an inconsistency. The
+  bullets are text; the button is the thing you press.
+
+  WHY A SCOPED CLASS AND NOT A LIST OF EDITS. Removing `shadow-*` from each
+  surface does not hold, which is why this block exists. It was taken off the
+  option cards once and the question card kept its own, and the buttons never
+  had a `shadow-*` class to remove at all, because `btn-press` below paints one
+  unconditionally. A shadow can arrive here from a shared component nobody
+  touched, so the guarantee has to live above the components.
+
+  Scope it as tightly as the list above and nothing else can get swept up:
+  `.flat-surface` goes on the question region and on the intro list, not on the
+  flow root. An earlier version put it on the root and took the shadow off the
+  fork cards, the grade picker and every button in the product, which was a
+  much bigger change than the one being asked for.
+
+  Specificity is (0,2,0) and (0,3,0), which beats both the utility classes and
+  `btn-press`'s own hover and active states, so it does not depend on source
+  order.
+*/
+.flat-surface {
+  --btn-shadow-color: transparent;
+}
+.flat-surface [class*="shadow-hard"],
+.flat-surface[class*="shadow-hard"] {
+  box-shadow: none;
+}
+/* The press travel goes with the shadow: a control sliding 2px with nothing
+   under it reads as a glitch rather than as a press. */
+.flat-surface .btn-press:hover,
+.flat-surface .btn-press:active,
+.flat-surface .press:hover,
+.flat-surface .press:active,
+.flat-surface .press-lg:hover,
+.flat-surface .press-lg:active {
+  transform: none;
 }
 
 /*
