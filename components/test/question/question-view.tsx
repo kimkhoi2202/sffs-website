@@ -110,6 +110,90 @@ function RelationRows({ rows }: { rows: Array<[string, string]> }) {
 }
 
 /**
+ * Two strings to be compared character by character, one pair per row.
+ *
+ * ===========================================================================
+ * WHY THIS IS NOT A PARAGRAPH
+ * ===========================================================================
+ * The attention-to-detail items are authored as `CODE   CODE` per line, with
+ * runs of spaces holding the halves apart. Rendered as a stem that collapsed
+ * to a single seventeen-character run per line, because `white-space: pre-line`
+ * keeps newlines and collapses runs of spaces to one. Centred in a proportional
+ * face, the four rows then did not line up as columns either.
+ *
+ * That changed what the item measured. The task is comparing a left half
+ * against a right half four times; with no gap and no columns the difficulty
+ * came from picking the halves apart, not from the character confusions the
+ * item is about. A careful reader still got the right answer, which is exactly
+ * why the data audit could not see it.
+ *
+ * Three things fix it and all three are necessary:
+ *
+ *   COLUMNS      a real grid, so the four left halves start at one x and the
+ *                four right halves at another. The comparison is vertical as
+ *                well as horizontal — a reader scans the column for the row
+ *                that breaks the pattern.
+ *   A SEPARATOR  a rule down the middle, so "where does the left one end" is
+ *                not itself a task.
+ *   MONOSPACE    load-bearing, not stylistic. `0` against `O` and `G` against
+ *                `6` is the whole item, and in a proportional face the two
+ *                halves of a pair are not even the same width, so the eye
+ *                cannot align them character against character. Equal advance
+ *                widths turn the comparison into looking straight down.
+ *
+ * a03 and a31 never had this because their strings sit in separate option rows.
+ */
+function PairRows({ rows }: { rows: Array<[string, string]> }) {
+  return (
+    <div
+      className="mx-auto grid w-fit font-mono text-[clamp(0.9rem,4vw,1.25rem)] font-bold leading-relaxed tracking-wide text-ink"
+      style={{ gridTemplateColumns: "auto auto auto" }}
+    >
+      {rows.map(([left, right], i) => (
+        <Fragment key={i}>
+          <span aria-hidden="true" className="pr-4 text-right">
+            {left}
+          </span>
+          {/* Full-height so the rules join into one continuous line down the
+              block rather than four dashes. */}
+          <span aria-hidden="true" className="h-full w-px justify-self-center bg-ink/25" />
+          <span aria-hidden="true" className="pl-4 text-left">
+            {right}
+          </span>
+          <span className="sr-only">{`Pair ${i + 1}: ${spellOut(left)} and ${spellOut(right)}. `}</span>
+        </Fragment>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Read a code out character by character. "R7K0LM94" spoken as a word is
+ * useless for an item about a zero against a letter O, and most screen readers
+ * will attempt exactly that.
+ */
+function spellOut(code: string): string {
+  return code.split("").join(" ");
+}
+
+/**
+ * Is this stem a table of string pairs? Every non-empty line has to be two
+ * runs of non-space separated by two or more spaces, and every line has to have
+ * the same shape, so a two-line prose stem is not caught by accident.
+ */
+function asPairRows(text: string): Array<[string, string]> | null {
+  const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
+  if (lines.length < 2) return null;
+  const rows: Array<[string, string]> = [];
+  for (const line of lines) {
+    const m = /^(\S+)\s{2,}(\S+)$/.exec(line);
+    if (!m) return null;
+    rows.push([m[1], m[2]]);
+  }
+  return rows;
+}
+
+/**
  * Is this stem a list of relations rather than a sentence? Every non-empty line
  * has to be `something -> something`, so a prose stem that happens to contain
  * an arrow is not caught by accident.
@@ -150,6 +234,11 @@ function Stem({ text }: { text: string }) {
   // individually breaks the column the item is read down.
   const rows = asRelationRows(text);
   if (rows) return <RelationRows rows={rows} />;
+
+  // Checked after relations, so an arrow list separated by wide spacing is
+  // still read as relations rather than as a pair table.
+  const pairs = asPairRows(text);
+  if (pairs) return <PairRows rows={pairs} />;
 
   const parts = text.split(/(_{2,})/g);
   return (

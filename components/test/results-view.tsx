@@ -87,16 +87,30 @@ export function ResultsView({
           {masked ? MASKED_VALUE : result.score}
           <span className="text-ink/40">/{result.max}</span>
         </p>
-        <h1 className="text-balance font-display text-[clamp(1.5rem,7vw,2.5rem)] uppercase leading-[1.02] tracking-[-0.015em]">
-          {result.verdict.title}
-        </h1>
+        {/*
+          ONE MASKED ELEMENT IS ENOUGH, AND IT IS THE SCORE.
+
+          This used to render "???" here too, under the "???/15" above it, with
+          "your verdict is in the email" under that. Three lines saying the same
+          absence, and repeated placeholder glyphs stop reading as a deliberate
+          tease and start reading as a page that failed to load.
+
+          Masking the verdict rather than inventing one is still right — a fake
+          "Mostly Smart Fella" fails for the same reason a fake score does — but
+          an absence does not need its own glyph when there is already a line
+          explaining it.
+        */}
+        {masked ? null : (
+          <h1 className="text-balance font-display text-[clamp(1.5rem,7vw,2.5rem)] uppercase leading-[1.02] tracking-[-0.015em]">
+            {result.verdict.title}
+          </h1>
+        )}
         <p className="text-pretty text-[0.975rem] font-semibold leading-snug text-ink/80">
           {result.verdict.subline}
         </p>
         {timedOut ? (
           <p className="text-pretty text-xs font-bold uppercase leading-snug tracking-wide text-ink/60">
-            {masked ? MASKED_VALUE : result.answered} of {result.max} answered before the
-            clock stopped.
+            {result.answered} of {result.max} answered before the clock stopped.
           </p>
         ) : null}
       </div>
@@ -122,8 +136,12 @@ export function ResultsView({
                   style={{ width: masked ? "0%" : `${(row.correct / row.total) * 100}%` }}
                 />
               </span>
+              {/* Masked: the empty track is the whole message. A column of
+                  "?/4" beside it was four more placeholders saying what the
+                  empty bar already says. The width is reserved either way so
+                  the rows do not shift when the real page loads. */}
               <span className="w-11 shrink-0 text-right font-mono text-sm font-bold tabular-nums text-ink">
-                {masked ? "?" : row.correct}/{row.total}
+                {masked ? "" : `${row.correct}/${row.total}`}
               </span>
             </div>
           ))}
@@ -153,7 +171,7 @@ export function ResultsView({
                 )}
               >
                 {masked
-                  ? "?"
+                  ? ""
                   : scored.correct
                     ? "\u2713"
                     : scored.picked === null

@@ -32,10 +32,12 @@
  */
 import "server-only";
 
+import { SUPPORT_EMAIL } from "../support-contact";
+
 const ENDPOINT = "https://api.resend.com/emails";
 
-/** Where a reply or an unsubscribe request goes. Matches the legal pages. */
-export const SUPPORT_EMAIL = "smartfellaorfartsmella123@gmail.com";
+/** Re-exported so callers already importing it from here keep working. */
+export { SUPPORT_EMAIL };
 
 export interface SendEmailInput {
   to: string;

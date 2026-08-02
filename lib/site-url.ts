@@ -10,7 +10,16 @@
  * the canonical host rather than whichever preview deployment happens to be
  * building — a sitemap listing a `*.vercel.app` origin is worse than none.
  */
-const CANONICAL = "https://www.smartfellaorfartsmella.com";
+/**
+ * Exported because the results email needs it DIRECTLY rather than through
+ * `siteOrigin()`. A link in an inbox is read outside the deployment that sent
+ * it, so a localhost or preview origin is never useful there — it is a broken
+ * image with no upside. The results LINK still honours RESULTS_BASE_URL, since
+ * a developer testing the flow does want their own link to work.
+ */
+export const CANONICAL_ORIGIN = "https://www.smartfellaorfartsmella.com";
+
+const CANONICAL = CANONICAL_ORIGIN;
 
 export function siteOrigin(): string {
   const configured = process.env.RESULTS_BASE_URL?.trim();

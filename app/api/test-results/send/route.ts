@@ -172,7 +172,6 @@ export async function POST(request: NextRequest) {
     // The grade they picked, never the band. Someone who chose 7 gets an email
     // about the Grade 7 test, not "Grade 7 and 8".
     testTitle: displayTestTitle(test, record.grade),
-    score: record.score,
     maxScore: record.maxScore,
     resultsUrl: resultsUrlFor(record.token, request),
   });

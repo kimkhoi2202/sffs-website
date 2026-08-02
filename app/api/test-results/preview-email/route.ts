@@ -60,7 +60,6 @@ export async function GET(request: NextRequest) {
   const rendered = renderResultsEmail({
     audience: record.audience,
     testTitle: displayTestTitle(test, record.grade),
-    score: record.score,
     maxScore: record.maxScore,
     resultsUrl: resultsUrlFor(record.token, request),
   });

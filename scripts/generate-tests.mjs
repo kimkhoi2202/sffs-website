@@ -817,7 +817,7 @@ export const ADULT_TEST: Test = {
   id: "adult",
   audience: "adult",
   band: "adult",
-  title: "The 15-Minute Grown-Up Test",
+  title: "The 15-Minute Test",
   durationSeconds: 15 * 60,
   allowBack: false,
   placeholder: true,

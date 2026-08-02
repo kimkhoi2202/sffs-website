@@ -191,10 +191,13 @@ if (openUrl) {
   const fresh = await browser.newContext({ viewport: { width: 1280, height: 900 } });
   const rp = await fresh.newPage();
   const resp = await rp.goto(openUrl, { waitUntil: "networkidle" });
-  check("results link loads", resp?.status() === 200, `HTTP ${resp?.status()}`);
   const text = await rp.evaluate(() => document.body.innerText);
-  const score = text.match(/(\d{1,2})\s*\/\s*15/);
-  check("results page shows the TRUE score", !!score && !text.includes("???"), score?.[0] ?? "no N/15 found");
+  const gone = /results have gone/i.test(text);
+  // The gone page is also a 200, so the status alone proves nothing. This is
+  // the check that was too weak the first time round.
+  check("results link loads a result", resp?.status() === 200 && !gone, `HTTP ${resp?.status()}${gone ? " but GONE" : ""}`);
+  const score = text.match(/(\d{1,2})\s*\/\s*(\d{1,2})/);
+  check("results page shows the TRUE score", !!score && !text.includes("???"), score?.[0] ?? "no score found");
   check("results page is not gated", !/send my results/i.test(text));
   await rp.screenshot({ path: "/tmp/live-results.png" });
   await fresh.close();
