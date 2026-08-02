@@ -48,6 +48,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { BrandMark } from "./brand-header";
 import { ArrowLeftIcon, ArrowRightIcon, XMarkIcon } from "@/components/ui/icons";
+import { FitToViewport } from "./question/fit-to-viewport";
 import { QuestionView } from "./question/question-view";
 import { Button } from "@/components/ui/button";
 import { formatClock, secondsLeft } from "@/lib/test/session";
@@ -88,8 +89,31 @@ export function TestRunner({
   const isLast = index === total - 1;
   const answeredCount = Object.keys(answers).length;
 
-  const scrollRef = useRef<HTMLDivElement>(null);
   const [confirmQuit, setConfirmQuit] = useState(false);
+
+  /*
+   * An item that will not fit even at the smallest scale is a content problem,
+   * not a layout one, so it is reported rather than absorbed: the item wants
+   * shortening, and shrinking it further would only make it unreadable instead
+   * of clipped.
+   *
+   * Nothing in the current bank reaches this. Measured across all 125 items at
+   * 360x640, the deepest scale needed is 0.69 (the three-by-three matrices) and
+   * everything else is 0.845 or gentler. The warning exists for the next item
+   * somebody writes.
+   *
+   * Dev-only, because a visitor can do nothing with it.
+   */
+  const reportOverflow = useCallback(
+    (info: { contentKey: string; needed: number; available: number }) => {
+      if (process.env.NODE_ENV === "production") return;
+      console.warn(
+        `[fit] ${info.contentKey} does not fit even scaled down: needs ${info.needed}px, has ${info.available}px. ` +
+          `That item is too long and should be shortened rather than scaled further.`,
+      );
+    },
+    [],
+  );
 
   /* -- the clock ---------------------------------------------------------- */
   // Only meaningful while `timerEnabled`. When the dev tools switch the clock
@@ -127,13 +151,6 @@ export function TestRunner({
       document.removeEventListener("visibilitychange", onVisible);
     };
   }, [deadlineAt, timerEnabled, onFinish]);
-
-  /* -- scroll position ----------------------------------------------------- */
-  // A new question always starts at the top. Without this, moving from a long
-  // figure question to a short text one leaves the player looking at whitespace.
-  useEffect(() => {
-    scrollRef.current?.scrollTo({ top: 0 });
-  }, [index]);
 
   /* -- body scroll lock ----------------------------------------------------- */
   useEffect(() => {
@@ -238,34 +255,26 @@ export function TestRunner({
       </p>
 
       {/* -- the question ------------------------------------------------------ */}
-      <div
-        ref={scrollRef}
-        data-lenis-prevent
-        className="flex min-h-0 flex-1 overflow-y-auto overscroll-contain"
-      >
-        {/*
-          `m-auto` rather than `mx-auto`: a question shorter than the region
-          centres in it, and one taller than it falls back to normal flow and
-          scrolls. On a desktop viewport that is the difference between the
-          question sitting in the middle of the screen and it clinging to the
-          top of 500px of nothing; on a phone the region is always full, so it
-          changes nothing.
-        */}
-        {/*
-          A TEST SCREEN USES THE VIEWPORT. `max-w-2xl` is a reading measure and
-          it is the wrong shape here: the job is to get a stimulus and four
-          options on screen at once, not to keep a comfortable line length. The
-          column widens through the breakpoints so a figure matrix and its
-          options fit a desktop without scrolling.
-        */}
-        <div className="m-auto w-full max-w-2xl px-4 py-5 sm:px-6 sm:py-7 md:max-w-3xl lg:max-w-5xl">
+      {/*
+        THE QUESTION IS SCALED TO FIT, NEVER SCROLLED TO. See the header of
+        ./question/fit-to-viewport.tsx. Under a clock, an option below the fold
+        is an option that does not get read.
+
+        A TEST SCREEN USES THE VIEWPORT. `max-w-2xl` is a reading measure and it
+        is the wrong shape here: the job is to get a stimulus and four options on
+        screen at once, not to keep a comfortable line length. The column widens
+        through the breakpoints so a figure matrix and its options fit a desktop
+        at full size, with no scaling needed at all.
+      */}
+      <FitToViewport contentKey={item.id} onOverflow={reportOverflow}>
+        <div className="mx-auto w-full max-w-2xl md:max-w-3xl lg:max-w-5xl">
           <QuestionView
             item={item}
             picked={answers[item.id] ?? null}
             onPick={(optionId) => onAnswer(item.id, optionId)}
           />
         </div>
-      </div>
+      </FitToViewport>
 
       {/* -- footer: navigation -------------------------------------------------- */}
       <footer className="shrink-0 border-t-[2.5px] border-ink bg-cream">

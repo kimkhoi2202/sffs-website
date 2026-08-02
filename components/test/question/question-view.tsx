@@ -61,8 +61,15 @@ function Stimulus({ children }: { children: React.ReactNode }) {
  * Sentence completion is the single largest item type on the grown-up test and
  * appears at every child level, so the blank is worth rendering properly. Left
  * as literal underscores it is punctuation the eye slides straight over,
- * especially at phone size; as a filled yellow slot it is unmistakably the hole
- * the answer goes in.
+ * especially at phone size.
+ *
+ * IT IS A RULE, NOT A SLOT. An earlier version filled the gap with brand yellow
+ * and rounded it, which read as a form field: something to type into, or a
+ * highlighted word rather than a missing one. A plain line is the convention
+ * every reader already knows from a printed test paper, and it does not compete
+ * with the options for attention. Width is in `em` so it tracks the sentence's
+ * own type size as the fitter scales it down, and `inline-block` means it wraps
+ * as one atomic word rather than splitting across lines.
  *
  * The blank is also announced, since "SAMPLE ______ SAMPLE" read aloud is just
  * a pause.
@@ -75,7 +82,7 @@ function Stem({ text }: { text: string }) {
         /^_{2,}$/.test(part) ? (
           <span
             key={i}
-            className="mx-1 inline-block min-w-[4.5rem] translate-y-[0.1em] rounded-md border-b-[3px] border-ink bg-yellow align-baseline"
+            className="mx-[0.2em] inline-block w-[3.25em] max-w-full border-b-[2.5px] border-ink align-baseline"
           >
             <span className="sr-only">blank</span>
             <span aria-hidden="true">&nbsp;</span>
