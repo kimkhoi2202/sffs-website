@@ -114,6 +114,24 @@ const LOCKUP_HEIGHT = {
   compact: "min(38vw, 13vh, 9rem)",
 } as const;
 
+/**
+ * The title pill's TYPE size. Its padding is in `em`, so the whole pill grows
+ * from this one number and its proportions cannot drift into a wide thin bar.
+ *
+ * Sized the same way as the lockup and for the same reason: the height term
+ * wins on a phone, because that is where the space runs out. The two scale
+ * together, so the pill stays in proportion to the mark above it at every
+ * viewport instead of being right at one width and wrong at the rest.
+ *
+ * IF SOMETHING HAS TO GIVE ON A SHORT PHONE, IT IS THIS. The pill is the name
+ * of the thing and the cards are the thing to do, so the height terms here are
+ * deliberately tighter than the lockup's — it backs off first.
+ */
+const PILL_SIZE = {
+  hero: "min(3.8vw, 2.2vh, 1.3rem)",
+  compact: "min(3vw, 1.5vh, 1rem)",
+} as const;
+
 export function BrandHeader({
   className,
   size = "compact",
@@ -123,6 +141,46 @@ export function BrandHeader({
 }) {
   return (
     <div className={cn("flex w-full flex-col items-center text-center", className)}>
+      {/*
+        THE PILL LEADS, and it is sized to hold its own rather than caption.
+
+        Under a lockup this large a small pill read as something left behind by
+        an earlier layout. It is the NAME OF THE THING, so it goes first and
+        works as a kicker: what this is, then whose it is. It also gives the eye
+        somewhere small to land before the wordmark, which is by far the loudest
+        thing on the screen.
+
+        PADDING IS IN `em`, so it is a fixed multiple of the type size and the
+        pill keeps its shape at every viewport. Scaling the two independently is
+        how a pill turns into a wide thin bar at one width and a lozenge at
+        another.
+
+        The border stays at a fixed 2.5px rather than scaling: it is the brand
+        keyline, the same weight as every other bordered surface in the flow,
+        and a hairline that grows with the text would stop matching them.
+
+        THE WIDTH TERM IS SET BY THE LABEL, NOT BY TASTE. "The Official Smart
+        Fella Test" is twenty-nine characters at this tracking, which measures
+        about 22x the type size, and the first version of this sized the type
+        big enough that it wrapped to two lines inside the pill on a 390px
+        phone — a bar with the name broken across it, which is worse than a
+        small pill. 3.8vw keeps the label on one line at every width tested,
+        and `whitespace-nowrap` makes a future overflow visible rather than
+        silently re-wrapping.
+
+        Orange is the existing --color-orange (#ff7a1a) added for the floating
+        sound button, not a second orange. The label stays INK, not paper:
+        white on this orange is about 2.5:1 and fails, ink is about 8:1. The
+        sound button already pairs the same orange with a black icon. No shadow,
+        like everything else on these screens that is not a control.
+      */}
+      <span
+        style={{ fontSize: PILL_SIZE[size], padding: "0.62em 1.25em" }}
+        className="inline-block whitespace-nowrap rounded-full border-[2.5px] border-ink bg-orange font-sans font-extrabold uppercase leading-none tracking-[0.12em] text-ink"
+      >
+        The Official Smart Fella Test
+      </span>
+
       {/*
         THIS IS THE PAGE'S H1, and it has to be, because the fork screen's own
         headline was removed: the two cards say "I'm a grown-up" and "I'm a kid"
@@ -134,32 +192,12 @@ export function BrandHeader({
         reads "Are you a Smart Fella or Fart Smella", which is the actual title,
         rather than leaving "Are you a" stranded as loose text next to a heading
         that starts mid-sentence.
-
-        The lockup leads and the pill captions it. Reading order is the sentence
-        the brand actually makes: "Are you a Smart Fella or Fart Smella" first,
-        then what the page does with that question.
       */}
-      <h1 className="flex flex-col items-center">
+      <h1 className="mt-3 flex flex-col items-center">
         <span className="eyebrow text-ink/70">Are you a</span>
 
         <BrandLockup className="mt-2" height={LOCKUP_HEIGHT[size]} />
       </h1>
-
-      {/*
-        The title pill, captioning the lockup.
-
-        `mt-3` and not more: the wordmark's PNG carries its own transparent
-        padding below the glyphs, so the optical gap is larger than the number
-        suggests. Measured, not guessed, at 360 and at 1440.
-
-        Orange is the existing --color-orange (#ff7a1a) added for the floating
-        sound button, not a second orange. The label stays INK, not paper:
-        white on this orange is about 2.5:1 and fails, ink is about 8:1. The
-        sound button already pairs the same orange with a black icon.
-      */}
-      <span className="mt-3 inline-block rounded-full border-[2.5px] border-ink bg-orange px-3.5 py-1.5 font-sans text-[0.7rem] font-extrabold uppercase leading-none tracking-[0.12em] text-ink">
-        The Official Smart Fella Test
-      </span>
     </div>
   );
 }
