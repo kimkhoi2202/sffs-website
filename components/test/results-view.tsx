@@ -31,6 +31,7 @@
  */
 import { ShareToChild } from "./share-to-child";
 import { MASKED_VALUE, type TestResult } from "@/lib/test/scoring";
+import { VERDICT_INK } from "@/lib/test/types";
 import type { Domain, Test } from "@/lib/test/types";
 import { cn } from "@/lib/utils";
 
@@ -101,7 +102,13 @@ export function ResultsView({
           explaining it.
         */}
         {masked ? null : (
-          <h1 className="text-balance font-display text-[clamp(1.5rem,7vw,2.5rem)] uppercase leading-[1.02] tracking-[-0.015em]">
+          <h1
+            /* Green at the top, red at the bottom, ink in the middle. Measured
+               against this card's yellow, not picked from the brand tokens —
+               see VERDICT_INK. */
+            style={{ color: VERDICT_INK[result.verdict.id] ?? "var(--color-ink)" }}
+            className="text-balance font-display text-[clamp(1.5rem,7vw,2.5rem)] uppercase leading-[1.02] tracking-[-0.015em]"
+          >
             {result.verdict.title}
           </h1>
         )}

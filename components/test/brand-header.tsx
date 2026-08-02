@@ -21,6 +21,67 @@
  */
 import { cn } from "@/lib/utils";
 
+/**
+ * The wordmark with the brain sticker on its top-right corner.
+ *
+ * ===========================================================================
+ * ONE COMPONENT, BECAUSE THE GEOMETRY WAS MEASURED AND MUST NOT DRIFT
+ * ===========================================================================
+ * The placement came from the archived homepage lockup, which measured it
+ * against the video pipeline's own sticker usages rather than eyeballing it.
+ * Three numbers carry it, and they are relative to the WORDMARK'S HEIGHT so the
+ * whole thing scales as one object:
+ *
+ *   h-[46%]      the brain, just under half the wordmark's height
+ *   top-[-26%]   how far it rides above the wordmark's top edge
+ *   rotate-12    the tilt
+ *
+ * Those two percentages are the interesting pair: 46 up and 26 out leaves 20%
+ * of the wordmark's height covered, which is 43% of the brain sitting ON the
+ * letters and the rest overhanging. That overlap is the whole effect — much
+ * less and it reads as a separate logo parked nearby, much more and it starts
+ * eating the wordmark.
+ *
+ * The ink drop-shadow is what lets it sit on the letters without muddying them:
+ * it gives the brain its own edge against the black type underneath.
+ *
+ * It is `absolute`, so it costs zero layout height and cannot push anything
+ * down when it scales.
+ *
+ * SECOND CALLER, AND WHY THIS IS EXTRACTED: the results screen shows the same
+ * lockup. Copying twenty characters of Tailwind into a second file is how two
+ * lockups end up 4% apart six months later.
+ */
+export function BrandLockup({
+  className,
+  /** Any CSS length. Everything else is a percentage of it. */
+  height,
+}: {
+  className?: string;
+  height: string;
+}) {
+  return (
+    <span className={cn("relative inline-block", className)}>
+      {/* eslint-disable-next-line @next/next/no-img-element -- brand wordmark is a static public asset */}
+      <img
+        src="/wordmark.png"
+        alt="Smart Fella or Fart Smella"
+        style={{ height }}
+        className="block w-auto max-w-full select-none object-contain"
+        draggable={false}
+      />
+      {/* eslint-disable-next-line @next/next/no-img-element -- brand mark is a static public asset */}
+      <img
+        src="/logo.png"
+        alt=""
+        aria-hidden
+        className="pointer-events-none absolute right-[-10%] top-[-26%] h-[46%] w-auto select-none rotate-[12deg] [filter:drop-shadow(3px_3px_0_#000)] md:[filter:drop-shadow(4px_4px_0_#000)]"
+        draggable={false}
+      />
+    </span>
+  );
+}
+
 export function BrandHeader({ className }: { className?: string }) {
   return (
     <div className={cn("flex w-full flex-col items-center text-center", className)}>
@@ -43,29 +104,7 @@ export function BrandHeader({ className }: { className?: string }) {
       <h1 className="flex flex-col items-center">
         <span className="eyebrow text-ink/70">Are you a</span>
 
-        {/*
-          The brain mark sits on the wordmark's top-right corner as a sticker,
-          absolutely positioned so it costs zero layout height. Placement and
-          the +12deg tilt carry over from the archived homepage lockup, which
-          measured them against the video pipeline's own sticker usages.
-        */}
-        <span className="relative mt-2 inline-block">
-          {/* eslint-disable-next-line @next/next/no-img-element -- brand wordmark is a static public asset */}
-          <img
-            src="/wordmark.png"
-            alt="Smart Fella or Fart Smella"
-            className="block h-[clamp(3.5rem,15vw,7rem)] w-auto max-w-full select-none object-contain"
-            draggable={false}
-          />
-          {/* eslint-disable-next-line @next/next/no-img-element -- brand mark is a static public asset */}
-          <img
-            src="/logo.png"
-            alt=""
-            aria-hidden
-            className="pointer-events-none absolute right-[-10%] top-[-26%] h-[46%] w-auto select-none rotate-[12deg] [filter:drop-shadow(3px_3px_0_#000)] md:[filter:drop-shadow(4px_4px_0_#000)]"
-            draggable={false}
-          />
-        </span>
+        <BrandLockup className="mt-2" height="clamp(3.5rem,15vw,7rem)" />
       </h1>
 
       {/*

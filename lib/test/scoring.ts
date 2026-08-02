@@ -115,14 +115,14 @@ const VERDICTS: Array<{
     id: "mostly-fart-smella",
     title: "Mostly Fart Smella",
     adult: "Look, the important thing is that you tried. Sort of.",
-    child: "Good effort. Some of these are genuinely hard, so keep at them.",
+    child: "For now, anyway. You got a real chunk of these, and the ones that got you are the ones worth going back to.",
   },
   {
     min: 0,
     id: "certified-fart-smella",
     title: "Certified Fart Smella",
     adult: "Congratulations, you have achieved the highest possible smell.",
-    child: "You finished the whole thing, and that already counts for a lot.",
+    child: "For now. You finished every single question, which most people do not, and these get a lot easier the second time round.",
   },
 ];
 

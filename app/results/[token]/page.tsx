@@ -25,6 +25,7 @@
  */
 import type { Metadata } from "next";
 
+import { BrandLockup } from "@/components/test/brand-header";
 import { ResultsOpenedBeacon } from "@/components/test/results-opened-beacon";
 import { ResultsView } from "@/components/test/results-view";
 import { Button } from "@/components/ui/button";
@@ -92,8 +93,15 @@ export default async function ResultsPage({
   return (
     <main id="main" data-flow className="flex min-h-[100dvh] flex-1 flex-col items-center px-4 pb-24 pt-8 sm:pt-12">
       <div className="flex w-full max-w-md flex-col items-center gap-5 sm:max-w-lg">
-        <div className="flex flex-col items-center gap-1 text-center">
-          <span className="eyebrow text-ink/60">The Official Smart Fella Test</span>
+        {/*
+          The lockup rather than the words. This page is often the first thing a
+          parent sees of the brand — they arrive on it from an email link having
+          never visited the site — so it is worth showing the mark rather than
+          setting its name in small caps. Same component as the front door, so
+          the two cannot drift apart. See BrandLockup.
+        */}
+        <div className="flex flex-col items-center gap-2 text-center">
+          <BrandLockup height="clamp(2.75rem,11vw,4.5rem)" />
           <span className="text-[0.8rem] font-bold uppercase tracking-wide text-ink/45">
             {displayTestTitle(test, record.grade)}
           </span>

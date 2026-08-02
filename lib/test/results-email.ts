@@ -52,6 +52,29 @@
  * "you" and "your score" are simply correct.
  *
  * ===========================================================================
+ * THERE IS NO UNSUBSCRIBE FOOTER, AND THAT DEPENDS ON WHAT THIS MAIL IS
+ * ===========================================================================
+ * This is TRANSACTIONAL: somebody asked for their results and this delivers
+ * exactly that, once. Transactional messages are exempt from CAN-SPAM's opt-out
+ * and physical-address requirements, so the "we will not email you again" and
+ * "write to us and we will remove your address" block was answering a question
+ * nobody had, in a mail that is not a list.
+ *
+ * THE EXEMPTION IS THE WHOLE BASIS FOR THIS. The moment this email carries an
+ * app pitch, an offer, a "here is what else we make", or anything that is not
+ * the result the person asked for, it stops being transactional and the footer
+ * has to come back — along with the physical address. Adding one promotional
+ * sentence is enough to change the category. Revisit this comment then.
+ *
+ * THE CHILD BRANCH KEEPS ONE SENTENCE, and not for legal reasons. A child types
+ * a parent's address in, so an adult receives an email they did not ask for,
+ * containing a link, about a test they did not take — which is structurally
+ * indistinguishable from phishing. "Your kid asked us to send these results to
+ * this address" is the sentence that makes it make sense in the two seconds
+ * before they decide whether to trust it. The adult branch needs no equivalent,
+ * because that reader typed their own address in a minute earlier.
+ *
+ * ===========================================================================
  * WHY THE HTML IS SO PLAIN
  * ===========================================================================
  * Email clients are not browsers. No web fonts (Anton will not load, so the
@@ -64,7 +87,6 @@
  * brand in Outlook, which is the bar.
  */
 import { CANONICAL_ORIGIN } from "@/lib/site-url";
-import { SUPPORT_EMAIL } from "@/lib/support-contact";
 import { MASKED_VALUE } from "./scoring";
 import type { Audience } from "./types";
 
@@ -162,10 +184,17 @@ export function renderResultsEmail(input: ResultsEmailInput): RenderedEmail {
       box before the image loads, or forever if it never does, so the layout
       cannot collapse and reflow the button underneath it.
 
-      RETINA: the file is 440px wide and displays at 220, so it stays sharp on
-      the phone screens most of this mail is opened on. It is flattened onto the
-      header's own yellow and palette-reduced, which takes it from 606KB to
-      12KB — worth doing for something every recipient downloads.
+      IT IS ONE FLATTENED IMAGE, not a wordmark with a brain positioned over it.
+      On the web the lockup is two elements and the brain is absolutely placed
+      on the corner; an inbox cannot be asked to do that, because Outlook drops
+      positioning on images and stacks them instead. So the overlap is baked in
+      at build time by scripts/build-email-logo.mjs and this ships a single tag
+      with nothing to position. Re-run that script if the lockup geometry
+      changes.
+
+      RETINA: the file is 460px wide and displays at 230, so it stays sharp on
+      the phone screens most of this mail is opened on. Flattened onto the
+      header's own yellow and palette-reduced: 13KB for the pair.
 
       The URL is ABSOLUTE and on the production domain. A relative path is a
       broken image in an inbox, since there is no page for it to be relative to.
@@ -173,8 +202,8 @@ export function renderResultsEmail(input: ResultsEmailInput): RenderedEmail {
     <tr><td align="center" style="padding-bottom:18px;">
       <img src="${escapeAttr(`${LOGO_ORIGIN}/email-logo.png`)}"
            alt="Smart Fella or Fart Smella"
-           width="220" height="139"
-           style="display:block;width:220px;height:139px;max-width:100%;border:0;outline:none;text-decoration:none;font-family:${BODY_FONT};font-size:13px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;color:${INK};">
+           width="230" height="176"
+           style="display:block;width:230px;height:176px;max-width:100%;border:0;outline:none;text-decoration:none;font-family:${BODY_FONT};font-size:13px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;color:${INK};">
     </td></tr>
 
     <tr><td style="background-color:${PAPER};border:3px solid ${INK};box-shadow:6px 6px 0 0 ${INK};">
@@ -219,13 +248,13 @@ export function renderResultsEmail(input: ResultsEmailInput): RenderedEmail {
       </table>
     </td></tr>
 
-    <tr><td style="padding:20px 8px 0 8px;font-family:${BODY_FONT};font-size:12px;line-height:1.6;color:${INK};opacity:0.7;">
-      You are getting this because ${child ? "your kid asked us to send these results to this address" : "you asked us to send you these results"}.
-      We will not email you again unless you ask us to.
-      Reply to this message, or write to
-      <a href="mailto:${SUPPORT_EMAIL}?subject=unsubscribe" style="color:${INK};">${SUPPORT_EMAIL}</a>,
-      and we will remove this address.
-    </td></tr>
+    ${
+      child
+        ? `<tr><td style="padding:20px 8px 0 8px;font-family:${BODY_FONT};font-size:12px;line-height:1.6;color:${INK};opacity:0.7;">
+      You are getting this because your kid asked us to send these results to this address.
+    </td></tr>`
+        : ""
+    }
 
   </table>
 
@@ -251,8 +280,9 @@ export function renderResultsEmail(input: ResultsEmailInput): RenderedEmail {
     "",
     input.resultsUrl,
     "",
-    "---",
-    `You are getting this because ${child ? "your kid asked us to send these results to this address" : "you asked us to send you these results"}. We will not email you again unless you ask us to. Reply to this message, or write to ${SUPPORT_EMAIL}, and we will remove this address.`,
+    ...(child
+      ? ["---", "You are getting this because your kid asked us to send these results to this address."]
+      : []),
   ].join("\n");
 
   return { subject, html, text };

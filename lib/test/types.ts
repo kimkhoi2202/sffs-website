@@ -227,6 +227,50 @@ export const PUZZLE_INK = {
  * has something to check against, and so the disjointness is visible in one
  * place instead of being a property you would have to go and discover.
  */
+/**
+ * THE THIRD PALETTE: what a verdict means.
+ *
+ * ===========================================================================
+ * WHY THIS IS ITS OWN RAMP AND NOT THE BRAND COLOURS
+ * ===========================================================================
+ * The verdict is large bold type on the YELLOW score card, and brand mint
+ * (#c6fcd0) and coral (#fd7962) measure 1.75:1 and 2.00:1 against it. Both are
+ * unreadable there, not merely weak — the pastel mint is close to invisible.
+ * So these are darkened variants chosen against that specific background
+ * rather than the tokens they are named after.
+ *
+ * EVERY BAND CLEARS WCAG AA FOR NORMAL TEXT (4.5:1) on #fce552, not just the
+ * 3:1 that large text would have allowed. The verdict is the one line on the
+ * page a person actually wants to read, and it is worth not gambling on
+ * whether a given renderer counts it as "large".
+ *
+ *   certified-smart-fella   #0f5132   7.34:1
+ *   mostly-smart-fella      #3f6b52   4.79:1
+ *   borderline              ink       16.47:1
+ *   mostly-fart-smella      #8a3f3a   5.77:1
+ *   certified-fart-smella   #8f1d17   6.99:1
+ *
+ * THE RAMP IS SATURATION, NOT LIGHTNESS, because on a background this bright
+ * every legible colour is dark, so lightness has almost nothing left to say.
+ * The two extreme verdicts get the saturated colours and the near-middle ones
+ * get muted versions of the same hue, which reads as intensity rather than as
+ * five arbitrary shades. The middle band stays INK: it is the honest colour for
+ * "could go either way", and a fifth hue there would have been decoration.
+ *
+ * A THIRD PALETTE RATHER THAN REUSING EITHER OF THE OTHER TWO. Blue is the
+ * selected-option state and the greyscale is puzzle content — see the note
+ * above on what went wrong when those two overlapped. These greens and reds
+ * appear on exactly one surface, mean exactly one thing, and are far away in
+ * colour space from both (nearest is 192 units from the UI blue).
+ */
+export const VERDICT_INK: Record<string, string> = {
+  "certified-smart-fella": "#0f5132",
+  "mostly-smart-fella": "#3f6b52",
+  borderline: "var(--color-ink)",
+  "mostly-fart-smella": "#8a3f3a",
+  "certified-fart-smella": "#8f1d17",
+};
+
 export const STATE_COLORS = {
   /** The option you picked. */
   selected: "var(--color-blue)",
