@@ -414,7 +414,11 @@ export function TestFlow() {
       <div className="flex w-full max-w-md flex-col items-center gap-7 sm:max-w-lg">
         {/* The results screen carries its own headline, so the full lockup only
             appears on the way in. */}
-        {state.step !== "results" ? <BrandHeader /> : null}
+        {state.step !== "results" ? (
+          /* The opening fork is the front door, so the lockup leads there and
+             is merely present on the steps after it. See LOCKUP_HEIGHT. */
+          <BrandHeader size={state.step === "audience" ? "hero" : "compact"} />
+        ) : null}
 
         {state.step === "audience" ? <AudienceFork onPick={pickFork} /> : null}
 

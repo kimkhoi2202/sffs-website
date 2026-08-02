@@ -58,6 +58,15 @@ export function StepShell({
       className={cn(
         "relative flex min-h-[100dvh] w-full flex-col items-center justify-center",
         "px-4 pb-24 pt-8 sm:pt-12",
+        /*
+          A SHORT VIEWPORT GETS ITS PADDING BACK. Below 700px tall the grade
+          picker and the intro already run past one screen, so 32px of top
+          padding and 16px of slack under the music toggle are worth more as
+          content than as margin. The bottom stays at 80px because that is what
+          the toggle actually occupies — a 56px puck inset 24px — so this
+          reclaims the spare 16 rather than letting the puck sit on a button.
+        */
+        "[@media(max-height:700px)]:pb-20 [@media(max-height:700px)]:pt-4",
         className,
       )}
     >

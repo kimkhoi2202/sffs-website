@@ -82,7 +82,45 @@ export function BrandLockup({
   );
 }
 
-export function BrandHeader({ className }: { className?: string }) {
+/**
+ * How large the lockup is, which depends on what else is on the screen.
+ *
+ * ===========================================================================
+ * TWO SIZES, BECAUSE THE PRE-TEST SCREENS ARE NOT THE SAME SHAPE
+ * ===========================================================================
+ * The opening fork is the front door and has two cards under it, so there is
+ * room for the lockup to be the thing you see rather than a mark sitting
+ * politely above the content. The grade picker has six buttons and a back link,
+ * and the intro has three bullets and two controls; on a 360x640 phone those
+ * already run past one viewport at the size they are now, which StepShell
+ * documents as a deliberate trade. Growing the lockup as far there would push
+ * them further, so they get the smaller of the two.
+ *
+ * BOTH ARE `min()` OF A WIDTH, A HEIGHT AND A CAP, and the height term is the
+ * one doing the real work. The binding constraint on a phone is vertical — a
+ * 360x640 screen is not short of width — so a size expressed only in `vw` grows
+ * fastest exactly where there is least room for it. The `vh` term makes the
+ * lockup back off on a short screen and the rem cap stops it becoming absurd on
+ * a large monitor.
+ *
+ *   hero      147px at 360x640, 194 at 390x844, 207 at 1440x900
+ *   compact    83px at 360x640, 110 at 390x844, 117 at 1440x900
+ *
+ * Measured maxima before anything overflows: 170 on the fork at 360x640, 280 at
+ * both larger sizes, so `hero` keeps real headroom on the tightest screen.
+ */
+const LOCKUP_HEIGHT = {
+  hero: "min(52vw, 23vh, 16rem)",
+  compact: "min(38vw, 13vh, 9rem)",
+} as const;
+
+export function BrandHeader({
+  className,
+  size = "compact",
+}: {
+  className?: string;
+  size?: keyof typeof LOCKUP_HEIGHT;
+}) {
   return (
     <div className={cn("flex w-full flex-col items-center text-center", className)}>
       {/*
@@ -104,7 +142,7 @@ export function BrandHeader({ className }: { className?: string }) {
       <h1 className="flex flex-col items-center">
         <span className="eyebrow text-ink/70">Are you a</span>
 
-        <BrandLockup className="mt-2" height="clamp(3.5rem,15vw,7rem)" />
+        <BrandLockup className="mt-2" height={LOCKUP_HEIGHT[size]} />
       </h1>
 
       {/*
