@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
+import { EMAIL_SOURCES, isKnownEmailSource } from "@/lib/email-sources";
 import { insertEmailSignup } from "@/lib/email-store";
 import { captureEmailCapturedServer } from "@/lib/posthog-server";
 import { clientIp, isRateLimited } from "@/lib/rate-limit";
@@ -11,27 +12,17 @@ export const dynamic = "force-dynamic";
 const MAX_BODY_BYTES = 4 * 1024;
 /** RFC 5321 max email length. */
 const MAX_EMAIL_LENGTH = 254;
-const DEFAULT_SOURCE = "pricing-get-access";
 
 /**
- * Every surface that may capture an address. An unrecognised source is NOT
- * rejected — it is silently rewritten to DEFAULT_SOURCE (see below), so
- * forgetting to add one here does not break a signup, it just misfiles it
- * forever. Keep this in step with EMAIL_SOURCES in lib/analytics/events.ts.
+ * Where a signup goes when the caller did not name a surface.
  *
- *   pricing-get-access         the archived early-access homepage form
- *   smart-fella-test-parent    the adult test's results gate: a parent's own address
- *   smart-fella-test-child     a child test's results gate: a GROWN-UP's address,
- *                              asked for as such. Kept distinct from the parent
- *                              value on purpose — the site is positioned 13+,
- *                              most of the grade range is under 13, and these
- *                              two records mean different things.
+ * This route predates the test and the archived homepage form is still its main
+ * caller, so the old value is the right default. It is also the reason the v3
+ * tag has to be sent EXPLICITLY by every v3 caller: anything that forgets is
+ * filed here, and a row filed here is indistinguishable from a v2 conversion.
+ * The vocabulary lives in lib/email-sources.ts.
  */
-const ALLOWED_SOURCES = new Set([
-  DEFAULT_SOURCE,
-  "smart-fella-test-parent",
-  "smart-fella-test-child",
-]);
+const DEFAULT_SOURCE = EMAIL_SOURCES.homepage;
 
 /**
  * Pragmatic server-side email shape check (the authority — the client does the
@@ -106,10 +97,25 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const source =
-    typeof body.source === "string" && ALLOWED_SOURCES.has(body.source)
-      ? body.source
-      : DEFAULT_SOURCE;
+  /*
+   * An unrecognised source is not rejected: failing a real person's signup over
+   * a bookkeeping mistake is the wrong trade. But it IS logged, because the
+   * silent version of this rule is how a whole version's conversions end up
+   * filed under the previous version's tag with nothing in the system saying
+   * so. A line in the server log is the difference between a bug that surfaces
+   * and one that only surfaces months later in a query.
+   */
+  let source = DEFAULT_SOURCE as string;
+  if (typeof body.source === "string" && body.source) {
+    if (isKnownEmailSource(body.source)) {
+      source = body.source;
+    } else {
+      console.warn(
+        `access-signup: unrecognised source "${body.source}", filing as "${DEFAULT_SOURCE}". ` +
+          `Add it to EMAIL_SOURCES in lib/email-sources.ts.`,
+      );
+    }
+  }
 
   const meta = {
     referrer: request.headers.get("referer"),

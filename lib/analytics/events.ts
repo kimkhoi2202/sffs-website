@@ -14,6 +14,8 @@
 import posthog from "posthog-js";
 import type { CaptureResult } from "posthog-js";
 
+import type { EmailSource } from "../email-sources";
+
 /* --------------------------------------------------------------------------
  * Shared property vocabulary (kept small + reused — see plan §2.0)
  * ------------------------------------------------------------------------ */
@@ -56,32 +58,14 @@ export type SectionName =
   | "cta_band"
   | "follow_us";
 
-export const EMAIL_SOURCE = "pricing-get-access";
-
 /**
- * Email sources, one per surface that can capture an address.
- *
- * These are the values written to Aurora `sffs.email_signups.source`, and they
- * are the only way to tell the surfaces apart after the fact. The two IQ-test
- * values are deliberately separate from each other as well as from the old
- * homepage's: an address captured on the child branch is a GROWN-UP's address
- * given on a child's behalf, and that is a materially different record to a
- * parent giving their own. If a deletion request ever arrives, or the 13+
- * positioning is ever audited, the distinction needs to already be in the data.
- *
- * Any new value must ALSO be added to ALLOWED_SOURCES in
- * app/api/access-signup/route.ts, which silently rewrites anything it does not
- * recognise back to the default rather than rejecting it.
+ * The email-source vocabulary lives in lib/email-sources.ts, which has no
+ * `posthog-js` import, because two SERVER routes need these values and pulling
+ * a browser SDK into a Node bundle for three string constants is the wrong
+ * shape. Re-exported here so analytics call sites still find them where they
+ * expect to.
  */
-export const EMAIL_SOURCES = {
-  homepage: "pricing-get-access",
-  /** The adult test's results gate: a parent giving their own address. */
-  testParent: "smart-fella-test-parent",
-  /** A child test's results gate: a grown-up's address, asked for as such. */
-  testChild: "smart-fella-test-child",
-} as const;
-
-export type EmailSource = (typeof EMAIL_SOURCES)[keyof typeof EMAIL_SOURCES];
+export { EMAIL_SOURCES, isKnownEmailSource, type EmailSource } from "../email-sources";
 
 /* --------------------------------------------------------------------------
  * Attribution — derived super properties (plan §2.1 + §A)
@@ -301,9 +285,17 @@ export function trackEmailCaptureValidationFailed(
   posthog.capture("email_capture_validation_failed", { reason });
 }
 
-/** THE conversion event. Source + attribution only — NEVER the email. */
-export function trackEmailCaptured(): void {
-  posthog.capture("email_captured", { source: EMAIL_SOURCE });
+/**
+ * THE conversion event. Source + attribution only — NEVER the email.
+ *
+ * `source` is a REQUIRED argument rather than a constant baked into the body.
+ * It used to be hardcoded to the old homepage's value, which meant that if this
+ * were ever wired to a second surface it would file that surface's conversions
+ * under the first one's tag, and nobody would notice because the event would
+ * still be firing. The caller knows which surface it is; it should have to say.
+ */
+export function trackEmailCaptured(source: EmailSource): void {
+  posthog.capture("email_captured", { source });
 }
 
 export function trackScrollDepthReached(depth: ScrollDepth): void {

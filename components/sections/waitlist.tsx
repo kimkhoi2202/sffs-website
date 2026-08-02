@@ -6,6 +6,7 @@ import { Section } from "@/components/ui/section";
 import { Heading } from "@/components/ui/heading";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { Button } from "@/components/ui/button";
+import { EMAIL_SOURCES } from "@/lib/email-sources";
 import { cn } from "@/lib/utils";
 
 type SectionBackground = NonNullable<React.ComponentProps<typeof Section>["background"]>;
@@ -71,7 +72,12 @@ export function Waitlist({
         const res = await fetch("/api/access-signup", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: value }),
+          // NAME THE SURFACE. Sending no `source` at all means the route falls
+          // back to its default, which is this same value — but only by
+          // accident, and the accident is indistinguishable in Aurora from a
+          // deliberate one. Every caller says which surface it is so that a row
+          // filed under the default is always a bug rather than a shrug.
+          body: JSON.stringify({ email: value, source: EMAIL_SOURCES.homepage }),
         });
         const data = (await res.json().catch(() => null)) as
           | { ok?: boolean; error?: string }

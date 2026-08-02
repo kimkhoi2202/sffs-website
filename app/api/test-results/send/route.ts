@@ -48,7 +48,7 @@ import { insertEmailSignup } from "@/lib/email-store";
 import { sendEmail } from "@/lib/email/resend";
 import { captureEmailCapturedServer } from "@/lib/posthog-server";
 import { clientIp, isRateLimited } from "@/lib/rate-limit";
-import { EMAIL_SOURCES } from "@/lib/analytics/events";
+import { EMAIL_SOURCES } from "@/lib/email-sources";
 import { getResult, MAX_SENDS_PER_RESULT, recordSend } from "@/lib/test/result-store";
 import { renderResultsEmail } from "@/lib/test/results-email";
 import { displayTestTitle, getTestById } from "@/lib/test/tests";
@@ -217,7 +217,7 @@ export async function POST(request: NextRequest) {
   const source =
     record.audience === "child" ? EMAIL_SOURCES.testChild : EMAIL_SOURCES.testParent;
   try {
-    const { inserted } = await insertEmailSignup({
+    const { inserted, mode } = await insertEmailSignup({
       email,
       source,
       meta: {
@@ -225,6 +225,9 @@ export async function POST(request: NextRequest) {
         userAgent: request.headers.get("user-agent"),
       },
     });
+    if (process.env.NODE_ENV !== "production") {
+      console.info(`results-send: filed source="${source}" via the ${mode} store`);
+    }
     // Only a genuinely new row is a conversion. A resend to the same address is
     // not a second signup.
     if (inserted) await captureEmailCapturedServer(request, source);

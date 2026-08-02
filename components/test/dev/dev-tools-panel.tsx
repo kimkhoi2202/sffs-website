@@ -103,9 +103,21 @@ function Chip({
   );
 }
 
+interface StoreInfo {
+  mode: "proxy" | "local";
+  reason: string;
+}
+
 export function DevToolsPanel({ api }: { api: FlowDevApi }) {
   const [open, setOpen] = useState(false);
   const [review, setReview] = useState(false);
+  /**
+   * Which store a signup would land in RIGHT NOW. Shown before anything is
+   * submitted, because that is when it matters: the whole point of the boundary
+   * is that you never accidentally put a test address into the real list, and a
+   * boundary you have to remember is one you eventually forget.
+   */
+  const [store, setStore] = useState<StoreInfo | null>(null);
   // Mirrors the module flag in lib/test/dev-flags.ts so the chip can show its
   // state. The module is the source of truth that the email box reads.
   const [failSends, setFailSends] = useState(false);
@@ -128,6 +140,21 @@ export function DevToolsPanel({ api }: { api: FlowDevApi }) {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetch("/api/dev/email-store")
+      .then((r) => (r.ok ? (r.json() as Promise<StoreInfo>) : null))
+      .then((info) => {
+        if (!cancelled && info) setStore(info);
+      })
+      .catch(() => {
+        /* the panel is still useful without it */
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const test = state.audience ? getTest(state.audience, state.grade) : null;
@@ -386,6 +413,30 @@ export function DevToolsPanel({ api }: { api: FlowDevApi }) {
             <div className="mt-1 text-paper/40">
               answered {Object.keys(state.answers).length} &middot; step {state.step}
             </div>
+          </div>
+        ) : null}
+
+        {/* Where a signup would actually go. Coral when it would reach the real
+            Aurora table, because that is the state worth noticing. */}
+        {store ? (
+          <div
+            className={cn(
+              "rounded-md border p-2 font-mono text-[0.6rem] leading-relaxed",
+              store.mode === "proxy"
+                ? "border-coral bg-coral/20 text-paper"
+                : "border-paper/20 bg-paper/5 text-paper/70",
+            )}
+          >
+            <div>
+              signups &rarr;{" "}
+              <span className={store.mode === "proxy" ? "font-bold text-coral" : "text-mint"}>
+                {store.mode === "proxy" ? "REAL AURORA TABLE" : "local file"}
+              </span>
+            </div>
+            <div className="mt-0.5 text-paper/40">{store.reason}</div>
+            {store.mode === "local" ? (
+              <div className="mt-0.5 text-paper/40">.data/email-signups.local.json</div>
+            ) : null}
           </div>
         ) : null}
       </div>

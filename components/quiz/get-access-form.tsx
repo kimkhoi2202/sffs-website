@@ -12,6 +12,7 @@ import {
   trackEmailFormViewed,
   type ValidationFailReason,
 } from "@/lib/analytics/events";
+import { EMAIL_SOURCES } from "@/lib/email-sources";
 import { cn } from "@/lib/utils";
 
 type Status = "idle" | "submitting" | "error" | "success";
@@ -109,7 +110,7 @@ export function GetAccessForm({ className }: { className?: string }) {
         const res = await fetch("/api/access-signup", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: trimmed, source: "pricing-get-access" }),
+          body: JSON.stringify({ email: trimmed, source: EMAIL_SOURCES.homepage }),
         });
         const data = (await res.json().catch(() => null)) as
           | { ok?: boolean; error?: string }

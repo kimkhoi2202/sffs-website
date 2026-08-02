@@ -23,7 +23,8 @@ import { useEffect, useRef } from "react";
 
 import { EmailGate } from "./email-gate";
 import { ResultsView } from "./results-view";
-import { EMAIL_SOURCES, trackTestResultsGateViewed } from "@/lib/analytics/events";
+import { trackTestResultsGateViewed } from "@/lib/analytics/events";
+import { EMAIL_SOURCES } from "@/lib/email-sources";
 import { maskedResult } from "@/lib/test/scoring";
 import type { Test } from "@/lib/test/types";
 
