@@ -82,6 +82,11 @@ interface SendBody {
   isInternal?: boolean;
   token?: unknown;
   email?: unknown;
+  /**
+   * Set by the "Send it again" button. Excluded from the per-address
+   * submission count — see the `countsAsSubmission` note further down.
+   */
+  isResend?: unknown;
   /** Dev-tools only, honoured only outside production. See below. */
   forceFailure?: unknown;
 }
@@ -218,16 +223,35 @@ export async function POST(request: NextRequest) {
   const source =
     record.audience === "child" ? EMAIL_SOURCES.testChild : EMAIL_SOURCES.testParent;
   try {
-    const { inserted, mode } = await insertEmailSignup({
+    const { inserted, submissions, mode } = await insertEmailSignup({
       email,
       source,
+      /*
+       * A RESEND IS NOT A SUBMISSION.
+       *
+       * Typing an address is an act of intent and is counted every time, even
+       * when the address is one already on the list — someone who comes back
+       * and enters the same address a second time has told us something. But
+       * "Send it again" is one person chasing one message that did not arrive,
+       * and counting it would inflate the number with impatience rather than
+       * interest.
+       *
+       * The write still happens on a resend, with counting suppressed, because
+       * the list write is best-effort and non-fatal: if the first attempt's
+       * write was the one that hiccuped, this is the second chance to record
+       * the address at all.
+       */
+      countsAsSubmission: body.isResend !== true,
       meta: {
         referrer: request.headers.get("referer"),
         userAgent: request.headers.get("user-agent"),
       },
     });
     if (process.env.NODE_ENV !== "production") {
-      console.info(`results-send: filed source="${source}" via the ${mode} store`);
+      console.info(
+        `results-send: filed source="${source}" via the ${mode} store ` +
+          `(submissions=${submissions ?? "unreported"})`,
+      );
     }
     // Only a genuinely new row is a conversion. A resend to the same address is
     // not a second signup.

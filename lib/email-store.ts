@@ -75,6 +75,17 @@ import { emailStoreMode, emailStoreReason, type EmailStoreMode } from "./email-s
 export interface EmailSignupInput {
   email: string;
   source: string;
+  /**
+   * Whether this write should advance the address's submission count.
+   *
+   * True for a typed submission — including a repeat of an address already on
+   * the list, which is the case the count exists to make visible. False for a
+   * mechanical retry of a send the person already asked for.
+   *
+   * Defaults to true when omitted so the older callers that predate the count
+   * keep behaving as they read: every call they make is a real submission.
+   */
+  countsAsSubmission?: boolean;
   meta: Record<string, unknown>;
 }
 
@@ -88,6 +99,19 @@ export interface EmailSignupResult {
    * it just must not be counted twice.
    */
   inserted: boolean;
+  /**
+   * How many times this address has now been submitted for this source,
+   * counting the call that just happened.
+   *
+   * 1 on a first submission. Higher when someone typed the same address again,
+   * which is exactly the case `inserted: false` hides — a repeat submit
+   * creates no row, so without this the second, third, and fourth attempts are
+   * indistinguishable from never having happened.
+   *
+   * Undefined when the store cannot report it, which currently means a proxy
+   * that predates the counter. Treat absent as "unknown", not as zero.
+   */
+  submissions?: number;
   /** Which store took the write. Returned so a route can log it in development. */
   mode: EmailStoreMode;
 }
@@ -147,6 +171,10 @@ const relativeFile = () => ".data/email-signups.local.json";
 
 interface LocalRow extends EmailSignupInput {
   at: string;
+  /** Mirrors sffs.email_signups.submissions. See insertLocal. */
+  submissions: number;
+  /** Mirrors sffs.email_signups.last_submitted_at. */
+  lastAt: string;
 }
 
 function insertLocal(input: EmailSignupInput): EmailSignupResult {
@@ -158,28 +186,43 @@ function insertLocal(input: EmailSignupInput): EmailSignupResult {
     rows = []; // missing or corrupt: start clean
   }
 
-  const duplicate = rows.some(
+  const counts = input.countsAsSubmission !== false;
+  const now = new Date().toISOString();
+  const existing = rows.find(
     (r) => r.email === input.email && r.source === input.source,
   );
 
-  if (!duplicate) {
-    rows.push({ ...input, at: new Date().toISOString() });
-    try {
-      mkdirSync(dirname(FILE), { recursive: true });
-      writeFileSync(FILE, JSON.stringify(rows, null, 2), "utf8");
-    } catch {
-      // Read-only filesystem. The point of this mode is that the write does
-      // not matter, so losing it is fine; the log line below is the artefact
-      // anyone is actually reading.
-    }
+  /*
+    The upsert, mirroring what the proxy does to (email, source): a first
+    submission creates the row at 1, a repeat leaves the row alone but advances
+    the counter, and a resend touches neither. Reproducing it here rather than
+    just swallowing the write is what lets the counting branches be exercised
+    on a laptop instead of only in production.
+  */
+  if (!existing) {
+    rows.push({ ...input, at: now, submissions: counts ? 1 : 0, lastAt: now });
+  } else if (counts) {
+    existing.submissions = (existing.submissions ?? 1) + 1;
+    existing.lastAt = now;
   }
 
+  try {
+    mkdirSync(dirname(FILE), { recursive: true });
+    writeFileSync(FILE, JSON.stringify(rows, null, 2), "utf8");
+  } catch {
+    // Read-only filesystem. The point of this mode is that the write does
+    // not matter, so losing it is fine; the log line below is the artefact
+    // anyone is actually reading.
+  }
+
+  const submissions = existing ? existing.submissions : counts ? 1 : 0;
+  const what = !existing ? "insert" : counts ? "repeat submit" : "resend";
   console.info(
-    `[email-store] local ${duplicate ? "duplicate" : "insert"}: source=${input.source} ` +
-      `email=${maskEmail(input.email)} (nothing sent to Aurora)`,
+    `[email-store] local ${what}: source=${input.source} ` +
+      `email=${maskEmail(input.email)} submissions=${submissions} (nothing sent to Aurora)`,
   );
 
-  return { inserted: !duplicate, mode: "local" };
+  return { inserted: !existing, submissions, mode: "local" };
 }
 
 /**
@@ -212,6 +255,17 @@ async function insertViaProxy(input: EmailSignupInput): Promise<EmailSignupResul
       "content-type": "application/json",
       "x-shared-secret": secret,
     },
+    /*
+      Passed straight through, deliberately NOT normalised to an explicit
+      boolean on every request.
+
+      `countsAsSubmission` is a key the proxy has never seen. A caller that
+      does not set it sends `undefined`, which JSON.stringify drops, so its
+      payload stays byte-identical to the one that has been working — and the
+      homepage signup path, the only one currently landing rows, cannot be
+      broken by a proxy that rejects unknown fields. Only the caller that opted
+      in carries the new key, and that path already fails safe.
+    */
     body: JSON.stringify(input),
     // A signup is a mutation — never cache it.
     cache: "no-store",
@@ -242,18 +296,28 @@ async function insertViaProxy(input: EmailSignupInput): Promise<EmailSignupResul
     proxy settles on.
   */
   let inserted = true;
+  let submissions: number | undefined;
   try {
     const data = (await res.json()) as {
       inserted?: unknown;
       created?: unknown;
+      submissions?: unknown;
     } | null;
     if (typeof data?.inserted === "boolean") inserted = data.inserted;
     else if (typeof data?.created === "boolean") inserted = data.created;
+    /*
+      Absent until the proxy grows the column, and left undefined rather than
+      defaulting to 1 — "we did not ask" and "they submitted once" are
+      different facts, and a default would quietly assert the second.
+    */
+    if (typeof data?.submissions === "number" && Number.isFinite(data.submissions)) {
+      submissions = data.submissions;
+    }
   } catch {
     // No body, or not JSON: keep the fail-open default.
   }
 
-  return { inserted, mode: "proxy" };
+  return { inserted, submissions, mode: "proxy" };
 }
 
 /* ==========================================================================

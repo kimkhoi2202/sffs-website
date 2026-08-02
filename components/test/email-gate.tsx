@@ -176,6 +176,17 @@ export function EmailGate({
         body: JSON.stringify({
           token,
           email: address,
+          /*
+            Whether this is the "Send it again" button rather than a typed
+            submission.
+
+            The server counts submissions per address and a resend is not one:
+            it is the same person asking for the same mail a second time
+            because the first did not arrive, not a fresh expression of
+            interest. Only the browser knows which button was pressed, so the
+            distinction has to travel with the request.
+          */
+          isResend,
           // Always false outside development; the reader folds to `return
           // false` in a production build, and the server ignores the field
           // there regardless. See lib/test/dev-flags.ts.

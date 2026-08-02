@@ -30,7 +30,7 @@
  * the domains, and a joke.
  */
 import { ShareToChild } from "./share-to-child";
-import { MASKED_VALUE, type TestResult } from "@/lib/test/scoring";
+import { MASKED_VALUE, type TestResult, type VerdictId } from "@/lib/test/scoring";
 import { VERDICT_INK } from "@/lib/test/types";
 import type { Domain, Test } from "@/lib/test/types";
 import { cn } from "@/lib/utils";
@@ -43,6 +43,39 @@ const DOMAIN_LABEL: Record<Domain, string> = {
 };
 
 const DOMAIN_ORDER: Domain[] = ["verbal", "quantitative", "spatial", "logic"];
+
+/**
+ * THE TWO END BANDS GET A STICKER INSTEAD OF THE WORDS.
+ *
+ * Each piece of art already spells its own verdict out, so rendering it next to
+ * an <h1> saying the same thing would print the verdict twice. The image IS the
+ * heading in these cases — it carries the title as its `alt`, so the heading
+ * still has text for a screen reader, and it is sized past the score above it
+ * because these are the two results people screenshot.
+ *
+ * Only the CERTIFIED bands are in here, and that is the whole rule: both
+ * stickers say "CERTIFIED", which is a claim the three middle bands cannot make
+ * without contradicting the score printed directly above them. A new band gets
+ * a badge only when there is art whose words match its own.
+ *
+ * Intrinsic dimensions are the real pixel size of each PNG, present so the
+ * browser reserves the right box before the image loads and the card does not
+ * jump.
+ */
+const VERDICT_BADGE: Partial<
+  Record<VerdictId, { src: string; width: number; height: number }>
+> = {
+  "certified-smart-fella": {
+    src: "/certified-smart-fella.png",
+    width: 530,
+    height: 575,
+  },
+  "certified-fart-smella": {
+    src: "/certified-fart-smella.png",
+    width: 546,
+    height: 592,
+  },
+};
 
 export function ResultsView({
   test,
@@ -69,6 +102,8 @@ export function ResultsView({
   masked?: boolean;
   className?: string;
 }) {
+  const badge = VERDICT_BADGE[result.verdict.id];
+
   const byDomain = DOMAIN_ORDER.map((d) => {
     const items = result.items.filter((i) => i.item.domain === d);
     return { domain: d, total: items.length, correct: items.filter((i) => i.correct).length };
@@ -101,7 +136,23 @@ export function ResultsView({
           an absence does not need its own glyph when there is already a line
           explaining it.
         */}
-        {masked ? null : (
+        {masked ? null : badge ? (
+          <h1 className="w-full">
+            {/* eslint-disable-next-line @next/next/no-img-element -- static public asset */}
+            <img
+              src={badge.src}
+              alt={result.verdict.title}
+              width={badge.width}
+              height={badge.height}
+              /* Positive margin on top of the card's gap. The badge is the
+                 loudest thing on the page and crowding it against the score
+                 and the subline makes all three fight; the air is what lets it
+                 read as the award it is. */
+              className="mx-auto my-4 h-auto w-[min(100%,20rem)] select-none sm:my-5 sm:w-[min(100%,24rem)]"
+              draggable={false}
+            />
+          </h1>
+        ) : (
           <h1
             /* Green at the top, red at the bottom, ink in the middle. Measured
                against this card's yellow, not picked from the brand tokens —
