@@ -39,27 +39,35 @@
       ],
       answer: "D",
 
-/* ===== g4-m4 — 2 rule(s): rows shade, columns size; key C (C) ===== */
+/* ===== g4-m4 — 2 rule(s): rows rotate, columns shade; key C (C) ===== */
       cells: [
-        { shapes: [{ shape: "cross", size: 0.8 }] },
-        { shapes: [{ shape: "cross", filled: true, color: "var(--color-gray-300)", size: 0.8 }] },
-        { shapes: [{ shape: "cross", filled: true, size: 0.8 }] },
-        { shapes: [{ shape: "cross", size: 0.57 }] },
-        { shapes: [{ shape: "cross", filled: true, color: "var(--color-gray-300)", size: 0.57 }] },
-        { shapes: [{ shape: "cross", filled: true, size: 0.57 }] },
-        { shapes: [{ shape: "cross", size: 0.34 }] },
-        { shapes: [{ shape: "cross", filled: true, color: "var(--color-gray-300)", size: 0.34 }] },
-        { shapes: [{ shape: "cross", filled: true, size: 0.34 }] },
+        { shapes: [{ shape: "heart", size: 0.68 }] },
+        { shapes: [{ shape: "heart", rotate: 45, size: 0.68 }] },
+        { shapes: [{ shape: "heart", rotate: 90, size: 0.68 }] },
+        { shapes: [{ shape: "heart", filled: true, color: "var(--color-gray-300)", size: 0.68 }] },
+        {
+          shapes: [
+            { shape: "heart", filled: true, color: "var(--color-gray-300)", rotate: 45, size: 0.68 },
+          ],
+        },
+        {
+          shapes: [
+            { shape: "heart", filled: true, color: "var(--color-gray-300)", rotate: 90, size: 0.68 },
+          ],
+        },
+        { shapes: [{ shape: "heart", filled: true, size: 0.68 }] },
+        { shapes: [{ shape: "heart", filled: true, rotate: 45, size: 0.68 }] },
+        { shapes: [{ shape: "heart", filled: true, rotate: 90, size: 0.68 }] },
       ],
       options: [
         // wp_copy
-        { id: "A", fig: { shapes: [{ shape: "cross", size: 0.8 }] } },
-        // ic_neg
-        { id: "B", fig: { shapes: [{ shape: "cross", size: 0.34 }] } },
+        { id: "A", fig: { shapes: [{ shape: "heart", size: 0.68 }] } },
+        // ic_flip
+        { id: "B", fig: { shapes: [{ shape: "heart", filled: true, rotate: 135, size: 0.68 }] } },
         // correct
-        { id: "C", fig: { shapes: [{ shape: "cross", filled: true, size: 0.34 }] } },
+        { id: "C", fig: { shapes: [{ shape: "heart", filled: true, rotate: 90, size: 0.68 }] } },
         // r_left
-        { id: "D", fig: { shapes: [{ shape: "cross", filled: true, color: "var(--color-gray-300)", size: 0.34 }] } },
+        { id: "D", fig: { shapes: [{ shape: "heart", filled: true, rotate: 45, size: 0.68 }] } },
       ],
       answer: "C",
 

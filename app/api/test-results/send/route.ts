@@ -78,6 +78,8 @@ function hashEmail(email: string): string {
 }
 
 interface SendBody {
+  /** Whether the submitting browser is marked internal. See lib/posthog-server.ts. */
+  isInternal?: boolean;
   token?: unknown;
   email?: unknown;
   /** Dev-tools only, honoured only outside production. See below. */
@@ -229,7 +231,7 @@ export async function POST(request: NextRequest) {
     }
     // Only a genuinely new row is a conversion. A resend to the same address is
     // not a second signup.
-    if (inserted) await captureEmailCapturedServer(request, source);
+    if (inserted) await captureEmailCapturedServer(request, source, body.isInternal === true);
   } catch (err) {
     console.error(
       "results-send: email stored-send succeeded but the list write failed:",

@@ -58,7 +58,13 @@ export function ShareToChild() {
       <Button variant="ink" size="lg" onClick={share} className="w-full">
         {copied ? "Link copied" : "Send it to your kid"}
       </Button>
+      {/*
+        Tracked like the other two exits. It is a real navigation rather than a
+        handler, so the event has to go out before the browser leaves; a plain
+        capture is enough here because PostHog sends it beacon-style.
+      */}
       <a
+        onClick={() => trackTestShareToChildClicked("open")}
         href={`/?${CHILD_ENTRY_PARAM}`}
         className="text-center text-xs font-bold uppercase tracking-wide text-ink/60 underline decoration-2 underline-offset-2"
       >

@@ -146,6 +146,7 @@ export async function POST(request: NextRequest) {
     */
     void recordResultStats({
       testId: test.id,
+      audience: test.audience,
       band: test.band,
       grade,
       score: result.score,

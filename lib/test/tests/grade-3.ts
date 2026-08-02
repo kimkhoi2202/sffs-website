@@ -274,7 +274,7 @@ export const GRADE_3_TEST: Test = {
           why: "R-left: copies the cell immediately to the left. Left-perseveration is the commonest matrix error.",
         },
       ],
-      explanation: "Across a row, the number of shapes goes 1, 2, 3. Nothing else changes.",
+      explanation: "Across a row, the number of shapes goes 1, 2, 3. They are drawn smaller when there are more of them so they fit, so the number is the rule and the size just follows it.",
       answer: "A",
     },
     {
@@ -392,7 +392,7 @@ export const GRADE_3_TEST: Test = {
         },
         { id: "D", fig: { shapes: [{ shape: "heart", filled: true, size: 0.68 }] } },
       ],
-      explanation: "Down a column, the shading goes from white to grey to solid. Nothing else changes.",
+      explanation: "Down a column, the shading goes from white to gray to solid. Nothing else changes.",
       answer: "D",
     },
     {
@@ -505,7 +505,7 @@ export const GRADE_3_TEST: Test = {
           why: "R-top: copies the cell immediately above.",
         },
       ],
-      explanation: "Across a row, the shape goes diamond, hexagon, star. Down a column, the shading goes from white to grey to solid. The missing cell is whatever both of those give at once.",
+      explanation: "Across a row, the shape goes diamond, hexagon, star. Down a column, the shading goes from white to gray to solid. The missing cell is whatever both of those give at once.",
       answer: "B",
     },
     {
@@ -626,7 +626,7 @@ export const GRADE_3_TEST: Test = {
         },
         { id: "D", fig: { shapes: [{ shape: "square", size: 0.68 }] } },
       ],
-      explanation: "Across a row, the number of shapes drops from 3 to 2 to 1. Down a column, the shape goes cross, teardrop, square. The missing cell is whatever both of those give at once.",
+      explanation: "Across a row, the number of shapes drops from 3 to 2 to 1. Down a column, the shape goes cross, teardrop, square. They are drawn smaller when there are more of them so they fit, so the number is the rule and the size just follows it. The missing cell is whatever both of those give at once.",
       answer: "D",
     },
   ],

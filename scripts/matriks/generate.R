@@ -71,7 +71,16 @@ suppressMessages(library(jsonlite))
 specs <- list(
   # ---- Grade 4 (L10): two of the five; the rest are shape and count -------
   list(id = "g4-m2", base = c("circle"),                     h = "shade",  v = "size",     glyphs = c("teardrop"),                        rot = 1),
-  list(id = "g4-m4", base = c("pentagon"),                   h = "shade",  v = "size",     glyphs = c("cross"),                           rot = 1),
+  # NOT a second shade+size grid. g4-m2 above is already shade across rows and
+  # size down columns, and this one was the same puzzle with the glyph swapped —
+  # so one child met it twice, six items apart, in a fifteen-item sitting.
+  #
+  # Rotation instead, which is the only attribute grade 4 was not using at all,
+  # and it lands at item 12 where the bank needed to be getting harder rather
+  # than repeating itself. `heart` because a rotation rule needs a glyph with no
+  # rotational symmetry AND this spec also shades, which rules out the thin
+  # glyphs — see the two constraints noted under grade 6.
+  list(id = "g4-m4", base = c("pentagon"),                   h = "rotate", v = "shade",    glyphs = c("heart"),                           rot = 1),
 
   # ---- Grade 5 (L11): rotation in quarter turns; the last one is three ----
   list(id = "g5-m1", base = c("triangle"),                   h = "rotate", v = "shade",    glyphs = c("triangle"),                        rot = 2),
@@ -111,6 +120,19 @@ specs <- list(
   # same circle, so half the cell would sit out the rotation rule entirely.
   list(id = "a-m1", base = c("triangle", "circle"),          h = "rotate", v = "shade",    glyphs = c("arrow", "teardrop"),               rot = 2),
   list(id = "a-m2", base = c("square"),                      h = c("shade", "size"), v = "rotate", glyphs = c("teardrop"),                rot = 1),
+  # KNOWN, UNFIXED: this is g78-m4 above with different glyphs. Both are a plain
+  # XOR over the same four bases, so the last and hardest item on the adult test
+  # is the same puzzle a seventh-grader meets at item 12.
+  #
+  # The obvious fix does not work. Adding a second rule (`v = "shade"`) to make
+  # it a genuine two-rule item is accepted by the spec and then silently dropped:
+  # matRiks forces `identity` down the columns whenever a logical operator is
+  # set, and the build reports `rules=1 [XOR / identity]` either way. Changing
+  # only the glyphs would leave the same puzzle wearing a different coat.
+  #
+  # Fixing it properly means hand-authoring the grid or a generator that can
+  # combine a logical operator with an attribute rule. Left as it is rather than
+  # papered over, because a cosmetic change here would hide the problem.
   list(id = "a-m3", base = c("circle", "square", "triangle", "pentagon"), h = "XOR", v = "identity", glyphs = c("crescent", "diamond", "cross", "triangle"), rot = 1)
 )
 

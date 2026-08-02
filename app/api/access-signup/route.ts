@@ -44,6 +44,8 @@ const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX = 10;
 
 interface SignupBody {
+  /** Whether the submitting browser is marked internal. See lib/posthog-server.ts. */
+  isInternal?: boolean;
   email?: unknown;
   source?: unknown;
 }
@@ -131,7 +133,7 @@ export async function POST(request: NextRequest) {
     // on the list is not a second conversion, and no client-side guard can
     // catch that case because it spans separate visits.
     if (inserted) {
-      await captureEmailCapturedServer(request, source);
+      await captureEmailCapturedServer(request, source, body.isInternal === true);
     }
     // Same status and same body either way: never reveal whether an address is
     // already on the list.

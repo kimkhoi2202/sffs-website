@@ -122,10 +122,10 @@ const VA = {
     {
       rule: "VA-R5 worker to tool, tier 1",
       stem: "PAINTER is to BRUSH as GARDENER is to ?",
-      explain: "A painter works with a brush; a gardener works with a spade.",
+      explain: "A painter works with a brush; a gardener works with a shovel.",
       k: 0,
       opts: [
-        ["spade"],
+        ["shovel"],
         ["garden", "WP-relation: where a gardener works, not what they work with."],
         ["flower", "WP-relation: what a gardener tends, not what they hold."],
         ["paint", "R-echo: belongs to the first pair, not the second."],
@@ -228,7 +228,7 @@ const VA = {
         ["heavy"],
         ["soft", "WP-direction: the property matched to FEATHER rather than to STONE."],
         ["hard", "IC-partial: a real property of stone, but on a different dimension from the weight the stem uses."],
-        ["grey", "D: a property from another dimension entirely."],
+        ["gray", "D: a property from another dimension entirely."],
       ],
     },
   ],
@@ -918,7 +918,7 @@ function rulePhrase(rule, a, b, c) {
 
   switch (rule) {
     case "shade":
-      return "the shading goes from white to grey to solid";
+      return "the shading goes from white to gray to solid";
     case "size":
       return size(c) < size(a) ? "the figure gets smaller" : "the figure gets bigger";
     case "rotate":
@@ -947,12 +947,33 @@ function figureExplanation(m) {
 
   if (h.length) parts.push(`Across a row, ${h.map((r) => rulePhrase(r, ...row)).join(" and ")}.`);
   if (v.length) parts.push(`Down a column, ${v.map((r) => rulePhrase(r, ...col)).join(" and ")}.`);
+
+  /*
+    A COUNT RULE MAKES THE SHAPES SMALLER, AND THE EXPLANATION HAS TO SAY SO.
+
+    Three shapes only fit a cell if they are drawn smaller than one, so a grid
+    whose rule is "1, 2, 3" also visibly shrinks. Saying "nothing else changes"
+    under a picture where something else plainly changed teaches a child to
+    distrust the feedback, and it is the sentence they read at the exact moment
+    they are trying to work out what they missed.
+
+    Naming it is also the more useful lesson: the size is a consequence of the
+    count, not a second rule to find.
+  */
+  const hasCount = [...h, ...v].includes("count");
+  if (hasCount) {
+    parts.push(
+      "They are drawn smaller when there are more of them so they fit, so the number is the rule and the size just follows it.",
+    );
+  }
   parts.push(
     h.length && v.length
       ? "The missing cell is whatever both of those give at once."
-      : "Nothing else changes.",
+      : hasCount
+        ? ""
+        : "Nothing else changes.",
   );
-  return parts.join(" ");
+  return parts.filter(Boolean).join(" ");
 }
 
 function emitFigureItem(id, m, ruleId) {

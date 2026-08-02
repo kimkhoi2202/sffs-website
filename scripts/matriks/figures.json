@@ -157,10 +157,10 @@
     "id": "g4-m4",
     "rules": {
       "h": [
-        "shade"
+        "rotate"
       ],
       "v": [
-        "size"
+        "shade"
       ]
     },
     "ruleCount": 2,
@@ -169,16 +169,34 @@
       {
         "shapes": [
           {
-            "shape": "cross",
-            "size": 0.8
+            "shape": "heart",
+            "size": 0.68
           }
         ]
       },
       {
         "shapes": [
           {
-            "shape": "cross",
-            "size": 0.8,
+            "shape": "heart",
+            "size": 0.68,
+            "rotate": 45
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "heart",
+            "size": 0.68,
+            "rotate": 90
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "heart",
+            "size": 0.68,
             "filled": true,
             "color": "var(--color-gray-300)"
           }
@@ -187,8 +205,30 @@
       {
         "shapes": [
           {
-            "shape": "cross",
-            "size": 0.8,
+            "shape": "heart",
+            "size": 0.68,
+            "rotate": 45,
+            "filled": true,
+            "color": "var(--color-gray-300)"
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "heart",
+            "size": 0.68,
+            "rotate": 90,
+            "filled": true,
+            "color": "var(--color-gray-300)"
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "heart",
+            "size": 0.68,
             "filled": true
           }
         ]
@@ -196,26 +236,9 @@
       {
         "shapes": [
           {
-            "shape": "cross",
-            "size": 0.57
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "cross",
-            "size": 0.57,
-            "filled": true,
-            "color": "var(--color-gray-300)"
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "cross",
-            "size": 0.57,
+            "shape": "heart",
+            "size": 0.68,
+            "rotate": 45,
             "filled": true
           }
         ]
@@ -223,26 +246,9 @@
       {
         "shapes": [
           {
-            "shape": "cross",
-            "size": 0.34
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "cross",
-            "size": 0.34,
-            "filled": true,
-            "color": "var(--color-gray-300)"
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "cross",
-            "size": 0.34,
+            "shape": "heart",
+            "size": 0.68,
+            "rotate": 90,
             "filled": true
           }
         ]
@@ -255,20 +261,22 @@
         "fig": {
           "shapes": [
             {
-              "shape": "cross",
-              "size": 0.8
+              "shape": "heart",
+              "size": 0.68
             }
           ]
         }
       },
       {
         "id": "B",
-        "tag": "ic_neg",
+        "tag": "ic_flip",
         "fig": {
           "shapes": [
             {
-              "shape": "cross",
-              "size": 0.34
+              "shape": "heart",
+              "size": 0.68,
+              "rotate": 135,
+              "filled": true
             }
           ]
         }
@@ -279,8 +287,9 @@
         "fig": {
           "shapes": [
             {
-              "shape": "cross",
-              "size": 0.34,
+              "shape": "heart",
+              "size": 0.68,
+              "rotate": 90,
               "filled": true
             }
           ]
@@ -292,10 +301,10 @@
         "fig": {
           "shapes": [
             {
-              "shape": "cross",
-              "size": 0.34,
-              "filled": true,
-              "color": "var(--color-gray-300)"
+              "shape": "heart",
+              "size": 0.68,
+              "rotate": 45,
+              "filled": true
             }
           ]
         }

@@ -437,6 +437,18 @@ export function trackTestGradeSelected(grade: number): void {
  * picker and choosing again is a real thing a person did and the count should
  * show it.
  */
+/**
+ * Somebody arrived on a link a parent shared, closing the loop.
+ *
+ * Without this the share is a dead end in the data: `test_share_to_child_clicked`
+ * says a link went out and nothing says one ever came back, so the loop's
+ * conversion rate cannot be computed at all. It fires from the `?for=child`
+ * seed in the flow, which is the only way to arrive in that state.
+ */
+export function trackTestChildLinkOpened(): void {
+  posthog.capture("test_child_link_opened");
+}
+
 export function trackTestStepViewed(p: {
   /** "fork" | "parent-intent" | "grade" | "intro" | "test" | "results" */
   step: string;
@@ -654,8 +666,17 @@ export function trackResultsLinkOpened(p: {
   posthog.capture("results_link_opened", p);
 }
 
-/** The parent tapped the link that hands the test to their kid. */
-export function trackTestShareToChildClicked(method: "link" | "copy"): void {
+/**
+ * The parent handed the test to their kid.
+ *
+ * THREE METHODS, BECAUSE THE CARD HAS THREE EXITS. It used to report two: the
+ * native share sheet and the clipboard. The third is a plain anchor —
+ * "Or open the grade picker here" — which navigated with no event at all, so a
+ * parent who used it appeared to reach the child flow from nowhere. That is a
+ * bad thing to be blind to on a sharing loop specifically, because the loop is
+ * the growth mechanism and an untracked arm of it looks like no growth.
+ */
+export function trackTestShareToChildClicked(method: "link" | "copy" | "open"): void {
   posthog.capture("test_share_to_child_clicked", { method });
 }
 

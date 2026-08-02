@@ -329,7 +329,7 @@ export const ADULT_TEST: Test = {
       domain: "quantitative",
       rule: "WP-2 two operations, sequential",
       prompt: "Work out the answer.",
-      stem: "A tank holds 200 litres and starts full. 45 litres are drawn off in the morning and 68 in the afternoon. How much is left?",
+      stem: "A tank holds 200 liters and starts full. 45 liters are drawn off in the morning and 68 in the afternoon. How much is left?",
       options: [
         { id: "A", text: "87" },
         {
@@ -348,7 +348,7 @@ export const ADULT_TEST: Test = {
           why: "WP-inverse: added the withdrawals to the tank instead of taking them away.",
         },
       ],
-      explanation: "200 − 45 − 68 = 87 litres.",
+      explanation: "200 − 45 − 68 = 87 liters.",
       answer: "A",
     },
 
@@ -820,7 +820,7 @@ export const ADULT_TEST: Test = {
           why: "R-left: copies the cell immediately to the left. Left-perseveration is the commonest matrix error.",
         },
       ],
-      explanation: "Across a row the figure turns a quarter turn each step. Down a column the shading goes white, grey, solid. The last cell is both: turned twice and solid.",
+      explanation: "Across a row the figure turns a quarter turn each step. Down a column the shading goes white, gray, solid. The last cell is both: turned twice and solid.",
       answer: "B",
     },
     {
@@ -1395,7 +1395,7 @@ export const ADULT_TEST: Test = {
         },
         {
           id: "B",
-          text: "colour",
+          text: "color",
           why: "R-echo: a property matched to OPAQUE in the stem rather than to MUTE.",
         },
         {

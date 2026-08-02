@@ -50,6 +50,7 @@ import {
   trackTestEmailSent,
   trackTestEmailSubmitted,
   trackTestResendRequested,
+  isInternalUser,
 } from "@/lib/analytics/events";
 import { shouldForceSendFailure } from "@/lib/test/dev-flags";
 import type { Audience } from "@/lib/test/types";
@@ -179,6 +180,10 @@ export function EmailGate({
           // false` in a production build, and the server ignores the field
           // there regardless. See lib/test/dev-flags.ts.
           forceFailure: shouldForceSendFailure(),
+          // The server cannot see this browser's internal flag, so it travels
+          // with the submission. Without it the server-side conversion event
+          // escapes the project's internal-user filter. See lib/posthog-server.ts.
+          isInternal: isInternalUser(),
         }),
       });
       const data = (await res.json().catch(() => null)) as

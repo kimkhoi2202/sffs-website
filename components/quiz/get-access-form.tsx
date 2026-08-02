@@ -10,8 +10,7 @@ import {
   trackEmailCaptureValidationFailed,
   trackEmailFieldFocused,
   trackEmailFormViewed,
-  type ValidationFailReason,
-} from "@/lib/analytics/events";
+  type ValidationFailReason, isInternalUser } from "@/lib/analytics/events";
 import { EMAIL_SOURCES } from "@/lib/email-sources";
 import { cn } from "@/lib/utils";
 
@@ -110,7 +109,7 @@ export function GetAccessForm({ className }: { className?: string }) {
         const res = await fetch("/api/access-signup", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: trimmed, source: EMAIL_SOURCES.homepage }),
+          body: JSON.stringify({ email: trimmed, source: EMAIL_SOURCES.homepage, isInternal: isInternalUser() }),
         });
         const data = (await res.json().catch(() => null)) as
           | { ok?: boolean; error?: string }

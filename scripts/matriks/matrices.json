@@ -160,9 +160,9 @@
   },
   "g4-m4": {
     "id": "g4-m4",
-    "hrules": "shade",
-    "vrules": "size",
-    "glyphs": "cross",
+    "hrules": "rotate",
+    "vrules": "shade",
+    "glyphs": "heart",
     "rot": 1,
     "base": {
       "shape": "pentagon",
@@ -174,64 +174,64 @@
     "cells": [
       {
         "shape": "pentagon",
-        "size": 16.666667,
+        "size": 15,
         "rotation": 1.570796,
         "shade": "white",
         "visible": 1
       },
       {
         "shape": "pentagon",
-        "size": 16.666667,
+        "size": 15,
+        "rotation": 2.356194,
+        "shade": "white",
+        "visible": 1
+      },
+      {
+        "shape": "pentagon",
+        "size": 15,
+        "rotation": 3.141593,
+        "shade": "white",
+        "visible": 1
+      },
+      {
+        "shape": "pentagon",
+        "size": 15,
         "rotation": 1.570796,
         "shade": "grey",
         "visible": 1
       },
       {
         "shape": "pentagon",
-        "size": 16.666667,
+        "size": 15,
+        "rotation": 2.356194,
+        "shade": "grey",
+        "visible": 1
+      },
+      {
+        "shape": "pentagon",
+        "size": 15,
+        "rotation": 3.141593,
+        "shade": "grey",
+        "visible": 1
+      },
+      {
+        "shape": "pentagon",
+        "size": 15,
         "rotation": 1.570796,
         "shade": "black",
         "visible": 1
       },
       {
         "shape": "pentagon",
-        "size": 8.333333,
-        "rotation": 1.570796,
-        "shade": "white",
-        "visible": 1
-      },
-      {
-        "shape": "pentagon",
-        "size": 8.333333,
-        "rotation": 1.570796,
-        "shade": "grey",
-        "visible": 1
-      },
-      {
-        "shape": "pentagon",
-        "size": 8.333333,
-        "rotation": 1.570796,
+        "size": 15,
+        "rotation": 2.356194,
         "shade": "black",
         "visible": 1
       },
       {
         "shape": "pentagon",
-        "size": 5.555556,
-        "rotation": 1.570796,
-        "shade": "white",
-        "visible": 1
-      },
-      {
-        "shape": "pentagon",
-        "size": 5.555556,
-        "rotation": 1.570796,
-        "shade": "grey",
-        "visible": 1
-      },
-      {
-        "shape": "pentagon",
-        "size": 5.555556,
-        "rotation": 1.570796,
+        "size": 15,
+        "rotation": 3.141593,
         "shade": "black",
         "visible": 1
       }
@@ -239,78 +239,78 @@
     "responses": {
       "correct": {
         "shape": "pentagon",
-        "size": 5.555556,
-        "rotation": 1.570796,
+        "size": 15,
+        "rotation": 3.141593,
         "shade": "black",
         "visible": 1
       },
       "r_diag": {
         "shape": "pentagon",
-        "size": 8.333333,
-        "rotation": 1.570796,
+        "size": 15,
+        "rotation": 2.356194,
         "shade": "grey",
         "visible": 1
       },
       "r_left": {
         "shape": "pentagon",
-        "size": 5.555556,
-        "rotation": 1.570796,
-        "shade": "grey",
+        "size": 15,
+        "rotation": 2.356194,
+        "shade": "black",
         "visible": 1
       },
       "r_top": {
         "shape": "pentagon",
-        "size": 8.333333,
-        "rotation": 1.570796,
-        "shade": "black",
+        "size": 15,
+        "rotation": 3.141593,
+        "shade": "grey",
         "visible": 1
       },
       "wp_copy": {
         "shape": "pentagon",
-        "size": 16.666667,
+        "size": 15,
         "rotation": 1.570796,
         "shade": "white",
         "visible": 1
       },
       "wp_matrix": {
         "shape": ["pentagon", "pentagon"],
-        "size": [4.62963, 16.666667],
-        "rotation": [1.570796, 3.926991],
+        "size": [8.333333, 15],
+        "rotation": [2.356194, 3.926991],
         "shade": ["grey", "white"],
         "visible": [1, 1]
       },
       "difference": {
         "shape": ["pentagon", "s_maxi"],
-        "size": [16.666667, 4, 8, 4, 8],
+        "size": [15, 4, 8, 4, 8],
         "rotation": [1.570796, -3.141593, -3.141593, -3.141593, 3.141593],
         "shade": ["white", "none"],
         "visible": [1, 1]
       },
       "ic_neg": {
         "shape": "pentagon",
-        "size": 5.555556,
-        "rotation": 1.570796,
+        "size": 15,
+        "rotation": 3.141593,
         "shade": "white",
         "visible": 1
       },
       "ic_flip": {
         "shape": "pentagon",
-        "size": 5.555556,
-        "rotation": 2.356194,
+        "size": 15,
+        "rotation": 3.926991,
         "shade": "black",
         "visible": 1
       },
       "ic_size": {
         "shape": "pentagon",
-        "size": 2.057613,
-        "rotation": 1.570796,
+        "size": 5.555556,
+        "rotation": 3.141593,
         "shade": "black",
         "visible": 1
       },
       "ic_inc": {
         "shape": ["pentagon", "X"],
-        "size": [5.555556, 19.091883, 19.091883],
-        "rotation": [1.570796, 2.356194, 3.926991],
+        "size": [15, 19.091883, 19.091883],
+        "rotation": [3.141593, 2.356194, 3.926991],
         "shade": ["black", "none"],
         "visible": [1, 1]
       }

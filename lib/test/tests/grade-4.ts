@@ -265,7 +265,7 @@ export const GRADE_4_TEST: Test = {
         },
         { id: "D", fig: { shapes: [{ shape: "teardrop", filled: true, size: 0.34 }] } },
       ],
-      explanation: "Across a row, the shading goes from white to grey to solid. Down a column, the figure gets smaller. The missing cell is whatever both of those give at once.",
+      explanation: "Across a row, the shading goes from white to gray to solid. Down a column, the figure gets smaller. The missing cell is whatever both of those give at once.",
       answer: "D",
     },
     {
@@ -292,9 +292,9 @@ export const GRADE_4_TEST: Test = {
           text: "paint",
           why: "R-echo: belongs to the first pair, not the second.",
         },
-        { id: "D", text: "spade" },
+        { id: "D", text: "shovel" },
       ],
-      explanation: "A painter works with a brush; a gardener works with a spade.",
+      explanation: "A painter works with a brush; a gardener works with a shovel.",
       answer: "D",
     },
     {
@@ -428,54 +428,50 @@ export const GRADE_4_TEST: Test = {
       kind: "figure",
       tier: "FIGURE MATRIX",
       domain: "spatial",
-      rule: "FM-3 shading across rows, FM-4 size down columns (matRiks, 2 rules)",
+      rule: "FM-6 rotation across rows, FM-3 shading down columns (matRiks, 2 rules)",
       prompt: "Which figure completes the grid?",
       layout: "matrix",
       cells: [
-        { shapes: [{ shape: "cross", size: 0.8 }] },
+        { shapes: [{ shape: "heart", size: 0.68 }] },
+        { shapes: [{ shape: "heart", rotate: 45, size: 0.68 }] },
+        { shapes: [{ shape: "heart", rotate: 90, size: 0.68 }] },
         {
           shapes: [
-            { shape: "cross", filled: true, color: "var(--color-gray-300)", size: 0.8 },
+            { shape: "heart", filled: true, color: "var(--color-gray-300)", size: 0.68 },
           ],
         },
-        { shapes: [{ shape: "cross", filled: true, size: 0.8 }] },
-        { shapes: [{ shape: "cross", size: 0.57 }] },
         {
           shapes: [
-            { shape: "cross", filled: true, color: "var(--color-gray-300)", size: 0.57 },
+            { shape: "heart", filled: true, color: "var(--color-gray-300)", rotate: 45, size: 0.68 },
           ],
         },
-        { shapes: [{ shape: "cross", filled: true, size: 0.57 }] },
-        { shapes: [{ shape: "cross", size: 0.34 }] },
         {
           shapes: [
-            { shape: "cross", filled: true, color: "var(--color-gray-300)", size: 0.34 },
+            { shape: "heart", filled: true, color: "var(--color-gray-300)", rotate: 90, size: 0.68 },
           ],
         },
+        { shapes: [{ shape: "heart", filled: true, size: 0.68 }] },
+        { shapes: [{ shape: "heart", filled: true, rotate: 45, size: 0.68 }] },
       ],
       options: [
         {
           id: "A",
-          fig: { shapes: [{ shape: "cross", size: 0.8 }] },
+          fig: { shapes: [{ shape: "heart", size: 0.68 }] },
           why: "WP-copy: the figure the grid starts from, with the rule not applied at all.",
         },
         {
           id: "B",
-          fig: { shapes: [{ shape: "cross", size: 0.34 }] },
-          why: "IC-neg: everything else right, and the shading one step out.",
+          fig: { shapes: [{ shape: "heart", filled: true, rotate: 135, size: 0.68 }] },
+          why: "IC-flip: everything else right, and the turn carried one step too far.",
         },
-        { id: "C", fig: { shapes: [{ shape: "cross", filled: true, size: 0.34 }] } },
+        { id: "C", fig: { shapes: [{ shape: "heart", filled: true, rotate: 90, size: 0.68 }] } },
         {
           id: "D",
-          fig: {
-            shapes: [
-              { shape: "cross", filled: true, color: "var(--color-gray-300)", size: 0.34 },
-            ],
-          },
+          fig: { shapes: [{ shape: "heart", filled: true, rotate: 45, size: 0.68 }] },
           why: "R-left: copies the cell immediately to the left. Left-perseveration is the commonest matrix error.",
         },
       ],
-      explanation: "Across a row, the shading goes from white to grey to solid. Down a column, the figure gets smaller. The missing cell is whatever both of those give at once.",
+      explanation: "Across a row, the figure turns a step further round. Down a column, the shading goes from white to gray to solid. The missing cell is whatever both of those give at once.",
       answer: "C",
     },
     {
@@ -616,7 +612,7 @@ export const GRADE_4_TEST: Test = {
           why: "R-left: copies the cell immediately to the left. Left-perseveration is the commonest matrix error.",
         },
       ],
-      explanation: "Across a row, the number of shapes goes 1, 2, 3. Down a column, the shading goes from white to grey to solid. The missing cell is whatever both of those give at once.",
+      explanation: "Across a row, the number of shapes goes 1, 2, 3. Down a column, the shading goes from white to gray to solid. They are drawn smaller when there are more of them so they fit, so the number is the rule and the size just follows it. The missing cell is whatever both of those give at once.",
       answer: "B",
     },
   ],

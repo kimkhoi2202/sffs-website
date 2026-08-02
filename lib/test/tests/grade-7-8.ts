@@ -168,7 +168,7 @@ export const GRADE_7_8_TEST: Test = {
           why: "R-left: copies the cell immediately to the left. Left-perseveration is the commonest matrix error.",
         },
       ],
-      explanation: "Across a row, the shading goes from white to grey to solid and the figure gets smaller. Down a column, the figure turns a step further round. The missing cell is whatever both of those give at once.",
+      explanation: "Across a row, the shading goes from white to gray to solid and the figure gets smaller. Down a column, the figure turns a step further round. The missing cell is whatever both of those give at once.",
       answer: "B",
     },
     {
@@ -315,7 +315,7 @@ export const GRADE_7_8_TEST: Test = {
           ],
         } },
       ],
-      explanation: "Across a row, the figure turns a step further round and the figure gets smaller. Down a column, the shading goes from white to grey to solid. The missing cell is whatever both of those give at once.",
+      explanation: "Across a row, the figure turns a step further round and the figure gets smaller. Down a column, the shading goes from white to gray to solid. The missing cell is whatever both of those give at once.",
       answer: "D",
     },
     {
@@ -428,7 +428,7 @@ export const GRADE_7_8_TEST: Test = {
           why: "R-left: copies the cell immediately to the left. Left-perseveration is the commonest matrix error.",
         },
       ],
-      explanation: "Across a row, the shading goes from white to grey to solid and the figure turns a step further round. Down a column, the figure gets smaller. The missing cell is whatever both of those give at once.",
+      explanation: "Across a row, the shading goes from white to gray to solid and the figure turns a step further round. Down a column, the figure gets smaller. The missing cell is whatever both of those give at once.",
       answer: "C",
     },
     {

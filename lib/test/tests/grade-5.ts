@@ -164,7 +164,7 @@ export const GRADE_5_TEST: Test = {
         },
         { id: "D", fig: { shapes: [{ shape: "triangle", filled: true, rotate: 180, size: 0.68 }] } },
       ],
-      explanation: "Across a row, the figure turns a step further round. Down a column, the shading goes from white to grey to solid. The missing cell is whatever both of those give at once.",
+      explanation: "Across a row, the figure turns a step further round. Down a column, the shading goes from white to gray to solid. The missing cell is whatever both of those give at once.",
       answer: "D",
     },
     {
@@ -511,7 +511,7 @@ export const GRADE_5_TEST: Test = {
           why: "R-left: copies the cell immediately to the left. Left-perseveration is the commonest matrix error.",
         },
       ],
-      explanation: "Across a row, the shading goes from white to grey to solid. Down a column, the figure turns a step further round. The missing cell is whatever both of those give at once.",
+      explanation: "Across a row, the shading goes from white to gray to solid. Down a column, the figure turns a step further round. The missing cell is whatever both of those give at once.",
       answer: "A",
     },
     {
@@ -536,7 +536,7 @@ export const GRADE_5_TEST: Test = {
         },
         {
           id: "D",
-          text: "grey",
+          text: "gray",
           why: "D: a property from another dimension entirely.",
         },
       ],
@@ -658,7 +658,7 @@ export const GRADE_5_TEST: Test = {
           why: "R-left: copies the cell immediately to the left. Left-perseveration is the commonest matrix error.",
         },
       ],
-      explanation: "Across a row, the figure turns a step further round and the figure gets smaller. Down a column, the shading goes from white to grey to solid. The missing cell is whatever both of those give at once.",
+      explanation: "Across a row, the figure turns a step further round and the figure gets smaller. Down a column, the shading goes from white to gray to solid. The missing cell is whatever both of those give at once.",
       answer: "C",
     },
   ],

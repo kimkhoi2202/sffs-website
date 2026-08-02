@@ -50,6 +50,7 @@ import {
   trackTestCompleted,
   trackTestForkSelected,
   trackTestGradeSelected,
+  trackTestChildLinkOpened,
   trackTestRestarted,
   trackTestStarted,
   trackTestStepViewed,
@@ -155,6 +156,8 @@ export function TestFlow() {
 
     const params = new URLSearchParams(window.location.search);
     if (params.get("for") === "child") {
+      // The other half of the sharing loop. See trackTestChildLinkOpened.
+      trackTestChildLinkOpened();
       setState({ ...INITIAL_STATE, step: "grade", fork: "child", audience: "child" });
       // Strip the param so a later refresh restores real progress rather than
       // re-seeding over the top of it.

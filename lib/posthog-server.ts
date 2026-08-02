@@ -102,6 +102,26 @@ function platformFromReferer(req: NextRequest): string | undefined {
 export async function captureEmailCapturedServer(
   req: NextRequest,
   source: string,
+  /**
+   * Whether the submitting browser is marked internal.
+   *
+   * ===========================================================================
+   * WHY THIS HAS TO BE PASSED IN
+   * ===========================================================================
+   * The internal flag lives in the visitor's own localStorage and as a PostHog
+   * super-property the browser SDK attaches client-side. The server has neither,
+   * so this event went out with no `is_internal` and a distinct_id the project's
+   * test-account filter does not recognise — which meant it bypassed the filter
+   * completely. Every client-side series read zero while this one read three,
+   * and all three were us testing the flow. A conversion metric that counts the
+   * people building the product is worse than no conversion metric.
+   *
+   * TRUSTING THE CLIENT IS FINE HERE, unusually. The only thing a visitor can
+   * do by lying is exclude themselves from our analytics, and claiming `false`
+   * is what happens by default anyway. There is nothing to gain and nothing to
+   * protect.
+   */
+  internal = false,
 ): Promise<void> {
   if (!isProdRequest(req)) return; // W4: prod domain only — no dev/preview pollution
   const ph = getClient();
@@ -116,6 +136,9 @@ export async function captureEmailCapturedServer(
         source,
         server_side: true, // lets insights dedupe/split client vs server truth
         stitched: Boolean(stitchedId),
+        // Same property name the client stamps, so one test-account filter
+        // covers both sides. See INTERNAL_PROPERTY in lib/analytics/events.ts.
+        ...(internal ? { is_internal: true } : {}),
         ...(platform ? { platform } : {}),
         $process_person_profile: false, // stay anonymous (mirrors identified_only)
       },
