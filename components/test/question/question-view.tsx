@@ -58,7 +58,10 @@ function SeqRow({ children }: { children: React.ReactNode }) {
  */
 function Stimulus({ children }: { children: React.ReactNode }) {
   return (
-    <div className="w-full rounded-2xl border-[2.5px] border-ink bg-cream p-3 sm:p-5">
+    <div
+      data-surface="stem"
+      className="w-full rounded-2xl border-[2.5px] border-ink bg-cream p-3 sm:p-5"
+    >
       {children}
     </div>
   );

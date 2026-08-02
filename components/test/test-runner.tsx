@@ -51,10 +51,23 @@ import { ArrowLeftIcon, ArrowRightIcon, XMarkIcon } from "@/components/ui/icons"
 import { FitToViewport } from "./question/fit-to-viewport";
 import { QuestionView } from "./question/question-view";
 import { Button } from "@/components/ui/button";
+import {
+  trackQuestionAnswered,
+  trackQuestionViewed,
+  trackTestQuit,
+  trackTestTimedOut,
+} from "@/lib/analytics/events";
 import { formatClock, secondsLeft } from "@/lib/test/session";
 import type { AnswerMap } from "@/lib/test/scoring";
 import type { Test } from "@/lib/test/types";
 import { cn } from "@/lib/utils";
+
+/**
+ * Reading the wall clock, hoisted out of the component. `react-hooks/purity`
+ * flags `Date.now()` anywhere in a component body, including inside a handler
+ * it cannot see is only called on a tap.
+ */
+const nowMs = () => Date.now();
 
 /** Seconds left at which the clock turns yellow, then coral. */
 const WARN_AT = 60;
@@ -90,6 +103,60 @@ export function TestRunner({
   const answeredCount = Object.keys(answers).length;
 
   const [confirmQuit, setConfirmQuit] = useState(false);
+
+  /* -- per-question analytics --------------------------------------------- */
+  /**
+   * Which questions have already been counted as seen, so `question_viewed`
+   * fires ONCE per question per attempt. Without this it would fire again every
+   * time a child navigates back, which inflates the middle of the drop-off
+   * funnel and makes the curve say the opposite of what happened.
+   */
+  const seenRef = useRef<Set<string>>(new Set());
+  /** When the question currently on screen appeared, for `dwell_ms`. */
+  const shownAtRef = useRef<number>(nowMs());
+
+  const questionProps = useCallback(
+    (i: number) => ({
+      test_id: test.id,
+      audience: test.audience,
+      band: test.band,
+      question_index: i + 1,
+      question_total: total,
+      question_id: test.items[i].id,
+      question_tier: test.items[i].tier,
+      question_domain: test.items[i].domain,
+    }),
+    [test, total],
+  );
+
+  useEffect(() => {
+    const current = test.items[index];
+    if (!current) return;
+    shownAtRef.current = nowMs();
+    if (seenRef.current.has(current.id)) return;
+    seenRef.current.add(current.id);
+    trackQuestionViewed(questionProps(index));
+  }, [index, test, questionProps]);
+
+  /**
+   * An answer is a deliberate tap, so this fires per tap rather than per render.
+   * `changed` separates a first answer from a correction, which matters because
+   * a question people keep changing their mind on is a different signal from one
+   * they answer slowly.
+   */
+  const handleAnswer = useCallback(
+    (itemId: string, optionId: string) => {
+      const item = test.items[index];
+      trackQuestionAnswered({
+        ...questionProps(index),
+        correct: optionId === item.answer,
+        dwell_ms: Math.max(0, nowMs() - shownAtRef.current),
+        changed: answers[itemId] !== undefined,
+      });
+      onAnswer(itemId, optionId);
+    },
+    [answers, index, onAnswer, questionProps, test.items],
+  );
 
   /*
    * An item that will not fit even at the smallest scale is a content problem,
@@ -132,6 +199,17 @@ export function TestRunner({
       setRemaining(left);
       if (left <= 0 && !firedRef.current) {
         firedRef.current = true;
+        // Separate from `test_completed`, which fires either way. This says the
+        // clock ended it rather than the player did, and it carries how far
+        // they got, which is the number that says whether the limit is right.
+        trackTestTimedOut({
+          test_id: test.id,
+          audience: test.audience,
+          band: test.band,
+          question_index: index + 1,
+          question_total: total,
+          answered: Object.keys(answers).length,
+        });
         onFinish(true);
       }
     };
@@ -150,6 +228,11 @@ export function TestRunner({
       window.clearInterval(id);
       document.removeEventListener("visibilitychange", onVisible);
     };
+    // `answers` and `index` are read inside the tick for the timed-out event.
+    // They are deliberately NOT dependencies: re-running this effect on every
+    // answer would restart the interval, and the values are only read at the
+    // moment the clock hits zero.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deadlineAt, timerEnabled, onFinish]);
 
   /* -- body scroll lock ----------------------------------------------------- */
@@ -224,6 +307,7 @@ export function TestRunner({
             so it can overlap the flex row without stealing taps. */}
         <div className="pointer-events-none absolute inset-x-0 top-[max(0.5rem,env(safe-area-inset-top))] flex justify-center">
           <div
+            data-surface="clock"
             className={cn(
               "grid min-w-[4.25rem] place-items-center rounded-full border-[2.5px] border-ink px-3 py-1.5",
               "font-mono text-base font-bold leading-none tabular-nums",
@@ -271,7 +355,7 @@ export function TestRunner({
           <QuestionView
             item={item}
             picked={answers[item.id] ?? null}
-            onPick={(optionId) => onAnswer(item.id, optionId)}
+            onPick={(optionId) => handleAnswer(item.id, optionId)}
           />
         </div>
       </FitToViewport>
@@ -335,7 +419,6 @@ export function TestRunner({
           <div
             /* The other modal. Same reasoning as the email gate: it sits on a
                scrim over the question and the depth is what separates them. */
-            data-elevated
             className="w-full max-w-sm rounded-2xl border-[2.5px] border-ink bg-paper p-5 shadow-hard-lg"
           >
             <h2 id="quit-title" className="font-display text-2xl uppercase leading-none">
@@ -350,7 +433,25 @@ export function TestRunner({
               <Button variant="paper" size="lg" onClick={() => setConfirmQuit(false)}>
                 Keep going
               </Button>
-              <Button variant="coral" size="lg" onClick={onQuit}>
+              <Button
+                variant="coral"
+                size="lg"
+                onClick={() => {
+                  trackTestQuit({
+                    test_id: test.id,
+                    audience: test.audience,
+                    band: test.band,
+                    question_index: index + 1,
+                    question_total: total,
+                    answered: answeredCount,
+                    elapsed_s: Math.max(
+                      0,
+                      Math.round(test.durationSeconds - secondsLeft(deadlineAt)),
+                    ),
+                  });
+                  onQuit();
+                }}
+              >
                 Quit
               </Button>
             </div>

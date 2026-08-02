@@ -411,12 +411,10 @@ function Card({ children }: { children: React.ReactNode }) {
   return (
     <div
       /*
-       * KEEPS ITS SHADOW, and is one of only two surfaces in the flow that
-       * does. This is a modal lifting off deliberately blurred content, so the
-       * depth is what says "this is on top and it is the thing to deal with"
-       * rather than being decoration. See the flat-flow block in globals.css.
+       * A modal lifting off deliberately blurred content: the depth is what
+       * says "this is on top and it is the thing to deal with". Nothing strips
+       * it, since the flat scope is now only on the question surfaces.
        */
-      data-elevated
       className="w-full max-w-sm rounded-2xl border-[2.5px] border-ink bg-paper p-5 shadow-hard-lg sm:p-6"
     >
       {children}

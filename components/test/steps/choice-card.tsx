@@ -41,8 +41,8 @@ export function ChoiceCard({
       type="button"
       onClick={onClick}
       className={cn(
-        "group flex w-full cursor-pointer flex-col items-start gap-1 rounded-2xl",
-        "border-[2.5px] border-ink p-5 text-left transition-colors duration-100",
+        "press-lg group flex w-full cursor-pointer flex-col items-start gap-1 rounded-2xl",
+        "border-[2.5px] border-ink p-5 text-left shadow-hard-lg",
         "focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-[3px] focus-visible:outline-ink",
         TONES[tone],
         className,
@@ -75,8 +75,8 @@ export function GradeButton({
       onClick={onClick}
       aria-label={`Grade ${grade}`}
       className={cn(
-        "flex aspect-square min-h-14 w-full cursor-pointer items-center justify-center rounded-2xl",
-        "border-[2.5px] border-ink bg-paper transition-colors duration-100 hover:[@media(hover:hover)]:bg-cream",
+        "press flex aspect-square min-h-14 w-full cursor-pointer items-center justify-center rounded-2xl",
+        "border-[2.5px] border-ink bg-paper shadow-hard-sm",
         "font-display text-[clamp(1.5rem,7vw,2.25rem)] leading-none text-ink",
         "focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-[3px] focus-visible:outline-ink",
       )}

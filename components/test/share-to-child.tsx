@@ -48,7 +48,7 @@ export function ShareToChild() {
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border-[2.5px] border-ink bg-mint p-4 sm:p-5">
+    <div className="flex flex-col gap-3 rounded-2xl border-[2.5px] border-ink bg-mint p-4 shadow-hard-sm sm:p-5">
       <h2 className="text-balance font-display text-xl uppercase leading-none">
         Now make your kid do it
       </h2>

@@ -415,6 +415,131 @@ export function trackTestGradeSelected(grade: number): void {
   posthog.capture("test_grade_selected", { grade });
 }
 
+/**
+ * Somebody arrived on the test. The first step of the funnel, and the
+ * denominator every later rate is measured against.
+ *
+ * `version` is which homepage actually rendered, read from the same resolver
+ * the page uses rather than hardcoded, so the moment the switch is flipped the
+ * events say so. Without it, comparing v2's conversion to v3's means guessing
+ * which visitors saw which from the date.
+ */
+/**
+ * Every screen in the flow, as ONE event with a `step` property rather than an
+ * event per screen.
+ *
+ * The question this has to answer is "where do people leave", and that is a
+ * funnel over an ordered list of steps. With an event per screen, adding a step
+ * later means the old funnels silently skip it. With one event, the funnel is a
+ * breakdown of `step` and a new screen shows up in it the day it ships.
+ *
+ * Fires once per entry to a step, including re-entry: going back to the grade
+ * picker and choosing again is a real thing a person did and the count should
+ * show it.
+ */
+export function trackTestStepViewed(p: {
+  /** "fork" | "parent-intent" | "grade" | "intro" | "test" | "results" */
+  step: string;
+  /** Which build of the flow, so v2 and v3 funnels stay separable. */
+  version: string;
+  audience: TestAudience | null;
+  grade: number | null;
+}): void {
+  posthog.capture("test_step_viewed", p);
+}
+
+/* --------------------------------------------------------------------------
+ * PER-QUESTION
+ *
+ * This pair is the reason the rest of the funnel is worth having. "People drop
+ * during the test" is not an actionable sentence; "we lose a third of them on
+ * question four" is, and the gap between those two is exactly these two events.
+ *
+ * It is also the only cheap way to find ONE bad item. An item that loses 40% of
+ * everyone who sees it is either broken or a difficulty cliff, and reviewing a
+ * bank of 125 by eye will not find it, because a broken item does not look
+ * broken to the person who wrote it.
+ *
+ * VOLUME. `question_viewed` fires ONCE PER QUESTION PER ATTEMPT, on first sight,
+ * not on every render and not again when a child navigates back to a question
+ * they have already seen. That caps it at 50 events for the longest test, which
+ * is the number a drop-off funnel wants: re-views would inflate the middle of
+ * the funnel and make the curve lie. `question_answered` fires on a deliberate
+ * tap, and carries `changed` when it is replacing an earlier answer.
+ *
+ * NO PII, same as everything else here. An index, a type and a duration are not
+ * a person. Note what is still deliberately absent: WHICH OPTION was picked.
+ * Per-option data joined to a grade and a session recording is a behavioural
+ * profile of a named child, and correctness plus timing answers every question
+ * we actually have.
+ * ------------------------------------------------------------------------ */
+
+interface QuestionEventBase {
+  test_id: string;
+  audience: TestAudience;
+  band: string;
+  /** 1-based, so it reads the way the screen does: "4 of 50". */
+  question_index: number;
+  question_total: number;
+  /** Stable id, so a single bad item can be found across banks. */
+  question_id: string;
+  /** The item type pill: SENTENCE COMPLETION, FIGURE MATRIX, and so on. */
+  question_tier: string;
+  question_domain: string;
+}
+
+export function trackQuestionViewed(p: QuestionEventBase): void {
+  posthog.capture("question_viewed", p);
+}
+
+export function trackQuestionAnswered(
+  p: QuestionEventBase & {
+    correct: boolean;
+    /** Milliseconds from the question appearing to this tap. */
+    dwell_ms: number;
+    /** True when this replaced an answer they had already given. */
+    changed: boolean;
+  },
+): void {
+  posthog.capture("question_answered", p);
+}
+
+/**
+ * They walked out mid-test. Deliberately separate from the clock running out:
+ * one is a decision about the product and the other is the product working as
+ * designed, and averaging them together hides both.
+ */
+export function trackTestQuit(p: {
+  test_id: string;
+  audience: TestAudience;
+  band: string;
+  /** Where they were when they left, 1-based. */
+  question_index: number;
+  question_total: number;
+  answered: number;
+  elapsed_s: number;
+}): void {
+  posthog.capture("test_quit", p);
+}
+
+/** The clock hit zero. `test_completed` still follows; this says why. */
+export function trackTestTimedOut(p: {
+  test_id: string;
+  audience: TestAudience;
+  band: string;
+  /** How far they had got when it stopped, 1-based. */
+  question_index: number;
+  question_total: number;
+  answered: number;
+}): void {
+  posthog.capture("test_timed_out", p);
+}
+
+/** Threw the attempt away and went back to the start. */
+export function trackTestRestarted(from_step: string): void {
+  posthog.capture("test_restarted", { from_step });
+}
+
 export function trackTestStarted(p: {
   test_id: string;
   audience: TestAudience;

@@ -75,24 +75,30 @@ function BackLink({ onClick, label = "Back" }: { onClick: () => void; label?: st
 
 export function AudienceFork({ onPick }: { onPick: (fork: "parent" | "child") => void }) {
   return (
-    <div className="flex w-full flex-col gap-5">
-      <StepHeading sub="Pick the one that sounds like you.">
-        First things first
-      </StepHeading>
-      <div className="grid gap-4">
-        <ChoiceCard
-          tone="blue"
-          onClick={() => onPick("parent")}
-          title="I'm a grown-up"
-          subtitle="Take the 15-minute test yourself, or set one up for your kid."
-        />
-        <ChoiceCard
-          tone="mint"
-          onClick={() => onPick("child")}
-          title="I'm a kid"
-          subtitle="Tell us your grade and take a quick 5-minute test."
-        />
-      </div>
+    /*
+      NO HEADING ON THIS STEP, deliberately. It carried "First things first"
+      over "Pick the one that sounds like you", and both were restating the
+      question the two cards already ask: a card that says "I'm a grown-up" and
+      a card that says "I'm a kid" do not need to be told apart for you. Two
+      lines of instruction above two obvious choices is the kind of thing that
+      reads as helpful and measures as friction.
+
+      The document's h1 moved to the wordmark in BrandHeader, which is where the
+      page's real title was all along. See the note there.
+    */
+    <div className="grid w-full gap-4">
+      <ChoiceCard
+        tone="blue"
+        onClick={() => onPick("parent")}
+        title="I'm a grown-up"
+        subtitle="Take the 15-minute test yourself, or set one up for your kid."
+      />
+      <ChoiceCard
+        tone="mint"
+        onClick={() => onPick("child")}
+        title="I'm a kid"
+        subtitle="Tell us your grade and take a quick 5-minute test."
+      />
     </div>
   );
 }
@@ -256,7 +262,7 @@ export function TestIntro({
       {/* No icons. A yellow "!" on every row turned a friendly screen into
           something that looked like an error state, and the bullets read
           perfectly well as plain statements on their own cards. */}
-      <ul className="flex flex-col gap-2.5">
+      <ul className="flat-surface flex flex-col gap-2.5">
         {rules.map((rule) => (
           <li
             key={rule}
@@ -264,7 +270,7 @@ export function TestIntro({
                button. `text-balance` rather than `text-pretty` because these
                wrap to two lines at 360 and balance splits them evenly, which
                is what centred text needs; pretty only protects the last line. */
-            className="text-balance rounded-2xl border-[2.5px] border-ink bg-cream p-3.5 text-center text-[0.95rem] font-semibold leading-snug text-ink"
+            className="text-balance rounded-2xl border-[2.5px] border-ink bg-cream p-3.5 text-center text-[0.95rem] font-semibold leading-snug text-ink shadow-hard-xs"
           >
             {rule}
           </li>

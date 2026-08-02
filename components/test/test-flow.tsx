@@ -50,7 +50,9 @@ import {
   trackTestCompleted,
   trackTestForkSelected,
   trackTestGradeSelected,
+  trackTestRestarted,
   trackTestStarted,
+  trackTestStepViewed,
 } from "@/lib/analytics/events";
 import { scoreTest } from "@/lib/test/scoring";
 import {
@@ -93,6 +95,12 @@ export interface FlowDevApi {
   reset: () => void;
 }
 
+/**
+ * Stamped on every screen view so v2 and v3 funnels stay separable after the
+ * cutover. Bump it when the flow changes shape, not for content edits.
+ */
+const FLOW_VERSION = "v3";
+
 export function TestFlow() {
   const [state, setState] = useState<FlowState>(INITIAL_STATE);
   const [hydrated, setHydrated] = useState(false);
@@ -107,6 +115,28 @@ export function TestFlow() {
     () => (state.audience ? getTest(state.audience, state.grade) : null),
     [state.audience, state.grade],
   );
+
+  /* -- screen views --------------------------------------------------------
+   *
+   * One effect for the whole funnel. Every screen the flow can show is a value
+   * of `state.step`, so this is the entire drop-off curve, and a screen added
+   * later is included without anyone remembering to instrument it.
+   *
+   * Waits for `hydrated` so a reload lands on the step the player is actually
+   * on rather than firing "fork" first and inventing a visit to a screen they
+   * never saw.
+   */
+  const stepRef = useRef(state.step);
+  useEffect(() => {
+    stepRef.current = state.step;
+    if (!hydrated) return;
+    trackTestStepViewed({
+      step: state.step,
+      version: FLOW_VERSION,
+      audience: state.audience,
+      grade: state.grade,
+    });
+  }, [state.step, state.audience, state.grade, hydrated]);
 
   /* -- restore, or seed from the hand-off link ----------------------------- */
   useIsomorphicLayoutEffect(() => {
@@ -291,6 +321,7 @@ export function TestFlow() {
   );
 
   const reset = useCallback(() => {
+    trackTestRestarted(stepRef.current);
     clearState();
     finishingRef.current = false;
     setState(INITIAL_STATE);
@@ -436,7 +467,7 @@ export function TestFlow() {
           longer exists, say) would otherwise be a blank page. Give it a way out.
         */}
         {(state.step === "intro" || state.step === "results") && !test ? (
-          <div className="rounded-2xl border-[2.5px] border-ink bg-coral p-5 text-center">
+          <div className="rounded-2xl border-[2.5px] border-ink bg-coral p-5 text-center shadow-hard-sm">
             <p className="font-display text-xl uppercase leading-none">
               Something went sideways
             </p>
@@ -453,17 +484,10 @@ export function TestFlow() {
       </StepShell>
     );
 
-  /*
-   * `flow-flat` turns the brand's hard offset shadow off for everything inside
-   * the test, whatever level it arrives from. See the block in app/globals.css:
-   * this is scoped here rather than edited surface by surface because the
-   * buttons get their shadow from a shared utility, not from a class anyone
-   * could remove at the call site. A modal opts back in with `data-elevated`.
-   */
   return (
-    <div className="flow-flat contents">
+    <>
       {body}
       <DevToolsGate api={devApi} />
-    </div>
+    </>
   );
 }

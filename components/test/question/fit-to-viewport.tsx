@@ -162,7 +162,13 @@ export function FitToViewport({ children, contentKey, onOverflow }: FitToViewpor
        * kept rather than set to hidden because unreachable content is a worse
        * failure than a scrollbar nobody uses.
        */
-      className="flex min-h-0 flex-1 items-center justify-center overflow-y-auto overscroll-contain"
+      /*
+       * `flat-surface`: the stem card and the option cards are the two things
+       * somebody looks at for fifteen minutes, so they lose the hard shadow.
+       * Scoped here rather than on the flow root so it cannot reach the
+       * buttons, the fork cards or anything else. See app/globals.css.
+       */
+      className="flat-surface flex min-h-0 flex-1 items-center justify-center overflow-y-auto overscroll-contain"
     >
       <div style={{ height }} className="w-full">
         <div

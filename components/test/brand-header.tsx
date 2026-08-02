@@ -24,38 +24,56 @@ import { cn } from "@/lib/utils";
 export function BrandHeader({ className }: { className?: string }) {
   return (
     <div className={cn("flex w-full flex-col items-center text-center", className)}>
-      <span className="eyebrow text-ink/70">Are you a</span>
-
       {/*
-        The brain mark sits on the wordmark's top-right corner as a sticker,
-        absolutely positioned so it costs zero layout height. Placement and the
-        +12deg tilt carry over from the archived homepage lockup, which measured
-        them against the video pipeline's own sticker usages.
+        THIS IS THE PAGE'S H1, and it has to be, because the fork screen's own
+        headline was removed: the two cards say "I'm a grown-up" and "I'm a kid"
+        and a heading above them was restating the question they already ask.
+        Something still has to carry the document's heading, and the honest
+        candidate is the thing that IS the page's title.
+
+        The eyebrow is inside the h1 rather than above it so the accessible name
+        reads "Are you a Smart Fella or Fart Smella", which is the actual title,
+        rather than leaving "Are you a" stranded as loose text next to a heading
+        that starts mid-sentence.
+
+        The lockup leads and the pill captions it. Reading order is the sentence
+        the brand actually makes: "Are you a Smart Fella or Fart Smella" first,
+        then what the page does with that question.
       */}
-      <div className="relative mt-2 inline-block">
-        {/* eslint-disable-next-line @next/next/no-img-element -- brand wordmark is a static public asset */}
-        <img
-          src="/wordmark.png"
-          alt="Smart Fella or Fart Smella"
-          className="block h-[clamp(3.5rem,15vw,7rem)] w-auto max-w-full select-none object-contain"
-          draggable={false}
-        />
-        {/* eslint-disable-next-line @next/next/no-img-element -- brand mark is a static public asset */}
-        <img
-          src="/logo.png"
-          alt=""
-          aria-hidden
-          className="pointer-events-none absolute right-[-10%] top-[-26%] h-[46%] w-auto select-none rotate-[12deg] [filter:drop-shadow(3px_3px_0_#000)] md:[filter:drop-shadow(4px_4px_0_#000)]"
-          draggable={false}
-        />
-      </div>
+      <h1 className="flex flex-col items-center">
+        <span className="eyebrow text-ink/70">Are you a</span>
+
+        {/*
+          The brain mark sits on the wordmark's top-right corner as a sticker,
+          absolutely positioned so it costs zero layout height. Placement and
+          the +12deg tilt carry over from the archived homepage lockup, which
+          measured them against the video pipeline's own sticker usages.
+        */}
+        <span className="relative mt-2 inline-block">
+          {/* eslint-disable-next-line @next/next/no-img-element -- brand wordmark is a static public asset */}
+          <img
+            src="/wordmark.png"
+            alt="Smart Fella or Fart Smella"
+            className="block h-[clamp(3.5rem,15vw,7rem)] w-auto max-w-full select-none object-contain"
+            draggable={false}
+          />
+          {/* eslint-disable-next-line @next/next/no-img-element -- brand mark is a static public asset */}
+          <img
+            src="/logo.png"
+            alt=""
+            aria-hidden
+            className="pointer-events-none absolute right-[-10%] top-[-26%] h-[46%] w-auto select-none rotate-[12deg] [filter:drop-shadow(3px_3px_0_#000)] md:[filter:drop-shadow(4px_4px_0_#000)]"
+            draggable={false}
+          />
+        </span>
+      </h1>
 
       {/*
-        The one element in the flow with no hard offset shadow. The shadow is
-        the brand's signature and everything else keeps it — the choice cards
-        especially — so this is an exception, not a change of direction: the
-        pill is a label sitting under the wordmark rather than a surface, and a
-        shadow on it competed with the lockup above it.
+        The title pill, captioning the lockup.
+
+        `mt-3` and not more: the wordmark's PNG carries its own transparent
+        padding below the glyphs, so the optical gap is larger than the number
+        suggests. Measured, not guessed, at 360 and at 1440.
 
         Orange is the existing --color-orange (#ff7a1a) added for the floating
         sound button, not a second orange. The label stays INK, not paper:
