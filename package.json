@@ -12,7 +12,8 @@
     "verify:no-devtools": "node scripts/verify-no-devtools.mjs",
     "verify:tests": "node --import ./scripts/ts-resolve-hook.mjs scripts/verify-tests.mjs",
     "audit:content": "node --import ./scripts/ts-resolve-hook.mjs scripts/audit-content.mjs",
-    "verify:email-store": "node --import ./scripts/ts-resolve-hook.mjs scripts/verify-email-store.mjs"
+    "verify:email-store": "node --import ./scripts/ts-resolve-hook.mjs scripts/verify-email-store.mjs",
+    "verify:result-token": "node --import ./scripts/ts-resolve-hook.mjs scripts/verify-result-token.mjs"
   },
   "dependencies": {
     "@base-ui-components/react": "^1.0.0-rc.0",

@@ -27,6 +27,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { clientIp, isRateLimited } from "@/lib/rate-limit";
+import { recordResultStats } from "@/lib/test/result-stats";
 import { saveResult } from "@/lib/test/result-store";
 import { scoreTest, type AnswerMap } from "@/lib/test/scoring";
 import { getTestById } from "@/lib/test/tests";
@@ -131,6 +132,28 @@ export async function POST(request: NextRequest) {
       answered: result.answered,
       elapsedSeconds,
       timedOut: body.timedOut === true,
+    });
+
+    /*
+      The durable half. The token above is stateless and keeps nothing, so this
+      is the only record that outlives the request and the only thing a
+      per-grade-band percentile could ever be built from.
+
+      Not awaited, and it carries no email address — see lib/test/result-stats.ts
+      for why the separation is structural rather than a convention. Blocking
+      the response on a statistics write would put latency between finishing a
+      timed test and seeing the score, to protect a number nobody is reading yet.
+    */
+    void recordResultStats({
+      testId: test.id,
+      band: test.band,
+      grade,
+      score: result.score,
+      maxScore: result.max,
+      answered: result.answered,
+      elapsedSeconds,
+      timedOut: body.timedOut === true,
+      completedAt: new Date().toISOString(),
     });
 
     return NextResponse.json({ ok: true, token: stored.token });
