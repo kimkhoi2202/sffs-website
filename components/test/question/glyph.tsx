@@ -61,6 +61,23 @@ function starPoints(): string {
 }
 
 /**
+ * A regular n-gon inscribed in the viewBox, first vertex at the top.
+ *
+ * Drawn from the same circle as the star so a pentagon and a hexagon carry the
+ * same visual weight as everything else in the set. That matters more than it
+ * sounds: these two exist so a matrix can run triangle, square, pentagon as a
+ * shape rule, and a rule reads as a rule only when nothing else changes with it.
+ */
+function polygonPoints(sides: number): string {
+  const c = 50;
+  const R = 50 - PAD;
+  return Array.from({ length: sides }, (_, i) => {
+    const a = (-90 + (i * 360) / sides) * (Math.PI / 180);
+    return `${(c + R * Math.cos(a)).toFixed(2)},${(c + R * Math.sin(a)).toFixed(2)}`;
+  }).join(" ");
+}
+
+/**
  * The shape of each glyph inside the shared 0..100 viewBox. Six of these paths
  * are lifted verbatim from the video pipeline, which already drew them on a
  * 0..100 box; the rest were re-derived to fit the same box.
@@ -75,6 +92,10 @@ function glyphShape(kind: GlyphKind): { tag: "polygon" | "path" | "circle" | "re
       return { tag: "polygon", d: `50,${PAD + 4} ${96 - PAD},${92 - PAD} ${PAD + 4},${92 - PAD}` };
     case "diamond":
       return { tag: "polygon", d: `50,${PAD} ${100 - PAD},50 50,${100 - PAD} ${PAD},50` };
+    case "pentagon":
+      return { tag: "polygon", d: polygonPoints(5) };
+    case "hexagon":
+      return { tag: "polygon", d: polygonPoints(6) };
     case "star":
       return { tag: "polygon", d: starPoints() };
     case "heart":

@@ -13,7 +13,7 @@
  *
  * It earns its cost because of a specific failure mode. The rule taxonomy
  * contains a worked sentence-completion example where the author intended B and
- * the sentence, read carefully, supports A — caught only by writing the
+ * the sentence, read carefully, supports A, caught only by writing the
  * distractor rationales out longhand. That class of error survives a careful
  * read of 125 items, because by item 90 you are reading what you meant rather
  * than what you wrote.
@@ -21,22 +21,36 @@
  * ===========================================================================
  * WHAT IS NOT IN HERE, AND WHY
  * ===========================================================================
- * Three items failed the cold solve outright and were FIXED rather than
- * flagged, because in each case the item was broken rather than borderline:
+ * Items that failed the cold solve outright were FIXED rather than flagged,
+ * because in each case the item was broken rather than borderline:
  *
- *   grade-5 verbal analogy 4  had "music" against a key of "symphony". The
+ *   grade-5 verbal analogy    had "music" against a key of "symphony". The
  *       relation sentence is "an author writes a novel"; "a composer writes
- *       music" is also true, so the item had two defensible answers. Replaced
- *       with "concert".
- *   grade-6 verbal analogy 5  used PUBLIC, whose opposite is "private" on the
- *       access dimension and "hidden" on the visibility one — the exact
- *       two-dimensional trap the antonym gate exists to catch. Replaced with
- *       VOLUNTARY, which varies on one thing.
- *   adult 29  asked which team was "most productive", which is ambiguous
- *       between most tasks and most tasks per member. Reworded to name the
- *       operation.
+ *       music" is also true, so the item had two defensible answers. Now
+ *       "concert".
+ *   grade-6 verbal analogy    used PUBLIC, whose opposite is "private" on the
+ *       access dimension and "hidden" on the visibility one, which is the exact
+ *       two-dimensional trap the antonym gate exists to catch. Now VOLUNTARY.
+ *   adult 29    asked which team was "most productive", ambiguous between most
+ *       tasks and most tasks per member. Reworded to name the operation.
+ *   adult 21    asked for "repetition" and carried "summary", which took a
+ *       judgement about what summaries are like to rule out rather than
+ *       anything the sentence said. Replaced outright with a new item at the
+ *       same point in the curve; the cold solve on the replacement is clean.
+ *   grade 7-8 verbal analogy 3    was STERILE : LIFE :: ARID : ?, which spent
+ *       two curriculum-dependent words where the cap is one and measured which
+ *       syllabus a child sat rather than whether they can hold a relation.
+ *       Replaced with FAMINE : FOOD :: DROUGHT : ?, same relation, same level,
+ *       vocabulary that travels. ELATED went the same way, to OVERJOYED, which
+ *       a solver can work out from its parts.
  *
- * WHY THIS IS A LIST OF EXCEPTIONS. Recording all 125 cold answers would make
+ * TWO FLAGS IN HERE WERE ON THE WRONG ITEM until this revision. The child banks
+ * number their items by SLOT (verbal, number, figure, repeating), so
+ * `grade-7-8-05` is a number analogy, not the verbal item the note described.
+ * Both are now keyed off the emitted files rather than off arithmetic done in
+ * my head, which is the same class of mistake this file exists to catch.
+ *
+ * WHY IT IS A LIST OF EXCEPTIONS. Recording all 125 cold answers would make
  * this file a second answer key, which is exactly the thing that drifts out of
  * sync. Only the items worth a second look are stored; every other item is, by
  * omission, one the cold solve agreed with without hesitating.
@@ -61,25 +75,20 @@ export const BLIND_SOLVE: Record<string, BlindSolveFlag> = {
     kind: "hesitant",
     note: "Agreed with the key. Flagged because 'checked' restates 'tested' from the same sentence, so a solver can reach it by surface matching without ever reading the list's shared property. The item is not wrong; it is easier than its position at 14 implies.",
   },
-  a21: {
-    picked: "D",
-    kind: "hesitant",
-    note: "Agreed with the key (repetition), but 'summary' took a second pass to rule out. A second draft that condenses the first is a real thing. What kills it is 'the same errors appeared in the same order', which a summary would not preserve — and that is a judgement about what summaries are like rather than something the sentence states. The weakest gate on any adult sentence-completion item.",
-  },
   a38: {
     picked: "B",
     kind: "hesitant",
     note: "Agreed with the key, and it resolved cleanly, but this item sits exactly on the cap the taxonomy sets: 'though' and 'almost nothing' are two negations and no more are allowed. Worth a decision about whether an eighteen-second item should ask for two negation flips at all, rather than about whether this one is correct.",
   },
-  "grade-7-8-05": {
-    picked: "A",
+  "grade-3-03": {
+    picked: "C",
     kind: "hesitant",
-    note: "Agreed with the key (moisture) and the relation is clean, but the item spends TWO rare words — 'sterile' and 'arid' — where the taxonomy caps a band at one. It is also the item whose answer depends most on knowing a word rather than on working a relation out, so it is the likeliest of the twenty-five child verbal items to be rejected on vocabulary grounds.",
+    note: "Agreed with the key, and flagged for a property this item shares with every ONE-RULE matrix in the bank rather than for anything wrong with it. With a single rule running along the rows, stepping that rule back lands on the cell to the left, so the fourth option has to perturb something the grid holds constant instead: here, the number of shapes. That is a real error (the solver read the rule and did not notice what it was not allowed to touch) but it is the weakest of the four families, and it is the option a sharp eight-year-old will eliminate first. Same shape at grade-3-06, grade-3-09 and grade-4-03.",
   },
-  "grade-7-8-11": {
+  "grade-7-8-13": {
     picked: "A",
     kind: "hesitant",
-    note: "Agreed with the key (loneliness). The distractor 'distance' is tagged as the relation run backwards — distance causes isolation, not the other way round — but a reader can construct a sense in which isolation produces emotional distance. It is the weakest distractor in the grade 7-8 verbal set and the one most likely to be argued with.",
+    note: "Agreed with the key (loneliness). The distractor 'distance' is tagged as the relation run backwards, since distance causes isolation rather than the other way round, but a reader can construct a sense in which isolation produces emotional distance. It is the weakest distractor in the grade 7-8 verbal set and the one most likely to be argued with.",
   },
 };
 

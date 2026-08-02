@@ -47,8 +47,7 @@ const raw = JSON.parse(readFileSync(join(HERE, "matrices.json"), "utf8"));
  * Audited across the whole bank in scripts/audit-content.mjs.
  * ------------------------------------------------------------------------- */
 const KEY_POS = {
-  "g3-m1": "C", "g3-m2": "A", "g3-m3": "D", "g3-m4": "B", "g3-m5": "D",
-  "g4-m1": "B", "g4-m2": "D", "g4-m3": "A", "g4-m4": "C", "g4-m5": "B",
+  "g4-m2": "D", "g4-m4": "C",
   "g5-m1": "D", "g5-m2": "C", "g5-m3": "B", "g5-m4": "A", "g5-m5": "C",
   "g6-m1": "A", "g6-m2": "C", "g6-m3": "D", "g6-m4": "B", "g6-m5": "A",
   "g78-m1": "B", "g78-m2": "D", "g78-m3": "C", "g78-m4": "A", "g78-m5": "D",
@@ -291,6 +290,232 @@ for (const [id, m] of Object.entries(raw)) {
     `${id}  rules=${rules.length} [${hrules.join("+")} / ${vrules.join("+")}]  key=${keyPos}  options=${order
       .map((p) => p.tag)
       .join(", ")}`,
+  );
+}
+
+/* =========================================================================
+ * A SECOND ENGINE, for the two rules matRiks cannot express here
+ * =========================================================================
+ * matRiks covers shading, size, rotation and the logical operators. It cannot
+ * give us the other two the taxonomy asks for at the youngest band:
+ *
+ *   FM-1 shape identity   its `shape` rule permutes among its OWN compound
+ *                         silhouettes (s_lily, s_malta, s_ninja and friends),
+ *                         which have no glyph in this codebase. Mapping them
+ *                         would mean drawing a dozen shapes that exist for no
+ *                         other reason.
+ *   FM-2 element count    it has no count rule at all.
+ *
+ * Losing both left Grade 3 with shading and size and nothing else, which is why
+ * that bank was five variations on one idea with no ramp in it. So these two
+ * rules are generated here instead.
+ *
+ * THE PROPERTY THAT MATTERS IS PRESERVED. Cell nine is produced by the same
+ * function as cells one through eight, from the rules, rather than being
+ * asserted separately: `cellSpec(2, 2)` is the same call as `cellSpec(0, 0)`.
+ * A wrong key would require the rule itself to be wrong, in which case every
+ * other cell is wrong too and it is visible immediately. That is the same
+ * guarantee matRiks gives and it is the reason the taxonomy prefers a generator
+ * to a person, not any property of matRiks specifically.
+ *
+ * The distractors are derived the same way: each one is the correct cell with a
+ * named thing done to it, so its error sentence is a fact about how it was
+ * built rather than a claim made afterwards.
+ * ========================================================================= */
+
+/** Sizes when an item has no size rule, by how many glyphs share the cell. */
+const COUNT_FIT = { 1: 0.68, 2: 0.4, 3: 0.28, 4: 0.24 };
+/**
+ * The three steps of a size rule, single-glyph cells only.
+ *
+ * Each step is about 1.4x the one below it. Evenly spaced steps (0.40, 0.54,
+ * 0.68) put the top two only 26% apart, which is under what the legibility
+ * check allows and, more to the point, is a coin flip at option-card size on a
+ * phone. Size is an ORDINAL attribute here: nothing depends on the ratios
+ * being uniform, only on the order being unmistakable.
+ */
+const SIZE_STEPS = [0.36, 0.5, 0.7];
+const SHADES = ["white", "grey", "solid"];
+
+const LOCAL_SPECS = [
+  /* ---- Grade 3 (L9). One rule, one rule, one rule, two, two. ------------- */
+  {
+    id: "g3-m1",
+    h: "shape",
+    v: "identity",
+    glyphs: ["triangle", "square", "pentagon"],
+    key: "C",
+  },
+  { id: "g3-m2", h: "count", v: "identity", glyphs: ["circle"], counts: [1, 2, 3], key: "A" },
+  { id: "g3-m3", h: "identity", v: "shade", glyphs: ["heart"], key: "D" },
+  {
+    id: "g3-m4",
+    h: "shape",
+    v: "shade",
+    glyphs: ["diamond", "hexagon", "star"],
+    key: "B",
+  },
+  {
+    id: "g3-m5",
+    h: "count",
+    v: "shape",
+    glyphs: ["cross", "teardrop", "square"],
+    counts: [3, 2, 1],
+    key: "D",
+  },
+
+  /* ---- Grade 4 (L10). Shape and count join size and shading. ------------- */
+  { id: "g4-m1", h: "size", v: "identity", glyphs: ["diamond"], key: "B" },
+  {
+    id: "g4-m3",
+    h: "shape",
+    v: "size",
+    glyphs: ["triangle", "pentagon", "hexagon"],
+    key: "A",
+  },
+  {
+    id: "g4-m5",
+    h: "count",
+    v: "shade",
+    glyphs: ["star"],
+    counts: [1, 2, 3],
+    key: "B",
+  },
+];
+
+/** What a cell looks like, from the rules and nothing else. */
+function cellSpec(spec, row, col) {
+  const glyphs = spec.glyphs;
+  const counts = spec.counts ?? [1, 1, 1];
+  const pick = (rule, byCol, byRow, fallback) =>
+    spec.h === rule ? byCol[col] : spec.v === rule ? byRow[row] : fallback;
+
+  return {
+    shape: pick("shape", glyphs, glyphs, glyphs[0]),
+    count: pick("count", counts, counts, counts[0] ?? 1),
+    shade: pick("shade", SHADES, SHADES, "white"),
+    sizeStep: pick("size", [2, 1, 0], [2, 1, 0], null),
+  };
+}
+
+function specToCell(spec, s) {
+  const n = Math.max(1, s.count);
+  const size = s.sizeStep === null ? (COUNT_FIT[n] ?? 0.28) : SIZE_STEPS[s.sizeStep];
+  const fill =
+    s.shade === "grey"
+      ? { filled: true, color: "var(--color-gray-300)" }
+      : s.shade === "solid"
+        ? { filled: true }
+        : {};
+  return {
+    shapes: Array.from({ length: n }, () => ({ shape: s.shape, size: round(size), ...fill })),
+  };
+}
+
+function buildLocal(spec) {
+  const cells = [];
+  for (let r = 0; r < 3; r++) {
+    for (let c = 0; c < 3; c++) cells.push(specToCell(spec, cellSpec(spec, r, c)));
+  }
+
+  const correctSpec = cellSpec(spec, 2, 2);
+  const picks = [{ tag: "correct", cell: specToCell(spec, correctSpec) }];
+  const seen = new Set([signature(picks[0].cell)]);
+  const take = (tag, cell) => {
+    if (!cell || cell.shapes.length === 0) return false;
+    const sig = signature(cell);
+    if (seen.has(sig)) return false;
+    seen.add(sig);
+    picks.push({ tag, cell });
+    return true;
+  };
+
+  // WP: the figure the grid starts from, with no rule applied.
+  take("wp_copy", specToCell(spec, cellSpec(spec, 0, 0)));
+
+  /*
+   * IC: the correct cell with exactly one thing wrong.
+   *
+   * Stepping an ACTIVE rule back is the strongest version, but on a one-rule
+   * matrix that lands on the cell to the left, which is already the R option.
+   * So the fallbacks perturb something the grid holds CONSTANT, which is a real
+   * error of its own: the solver read the rule and did not notice what the rule
+   * was not allowed to touch.
+   */
+  const active = [spec.h, spec.v].filter((r) => r && r !== "identity");
+  const back = (s) => ({ ...s });
+  const candidates = [];
+  if (active.includes("shape")) {
+    const i = spec.glyphs.indexOf(correctSpec.shape);
+    candidates.push(["ic_shape", { ...back(correctSpec), shape: spec.glyphs[(i + 2) % 3] }]);
+  }
+  if (active.includes("count")) {
+    candidates.push(["ic_count", { ...back(correctSpec), count: correctSpec.count + 1 }]);
+  }
+  if (active.includes("shade")) {
+    const i = SHADES.indexOf(correctSpec.shade);
+    candidates.push(["ic_shade", { ...back(correctSpec), shade: SHADES[(i + 2) % 3] }]);
+  }
+  if (active.includes("size")) {
+    candidates.push(["ic_size", { ...back(correctSpec), sizeStep: (correctSpec.sizeStep + 2) % 3 }]);
+  }
+  // Held-constant perturbations, for the one-rule case.
+  candidates.push(["ic_count", { ...back(correctSpec), count: correctSpec.count + 1 }]);
+  candidates.push(["ic_shade", { ...back(correctSpec), shade: correctSpec.shade === "white" ? "grey" : "white" }]);
+  candidates.push(["ic_size", { ...back(correctSpec), sizeStep: correctSpec.sizeStep === null ? null : (correctSpec.sizeStep + 1) % 3 }]);
+
+  for (const [tag, s] of candidates) if (take(tag, specToCell(spec, s))) break;
+
+  for (const [tag, rc] of [["r_left", [2, 1]], ["r_top", [1, 2]], ["r_diag", [1, 1]]]) {
+    if (take(tag, specToCell(spec, cellSpec(spec, rc[0], rc[1])))) break;
+  }
+
+  /*
+   * Backfill. A ONE-RULE matrix has very little to be wrong about: with a
+   * single rule running along the rows, stepping it back lands on the cell to
+   * the left, so the Incomplete-Correlate option and the Repetition option are
+   * the same picture and one of them is lost. The remaining candidates perturb
+   * something the grid holds CONSTANT, which is a real error rather than a
+   * filler: the solver read the rule and did not notice what the rule was not
+   * allowed to touch.
+   */
+  if (picks.length < 4) {
+    for (const [tag, s] of candidates) {
+      if (picks.length === 4) break;
+      take(tag, specToCell(spec, s));
+    }
+  }
+
+  if (picks.length !== 4) {
+    report.push(`!! ${spec.id}: only ${picks.length} distinct options`);
+    return null;
+  }
+
+  const ids = ["A", "B", "C", "D"];
+  const rest = picks.slice(1);
+  const order = ids.map((id) => (id === spec.key ? picks[0] : rest.shift()));
+
+  return {
+    id: spec.id,
+    engine: "local",
+    rules: { h: [spec.h], v: [spec.v] },
+    ruleCount: active.length,
+    rot: 1,
+    cells,
+    options: order.map((p, i) => ({ id: ids[i], tag: p.tag, fig: p.cell })),
+    answer: spec.key,
+    warnings: [],
+  };
+}
+
+for (const spec of LOCAL_SPECS) {
+  const built = buildLocal(spec);
+  if (!built) continue;
+  results[spec.id] = built;
+  report.push(
+    `${spec.id}  rules=${built.ruleCount} [${spec.h} / ${spec.v}]  key=${spec.key}  options=${built.options
+      .map((o) => o.tag)
+      .join(", ")}  (local engine)`,
   );
 }
 

@@ -316,27 +316,47 @@ const VA = {
       ],
     },
     {
-      rule: "VA-R13 quality to the thing it lacks, tier 3 capped at one rare word",
-      stem: "STERILE is to LIFE as ARID is to ?",
-      explain: "Sterile ground has no life; arid ground has no moisture.",
+      /*
+       * STERILE and ARID were the first version of this item, and both are the
+       * wrong kind of hard. The problem is not the difficulty, it is the
+       * CURRICULUM DEPENDENCE: they are words one syllabus teaches and another
+       * does not, so the item measures which classroom a child sat in. Worse,
+       * it spent two rare words where the cap is one.
+       *
+       * FAMINE and DROUGHT carry the same relation at the same level and are
+       * taught everywhere the subject is taught at all. The relation is what is
+       * being tested; the vocabulary should be the part that gets out of the
+       * way.
+       */
+      rule: "VA-R13 state defined by what is absent, tier 2, curriculum-neutral",
+      stem: "FAMINE is to FOOD as DROUGHT is to ?",
+      explain: "A famine is a shortage of food; a drought is a shortage of rain.",
       k: 0,
       opts: [
-        ["moisture"],
-        ["desert", "WP-relation: the place that is arid, not the thing absent from it."],
-        ["heat", "WP-relation: what accompanies aridity, not what is missing."],
-        ["sand", "D: a word from the same field, licensed by no relation."],
+        ["rain"],
+        ["flood", "WP-reverse: the opposite condition rather than the thing that is missing."],
+        ["desert", "WP-relation: a place where drought is normal, not the thing absent from it."],
+        ["heat", "WP-relation: what accompanies a drought rather than what it is a shortage of."],
       ],
     },
     {
-      rule: "VA-R10 degree on a scale, tier 3 capped at one rare word",
+      /*
+       * ELATED was the key here and it has the same curriculum problem in a
+       * milder form. OVERJOYED means the same thing, sits at the same point on
+       * the scale, and is built out of two words a child already has, so a
+       * solver who has never met it can still work out what it must mean. That
+       * is the line: hard to REASON about is the point, hard to have
+       * ENCOUNTERED is not.
+       */
+      rule: "VA-R10 degree on a scale, tier 2, compositional vocabulary",
       stem: "ANNOYED is to FURIOUS as PLEASED is to ?",
-      explain: "Furious is the extreme of annoyed; elated is the extreme of pleased.",
+      explain: "Furious is the extreme of annoyed; overjoyed is the extreme of pleased.",
       k: 0,
       opts: [
-        ["elated"],
-        ["content", "IC-degree: the same direction but weaker than 'pleased', so the escalation runs backwards."],
+        ["overjoyed"],
+        ["satisfied", "IC-degree: the same direction but no stronger than 'pleased', so the escalation runs backwards."],
         ["grateful", "WP-relation: a related feeling rather than a stronger version of the same one."],
-        ["calm", "D: a mood word, licensed by no relation."],
+        ["untroubled", "D: a mood word, licensed by no relation in the stem."],
       ],
     },
     {
@@ -436,8 +456,55 @@ const NA = {
     },
   ],
 
-  /* -- L10: one operation, nothing over 50, needs a times-table fact ------- */
+  /*
+   * L10: one operation, nothing over 50, needs a times-table fact.
+   *
+   * FOUR MULTIPLICATIONS AND A SUBTRACTION was the first version of this set,
+   * and five items testing one operation is not five items. This runs all four
+   * operations and ramps them: addition, subtraction, an easy multiplication, a
+   * harder times-table fact, and division last, which is the operation a Grade
+   * 4 child is least fluent in.
+   */
   "grade-4": [
+    {
+      rule: "NA-1 single additive (+9)",
+      pairs: [[7, 16], [12, 21]],
+      from: 20,
+      explain: "Each number goes up by 9, so 20 becomes 29.",
+      k: 0,
+      opts: [
+        [29],
+        [28, "IC-offby: added 8 instead of 9."],
+        [11, "WP-direction: subtracted 9 instead of adding it."],
+        [21, "R-pair: copied the answer from the second pair."],
+      ],
+    },
+    {
+      rule: "NA-1 single subtractive (-14)",
+      pairs: [[30, 16], [45, 31]],
+      from: 40,
+      explain: "Each number goes down by 14, so 40 becomes 26.",
+      k: 0,
+      opts: [
+        [26],
+        [54, "WP-direction: added 14 instead of taking it away."],
+        [25, "IC-offby: subtracted 15 instead of 14."],
+        [31, "R-pair: copied the answer from the second pair."],
+      ],
+    },
+    {
+      rule: "NA-2 single multiplicative (x3)",
+      pairs: [[6, 18], [9, 27]],
+      from: 12,
+      explain: "Each number is multiplied by 3, so 12 becomes 36.",
+      k: 0,
+      opts: [
+        [36],
+        [24, "WP-additive: added 12, the gap in the first pair, instead of multiplying."],
+        [48, "IC-offby: multiplied by 4 instead of 3."],
+        [27, "R-pair: copied the answer from the second pair."],
+      ],
+    },
     {
       rule: "NA-2 single multiplicative (x7)",
       pairs: [[4, 28], [6, 42]],
@@ -462,45 +529,6 @@ const NA = {
         [24, "WP-inverse: subtracted 6 instead of dividing by it."],
         [6, "IC-offby: divided by 5 instead of 6."],
         [36, "R-echo: copied a number straight out of the first pair."],
-      ],
-    },
-    {
-      rule: "NA-2 single multiplicative (x4)",
-      pairs: [[9, 36], [7, 28]],
-      from: 12,
-      explain: "Each number is multiplied by 4, so 12 becomes 48.",
-      k: 0,
-      opts: [
-        [48],
-        [39, "WP-additive: added 27, the gap in the first pair, instead of multiplying."],
-        [44, "IC-offby: multiplied 11 by 4 rather than 12."],
-        [36, "R-pair: copied the answer from the first pair."],
-      ],
-    },
-    {
-      rule: "NA-2 single multiplicative (x8)",
-      pairs: [[6, 48], [4, 32]],
-      from: 5,
-      explain: "Each number is multiplied by 8, so 5 becomes 40.",
-      k: 0,
-      opts: [
-        [40],
-        [47, "WP-additive: added 42, the gap in the first pair, instead of multiplying."],
-        [45, "IC-offby: multiplied by 9 instead of 8."],
-        [32, "R-pair: copied the answer from the second pair."],
-      ],
-    },
-    {
-      rule: "NA-1 single subtractive (-17)",
-      pairs: [[32, 15], [28, 11]],
-      from: 45,
-      explain: "Each number goes down by 17, so 45 becomes 28.",
-      k: 0,
-      opts: [
-        [28],
-        [62, "WP-direction: added 17 instead of taking it away."],
-        [27, "IC-offby: subtracted 18 instead of 17."],
-        [11, "R-pair: copied the answer from the second pair."],
       ],
     },
   ],
@@ -714,8 +742,42 @@ const NA = {
 };
 
 /* =========================================================================
+ * THE RAMP
+ * =========================================================================
+ * Each bank is ordered so difficulty rises across it: the first items are
+ * accessible to a typical child in that grade, and the last two are the ones
+ * that separate. The banks were first written to a flat spec, which produced
+ * fifteen items at one level and nothing that told a child who has got it from
+ * a child who has not.
+ *
+ * These are indices into the arrays above, which stay in authoring order so a
+ * change to an item does not silently move it in the test. Reading a row tells
+ * you the ramp; reading the array tells you the content.
+ *
+ * WHAT MAKES ONE HARDER THAN THE NEXT, per type:
+ *
+ *   verbal analogy   how concrete the terms are, and how many steps the
+ *                    relation takes. Two things you can point at is the floor;
+ *                    two abstract nouns is the ceiling.
+ *   number analogy   the operation. Addition, then subtraction, then
+ *                    multiplication, then two steps, then a non-unit ratio.
+ *   figure matrix    the number of rules running at once, which is set in
+ *                    scripts/matriks/generate.R and the local engine beside it.
+ */
+const ORDER = {
+  "grade-3": { va: [2, 0, 3, 1, 4], na: [0, 3, 2, 4, 1] },
+  "grade-4": { va: [0, 2, 1, 4, 3], na: [0, 1, 2, 3, 4] },
+  "grade-5": { va: [0, 2, 3, 1, 4], na: [0, 4, 3, 1, 2] },
+  "grade-6": { va: [0, 2, 1, 3, 4], na: [0, 4, 2, 1, 3] },
+  "grade-7-8": { va: [4, 0, 1, 2, 3], na: [2, 4, 0, 1, 3] },
+};
+
+/* =========================================================================
  * Where each key sits. Balanced within each bank at 4/4/4/3 with no run of
  * three, and the figure-matrix column is whatever scripts/matriks put there.
+ *
+ * Indexed by SLOT, not by item, so reordering the ramp above leaves the
+ * position balance untouched.
  * ========================================================================= */
 const KEYS = {
   "grade-3": { va: ["B", "B", "C", "D", "A"], na: ["A", "C", "A", "B", "C"] },
@@ -801,6 +863,18 @@ function figureWhy(tag, rules) {
       return "WP-union: kept every shape that appears in either of the first two cells. That is 'or', not the rule the rows actually use.";
     case "ic-dropped":
       return "IC-inc: applied the rule and then dropped one of the shapes it produces.";
+    case "ic_shape":
+      return rules.includes("shape")
+        ? "IC-shape: everything else right, and the shape one step behind where the row had got to."
+        : "IC-shape: right on the rule, but the shape has changed, which this grid holds constant.";
+    case "ic_count":
+      return rules.includes("count")
+        ? "IC-count: everything else right, and one shape too many."
+        : "IC-count: right on the rule, but the number of shapes has changed, which this grid holds constant.";
+    case "ic_shade":
+      return rules.includes("shade")
+        ? "IC-shade: everything else right, and the shading one step behind."
+        : "IC-shade: right on the rule, but the shading has changed, which this grid holds constant.";
     case "ic_flip":
       return rotating
         ? "IC-flip: everything else right, and the turn carried one step too far."
@@ -824,32 +898,60 @@ function figureWhy(tag, rules) {
   }
 }
 
-const RULE_PHRASE = {
-  shade: "the shading goes from white to grey to solid",
-  size: "the figure gets smaller",
-  rotate: "the figure turns a step further round",
+const LOGIC_PHRASE = {
   XOR: "the third cell keeps the shapes that appear in exactly one of the first two, and drops the ones in both",
   AND: "the third cell keeps only the shapes that appear in both of the first two",
   OR: "the third cell keeps every shape that appears in either of the first two",
 };
 
+/**
+ * What a rule does, READ OFF THE CELLS IT PRODUCED rather than assumed from its
+ * name. A size rule can run either way and a shape rule runs through whichever
+ * three shapes this matrix happens to use, so a fixed phrase per rule name gets
+ * it wrong about half the time. `a`, `b` and `c` are the three cells the rule
+ * moves through.
+ */
+function rulePhrase(rule, a, b, c) {
+  const count = (cell) => cell.shapes.length;
+  const size = (cell) => cell.shapes[0]?.size ?? 0;
+  const shape = (cell) => cell.shapes[0]?.shape ?? "";
+
+  switch (rule) {
+    case "shade":
+      return "the shading goes from white to grey to solid";
+    case "size":
+      return size(c) < size(a) ? "the figure gets smaller" : "the figure gets bigger";
+    case "rotate":
+      return "the figure turns a step further round";
+    case "shape":
+      return `the shape goes ${shape(a)}, ${shape(b)}, ${shape(c)}`;
+    case "count":
+      return count(c) > count(a)
+        ? `the number of shapes goes ${count(a)}, ${count(b)}, ${count(c)}`
+        : `the number of shapes drops from ${count(a)} to ${count(b)} to ${count(c)}`;
+    default:
+      return rule;
+  }
+}
+
 function figureExplanation(m) {
   const h = m.rules.h.filter((r) => r !== "identity");
   const v = m.rules.v.filter((r) => r !== "identity");
+  const cells = m.cells;
+  const row = [cells[0], cells[1], cells[2]];
+  const col = [cells[0], cells[3], cells[6]];
   const parts = [];
-  if (h.length) {
-    const logic = h.find((r) => RULE_PHRASE[r] && "XOR AND OR".includes(r));
-    parts.push(
-      logic
-        ? `Along each row, ${RULE_PHRASE[logic]}.`
-        : `Across a row, ${h.map((r) => RULE_PHRASE[r]).join(" and ")}.`,
-    );
-  }
-  if (v.length) parts.push(`Down a column, ${v.map((r) => RULE_PHRASE[r]).join(" and ")}.`);
-  parts.push("The missing cell is whatever both of those give at once.");
-  if (!v.length && !h.some((r) => "XOR AND OR".includes(r))) {
-    parts[parts.length - 1] = "Nothing else changes.";
-  }
+
+  const logic = [...h, ...v].find((r) => LOGIC_PHRASE[r]);
+  if (logic) return `Along each row, ${LOGIC_PHRASE[logic]}.`;
+
+  if (h.length) parts.push(`Across a row, ${h.map((r) => rulePhrase(r, ...row)).join(" and ")}.`);
+  if (v.length) parts.push(`Down a column, ${v.map((r) => rulePhrase(r, ...col)).join(" and ")}.`);
+  parts.push(
+    h.length && v.length
+      ? "The missing cell is whatever both of those give at once."
+      : "Nothing else changes.",
+  );
   return parts.join(" ");
 }
 
@@ -890,6 +992,8 @@ ${options}
 }
 
 const FM_RULE_ID = {
+  shape: "FM-1 shape identity",
+  count: "FM-2 element count",
   shade: "FM-3 shading",
   size: "FM-4 size",
   rotate: "FM-6 rotation",
@@ -905,14 +1009,18 @@ function fmRuleId(m) {
   if (h.length) bits.push(`${h.join(" + ")} across rows`);
   if (v.length) bits.push(`${v.join(" + ")} down columns`);
   const n = m.ruleCount;
-  return `${bits.join(", ")} (matRiks, ${n} rule${n === 1 ? "" : "s"})`;
+  // Which engine produced it is part of the provenance: the two rules matRiks
+  // cannot express here come from the local generator beside it.
+  const engine = m.engine === "local" ? "generated" : "matRiks";
+  return `${bits.join(", ")} (${engine}, ${n} rule${n === 1 ? "" : "s"})`;
 }
 
 /* -- build ---------------------------------------------------------------- */
 
 for (const bank of BANKS) {
-  const va = VA[bank.id];
-  const na = NA[bank.id];
+  const order = ORDER[bank.id];
+  const va = order.va.map((i) => VA[bank.id][i]);
+  const na = order.na.map((i) => NA[bank.id][i]);
   const keys = KEYS[bank.id];
   const items = [];
 

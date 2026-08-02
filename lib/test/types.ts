@@ -125,14 +125,23 @@ export type Domain = "verbal" | "quantitative" | "spatial" | "logic";
  * ========================================================================== */
 
 /**
- * The eleven glyph silhouettes. Every one is a distinct shape — nothing here
+ * The thirteen glyph silhouettes. Every one is a distinct shape — nothing here
  * reads as a near-circle, so an options row is never ambiguous at phone size.
+ *
+ * PENTAGON AND HEXAGON EXIST FOR A RULE, NOT FOR VARIETY. A figure matrix can
+ * vary shape identity across a row, and the most legible version of that rule
+ * for an eight-year-old is a run of polygons whose side count climbs: triangle,
+ * square, pentagon. Without the five- and six-sided shapes the set jumped
+ * straight from a square to a star, which reads as "a different picture"
+ * rather than as a sequence, and the youngest band lost the rule entirely.
  */
 export type GlyphKind =
   | "circle"
   | "square"
   | "triangle"
   | "diamond"
+  | "pentagon"
+  | "hexagon"
   | "star"
   | "heart"
   | "cross"
@@ -146,6 +155,8 @@ export const GLYPH_KINDS: readonly GlyphKind[] = [
   "square",
   "triangle",
   "diamond",
+  "pentagon",
+  "hexagon",
   "star",
   "heart",
   "cross",

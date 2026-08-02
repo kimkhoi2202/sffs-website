@@ -668,28 +668,37 @@ export const ADULT_TEST: Test = {
       kind: "text",
       tier: "SENTENCE COMPLETION",
       domain: "verbal",
-      rule: "SC-1f degree comparison + SC-3a definitional + SC-2a, tier 2",
+      /*
+       * REPLACED. The first version of this item asked for "repetition" and
+       * carried "summary" as a distractor, and ruling that out took a judgement
+       * about what summaries are like rather than anything the sentence stated.
+       * An item whose elimination step is a matter of taste is an item that
+       * gets argued with, and no amount of rewording the rationale fixes that.
+       * This one turns on the anchor instead: two careful people diverging is
+       * what ambiguity does, and nothing else in the option set produces it.
+       */
+      rule: "SC-1f degree comparison (so ... that) + SC-3a definitional + SC-2a, tier 2",
       prompt: "Which word completes the sentence?",
-      stem: "The second draft was less an improvement on the first than a ______ of it: the same errors appeared in the same order.",
+      stem: "The instructions were so ______ that two people following them carefully arrived at different answers.",
       options: [
         {
           id: "A",
-          text: "summary",
-          why: "WP-assoc: a plausible thing a second draft can be, but a summary would not carry the same errors in the same order.",
+          text: "detailed",
+          why: "WP-direction: apt for instructions, and the opposite of what the anchor licenses. Detail makes two careful readers converge; these diverged.",
         },
         {
           id: "B",
-          text: "correction",
-          why: "WP-direction: a change for the better, which is exactly what 'less an improvement than' rules out.",
+          text: "repetitive",
+          why: "D: an instruction-register word that fits the slot grammatically and is licensed by nothing in the sentence.",
         },
         {
           id: "C",
-          text: "rejection",
-          why: "IC-degree: on the right side of the comparison but far past what the sentence licenses — the second draft exists, so it is not a rejection.",
+          text: "incorrect",
+          why: "IC-degree: right that something is wrong with them, but it overshoots. Instructions that are simply wrong send two careful people to the SAME wrong answer, not to different ones.",
         },
-        { id: "D", text: "repetition" },
+        { id: "D", text: "ambiguous" },
       ],
-      explanation: "'Less X than Y' puts the blank opposite improvement, and the colon defines it: the same errors in the same order is a repetition.",
+      explanation: "'So ... that' makes the result define the blank. Two people following the same instructions carefully and getting different answers is what ambiguity does.",
       answer: "D",
     },
     {

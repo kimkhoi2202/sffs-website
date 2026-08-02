@@ -1,961 +1,4 @@
 {
-  "g3-m1": {
-    "id": "g3-m1",
-    "rules": {
-      "h": [
-        "shade"
-      ],
-      "v": [
-        "identity"
-      ]
-    },
-    "ruleCount": 1,
-    "rot": 1,
-    "cells": [
-      {
-        "shapes": [
-          {
-            "shape": "circle",
-            "size": 0.68
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "circle",
-            "size": 0.68,
-            "filled": true,
-            "color": "var(--color-gray-300)"
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "circle",
-            "size": 0.68,
-            "filled": true
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "circle",
-            "size": 0.68
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "circle",
-            "size": 0.68,
-            "filled": true,
-            "color": "var(--color-gray-300)"
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "circle",
-            "size": 0.68,
-            "filled": true
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "circle",
-            "size": 0.68
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "circle",
-            "size": 0.68,
-            "filled": true,
-            "color": "var(--color-gray-300)"
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "circle",
-            "size": 0.68,
-            "filled": true
-          }
-        ]
-      }
-    ],
-    "options": [
-      {
-        "id": "A",
-        "tag": "wp_copy",
-        "fig": {
-          "shapes": [
-            {
-              "shape": "circle",
-              "size": 0.68
-            }
-          ]
-        }
-      },
-      {
-        "id": "B",
-        "tag": "ic_size",
-        "fig": {
-          "shapes": [
-            {
-              "shape": "circle",
-              "size": 0.408,
-              "filled": true
-            }
-          ]
-        }
-      },
-      {
-        "id": "C",
-        "tag": "correct",
-        "fig": {
-          "shapes": [
-            {
-              "shape": "circle",
-              "size": 0.68,
-              "filled": true
-            }
-          ]
-        }
-      },
-      {
-        "id": "D",
-        "tag": "r_left",
-        "fig": {
-          "shapes": [
-            {
-              "shape": "circle",
-              "size": 0.68,
-              "filled": true,
-              "color": "var(--color-gray-300)"
-            }
-          ]
-        }
-      }
-    ],
-    "answer": "C",
-    "warnings": [
-      "R-Top is equal to the correct response",
-      "Can't rotate, sorry!",
-      "IC-Inc cannot be obtained with a single figure"
-    ]
-  },
-  "g3-m2": {
-    "id": "g3-m2",
-    "rules": {
-      "h": [
-        "identity"
-      ],
-      "v": [
-        "shade"
-      ]
-    },
-    "ruleCount": 1,
-    "rot": 1,
-    "cells": [
-      {
-        "shapes": [
-          {
-            "shape": "heart",
-            "size": 0.68
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "heart",
-            "size": 0.68
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "heart",
-            "size": 0.68
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "heart",
-            "size": 0.68,
-            "filled": true,
-            "color": "var(--color-gray-300)"
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "heart",
-            "size": 0.68,
-            "filled": true,
-            "color": "var(--color-gray-300)"
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "heart",
-            "size": 0.68,
-            "filled": true,
-            "color": "var(--color-gray-300)"
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "heart",
-            "size": 0.68,
-            "filled": true
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "heart",
-            "size": 0.68,
-            "filled": true
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "heart",
-            "size": 0.68,
-            "filled": true
-          }
-        ]
-      }
-    ],
-    "options": [
-      {
-        "id": "A",
-        "tag": "correct",
-        "fig": {
-          "shapes": [
-            {
-              "shape": "heart",
-              "size": 0.68,
-              "filled": true
-            }
-          ]
-        }
-      },
-      {
-        "id": "B",
-        "tag": "wp_copy",
-        "fig": {
-          "shapes": [
-            {
-              "shape": "heart",
-              "size": 0.68
-            }
-          ]
-        }
-      },
-      {
-        "id": "C",
-        "tag": "ic_size",
-        "fig": {
-          "shapes": [
-            {
-              "shape": "heart",
-              "size": 0.408,
-              "filled": true
-            }
-          ]
-        }
-      },
-      {
-        "id": "D",
-        "tag": "r_top",
-        "fig": {
-          "shapes": [
-            {
-              "shape": "heart",
-              "size": 0.68,
-              "filled": true,
-              "color": "var(--color-gray-300)"
-            }
-          ]
-        }
-      }
-    ],
-    "answer": "A",
-    "warnings": [
-      "R-left is equal to the correct response",
-      "IC-Inc cannot be obtained with a single figure"
-    ]
-  },
-  "g3-m3": {
-    "id": "g3-m3",
-    "rules": {
-      "h": [
-        "size"
-      ],
-      "v": [
-        "identity"
-      ]
-    },
-    "ruleCount": 1,
-    "rot": 1,
-    "cells": [
-      {
-        "shapes": [
-          {
-            "shape": "star",
-            "size": 0.8
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "star",
-            "size": 0.57
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "star",
-            "size": 0.34
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "star",
-            "size": 0.8
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "star",
-            "size": 0.57
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "star",
-            "size": 0.34
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "star",
-            "size": 0.8
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "star",
-            "size": 0.57
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "star",
-            "size": 0.34
-          }
-        ]
-      }
-    ],
-    "options": [
-      {
-        "id": "A",
-        "tag": "wp_copy",
-        "fig": {
-          "shapes": [
-            {
-              "shape": "star",
-              "size": 0.8
-            }
-          ]
-        }
-      },
-      {
-        "id": "B",
-        "tag": "ic_size",
-        "fig": {
-          "shapes": [
-            {
-              "shape": "star",
-              "size": 0.204
-            }
-          ]
-        }
-      },
-      {
-        "id": "C",
-        "tag": "r_left",
-        "fig": {
-          "shapes": [
-            {
-              "shape": "star",
-              "size": 0.57
-            }
-          ]
-        }
-      },
-      {
-        "id": "D",
-        "tag": "correct",
-        "fig": {
-          "shapes": [
-            {
-              "shape": "star",
-              "size": 0.34
-            }
-          ]
-        }
-      }
-    ],
-    "answer": "D",
-    "warnings": [
-      "R-Top is equal to the correct response",
-      "IC-Inc cannot be obtained with a single figure"
-    ]
-  },
-  "g3-m4": {
-    "id": "g3-m4",
-    "rules": {
-      "h": [
-        "shade"
-      ],
-      "v": [
-        "identity"
-      ]
-    },
-    "ruleCount": 1,
-    "rot": 1,
-    "cells": [
-      {
-        "shapes": [
-          {
-            "shape": "square",
-            "size": 0.374
-          },
-          {
-            "shape": "circle",
-            "size": 0.374
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "square",
-            "size": 0.374,
-            "filled": true,
-            "color": "var(--color-gray-300)"
-          },
-          {
-            "shape": "circle",
-            "size": 0.374,
-            "filled": true,
-            "color": "var(--color-gray-300)"
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "square",
-            "size": 0.374,
-            "filled": true
-          },
-          {
-            "shape": "circle",
-            "size": 0.374,
-            "filled": true
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "square",
-            "size": 0.374
-          },
-          {
-            "shape": "circle",
-            "size": 0.374
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "square",
-            "size": 0.374,
-            "filled": true,
-            "color": "var(--color-gray-300)"
-          },
-          {
-            "shape": "circle",
-            "size": 0.374,
-            "filled": true,
-            "color": "var(--color-gray-300)"
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "square",
-            "size": 0.374,
-            "filled": true
-          },
-          {
-            "shape": "circle",
-            "size": 0.374,
-            "filled": true
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "square",
-            "size": 0.374
-          },
-          {
-            "shape": "circle",
-            "size": 0.374
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "square",
-            "size": 0.374,
-            "filled": true,
-            "color": "var(--color-gray-300)"
-          },
-          {
-            "shape": "circle",
-            "size": 0.374,
-            "filled": true,
-            "color": "var(--color-gray-300)"
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "square",
-            "size": 0.374,
-            "filled": true
-          },
-          {
-            "shape": "circle",
-            "size": 0.374,
-            "filled": true
-          }
-        ]
-      }
-    ],
-    "options": [
-      {
-        "id": "A",
-        "tag": "wp_copy",
-        "fig": {
-          "shapes": [
-            {
-              "shape": "square",
-              "size": 0.374
-            },
-            {
-              "shape": "circle",
-              "size": 0.374
-            }
-          ]
-        }
-      },
-      {
-        "id": "B",
-        "tag": "correct",
-        "fig": {
-          "shapes": [
-            {
-              "shape": "square",
-              "size": 0.374,
-              "filled": true
-            },
-            {
-              "shape": "circle",
-              "size": 0.374,
-              "filled": true
-            }
-          ]
-        }
-      },
-      {
-        "id": "C",
-        "tag": "ic_size",
-        "fig": {
-          "shapes": [
-            {
-              "shape": "square",
-              "size": 0.224,
-              "filled": true
-            },
-            {
-              "shape": "circle",
-              "size": 0.224,
-              "filled": true
-            }
-          ]
-        }
-      },
-      {
-        "id": "D",
-        "tag": "r_left",
-        "fig": {
-          "shapes": [
-            {
-              "shape": "square",
-              "size": 0.374,
-              "filled": true,
-              "color": "var(--color-gray-300)"
-            },
-            {
-              "shape": "circle",
-              "size": 0.374,
-              "filled": true,
-              "color": "var(--color-gray-300)"
-            }
-          ]
-        }
-      }
-    ],
-    "answer": "B",
-    "warnings": [
-      "R-Top is equal to the correct response",
-      "IC-Inc cannot be obtained with a single figure"
-    ]
-  },
-  "g3-m5": {
-    "id": "g3-m5",
-    "rules": {
-      "h": [
-        "identity"
-      ],
-      "v": [
-        "size"
-      ]
-    },
-    "ruleCount": 1,
-    "rot": 1,
-    "cells": [
-      {
-        "shapes": [
-          {
-            "shape": "arrow",
-            "size": 0.8
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "arrow",
-            "size": 0.8
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "arrow",
-            "size": 0.8
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "arrow",
-            "size": 0.57
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "arrow",
-            "size": 0.57
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "arrow",
-            "size": 0.57
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "arrow",
-            "size": 0.34
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "arrow",
-            "size": 0.34
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "arrow",
-            "size": 0.34
-          }
-        ]
-      }
-    ],
-    "options": [
-      {
-        "id": "A",
-        "tag": "wp_copy",
-        "fig": {
-          "shapes": [
-            {
-              "shape": "arrow",
-              "size": 0.8
-            }
-          ]
-        }
-      },
-      {
-        "id": "B",
-        "tag": "ic_size",
-        "fig": {
-          "shapes": [
-            {
-              "shape": "arrow",
-              "size": 0.204
-            }
-          ]
-        }
-      },
-      {
-        "id": "C",
-        "tag": "r_top",
-        "fig": {
-          "shapes": [
-            {
-              "shape": "arrow",
-              "size": 0.57
-            }
-          ]
-        }
-      },
-      {
-        "id": "D",
-        "tag": "correct",
-        "fig": {
-          "shapes": [
-            {
-              "shape": "arrow",
-              "size": 0.34
-            }
-          ]
-        }
-      }
-    ],
-    "answer": "D",
-    "warnings": [
-      "R-left is equal to the correct response",
-      "IC-Inc cannot be obtained with a single figure"
-    ]
-  },
-  "g4-m1": {
-    "id": "g4-m1",
-    "rules": {
-      "h": [
-        "size"
-      ],
-      "v": [
-        "identity"
-      ]
-    },
-    "ruleCount": 1,
-    "rot": 1,
-    "cells": [
-      {
-        "shapes": [
-          {
-            "shape": "diamond",
-            "size": 0.8
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "diamond",
-            "size": 0.57
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "diamond",
-            "size": 0.34
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "diamond",
-            "size": 0.8
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "diamond",
-            "size": 0.57
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "diamond",
-            "size": 0.34
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "diamond",
-            "size": 0.8
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "diamond",
-            "size": 0.57
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "diamond",
-            "size": 0.34
-          }
-        ]
-      }
-    ],
-    "options": [
-      {
-        "id": "A",
-        "tag": "wp_copy",
-        "fig": {
-          "shapes": [
-            {
-              "shape": "diamond",
-              "size": 0.8
-            }
-          ]
-        }
-      },
-      {
-        "id": "B",
-        "tag": "correct",
-        "fig": {
-          "shapes": [
-            {
-              "shape": "diamond",
-              "size": 0.34
-            }
-          ]
-        }
-      },
-      {
-        "id": "C",
-        "tag": "ic_size",
-        "fig": {
-          "shapes": [
-            {
-              "shape": "diamond",
-              "size": 0.204
-            }
-          ]
-        }
-      },
-      {
-        "id": "D",
-        "tag": "r_left",
-        "fig": {
-          "shapes": [
-            {
-              "shape": "diamond",
-              "size": 0.57
-            }
-          ]
-        }
-      }
-    ],
-    "answer": "B",
-    "warnings": [
-      "R-Top is equal to the correct response",
-      "IC-Inc cannot be obtained with a single figure"
-    ]
-  },
   "g4-m2": {
     "id": "g4-m2",
     "rules": {
@@ -1110,221 +153,6 @@
       "IC-Inc cannot be obtained with a single figure"
     ]
   },
-  "g4-m3": {
-    "id": "g4-m3",
-    "rules": {
-      "h": [
-        "size"
-      ],
-      "v": [
-        "shade"
-      ]
-    },
-    "ruleCount": 2,
-    "rot": 1,
-    "cells": [
-      {
-        "shapes": [
-          {
-            "shape": "triangle",
-            "size": 0.44
-          },
-          {
-            "shape": "circle",
-            "size": 0.44
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "triangle",
-            "size": 0.34
-          },
-          {
-            "shape": "circle",
-            "size": 0.34
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "triangle",
-            "size": 0.24
-          },
-          {
-            "shape": "circle",
-            "size": 0.24
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "triangle",
-            "size": 0.44,
-            "filled": true,
-            "color": "var(--color-gray-300)"
-          },
-          {
-            "shape": "circle",
-            "size": 0.44,
-            "filled": true,
-            "color": "var(--color-gray-300)"
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "triangle",
-            "size": 0.34,
-            "filled": true,
-            "color": "var(--color-gray-300)"
-          },
-          {
-            "shape": "circle",
-            "size": 0.34,
-            "filled": true,
-            "color": "var(--color-gray-300)"
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "triangle",
-            "size": 0.24,
-            "filled": true,
-            "color": "var(--color-gray-300)"
-          },
-          {
-            "shape": "circle",
-            "size": 0.24,
-            "filled": true,
-            "color": "var(--color-gray-300)"
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "triangle",
-            "size": 0.44,
-            "filled": true
-          },
-          {
-            "shape": "circle",
-            "size": 0.44,
-            "filled": true
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "triangle",
-            "size": 0.34,
-            "filled": true
-          },
-          {
-            "shape": "circle",
-            "size": 0.34,
-            "filled": true
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "triangle",
-            "size": 0.24,
-            "filled": true
-          },
-          {
-            "shape": "circle",
-            "size": 0.24,
-            "filled": true
-          }
-        ]
-      }
-    ],
-    "options": [
-      {
-        "id": "A",
-        "tag": "correct",
-        "fig": {
-          "shapes": [
-            {
-              "shape": "triangle",
-              "size": 0.24,
-              "filled": true
-            },
-            {
-              "shape": "circle",
-              "size": 0.24,
-              "filled": true
-            }
-          ]
-        }
-      },
-      {
-        "id": "B",
-        "tag": "wp_copy",
-        "fig": {
-          "shapes": [
-            {
-              "shape": "triangle",
-              "size": 0.44
-            },
-            {
-              "shape": "circle",
-              "size": 0.44
-            }
-          ]
-        }
-      },
-      {
-        "id": "C",
-        "tag": "ic_neg",
-        "fig": {
-          "shapes": [
-            {
-              "shape": "triangle",
-              "size": 0.24
-            },
-            {
-              "shape": "circle",
-              "size": 0.24
-            }
-          ]
-        }
-      },
-      {
-        "id": "D",
-        "tag": "r_left",
-        "fig": {
-          "shapes": [
-            {
-              "shape": "triangle",
-              "size": 0.34,
-              "filled": true
-            },
-            {
-              "shape": "circle",
-              "size": 0.34,
-              "filled": true
-            }
-          ]
-        }
-      }
-    ],
-    "answer": "A",
-    "warnings": [
-      "IC-Inc cannot be obtained with a single figure"
-    ]
-  },
   "g4-m4": {
     "id": "g4-m4",
     "rules": {
@@ -1474,221 +302,6 @@
       }
     ],
     "answer": "C",
-    "warnings": [
-      "IC-Inc cannot be obtained with a single figure"
-    ]
-  },
-  "g4-m5": {
-    "id": "g4-m5",
-    "rules": {
-      "h": [
-        "size"
-      ],
-      "v": [
-        "shade"
-      ]
-    },
-    "ruleCount": 2,
-    "rot": 1,
-    "cells": [
-      {
-        "shapes": [
-          {
-            "shape": "cross",
-            "size": 0.44
-          },
-          {
-            "shape": "teardrop",
-            "size": 0.44
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "cross",
-            "size": 0.34
-          },
-          {
-            "shape": "teardrop",
-            "size": 0.34
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "cross",
-            "size": 0.24
-          },
-          {
-            "shape": "teardrop",
-            "size": 0.24
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "cross",
-            "size": 0.44,
-            "filled": true,
-            "color": "var(--color-gray-300)"
-          },
-          {
-            "shape": "teardrop",
-            "size": 0.44,
-            "filled": true,
-            "color": "var(--color-gray-300)"
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "cross",
-            "size": 0.34,
-            "filled": true,
-            "color": "var(--color-gray-300)"
-          },
-          {
-            "shape": "teardrop",
-            "size": 0.34,
-            "filled": true,
-            "color": "var(--color-gray-300)"
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "cross",
-            "size": 0.24,
-            "filled": true,
-            "color": "var(--color-gray-300)"
-          },
-          {
-            "shape": "teardrop",
-            "size": 0.24,
-            "filled": true,
-            "color": "var(--color-gray-300)"
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "cross",
-            "size": 0.44,
-            "filled": true
-          },
-          {
-            "shape": "teardrop",
-            "size": 0.44,
-            "filled": true
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "cross",
-            "size": 0.34,
-            "filled": true
-          },
-          {
-            "shape": "teardrop",
-            "size": 0.34,
-            "filled": true
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "cross",
-            "size": 0.24,
-            "filled": true
-          },
-          {
-            "shape": "teardrop",
-            "size": 0.24,
-            "filled": true
-          }
-        ]
-      }
-    ],
-    "options": [
-      {
-        "id": "A",
-        "tag": "wp_copy",
-        "fig": {
-          "shapes": [
-            {
-              "shape": "cross",
-              "size": 0.44
-            },
-            {
-              "shape": "teardrop",
-              "size": 0.44
-            }
-          ]
-        }
-      },
-      {
-        "id": "B",
-        "tag": "correct",
-        "fig": {
-          "shapes": [
-            {
-              "shape": "cross",
-              "size": 0.24,
-              "filled": true
-            },
-            {
-              "shape": "teardrop",
-              "size": 0.24,
-              "filled": true
-            }
-          ]
-        }
-      },
-      {
-        "id": "C",
-        "tag": "ic_neg",
-        "fig": {
-          "shapes": [
-            {
-              "shape": "cross",
-              "size": 0.24
-            },
-            {
-              "shape": "teardrop",
-              "size": 0.24
-            }
-          ]
-        }
-      },
-      {
-        "id": "D",
-        "tag": "r_left",
-        "fig": {
-          "shapes": [
-            {
-              "shape": "cross",
-              "size": 0.34,
-              "filled": true
-            },
-            {
-              "shape": "teardrop",
-              "size": 0.34,
-              "filled": true
-            }
-          ]
-        }
-      }
-    ],
-    "answer": "B",
     "warnings": [
       "IC-Inc cannot be obtained with a single figure"
     ]
@@ -2383,24 +996,25 @@
     "id": "g5-m5",
     "rules": {
       "h": [
-        "rotate"
+        "rotate",
+        "size"
       ],
       "v": [
         "shade"
       ]
     },
-    "ruleCount": 2,
+    "ruleCount": 3,
     "rot": 2,
     "cells": [
       {
         "shapes": [
           {
             "shape": "triangle",
-            "size": 0.374
+            "size": 0.44
           },
           {
             "shape": "teardrop",
-            "size": 0.374
+            "size": 0.44
           }
         ]
       },
@@ -2408,12 +1022,12 @@
         "shapes": [
           {
             "shape": "triangle",
-            "size": 0.374,
+            "size": 0.34,
             "rotate": 90
           },
           {
             "shape": "teardrop",
-            "size": 0.374,
+            "size": 0.34,
             "rotate": 90
           }
         ]
@@ -2422,12 +1036,12 @@
         "shapes": [
           {
             "shape": "triangle",
-            "size": 0.374,
+            "size": 0.24,
             "rotate": 180
           },
           {
             "shape": "teardrop",
-            "size": 0.374,
+            "size": 0.24,
             "rotate": 180
           }
         ]
@@ -2436,13 +1050,13 @@
         "shapes": [
           {
             "shape": "triangle",
-            "size": 0.374,
+            "size": 0.44,
             "filled": true,
             "color": "var(--color-gray-300)"
           },
           {
             "shape": "teardrop",
-            "size": 0.374,
+            "size": 0.44,
             "filled": true,
             "color": "var(--color-gray-300)"
           }
@@ -2452,14 +1066,14 @@
         "shapes": [
           {
             "shape": "triangle",
-            "size": 0.374,
+            "size": 0.34,
             "rotate": 90,
             "filled": true,
             "color": "var(--color-gray-300)"
           },
           {
             "shape": "teardrop",
-            "size": 0.374,
+            "size": 0.34,
             "rotate": 90,
             "filled": true,
             "color": "var(--color-gray-300)"
@@ -2470,14 +1084,14 @@
         "shapes": [
           {
             "shape": "triangle",
-            "size": 0.374,
+            "size": 0.24,
             "rotate": 180,
             "filled": true,
             "color": "var(--color-gray-300)"
           },
           {
             "shape": "teardrop",
-            "size": 0.374,
+            "size": 0.24,
             "rotate": 180,
             "filled": true,
             "color": "var(--color-gray-300)"
@@ -2488,12 +1102,12 @@
         "shapes": [
           {
             "shape": "triangle",
-            "size": 0.374,
+            "size": 0.44,
             "filled": true
           },
           {
             "shape": "teardrop",
-            "size": 0.374,
+            "size": 0.44,
             "filled": true
           }
         ]
@@ -2502,13 +1116,13 @@
         "shapes": [
           {
             "shape": "triangle",
-            "size": 0.374,
+            "size": 0.34,
             "rotate": 90,
             "filled": true
           },
           {
             "shape": "teardrop",
-            "size": 0.374,
+            "size": 0.34,
             "rotate": 90,
             "filled": true
           }
@@ -2518,13 +1132,13 @@
         "shapes": [
           {
             "shape": "triangle",
-            "size": 0.374,
+            "size": 0.24,
             "rotate": 180,
             "filled": true
           },
           {
             "shape": "teardrop",
-            "size": 0.374,
+            "size": 0.24,
             "rotate": 180,
             "filled": true
           }
@@ -2539,11 +1153,11 @@
           "shapes": [
             {
               "shape": "triangle",
-              "size": 0.374
+              "size": 0.44
             },
             {
               "shape": "teardrop",
-              "size": 0.374
+              "size": 0.44
             }
           ]
         }
@@ -2555,13 +1169,13 @@
           "shapes": [
             {
               "shape": "triangle",
-              "size": 0.374,
+              "size": 0.24,
               "rotate": 270,
               "filled": true
             },
             {
               "shape": "teardrop",
-              "size": 0.374,
+              "size": 0.24,
               "rotate": 270,
               "filled": true
             }
@@ -2575,13 +1189,13 @@
           "shapes": [
             {
               "shape": "triangle",
-              "size": 0.374,
+              "size": 0.24,
               "rotate": 180,
               "filled": true
             },
             {
               "shape": "teardrop",
-              "size": 0.374,
+              "size": 0.24,
               "rotate": 180,
               "filled": true
             }
@@ -2595,13 +1209,13 @@
           "shapes": [
             {
               "shape": "triangle",
-              "size": 0.374,
+              "size": 0.34,
               "rotate": 90,
               "filled": true
             },
             {
               "shape": "teardrop",
-              "size": 0.374,
+              "size": 0.34,
               "rotate": 90,
               "filled": true
             }
@@ -2768,21 +1382,20 @@
     "id": "g6-m2",
     "rules": {
       "h": [
-        "shade",
-        "size"
+        "rotate"
       ],
       "v": [
-        "rotate"
+        "shade"
       ]
     },
-    "ruleCount": 3,
+    "ruleCount": 2,
     "rot": 2,
     "cells": [
       {
         "shapes": [
           {
             "shape": "arrow",
-            "size": 0.8
+            "size": 0.68
           }
         ]
       },
@@ -2790,26 +1403,7 @@
         "shapes": [
           {
             "shape": "arrow",
-            "size": 0.57,
-            "filled": true,
-            "color": "var(--color-gray-300)"
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "arrow",
-            "size": 0.34,
-            "filled": true
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "arrow",
-            "size": 0.8,
+            "size": 0.68,
             "rotate": 90
           }
         ]
@@ -2818,7 +1412,26 @@
         "shapes": [
           {
             "shape": "arrow",
-            "size": 0.57,
+            "size": 0.68,
+            "rotate": 180
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "arrow",
+            "size": 0.68,
+            "filled": true,
+            "color": "var(--color-gray-300)"
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "arrow",
+            "size": 0.68,
             "rotate": 90,
             "filled": true,
             "color": "var(--color-gray-300)"
@@ -2829,26 +1442,7 @@
         "shapes": [
           {
             "shape": "arrow",
-            "size": 0.34,
-            "rotate": 90,
-            "filled": true
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "arrow",
-            "size": 0.8,
-            "rotate": 180
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "arrow",
-            "size": 0.57,
+            "size": 0.68,
             "rotate": 180,
             "filled": true,
             "color": "var(--color-gray-300)"
@@ -2859,7 +1453,26 @@
         "shapes": [
           {
             "shape": "arrow",
-            "size": 0.34,
+            "size": 0.68,
+            "filled": true
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "arrow",
+            "size": 0.68,
+            "rotate": 90,
+            "filled": true
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "arrow",
+            "size": 0.68,
             "rotate": 180,
             "filled": true
           }
@@ -2874,7 +1487,7 @@
           "shapes": [
             {
               "shape": "arrow",
-              "size": 0.8
+              "size": 0.68
             }
           ]
         }
@@ -2886,7 +1499,7 @@
           "shapes": [
             {
               "shape": "arrow",
-              "size": 0.34,
+              "size": 0.68,
               "rotate": 270,
               "filled": true
             }
@@ -2900,7 +1513,7 @@
           "shapes": [
             {
               "shape": "arrow",
-              "size": 0.34,
+              "size": 0.68,
               "rotate": 180,
               "filled": true
             }
@@ -2914,10 +1527,9 @@
           "shapes": [
             {
               "shape": "arrow",
-              "size": 0.57,
-              "rotate": 180,
-              "filled": true,
-              "color": "var(--color-gray-300)"
+              "size": 0.68,
+              "rotate": 90,
+              "filled": true
             }
           ]
         }
@@ -3168,20 +1780,21 @@
     "id": "g6-m4",
     "rules": {
       "h": [
-        "rotate"
+        "shade",
+        "size"
       ],
       "v": [
-        "shade"
+        "rotate"
       ]
     },
-    "ruleCount": 2,
+    "ruleCount": 3,
     "rot": 1,
     "cells": [
       {
         "shapes": [
           {
             "shape": "heart",
-            "size": 0.68
+            "size": 0.8
           }
         ]
       },
@@ -3189,25 +1802,7 @@
         "shapes": [
           {
             "shape": "heart",
-            "size": 0.68,
-            "rotate": 45
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "heart",
-            "size": 0.68,
-            "rotate": 90
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "heart",
-            "size": 0.68,
+            "size": 0.57,
             "filled": true,
             "color": "var(--color-gray-300)"
           }
@@ -3217,7 +1812,25 @@
         "shapes": [
           {
             "shape": "heart",
-            "size": 0.68,
+            "size": 0.34,
+            "filled": true
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "heart",
+            "size": 0.8,
+            "rotate": 45
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "heart",
+            "size": 0.57,
             "rotate": 45,
             "filled": true,
             "color": "var(--color-gray-300)"
@@ -3228,7 +1841,26 @@
         "shapes": [
           {
             "shape": "heart",
-            "size": 0.68,
+            "size": 0.34,
+            "rotate": 45,
+            "filled": true
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "heart",
+            "size": 0.8,
+            "rotate": 90
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "heart",
+            "size": 0.57,
             "rotate": 90,
             "filled": true,
             "color": "var(--color-gray-300)"
@@ -3239,26 +1871,7 @@
         "shapes": [
           {
             "shape": "heart",
-            "size": 0.68,
-            "filled": true
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "heart",
-            "size": 0.68,
-            "rotate": 45,
-            "filled": true
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "heart",
-            "size": 0.68,
+            "size": 0.34,
             "rotate": 90,
             "filled": true
           }
@@ -3273,7 +1886,7 @@
           "shapes": [
             {
               "shape": "heart",
-              "size": 0.68
+              "size": 0.8
             }
           ]
         }
@@ -3285,7 +1898,7 @@
           "shapes": [
             {
               "shape": "heart",
-              "size": 0.68,
+              "size": 0.34,
               "rotate": 90,
               "filled": true
             }
@@ -3299,7 +1912,7 @@
           "shapes": [
             {
               "shape": "heart",
-              "size": 0.68,
+              "size": 0.34,
               "rotate": 135,
               "filled": true
             }
@@ -3313,9 +1926,10 @@
           "shapes": [
             {
               "shape": "heart",
-              "size": 0.68,
-              "rotate": 45,
-              "filled": true
+              "size": 0.57,
+              "rotate": 90,
+              "filled": true,
+              "color": "var(--color-gray-300)"
             }
           ]
         }
@@ -3730,6 +2344,406 @@
     "id": "g78-m2",
     "rules": {
       "h": [
+        "rotate",
+        "size"
+      ],
+      "v": [
+        "shade"
+      ]
+    },
+    "ruleCount": 3,
+    "rot": 1,
+    "cells": [
+      {
+        "shapes": [
+          {
+            "shape": "arrow",
+            "size": 0.44
+          },
+          {
+            "shape": "teardrop",
+            "size": 0.44
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "arrow",
+            "size": 0.34,
+            "rotate": 45
+          },
+          {
+            "shape": "teardrop",
+            "size": 0.34,
+            "rotate": 45
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "arrow",
+            "size": 0.24,
+            "rotate": 90
+          },
+          {
+            "shape": "teardrop",
+            "size": 0.24,
+            "rotate": 90
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "arrow",
+            "size": 0.44,
+            "filled": true,
+            "color": "var(--color-gray-300)"
+          },
+          {
+            "shape": "teardrop",
+            "size": 0.44,
+            "filled": true,
+            "color": "var(--color-gray-300)"
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "arrow",
+            "size": 0.34,
+            "rotate": 45,
+            "filled": true,
+            "color": "var(--color-gray-300)"
+          },
+          {
+            "shape": "teardrop",
+            "size": 0.34,
+            "rotate": 45,
+            "filled": true,
+            "color": "var(--color-gray-300)"
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "arrow",
+            "size": 0.24,
+            "rotate": 90,
+            "filled": true,
+            "color": "var(--color-gray-300)"
+          },
+          {
+            "shape": "teardrop",
+            "size": 0.24,
+            "rotate": 90,
+            "filled": true,
+            "color": "var(--color-gray-300)"
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "arrow",
+            "size": 0.44,
+            "filled": true
+          },
+          {
+            "shape": "teardrop",
+            "size": 0.44,
+            "filled": true
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "arrow",
+            "size": 0.34,
+            "rotate": 45,
+            "filled": true
+          },
+          {
+            "shape": "teardrop",
+            "size": 0.34,
+            "rotate": 45,
+            "filled": true
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "arrow",
+            "size": 0.24,
+            "rotate": 90,
+            "filled": true
+          },
+          {
+            "shape": "teardrop",
+            "size": 0.24,
+            "rotate": 90,
+            "filled": true
+          }
+        ]
+      }
+    ],
+    "options": [
+      {
+        "id": "A",
+        "tag": "wp_copy",
+        "fig": {
+          "shapes": [
+            {
+              "shape": "arrow",
+              "size": 0.44
+            },
+            {
+              "shape": "teardrop",
+              "size": 0.44
+            }
+          ]
+        }
+      },
+      {
+        "id": "B",
+        "tag": "ic_flip",
+        "fig": {
+          "shapes": [
+            {
+              "shape": "arrow",
+              "size": 0.24,
+              "rotate": 135,
+              "filled": true
+            },
+            {
+              "shape": "teardrop",
+              "size": 0.24,
+              "rotate": 135,
+              "filled": true
+            }
+          ]
+        }
+      },
+      {
+        "id": "C",
+        "tag": "r_left",
+        "fig": {
+          "shapes": [
+            {
+              "shape": "arrow",
+              "size": 0.34,
+              "rotate": 45,
+              "filled": true
+            },
+            {
+              "shape": "teardrop",
+              "size": 0.34,
+              "rotate": 45,
+              "filled": true
+            }
+          ]
+        }
+      },
+      {
+        "id": "D",
+        "tag": "correct",
+        "fig": {
+          "shapes": [
+            {
+              "shape": "arrow",
+              "size": 0.24,
+              "rotate": 90,
+              "filled": true
+            },
+            {
+              "shape": "teardrop",
+              "size": 0.24,
+              "rotate": 90,
+              "filled": true
+            }
+          ]
+        }
+      }
+    ],
+    "answer": "D",
+    "warnings": [
+      "IC-Inc cannot be obtained with a single figure"
+    ]
+  },
+  "g78-m3": {
+    "id": "g78-m3",
+    "rules": {
+      "h": [
+        "shade",
+        "rotate"
+      ],
+      "v": [
+        "size"
+      ]
+    },
+    "ruleCount": 3,
+    "rot": 1,
+    "cells": [
+      {
+        "shapes": [
+          {
+            "shape": "teardrop",
+            "size": 0.8
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "teardrop",
+            "size": 0.8,
+            "rotate": 45,
+            "filled": true,
+            "color": "var(--color-gray-300)"
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "teardrop",
+            "size": 0.8,
+            "rotate": 90,
+            "filled": true
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "teardrop",
+            "size": 0.57
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "teardrop",
+            "size": 0.57,
+            "rotate": 45,
+            "filled": true,
+            "color": "var(--color-gray-300)"
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "teardrop",
+            "size": 0.57,
+            "rotate": 90,
+            "filled": true
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "teardrop",
+            "size": 0.34
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "teardrop",
+            "size": 0.34,
+            "rotate": 45,
+            "filled": true,
+            "color": "var(--color-gray-300)"
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "teardrop",
+            "size": 0.34,
+            "rotate": 90,
+            "filled": true
+          }
+        ]
+      }
+    ],
+    "options": [
+      {
+        "id": "A",
+        "tag": "wp_copy",
+        "fig": {
+          "shapes": [
+            {
+              "shape": "teardrop",
+              "size": 0.8
+            }
+          ]
+        }
+      },
+      {
+        "id": "B",
+        "tag": "ic_flip",
+        "fig": {
+          "shapes": [
+            {
+              "shape": "teardrop",
+              "size": 0.34,
+              "rotate": 135,
+              "filled": true
+            }
+          ]
+        }
+      },
+      {
+        "id": "C",
+        "tag": "correct",
+        "fig": {
+          "shapes": [
+            {
+              "shape": "teardrop",
+              "size": 0.34,
+              "rotate": 90,
+              "filled": true
+            }
+          ]
+        }
+      },
+      {
+        "id": "D",
+        "tag": "r_left",
+        "fig": {
+          "shapes": [
+            {
+              "shape": "teardrop",
+              "size": 0.34,
+              "rotate": 45,
+              "filled": true,
+              "color": "var(--color-gray-300)"
+            }
+          ]
+        }
+      }
+    ],
+    "answer": "C",
+    "warnings": [
+      "IC-Inc cannot be obtained with a single figure"
+    ]
+  },
+  "g78-m4": {
+    "id": "g78-m4",
+    "rules": {
+      "h": [
         "XOR"
       ],
       "v": [
@@ -3923,6 +2937,26 @@
     "options": [
       {
         "id": "A",
+        "tag": "correct",
+        "fig": {
+          "shapes": [
+            {
+              "shape": "square",
+              "size": 0.357,
+              "x": 0.71,
+              "y": 0.29
+            },
+            {
+              "shape": "triangle",
+              "size": 0.357,
+              "x": 0.29,
+              "y": 0.71
+            }
+          ]
+        }
+      },
+      {
+        "id": "B",
         "tag": "wp-union",
         "fig": {
           "shapes": [
@@ -3954,7 +2988,7 @@
         }
       },
       {
-        "id": "B",
+        "id": "C",
         "tag": "ic-dropped",
         "fig": {
           "shapes": [
@@ -3968,7 +3002,7 @@
         }
       },
       {
-        "id": "C",
+        "id": "D",
         "tag": "r_left",
         "fig": {
           "shapes": [
@@ -3992,271 +3026,15 @@
             }
           ]
         }
-      },
-      {
-        "id": "D",
-        "tag": "correct",
-        "fig": {
-          "shapes": [
-            {
-              "shape": "square",
-              "size": 0.357,
-              "x": 0.71,
-              "y": 0.29
-            },
-            {
-              "shape": "triangle",
-              "size": 0.357,
-              "x": 0.29,
-              "y": 0.71
-            }
-          ]
-        }
       }
     ],
-    "answer": "D",
+    "answer": "A",
     "warnings": [
       "IC-Inc cannot be obtained with a single figure"
     ]
   },
-  "g78-m3": {
-    "id": "g78-m3",
-    "rules": {
-      "h": [
-        "rotate",
-        "size"
-      ],
-      "v": [
-        "shade"
-      ]
-    },
-    "ruleCount": 3,
-    "rot": 1,
-    "cells": [
-      {
-        "shapes": [
-          {
-            "shape": "arrow",
-            "size": 0.44
-          },
-          {
-            "shape": "teardrop",
-            "size": 0.44
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "arrow",
-            "size": 0.34,
-            "rotate": 45
-          },
-          {
-            "shape": "teardrop",
-            "size": 0.34,
-            "rotate": 45
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "arrow",
-            "size": 0.24,
-            "rotate": 90
-          },
-          {
-            "shape": "teardrop",
-            "size": 0.24,
-            "rotate": 90
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "arrow",
-            "size": 0.44,
-            "filled": true,
-            "color": "var(--color-gray-300)"
-          },
-          {
-            "shape": "teardrop",
-            "size": 0.44,
-            "filled": true,
-            "color": "var(--color-gray-300)"
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "arrow",
-            "size": 0.34,
-            "rotate": 45,
-            "filled": true,
-            "color": "var(--color-gray-300)"
-          },
-          {
-            "shape": "teardrop",
-            "size": 0.34,
-            "rotate": 45,
-            "filled": true,
-            "color": "var(--color-gray-300)"
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "arrow",
-            "size": 0.24,
-            "rotate": 90,
-            "filled": true,
-            "color": "var(--color-gray-300)"
-          },
-          {
-            "shape": "teardrop",
-            "size": 0.24,
-            "rotate": 90,
-            "filled": true,
-            "color": "var(--color-gray-300)"
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "arrow",
-            "size": 0.44,
-            "filled": true
-          },
-          {
-            "shape": "teardrop",
-            "size": 0.44,
-            "filled": true
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "arrow",
-            "size": 0.34,
-            "rotate": 45,
-            "filled": true
-          },
-          {
-            "shape": "teardrop",
-            "size": 0.34,
-            "rotate": 45,
-            "filled": true
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "arrow",
-            "size": 0.24,
-            "rotate": 90,
-            "filled": true
-          },
-          {
-            "shape": "teardrop",
-            "size": 0.24,
-            "rotate": 90,
-            "filled": true
-          }
-        ]
-      }
-    ],
-    "options": [
-      {
-        "id": "A",
-        "tag": "wp_copy",
-        "fig": {
-          "shapes": [
-            {
-              "shape": "arrow",
-              "size": 0.44
-            },
-            {
-              "shape": "teardrop",
-              "size": 0.44
-            }
-          ]
-        }
-      },
-      {
-        "id": "B",
-        "tag": "ic_flip",
-        "fig": {
-          "shapes": [
-            {
-              "shape": "arrow",
-              "size": 0.24,
-              "rotate": 135,
-              "filled": true
-            },
-            {
-              "shape": "teardrop",
-              "size": 0.24,
-              "rotate": 135,
-              "filled": true
-            }
-          ]
-        }
-      },
-      {
-        "id": "C",
-        "tag": "correct",
-        "fig": {
-          "shapes": [
-            {
-              "shape": "arrow",
-              "size": 0.24,
-              "rotate": 90,
-              "filled": true
-            },
-            {
-              "shape": "teardrop",
-              "size": 0.24,
-              "rotate": 90,
-              "filled": true
-            }
-          ]
-        }
-      },
-      {
-        "id": "D",
-        "tag": "r_left",
-        "fig": {
-          "shapes": [
-            {
-              "shape": "arrow",
-              "size": 0.34,
-              "rotate": 45,
-              "filled": true
-            },
-            {
-              "shape": "teardrop",
-              "size": 0.34,
-              "rotate": 45,
-              "filled": true
-            }
-          ]
-        }
-      }
-    ],
-    "answer": "C",
-    "warnings": [
-      "IC-Inc cannot be obtained with a single figure"
-    ]
-  },
-  "g78-m4": {
-    "id": "g78-m4",
+  "g78-m5": {
+    "id": "g78-m5",
     "rules": {
       "h": [
         "AND"
@@ -4452,26 +3230,6 @@
     "options": [
       {
         "id": "A",
-        "tag": "correct",
-        "fig": {
-          "shapes": [
-            {
-              "shape": "heart",
-              "size": 0.357,
-              "x": 0.29,
-              "y": 0.29
-            },
-            {
-              "shape": "lightning",
-              "size": 0.357,
-              "x": 0.71,
-              "y": 0.71
-            }
-          ]
-        }
-      },
-      {
-        "id": "B",
         "tag": "wp-union",
         "fig": {
           "shapes": [
@@ -4503,7 +3261,7 @@
         }
       },
       {
-        "id": "C",
+        "id": "B",
         "tag": "ic-dropped",
         "fig": {
           "shapes": [
@@ -4517,7 +3275,7 @@
         }
       },
       {
-        "id": "D",
+        "id": "C",
         "tag": "r_left",
         "fig": {
           "shapes": [
@@ -4541,156 +3299,6 @@
             }
           ]
         }
-      }
-    ],
-    "answer": "A",
-    "warnings": [
-      "IC-Inc cannot be obtained with a single figure"
-    ]
-  },
-  "g78-m5": {
-    "id": "g78-m5",
-    "rules": {
-      "h": [
-        "shade",
-        "rotate"
-      ],
-      "v": [
-        "size"
-      ]
-    },
-    "ruleCount": 3,
-    "rot": 1,
-    "cells": [
-      {
-        "shapes": [
-          {
-            "shape": "teardrop",
-            "size": 0.8
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "teardrop",
-            "size": 0.8,
-            "rotate": 45,
-            "filled": true,
-            "color": "var(--color-gray-300)"
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "teardrop",
-            "size": 0.8,
-            "rotate": 90,
-            "filled": true
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "teardrop",
-            "size": 0.57
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "teardrop",
-            "size": 0.57,
-            "rotate": 45,
-            "filled": true,
-            "color": "var(--color-gray-300)"
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "teardrop",
-            "size": 0.57,
-            "rotate": 90,
-            "filled": true
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "teardrop",
-            "size": 0.34
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "teardrop",
-            "size": 0.34,
-            "rotate": 45,
-            "filled": true,
-            "color": "var(--color-gray-300)"
-          }
-        ]
-      },
-      {
-        "shapes": [
-          {
-            "shape": "teardrop",
-            "size": 0.34,
-            "rotate": 90,
-            "filled": true
-          }
-        ]
-      }
-    ],
-    "options": [
-      {
-        "id": "A",
-        "tag": "wp_copy",
-        "fig": {
-          "shapes": [
-            {
-              "shape": "teardrop",
-              "size": 0.8
-            }
-          ]
-        }
-      },
-      {
-        "id": "B",
-        "tag": "ic_flip",
-        "fig": {
-          "shapes": [
-            {
-              "shape": "teardrop",
-              "size": 0.34,
-              "rotate": 135,
-              "filled": true
-            }
-          ]
-        }
-      },
-      {
-        "id": "C",
-        "tag": "r_left",
-        "fig": {
-          "shapes": [
-            {
-              "shape": "teardrop",
-              "size": 0.34,
-              "rotate": 45,
-              "filled": true,
-              "color": "var(--color-gray-300)"
-            }
-          ]
-        }
       },
       {
         "id": "D",
@@ -4698,10 +3306,16 @@
         "fig": {
           "shapes": [
             {
-              "shape": "teardrop",
-              "size": 0.34,
-              "rotate": 90,
-              "filled": true
+              "shape": "heart",
+              "size": 0.357,
+              "x": 0.29,
+              "y": 0.29
+            },
+            {
+              "shape": "lightning",
+              "size": 0.357,
+              "x": 0.71,
+              "y": 0.71
             }
           ]
         }
@@ -5403,5 +4017,1359 @@
     "warnings": [
       "IC-Inc cannot be obtained with a single figure"
     ]
+  },
+  "g3-m1": {
+    "id": "g3-m1",
+    "engine": "local",
+    "rules": {
+      "h": [
+        "shape"
+      ],
+      "v": [
+        "identity"
+      ]
+    },
+    "ruleCount": 1,
+    "rot": 1,
+    "cells": [
+      {
+        "shapes": [
+          {
+            "shape": "triangle",
+            "size": 0.68
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "square",
+            "size": 0.68
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "pentagon",
+            "size": 0.68
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "triangle",
+            "size": 0.68
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "square",
+            "size": 0.68
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "pentagon",
+            "size": 0.68
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "triangle",
+            "size": 0.68
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "square",
+            "size": 0.68
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "pentagon",
+            "size": 0.68
+          }
+        ]
+      }
+    ],
+    "options": [
+      {
+        "id": "A",
+        "tag": "wp_copy",
+        "fig": {
+          "shapes": [
+            {
+              "shape": "triangle",
+              "size": 0.68
+            }
+          ]
+        }
+      },
+      {
+        "id": "B",
+        "tag": "ic_shape",
+        "fig": {
+          "shapes": [
+            {
+              "shape": "square",
+              "size": 0.68
+            }
+          ]
+        }
+      },
+      {
+        "id": "C",
+        "tag": "correct",
+        "fig": {
+          "shapes": [
+            {
+              "shape": "pentagon",
+              "size": 0.68
+            }
+          ]
+        }
+      },
+      {
+        "id": "D",
+        "tag": "ic_count",
+        "fig": {
+          "shapes": [
+            {
+              "shape": "pentagon",
+              "size": 0.4
+            },
+            {
+              "shape": "pentagon",
+              "size": 0.4
+            }
+          ]
+        }
+      }
+    ],
+    "answer": "C",
+    "warnings": []
+  },
+  "g3-m2": {
+    "id": "g3-m2",
+    "engine": "local",
+    "rules": {
+      "h": [
+        "count"
+      ],
+      "v": [
+        "identity"
+      ]
+    },
+    "ruleCount": 1,
+    "rot": 1,
+    "cells": [
+      {
+        "shapes": [
+          {
+            "shape": "circle",
+            "size": 0.68
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "circle",
+            "size": 0.4
+          },
+          {
+            "shape": "circle",
+            "size": 0.4
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "circle",
+            "size": 0.28
+          },
+          {
+            "shape": "circle",
+            "size": 0.28
+          },
+          {
+            "shape": "circle",
+            "size": 0.28
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "circle",
+            "size": 0.68
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "circle",
+            "size": 0.4
+          },
+          {
+            "shape": "circle",
+            "size": 0.4
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "circle",
+            "size": 0.28
+          },
+          {
+            "shape": "circle",
+            "size": 0.28
+          },
+          {
+            "shape": "circle",
+            "size": 0.28
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "circle",
+            "size": 0.68
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "circle",
+            "size": 0.4
+          },
+          {
+            "shape": "circle",
+            "size": 0.4
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "circle",
+            "size": 0.28
+          },
+          {
+            "shape": "circle",
+            "size": 0.28
+          },
+          {
+            "shape": "circle",
+            "size": 0.28
+          }
+        ]
+      }
+    ],
+    "options": [
+      {
+        "id": "A",
+        "tag": "correct",
+        "fig": {
+          "shapes": [
+            {
+              "shape": "circle",
+              "size": 0.28
+            },
+            {
+              "shape": "circle",
+              "size": 0.28
+            },
+            {
+              "shape": "circle",
+              "size": 0.28
+            }
+          ]
+        }
+      },
+      {
+        "id": "B",
+        "tag": "wp_copy",
+        "fig": {
+          "shapes": [
+            {
+              "shape": "circle",
+              "size": 0.68
+            }
+          ]
+        }
+      },
+      {
+        "id": "C",
+        "tag": "ic_count",
+        "fig": {
+          "shapes": [
+            {
+              "shape": "circle",
+              "size": 0.24
+            },
+            {
+              "shape": "circle",
+              "size": 0.24
+            },
+            {
+              "shape": "circle",
+              "size": 0.24
+            },
+            {
+              "shape": "circle",
+              "size": 0.24
+            }
+          ]
+        }
+      },
+      {
+        "id": "D",
+        "tag": "r_left",
+        "fig": {
+          "shapes": [
+            {
+              "shape": "circle",
+              "size": 0.4
+            },
+            {
+              "shape": "circle",
+              "size": 0.4
+            }
+          ]
+        }
+      }
+    ],
+    "answer": "A",
+    "warnings": []
+  },
+  "g3-m3": {
+    "id": "g3-m3",
+    "engine": "local",
+    "rules": {
+      "h": [
+        "identity"
+      ],
+      "v": [
+        "shade"
+      ]
+    },
+    "ruleCount": 1,
+    "rot": 1,
+    "cells": [
+      {
+        "shapes": [
+          {
+            "shape": "heart",
+            "size": 0.68
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "heart",
+            "size": 0.68
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "heart",
+            "size": 0.68
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "heart",
+            "size": 0.68,
+            "filled": true,
+            "color": "var(--color-gray-300)"
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "heart",
+            "size": 0.68,
+            "filled": true,
+            "color": "var(--color-gray-300)"
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "heart",
+            "size": 0.68,
+            "filled": true,
+            "color": "var(--color-gray-300)"
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "heart",
+            "size": 0.68,
+            "filled": true
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "heart",
+            "size": 0.68,
+            "filled": true
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "heart",
+            "size": 0.68,
+            "filled": true
+          }
+        ]
+      }
+    ],
+    "options": [
+      {
+        "id": "A",
+        "tag": "wp_copy",
+        "fig": {
+          "shapes": [
+            {
+              "shape": "heart",
+              "size": 0.68
+            }
+          ]
+        }
+      },
+      {
+        "id": "B",
+        "tag": "ic_shade",
+        "fig": {
+          "shapes": [
+            {
+              "shape": "heart",
+              "size": 0.68,
+              "filled": true,
+              "color": "var(--color-gray-300)"
+            }
+          ]
+        }
+      },
+      {
+        "id": "C",
+        "tag": "ic_count",
+        "fig": {
+          "shapes": [
+            {
+              "shape": "heart",
+              "size": 0.4,
+              "filled": true
+            },
+            {
+              "shape": "heart",
+              "size": 0.4,
+              "filled": true
+            }
+          ]
+        }
+      },
+      {
+        "id": "D",
+        "tag": "correct",
+        "fig": {
+          "shapes": [
+            {
+              "shape": "heart",
+              "size": 0.68,
+              "filled": true
+            }
+          ]
+        }
+      }
+    ],
+    "answer": "D",
+    "warnings": []
+  },
+  "g3-m4": {
+    "id": "g3-m4",
+    "engine": "local",
+    "rules": {
+      "h": [
+        "shape"
+      ],
+      "v": [
+        "shade"
+      ]
+    },
+    "ruleCount": 2,
+    "rot": 1,
+    "cells": [
+      {
+        "shapes": [
+          {
+            "shape": "diamond",
+            "size": 0.68
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "hexagon",
+            "size": 0.68
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "star",
+            "size": 0.68
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "diamond",
+            "size": 0.68,
+            "filled": true,
+            "color": "var(--color-gray-300)"
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "hexagon",
+            "size": 0.68,
+            "filled": true,
+            "color": "var(--color-gray-300)"
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "star",
+            "size": 0.68,
+            "filled": true,
+            "color": "var(--color-gray-300)"
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "diamond",
+            "size": 0.68,
+            "filled": true
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "hexagon",
+            "size": 0.68,
+            "filled": true
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "star",
+            "size": 0.68,
+            "filled": true
+          }
+        ]
+      }
+    ],
+    "options": [
+      {
+        "id": "A",
+        "tag": "wp_copy",
+        "fig": {
+          "shapes": [
+            {
+              "shape": "diamond",
+              "size": 0.68
+            }
+          ]
+        }
+      },
+      {
+        "id": "B",
+        "tag": "correct",
+        "fig": {
+          "shapes": [
+            {
+              "shape": "star",
+              "size": 0.68,
+              "filled": true
+            }
+          ]
+        }
+      },
+      {
+        "id": "C",
+        "tag": "ic_shape",
+        "fig": {
+          "shapes": [
+            {
+              "shape": "hexagon",
+              "size": 0.68,
+              "filled": true
+            }
+          ]
+        }
+      },
+      {
+        "id": "D",
+        "tag": "r_top",
+        "fig": {
+          "shapes": [
+            {
+              "shape": "star",
+              "size": 0.68,
+              "filled": true,
+              "color": "var(--color-gray-300)"
+            }
+          ]
+        }
+      }
+    ],
+    "answer": "B",
+    "warnings": []
+  },
+  "g3-m5": {
+    "id": "g3-m5",
+    "engine": "local",
+    "rules": {
+      "h": [
+        "count"
+      ],
+      "v": [
+        "shape"
+      ]
+    },
+    "ruleCount": 2,
+    "rot": 1,
+    "cells": [
+      {
+        "shapes": [
+          {
+            "shape": "cross",
+            "size": 0.28
+          },
+          {
+            "shape": "cross",
+            "size": 0.28
+          },
+          {
+            "shape": "cross",
+            "size": 0.28
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "cross",
+            "size": 0.4
+          },
+          {
+            "shape": "cross",
+            "size": 0.4
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "cross",
+            "size": 0.68
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "teardrop",
+            "size": 0.28
+          },
+          {
+            "shape": "teardrop",
+            "size": 0.28
+          },
+          {
+            "shape": "teardrop",
+            "size": 0.28
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "teardrop",
+            "size": 0.4
+          },
+          {
+            "shape": "teardrop",
+            "size": 0.4
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "teardrop",
+            "size": 0.68
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "square",
+            "size": 0.28
+          },
+          {
+            "shape": "square",
+            "size": 0.28
+          },
+          {
+            "shape": "square",
+            "size": 0.28
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "square",
+            "size": 0.4
+          },
+          {
+            "shape": "square",
+            "size": 0.4
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "square",
+            "size": 0.68
+          }
+        ]
+      }
+    ],
+    "options": [
+      {
+        "id": "A",
+        "tag": "wp_copy",
+        "fig": {
+          "shapes": [
+            {
+              "shape": "cross",
+              "size": 0.28
+            },
+            {
+              "shape": "cross",
+              "size": 0.28
+            },
+            {
+              "shape": "cross",
+              "size": 0.28
+            }
+          ]
+        }
+      },
+      {
+        "id": "B",
+        "tag": "ic_shape",
+        "fig": {
+          "shapes": [
+            {
+              "shape": "teardrop",
+              "size": 0.68
+            }
+          ]
+        }
+      },
+      {
+        "id": "C",
+        "tag": "r_left",
+        "fig": {
+          "shapes": [
+            {
+              "shape": "square",
+              "size": 0.4
+            },
+            {
+              "shape": "square",
+              "size": 0.4
+            }
+          ]
+        }
+      },
+      {
+        "id": "D",
+        "tag": "correct",
+        "fig": {
+          "shapes": [
+            {
+              "shape": "square",
+              "size": 0.68
+            }
+          ]
+        }
+      }
+    ],
+    "answer": "D",
+    "warnings": []
+  },
+  "g4-m1": {
+    "id": "g4-m1",
+    "engine": "local",
+    "rules": {
+      "h": [
+        "size"
+      ],
+      "v": [
+        "identity"
+      ]
+    },
+    "ruleCount": 1,
+    "rot": 1,
+    "cells": [
+      {
+        "shapes": [
+          {
+            "shape": "diamond",
+            "size": 0.7
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "diamond",
+            "size": 0.5
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "diamond",
+            "size": 0.36
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "diamond",
+            "size": 0.7
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "diamond",
+            "size": 0.5
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "diamond",
+            "size": 0.36
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "diamond",
+            "size": 0.7
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "diamond",
+            "size": 0.5
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "diamond",
+            "size": 0.36
+          }
+        ]
+      }
+    ],
+    "options": [
+      {
+        "id": "A",
+        "tag": "wp_copy",
+        "fig": {
+          "shapes": [
+            {
+              "shape": "diamond",
+              "size": 0.7
+            }
+          ]
+        }
+      },
+      {
+        "id": "B",
+        "tag": "correct",
+        "fig": {
+          "shapes": [
+            {
+              "shape": "diamond",
+              "size": 0.36
+            }
+          ]
+        }
+      },
+      {
+        "id": "C",
+        "tag": "ic_count",
+        "fig": {
+          "shapes": [
+            {
+              "shape": "diamond",
+              "size": 0.36
+            },
+            {
+              "shape": "diamond",
+              "size": 0.36
+            }
+          ]
+        }
+      },
+      {
+        "id": "D",
+        "tag": "r_left",
+        "fig": {
+          "shapes": [
+            {
+              "shape": "diamond",
+              "size": 0.5
+            }
+          ]
+        }
+      }
+    ],
+    "answer": "B",
+    "warnings": []
+  },
+  "g4-m3": {
+    "id": "g4-m3",
+    "engine": "local",
+    "rules": {
+      "h": [
+        "shape"
+      ],
+      "v": [
+        "size"
+      ]
+    },
+    "ruleCount": 2,
+    "rot": 1,
+    "cells": [
+      {
+        "shapes": [
+          {
+            "shape": "triangle",
+            "size": 0.7
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "pentagon",
+            "size": 0.7
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "hexagon",
+            "size": 0.7
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "triangle",
+            "size": 0.5
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "pentagon",
+            "size": 0.5
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "hexagon",
+            "size": 0.5
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "triangle",
+            "size": 0.36
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "pentagon",
+            "size": 0.36
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "hexagon",
+            "size": 0.36
+          }
+        ]
+      }
+    ],
+    "options": [
+      {
+        "id": "A",
+        "tag": "correct",
+        "fig": {
+          "shapes": [
+            {
+              "shape": "hexagon",
+              "size": 0.36
+            }
+          ]
+        }
+      },
+      {
+        "id": "B",
+        "tag": "wp_copy",
+        "fig": {
+          "shapes": [
+            {
+              "shape": "triangle",
+              "size": 0.7
+            }
+          ]
+        }
+      },
+      {
+        "id": "C",
+        "tag": "ic_shape",
+        "fig": {
+          "shapes": [
+            {
+              "shape": "pentagon",
+              "size": 0.36
+            }
+          ]
+        }
+      },
+      {
+        "id": "D",
+        "tag": "r_top",
+        "fig": {
+          "shapes": [
+            {
+              "shape": "hexagon",
+              "size": 0.5
+            }
+          ]
+        }
+      }
+    ],
+    "answer": "A",
+    "warnings": []
+  },
+  "g4-m5": {
+    "id": "g4-m5",
+    "engine": "local",
+    "rules": {
+      "h": [
+        "count"
+      ],
+      "v": [
+        "shade"
+      ]
+    },
+    "ruleCount": 2,
+    "rot": 1,
+    "cells": [
+      {
+        "shapes": [
+          {
+            "shape": "star",
+            "size": 0.68
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "star",
+            "size": 0.4
+          },
+          {
+            "shape": "star",
+            "size": 0.4
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "star",
+            "size": 0.28
+          },
+          {
+            "shape": "star",
+            "size": 0.28
+          },
+          {
+            "shape": "star",
+            "size": 0.28
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "star",
+            "size": 0.68,
+            "filled": true,
+            "color": "var(--color-gray-300)"
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "star",
+            "size": 0.4,
+            "filled": true,
+            "color": "var(--color-gray-300)"
+          },
+          {
+            "shape": "star",
+            "size": 0.4,
+            "filled": true,
+            "color": "var(--color-gray-300)"
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "star",
+            "size": 0.28,
+            "filled": true,
+            "color": "var(--color-gray-300)"
+          },
+          {
+            "shape": "star",
+            "size": 0.28,
+            "filled": true,
+            "color": "var(--color-gray-300)"
+          },
+          {
+            "shape": "star",
+            "size": 0.28,
+            "filled": true,
+            "color": "var(--color-gray-300)"
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "star",
+            "size": 0.68,
+            "filled": true
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "star",
+            "size": 0.4,
+            "filled": true
+          },
+          {
+            "shape": "star",
+            "size": 0.4,
+            "filled": true
+          }
+        ]
+      },
+      {
+        "shapes": [
+          {
+            "shape": "star",
+            "size": 0.28,
+            "filled": true
+          },
+          {
+            "shape": "star",
+            "size": 0.28,
+            "filled": true
+          },
+          {
+            "shape": "star",
+            "size": 0.28,
+            "filled": true
+          }
+        ]
+      }
+    ],
+    "options": [
+      {
+        "id": "A",
+        "tag": "wp_copy",
+        "fig": {
+          "shapes": [
+            {
+              "shape": "star",
+              "size": 0.68
+            }
+          ]
+        }
+      },
+      {
+        "id": "B",
+        "tag": "correct",
+        "fig": {
+          "shapes": [
+            {
+              "shape": "star",
+              "size": 0.28,
+              "filled": true
+            },
+            {
+              "shape": "star",
+              "size": 0.28,
+              "filled": true
+            },
+            {
+              "shape": "star",
+              "size": 0.28,
+              "filled": true
+            }
+          ]
+        }
+      },
+      {
+        "id": "C",
+        "tag": "ic_count",
+        "fig": {
+          "shapes": [
+            {
+              "shape": "star",
+              "size": 0.24,
+              "filled": true
+            },
+            {
+              "shape": "star",
+              "size": 0.24,
+              "filled": true
+            },
+            {
+              "shape": "star",
+              "size": 0.24,
+              "filled": true
+            },
+            {
+              "shape": "star",
+              "size": 0.24,
+              "filled": true
+            }
+          ]
+        }
+      },
+      {
+        "id": "D",
+        "tag": "r_left",
+        "fig": {
+          "shapes": [
+            {
+              "shape": "star",
+              "size": 0.4,
+              "filled": true
+            },
+            {
+              "shape": "star",
+              "size": 0.4,
+              "filled": true
+            }
+          ]
+        }
+      }
+    ],
+    "answer": "B",
+    "warnings": []
   }
 }
