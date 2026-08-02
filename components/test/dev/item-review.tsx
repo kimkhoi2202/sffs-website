@@ -42,6 +42,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { BLIND_SOLVE } from "./blind-solve";
+import { OptionLettersProvider } from "../question/option-card";
 import { QuestionView } from "../question/question-view";
 import { ALL_TESTS } from "@/lib/test/tests";
 import type { Test, TestItem } from "@/lib/test/types";
@@ -157,7 +158,15 @@ function Bank({ test }: { test: Test }) {
               accidentally "answering" a question here would be confusing rather
               than useful.
             */}
-            <QuestionView item={item} picked={null} onPick={() => {}} />
+            {/*
+              Figural options show their A/B/C/D badge HERE and nowhere else.
+              The Meta line below prints "key C", and without letters on the
+              cards there is no way to tell which of four shapes that is, which
+              is the one thing this page exists to let a reviewer check.
+            */}
+            <OptionLettersProvider>
+              <QuestionView item={item} picked={null} onPick={() => {}} />
+            </OptionLettersProvider>
             <Meta item={item} index={i} />
           </article>
         ))}

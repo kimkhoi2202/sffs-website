@@ -480,12 +480,14 @@ export function QuestionView({ item, picked, onPick }: QuestionViewProps) {
           {/* odd-one-out has no stimulus: the options are the stimulus. */}
 
           <OptionGroup legend={legend} variant="visual">
-            {item.options.map((o) => (
+            {item.options.map((o, i) => (
               <VisualOptionCard
                 key={o.id}
                 {...shared}
                 id={o.id}
                 checked={picked === o.id}
+                index={i}
+                total={item.options.length}
                 label={describeFig(o.fig)}
               >
                 <FigCellContent fig={o.fig} />
@@ -532,12 +534,14 @@ export function QuestionView({ item, picked, onPick }: QuestionViewProps) {
             </SeqRow>
           </Stimulus>
           <OptionGroup legend={legend} variant="visual">
-            {item.options.map((o) => (
+            {item.options.map((o, i) => (
               <VisualOptionCard
                 key={o.id}
                 {...shared}
                 id={o.id}
                 checked={picked === o.id}
+                index={i}
+                total={item.options.length}
                 label={describePoly(o.poly)}
               >
                 <PolygonShape shape={o.poly} size="86%" />
@@ -560,12 +564,14 @@ export function QuestionView({ item, picked, onPick }: QuestionViewProps) {
             </SeqRow>
           </Stimulus>
           <OptionGroup legend={legend} variant="visual">
-            {item.options.map((o) => (
+            {item.options.map((o, i) => (
               <VisualOptionCard
                 key={o.id}
                 {...shared}
                 id={o.id}
                 checked={picked === o.id}
+                index={i}
+                total={item.options.length}
                 label={describeDot(o.pos)}
               >
                 <DotSquare pos={o.pos} size="86%" />
@@ -581,12 +587,14 @@ export function QuestionView({ item, picked, onPick }: QuestionViewProps) {
             <FoldStrip folds={item.folds} punches={item.punches} grid={item.grid ?? 4} />
           </Stimulus>
           <OptionGroup legend={legend} variant="visual">
-            {item.options.map((o) => (
+            {item.options.map((o, i) => (
               <VisualOptionCard
                 key={o.id}
                 {...shared}
                 id={o.id}
                 checked={picked === o.id}
+                index={i}
+                total={item.options.length}
                 label={describeHoles(o.holes)}
               >
                 <HoleGrid

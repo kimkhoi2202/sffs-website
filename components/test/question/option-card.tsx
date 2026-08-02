@@ -24,9 +24,39 @@
  */
 "use client";
 
-import type { ReactNode } from "react";
+import { createContext, useContext, type ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
+
+/**
+ * Whether figural options show their A/B/C/D badge.
+ *
+ * ===========================================================================
+ * OFF FOR TEST-TAKERS, ON FOR THE REVIEW PAGE
+ * ===========================================================================
+ * On a figural item the shape IS the answer — you tap the picture, not the
+ * letter — so the badge labels something that needs no label, and on a small
+ * card it competes with the glyph the item depends on being read clearly. Text
+ * options keep theirs, where the convention earns its place: "A. example" scans
+ * and the letter anchors the eye down a list of words.
+ *
+ * The internal review page is the exception, and it is a real one. It prints
+ * "key C" next to each item, and with no letters on the cards a reviewer cannot
+ * tell which of four shapes C is, which defeats the only thing that page is
+ * for.
+ *
+ * A CONTEXT RATHER THAN A PROP, because the alternative is threading a flag
+ * through QuestionView and OptionGroup — two components that otherwise have no
+ * opinion about this — to reach the one component that does. The default is the
+ * test-taker's view, so the runner gets the right behaviour by not knowing this
+ * exists, and the dev page opts in at its own boundary.
+ */
+const OptionLettersContext = createContext(false);
+
+/** Show A/B/C/D on figural options within. Review surfaces only. */
+export function OptionLettersProvider({ children }: { children: ReactNode }) {
+  return <OptionLettersContext.Provider value={true}>{children}</OptionLettersContext.Provider>;
+}
 
 /**
  * Shared state styling. Rest sits on a hard shadow; hover lifts it (hover
@@ -166,15 +196,42 @@ export function TextOptionCard({
   );
 }
 
-/** A square option holding a drawing. */
+/**
+ * A square option holding a drawing.
+ *
+ * NO LETTER BADGE. See OptionLettersContext above for why, and for the one
+ * surface that turns it back on.
+ *
+ * THE SPOKEN NAME IS POSITION PLUS DESCRIPTION. The badge was never carrying
+ * it — it is `aria-hidden` and always has been — so removing it costs a sighted
+ * person a label they did not need and costs a screen reader nothing. What is
+ * announced is `aria-label` on the radio, which every figural call site already
+ * fills with a real description of the drawing ("a large solid circle"), since
+ * the SVG itself is hidden.
+ *
+ * The position is prefixed to that. A native radio group does announce "2 of 4"
+ * on its own, but only when the reader chooses to; an explicit `aria-label`
+ * suppresses it in some iOS VoiceOver configurations, which is exactly the
+ * platform most of this traffic is on. Saying it outright costs three words and
+ * removes the dependency on that behaviour. It also restores what the letter
+ * was quietly doing for everyone: telling you where you are in the four.
+ */
 export function VisualOptionCard({
   name,
   id,
   checked,
   onSelect,
   label,
+  index,
+  total,
   children,
-}: BaseProps & { children: ReactNode }) {
+}: BaseProps & {
+  /** 0-based position in the group, for the spoken name. */
+  index: number;
+  total: number;
+  children: ReactNode;
+}) {
+  const showLetter = useContext(OptionLettersContext);
   return (
     <label className={cn(CARD_BASE, "group flex aspect-square w-full items-center justify-center p-2")}>
       <input
@@ -184,13 +241,15 @@ export function VisualOptionCard({
         checked={checked}
         onChange={() => onSelect(id)}
         className="sr-only"
-        aria-label={label}
+        aria-label={`Option ${index + 1} of ${total}: ${label}`}
       />
-      <LetterBadge
-        id={id}
-        className="absolute size-6 text-[0.65rem]"
-        style={{ left: BADGE_INSET, top: BADGE_INSET }}
-      />
+      {showLetter ? (
+        <LetterBadge
+          id={id}
+          className="absolute size-6 text-[0.65rem]"
+          style={{ left: BADGE_INSET, top: BADGE_INSET }}
+        />
+      ) : null}
       <div className="grid size-full place-items-center p-[8%]">{children}</div>
     </label>
   );
