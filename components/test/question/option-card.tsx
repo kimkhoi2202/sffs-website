@@ -73,10 +73,19 @@ const CARD_BASE = cn(
 );
 
 /** The A / B / C / D chip. */
-function LetterBadge({ id, className }: { id: string; className?: string }) {
+function LetterBadge({
+  id,
+  className,
+  style,
+}: {
+  id: string;
+  className?: string;
+  style?: React.CSSProperties;
+}) {
   return (
     <span
       aria-hidden="true"
+      style={style}
       className={cn(
         "grid size-7 shrink-0 place-items-center rounded-full border-[2.5px] border-ink",
         "bg-yellow font-sans text-xs font-extrabold leading-none text-ink",
@@ -98,6 +107,34 @@ interface BaseProps {
   label: string;
 }
 
+/**
+ * How far the letter badge sits in from the card's left edge, in pixels.
+ *
+ * ===========================================================================
+ * A ROUNDED CORNER NEEDS MORE INSET THAN A SQUARE ONE
+ * ===========================================================================
+ * The badge on a figural card sits in the top-left corner, and the card's
+ * corner is a 16px radius (`rounded-2xl`). Along the diagonal where the badge
+ * actually sits, the curve pulls the card's edge inward by r(1 - 1/root 2),
+ * which is about 4.7px. So an inset that looks generous measured against a
+ * straight edge is nearly touching once you follow the curve: at the old 6px it
+ * left roughly 1px of daylight, which is what read as crowding.
+ *
+ * Twelve gives about 7px of real diagonal clearance, which is what 12px looks
+ * like on a square corner.
+ *
+ * The same number is used for the text rows, where the badge sits in normal
+ * flow rather than in a corner, so the letter lands in the same place across
+ * every item type instead of shifting when the question changes shape.
+ *
+ * IT HOLDS AT EVERY SCALE. The fit-to-viewport wrapper scales the whole
+ * question with one transform, so the badge, its inset and the corner radius
+ * all shrink at exactly the same rate and the relationship between them is
+ * unchanged. That is a property of scaling the subtree rather than restyling
+ * it, and it is one of the reasons the fitter works that way.
+ */
+const BADGE_INSET = "0.75rem"; // 12px
+
 /** A full-width text option. */
 export function TextOptionCard({
   name,
@@ -108,7 +145,10 @@ export function TextOptionCard({
   text,
 }: BaseProps & { text: string }) {
   return (
-    <label className={cn(CARD_BASE, "group flex min-h-14 w-full items-center gap-3 px-3.5 py-3")}>
+    <label
+      className={cn(CARD_BASE, "group flex min-h-14 w-full items-center gap-3 py-3")}
+      style={{ paddingLeft: BADGE_INSET, paddingRight: BADGE_INSET }}
+    >
       <input
         type="radio"
         name={name}
@@ -146,7 +186,11 @@ export function VisualOptionCard({
         className="sr-only"
         aria-label={label}
       />
-      <LetterBadge id={id} className="absolute left-1.5 top-1.5 size-6 text-[0.65rem]" />
+      <LetterBadge
+        id={id}
+        className="absolute size-6 text-[0.65rem]"
+        style={{ left: BADGE_INSET, top: BADGE_INSET }}
+      />
       <div className="grid size-full place-items-center p-[8%]">{children}</div>
     </label>
   );

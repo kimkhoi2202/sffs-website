@@ -197,6 +197,52 @@
 }
 
 /*
+  ============================================================================
+  THE TEST FLOW IS FLAT. Everything else keeps the hard shadow.
+  ============================================================================
+  The hard offset shadow is the brand's signature and it is correct on the
+  marketing pages, the legal pages and the footer, where somebody looks at a
+  screen for ten seconds. The test screens are the deliberate exception: a
+  person sits in front of them for five minutes, and a stimulus card, four
+  option cards and three buttons all floating on 4px of black is heavy in a way
+  that shows after the third question.
+
+  WHY THIS IS A SCOPED RULE AND NOT A LIST OF EDITS. Removing `shadow-*` from
+  each surface is the obvious fix and it does not hold, which is the whole
+  reason this block exists. The shadow was removed from the option cards once
+  and the question card kept its own; the buttons never had a `shadow-*` class
+  to remove at all, because `btn-press` below paints one unconditionally, so no
+  amount of editing call sites would have taken it off Next, Back or Start. A
+  shadow can arrive in this flow from a shared component nobody touched.
+
+  So the flow's root carries `.flow-flat` and this rule turns the treatment off
+  for everything inside it, whatever level it came from. Specificity is (0,2,0)
+  and (0,3,0), which beats both the utility classes and `btn-press`'s own hover
+  and active states, so it does not depend on source order.
+
+  A MODAL OPTS BACK IN with `data-elevated`. That is the one case where the
+  depth is doing real work rather than decorating: the email gate and the quit
+  dialog are surfaces lifting off content behind them, and without the shadow
+  they read as part of the page rather than on top of it.
+*/
+.flow-flat {
+  --btn-shadow-color: transparent;
+}
+.flow-flat [class*="shadow-hard"]:not([data-elevated]) {
+  box-shadow: none;
+}
+/* The press travel goes with the shadow: a control sliding 2px with nothing
+   under it reads as a glitch rather than as a press. */
+.flow-flat .btn-press:hover,
+.flow-flat .btn-press:active,
+.flow-flat .press:hover,
+.flow-flat .press:active,
+.flow-flat .press-lg:hover,
+.flow-flat .press-lg:active {
+  transform: none;
+}
+
+/*
   The signature "press" interaction for buttons/cards.
   Element must set its own base box-shadow (e.g. shadow-hard-sm).
   On hover it nudges toward the shadow; on active it fully presses in.

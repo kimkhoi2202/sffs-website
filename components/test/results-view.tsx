@@ -76,7 +76,7 @@ export function ResultsView({
   return (
     <div className={cn("flex w-full flex-col gap-4", className)}>
       {/* -- score and verdict ------------------------------------------------ */}
-      <div className="flex flex-col items-center gap-3 rounded-2xl border-[2.5px] border-ink bg-yellow p-5 text-center shadow-hard-lg sm:p-7">
+      <div className="flex flex-col items-center gap-3 rounded-2xl border-[2.5px] border-ink bg-yellow p-5 text-center sm:p-7">
         <span className="eyebrow text-ink/70">
           {timedOut ? "Time ran out" : "Your score"}
         </span>
@@ -103,7 +103,7 @@ export function ResultsView({
 
       {/* -- the split by domain ----------------------------------------------- */}
       {byDomain.length > 1 ? (
-        <div className="flex flex-col gap-2.5 rounded-2xl border-[2.5px] border-ink bg-paper p-4 shadow-hard-sm sm:p-5">
+        <div className="flex flex-col gap-2.5 rounded-2xl border-[2.5px] border-ink bg-paper p-4 sm:p-5">
           <h2 className="font-display text-lg uppercase leading-none">How it broke down</h2>
           {byDomain.map((row) => (
             <div key={row.domain} className="flex items-center gap-3">
@@ -131,7 +131,7 @@ export function ResultsView({
       ) : null}
 
       {/* -- question by question ------------------------------------------------ */}
-      <div className="flex flex-col gap-2 rounded-2xl border-[2.5px] border-ink bg-paper p-4 shadow-hard-sm sm:p-5">
+      <div className="flex flex-col gap-2 rounded-2xl border-[2.5px] border-ink bg-paper p-4 sm:p-5">
         <h2 className="font-display text-lg uppercase leading-none">Question by question</h2>
         <ol className="flex flex-col gap-1.5">
           {result.items.map((scored, i) => (

@@ -169,6 +169,75 @@ export const GLYPH_KINDS: readonly GlyphKind[] = [
 /** Named size steps. A raw number (a fraction of the cell) is also accepted. */
 export type FigSize = "s" | "m" | "l";
 
+/* ==========================================================================
+ * THE TWO PALETTES, AND WHY THEY MUST NOT OVERLAP
+ * ==========================================================================
+ * A colour on this screen can mean one of exactly two things, and it must never
+ * mean both.
+ *
+ *   PUZZLE INK    part of the question. Shading is a RULE DIMENSION on figure
+ *                 matrices: a row can run white, grey, solid, and reading that
+ *                 progression is how the item is solved.
+ *   STATE         something about the interface. Which option you picked, which
+ *                 cell is the one to fill in, which control destroys your work.
+ *
+ * THIS WAS A REAL DEFECT, not a tidiness rule invented after the fact. Brand
+ * blue was the selected-option background AND the "solid" step of the shading
+ * ladder at the same time. On a figural question that meant a blue card could
+ * be blue because you picked it or because the figure inside it is blue as part
+ * of the puzzle, with both appearing in the same row of options. Somebody can
+ * misread the puzzle from that, which is a different order of problem from
+ * something looking untidy.
+ *
+ * The fix moved the PUZZLE side, not the UI side, and that was the cleaner
+ * direction for three reasons. White, grey and black is what the rule taxonomy
+ * specifies for FM-3 and what matRiks itself emits, so blue was a substitution
+ * that should never have happened. Black against paper separates from grey far
+ * better than blue does (100%, 77% and 0% luminance against 100%, 77% and 61%),
+ * which matters most at the deepest fit-to-viewport scale on a phone, where the
+ * shading rule is hardest to read. And the alternative would have meant finding
+ * a new selection colour: mint and green are the primary actions, yellow is the
+ * letter badges and the missing-cell marker, coral is destructive, and orange is
+ * the sound toggle, so there was no free slot on the UI side.
+ *
+ * ADDING A COLOUR TO EITHER SET MEANS CHECKING IT AGAINST THE OTHER.
+ * `scripts/audit-content.mjs` fails the build if an item paints a figure in a
+ * state colour, so the clash cannot come back quietly.
+ * ========================================================================== */
+
+/**
+ * The only colours a figure may be painted in. Three steps of one ramp, so the
+ * shading rule reads as an ordered progression rather than as three unrelated
+ * colours.
+ */
+export const PUZZLE_INK = {
+  /** Unfilled. The paper showing through. */
+  empty: "var(--color-paper)",
+  /** The middle step. */
+  mid: "var(--color-gray-300)",
+  /** The dark step, and the default for any filled element. */
+  solid: "var(--color-ink)",
+} as const;
+
+/**
+ * Colours that mean something about the INTERFACE. None of these may appear
+ * inside a figure.
+ *
+ * They are listed here rather than only living in Tailwind classes so the audit
+ * has something to check against, and so the disjointness is visible in one
+ * place instead of being a property you would have to go and discover.
+ */
+export const STATE_COLORS = {
+  /** The option you picked. */
+  selected: "var(--color-blue)",
+  /** The letter badge, and the matrix cell you are filling in. */
+  marker: "var(--color-yellow)",
+  /** Destructive: quit. */
+  destructive: "var(--color-coral)",
+  /** Primary action: start, send. */
+  action: "var(--color-green)",
+} as const;
+
 /**
  * ONE SHAPE inside a cell. Declarative geometry, never a picture.
  *

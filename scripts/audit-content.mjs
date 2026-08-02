@@ -524,6 +524,38 @@ for (const test of ALL_TESTS) {
     ];
 
     /*
+     * THE TWO PALETTES MUST STAY DISJOINT.
+     *
+     * A colour on the question screen means either "this is part of the puzzle"
+     * or "this is something about the interface", and never both. Brand blue
+     * was once the selected-option background AND the solid step of the shading
+     * ladder, so on a figural item a blue card could be blue because you picked
+     * it or because the figure inside it is blue as part of the question. That
+     * is a misreadable puzzle, not an untidy one.
+     *
+     * The sets are written down in lib/test/types.ts. This is the check that
+     * stops a future item type quietly reintroducing the clash.
+     */
+    const STATE_ONLY = {
+      "var(--color-blue)": "the selected-option background",
+      "var(--color-yellow)": "the letter badges and the missing-cell marker",
+      "var(--color-coral)": "the destructive action",
+      "var(--color-green)": "the primary action",
+      "var(--color-mint)": "the primary action",
+    };
+    for (const [where, cell] of surfaces) {
+      for (const el of cell.shapes) {
+        const reason = el.color && STATE_ONLY[el.color];
+        if (reason) {
+          fail(
+            `${test.id}/${item.id}: ${where} paints a figure in ${el.color}, which is ${reason}. ` +
+              `Puzzle ink and interface state must not share a colour — see PUZZLE_INK in lib/test/types.ts.`,
+          );
+        }
+      }
+    }
+
+    /*
      * A fill that cannot be seen.
      *
      * `crescent` and `lightning` are thin figures drawn with a heavy keyline:

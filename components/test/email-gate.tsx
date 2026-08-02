@@ -237,7 +237,7 @@ export function EmailGate({
         >
           <span
             aria-hidden="true"
-            className="grid size-12 place-items-center rounded-full border-[2.5px] border-ink bg-mint text-xl font-black shadow-hard-xs"
+            className="grid size-12 place-items-center rounded-full border-[2.5px] border-ink bg-mint text-xl font-black"
           >
             &#10003;
           </span>
@@ -336,7 +336,10 @@ export function EmailGate({
             }
           }}
           className={cn(
-            "h-14 w-full rounded-full border-[2.5px] bg-paper px-5 text-base font-medium text-ink shadow-hard-sm",
+            // Flat, like every other surface in the flow. The CARD it sits in is the
+            // elevated thing; a field inside an elevated card does not need its own
+            // depth, and the flat-flow rule would strip it anyway.
+            "h-14 w-full rounded-full border-[2.5px] bg-paper px-5 text-base font-medium text-ink",
             "placeholder:text-ink/40 disabled:cursor-not-allowed disabled:opacity-60",
             "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-transparent",
             invalid ? "border-coral" : "border-ink",
@@ -406,7 +409,16 @@ function StartOver({ onRestart }: { onRestart: () => void }) {
 
 function Card({ children }: { children: React.ReactNode }) {
   return (
-    <div className="w-full max-w-sm rounded-2xl border-[2.5px] border-ink bg-paper p-5 shadow-hard-lg sm:p-6">
+    <div
+      /*
+       * KEEPS ITS SHADOW, and is one of only two surfaces in the flow that
+       * does. This is a modal lifting off deliberately blurred content, so the
+       * depth is what says "this is on top and it is the thing to deal with"
+       * rather than being decoration. See the flat-flow block in globals.css.
+       */
+      data-elevated
+      className="w-full max-w-sm rounded-2xl border-[2.5px] border-ink bg-paper p-5 shadow-hard-lg sm:p-6"
+    >
       {children}
     </div>
   );

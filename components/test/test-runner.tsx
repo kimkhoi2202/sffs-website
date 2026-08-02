@@ -226,7 +226,7 @@ export function TestRunner({
           <div
             className={cn(
               "grid min-w-[4.25rem] place-items-center rounded-full border-[2.5px] border-ink px-3 py-1.5",
-              "font-mono text-base font-bold leading-none tabular-nums shadow-hard-xs",
+              "font-mono text-base font-bold leading-none tabular-nums",
               !timerEnabled && "bg-gray-200 text-ink/60",
               timerEnabled && !warning && !urgent && "bg-paper text-ink",
               warning && "bg-yellow text-ink",
@@ -332,7 +332,12 @@ export function TestRunner({
           aria-labelledby="quit-title"
           className="absolute inset-0 z-10 grid place-items-center bg-ink/60 p-5"
         >
-          <div className="w-full max-w-sm rounded-2xl border-[2.5px] border-ink bg-paper p-5 shadow-hard-lg">
+          <div
+            /* The other modal. Same reasoning as the email gate: it sits on a
+               scrim over the question and the depth is what separates them. */
+            data-elevated
+            className="w-full max-w-sm rounded-2xl border-[2.5px] border-ink bg-paper p-5 shadow-hard-lg"
+          >
             <h2 id="quit-title" className="font-display text-2xl uppercase leading-none">
               Quit the test?
             </h2>

@@ -13,6 +13,8 @@
  */
 "use client";
 
+import { Fragment } from "react";
+
 import { FigCellContent, FigCell, FigureCell, QuestionCell } from "./figure";
 import { OptionGroup, TextOptionCard, VisualOptionCard } from "./option-card";
 import { DotSquare, FoldStrip, HoleGrid, PolygonShape, creaseAxes } from "./shapes";
@@ -30,7 +32,7 @@ function SeqTile({ children, blank }: { children?: React.ReactNode; blank?: bool
     <div
       className={cn(
         "grid min-h-[3.25rem] min-w-[3.25rem] shrink-0 place-items-center rounded-xl border-[2.5px] border-ink px-2.5",
-        "font-display text-[clamp(1.25rem,6vw,1.75rem)] leading-none",
+        "font-display text-[clamp(1.25rem,6vw,1.75rem)] leading-none tabular-nums",
         blank ? "bg-yellow" : "bg-paper",
       )}
     >
@@ -46,13 +48,79 @@ function SeqRow({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** The stimulus block. Neutral surface so the drawn items sit on something. */
+/**
+ * The stimulus block. Neutral surface so the drawn items sit on something.
+ *
+ * NO SHADOW. See the note on the option cards: the test screens are the one
+ * place in the product that drops the brand's hard offset shadow, because
+ * somebody sits in front of them for five minutes and a screen of floating
+ * slabs is heavy. The thick ink keyline carries the house style on its own.
+ */
 function Stimulus({ children }: { children: React.ReactNode }) {
   return (
-    <div className="w-full rounded-2xl border-[2.5px] border-ink bg-cream p-3 shadow-hard-sm sm:p-5">
+    <div className="w-full rounded-2xl border-[2.5px] border-ink bg-cream p-3 sm:p-5">
       {children}
     </div>
   );
+}
+
+/**
+ * A stimulus that is a list of `a -> b` relations, laid out as real columns.
+ *
+ * ===========================================================================
+ * WHY THIS IS NOT JUST CENTRED TEXT
+ * ===========================================================================
+ * A number analogy is three lines of `left arrow right`, and rendering them as
+ * three centred lines centres each line INDEPENDENTLY. The moment one operand
+ * is wider than another (11 against 7, or 120 against 8) that row shifts
+ * sideways and the arrows stop lining up. On an item whose entire job is making
+ * a numeric relationship legible, a broken column is not a cosmetic problem: the
+ * relationship is the thing being read, and the eye reads it down the column.
+ *
+ * So the operands get their own columns, right-aligned and left-aligned against
+ * a fixed arrow in the middle, and the BLOCK is centred rather than the lines.
+ *
+ * TABULAR FIGURES ARE LOAD-BEARING HERE. In a proportional face a 1 is narrower
+ * than a 7, so even with real columns the digits inside a column would not
+ * align and the block would drift on some items and not others, which is the
+ * version of this bug that is hardest to notice and hardest to explain. This is
+ * why the whole stem opts into tabular numerals rather than just this layout.
+ */
+function RelationRows({ rows }: { rows: Array<[string, string]> }) {
+  return (
+    <div
+      className="mx-auto grid w-fit gap-x-2 gap-y-1 text-[clamp(1rem,4.5vw,1.375rem)] font-bold leading-snug tabular-nums text-ink"
+      style={{ gridTemplateColumns: "1fr auto 1fr" }}
+    >
+      {rows.map(([left, right], i) => (
+        <Fragment key={i}>
+          <span className="text-right">{left}</span>
+          <span aria-hidden="true" className="px-1 text-ink/60">
+            &rarr;
+          </span>
+          <span className="text-left">{right}</span>
+          <span className="sr-only">{`${left} goes to ${right}. `}</span>
+        </Fragment>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Is this stem a list of relations rather than a sentence? Every non-empty line
+ * has to be `something -> something`, so a prose stem that happens to contain
+ * an arrow is not caught by accident.
+ */
+function asRelationRows(text: string): Array<[string, string]> | null {
+  const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
+  if (lines.length < 2) return null;
+  const rows: Array<[string, string]> = [];
+  for (const line of lines) {
+    const m = /^(.+?)\s*(?:\u2192|->)\s*(.+)$/.exec(line);
+    if (!m) return null;
+    rows.push([m[1].trim(), m[2].trim()]);
+  }
+  return rows;
 }
 
 /**
@@ -75,9 +143,14 @@ function Stimulus({ children }: { children: React.ReactNode }) {
  * a pause.
  */
 function Stem({ text }: { text: string }) {
+  // A list of relations is a table, not a paragraph, and centring its lines
+  // individually breaks the column the item is read down.
+  const rows = asRelationRows(text);
+  if (rows) return <RelationRows rows={rows} />;
+
   const parts = text.split(/(_{2,})/g);
   return (
-    <p className="whitespace-pre-line text-balance text-center text-[clamp(1rem,4.5vw,1.375rem)] font-bold leading-snug text-ink">
+    <p className="whitespace-pre-line text-balance text-center text-[clamp(1rem,4.5vw,1.375rem)] font-bold leading-snug tabular-nums text-ink">
       {parts.map((part, i) =>
         /^_{2,}$/.test(part) ? (
           <span

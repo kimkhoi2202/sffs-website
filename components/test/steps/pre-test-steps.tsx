@@ -264,7 +264,7 @@ export function TestIntro({
                button. `text-balance` rather than `text-pretty` because these
                wrap to two lines at 360 and balance splits them evenly, which
                is what centred text needs; pretty only protects the last line. */
-            className="text-balance rounded-2xl border-[2.5px] border-ink bg-cream p-3.5 text-center text-[0.95rem] font-semibold leading-snug text-ink shadow-hard-xs"
+            className="text-balance rounded-2xl border-[2.5px] border-ink bg-cream p-3.5 text-center text-[0.95rem] font-semibold leading-snug text-ink"
           >
             {rule}
           </li>

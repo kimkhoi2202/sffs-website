@@ -436,7 +436,7 @@ export function TestFlow() {
           longer exists, say) would otherwise be a blank page. Give it a way out.
         */}
         {(state.step === "intro" || state.step === "results") && !test ? (
-          <div className="rounded-2xl border-[2.5px] border-ink bg-coral p-5 text-center shadow-hard-sm">
+          <div className="rounded-2xl border-[2.5px] border-ink bg-coral p-5 text-center">
             <p className="font-display text-xl uppercase leading-none">
               Something went sideways
             </p>
@@ -453,10 +453,17 @@ export function TestFlow() {
       </StepShell>
     );
 
+  /*
+   * `flow-flat` turns the brand's hard offset shadow off for everything inside
+   * the test, whatever level it arrives from. See the block in app/globals.css:
+   * this is scoped here rather than edited surface by surface because the
+   * buttons get their shadow from a shared utility, not from a class anyone
+   * could remove at the call site. A modal opts back in with `data-elevated`.
+   */
   return (
-    <>
+    <div className="flow-flat contents">
       {body}
       <DevToolsGate api={devApi} />
-    </>
+    </div>
   );
 }

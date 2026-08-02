@@ -16,7 +16,7 @@
 import type { ReactNode } from "react";
 
 import { Glyph } from "./glyph";
-import type { FigCellState, FigElement, FigSize } from "@/lib/test/types";
+import { PUZZLE_INK, type FigCellState, type FigElement, type FigSize } from "@/lib/test/types";
 import { cn } from "@/lib/utils";
 
 /** A single element at size "m", as a share of the cell. */
@@ -60,7 +60,13 @@ export function FigCellContent({ fig }: { fig: FigCellState }) {
       key={key}
       kind={el.shape}
       size={`${(sizeFraction(el.size, countScale) * 100).toFixed(1)}%`}
-      fill={el.filled ? (el.color ?? "var(--color-blue)") : "var(--color-paper)"}
+      /*
+       * PUZZLE INK ONLY. A figure is part of the question, so it may only be
+       * painted in the puzzle ramp; brand blue lives on the other side of the
+       * split because it is the selected-option colour. See the palette note in
+       * lib/test/types.ts for what went wrong when these two overlapped.
+       */
+      fill={el.filled ? (el.color ?? PUZZLE_INK.solid) : PUZZLE_INK.empty}
       rotate={el.rotate}
       className={absolute ? "absolute" : undefined}
       style={
