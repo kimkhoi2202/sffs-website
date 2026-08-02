@@ -28,12 +28,28 @@
  * scripts/verify-results-email.mjs.
  *
  * ===========================================================================
- * WHO IT IS ADDRESSED TO
+ * WHO IT IS ADDRESSED TO, AND THE LINE THE CHILD COPY WALKS
  * ===========================================================================
  * On the child branch this lands in a GROWN-UP's inbox, because that is whose
- * address we asked for. So the copy addresses the adult and refers to the child
- * in the third person. Writing "here are your results" to a parent about their
+ * address we asked for. Writing "here are your results" to a parent about their
  * nine-year-old's test would be both wrong and slightly alarming.
+ *
+ * So the copy splits by WHAT IS BEING REFERRED TO, not by tone:
+ *
+ *   THE PERSON     "your kid". Warm, direct, and true — the reader does have a
+ *                  kid and that kid did take the test. This used to say
+ *                  "someone", which is accurate and reads like a form letter.
+ *   THE SCORE AND  third person, always. "Their score", "which questions they
+ *   THE RESULTS    got wrong", "see their results". The reader did not sit a
+ *                  Grade 3 test, so "your score" is a claim they know is false,
+ *                  and a warm email that opens with something untrue is worse
+ *                  than a cool one that does not.
+ *
+ * The possessive is what gets the warmth without the falsehood: "your kid's
+ * results" belongs to the parent by relation and to the child by fact.
+ *
+ * NONE OF THIS APPLIES TO THE ADULT BRANCH, where the reader took the test and
+ * "you" and "your score" are simply correct.
  *
  * ===========================================================================
  * WHY THE HTML IS SO PLAIN
@@ -94,11 +110,11 @@ export function renderResultsEmail(input: ResultsEmailInput): RenderedEmail {
   const child = input.audience === "child";
 
   const subject = child
-    ? `Their Smart Fella test results are ready`
+    ? `Your kid's Smart Fella test results are ready`
     : `Your Smart Fella test results are ready`;
 
   const opener = child
-    ? `Someone just finished ${input.testTitle} and asked us to send you the results.`
+    ? `Your kid just finished ${input.testTitle} and asked us to send you the results.`
     : `You just finished ${input.testTitle}. Here is how it went.`;
 
   /*
@@ -204,7 +220,7 @@ export function renderResultsEmail(input: ResultsEmailInput): RenderedEmail {
     </td></tr>
 
     <tr><td style="padding:20px 8px 0 8px;font-family:${BODY_FONT};font-size:12px;line-height:1.6;color:${INK};opacity:0.7;">
-      You are getting this because ${child ? "someone asked us to send these results to this address" : "you asked us to send you these results"}.
+      You are getting this because ${child ? "your kid asked us to send these results to this address" : "you asked us to send you these results"}.
       We will not email you again unless you ask us to.
       Reply to this message, or write to
       <a href="mailto:${SUPPORT_EMAIL}?subject=unsubscribe" style="color:${INK};">${SUPPORT_EMAIL}</a>,
@@ -236,7 +252,7 @@ export function renderResultsEmail(input: ResultsEmailInput): RenderedEmail {
     input.resultsUrl,
     "",
     "---",
-    `You are getting this because ${child ? "someone asked us to send these results to this address" : "you asked us to send you these results"}. We will not email you again unless you ask us to. Reply to this message, or write to ${SUPPORT_EMAIL}, and we will remove this address.`,
+    `You are getting this because ${child ? "your kid asked us to send these results to this address" : "you asked us to send you these results"}. We will not email you again unless you ask us to. Reply to this message, or write to ${SUPPORT_EMAIL}, and we will remove this address.`,
   ].join("\n");
 
   return { subject, html, text };
