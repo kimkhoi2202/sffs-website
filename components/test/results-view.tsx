@@ -67,8 +67,8 @@ const VERDICT_BADGE: Partial<
 > = {
   "certified-smart-fella": {
     src: "/certified-smart-fella.png",
-    width: 530,
-    height: 575,
+    width: 560,
+    height: 651,
   },
   "certified-fart-smella": {
     src: "/certified-fart-smella.png",
