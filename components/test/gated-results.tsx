@@ -63,34 +63,66 @@ export function GatedResults({
   }, [test.id, audience]);
 
   return (
-    <div className="relative w-full">
+    <>
       {/*
-        The gated content.
+        ===================================================================
+        THE BLURRED LAYER IS THE WHOLE VIEWPORT, AND THAT IS THE POINT
+        ===================================================================
+        `filter: blur()` blurs an ELEMENT, so the element's own box becomes the
+        edge of the blurred region. When this was a block inside the reading
+        column it was a 512px-wide, 612px-tall rectangle of frosted glass
+        floating on plain white, with 464px of hard white either side of it on a
+        desktop viewport and the content sliced off flat at the bottom by
+        `max-height`. It read as a rendering fault rather than as results behind
+        glass, which is the opposite of what a gate is for.
+
+        Of the ways to fix that, this is the one that suits how the screen is
+        already built: put the blurred surface behind everything at viewport
+        size, so its boundaries are off-screen and there is no edge left to see.
+
+        The alternative worth naming is a `backdrop-filter` overlay, which was
+        rejected. To have no visible boundary it would also have to be
+        viewport-sized, and being ON TOP it would blur the things that are
+        deliberately outside the flow: the floating sound toggle, and the dev
+        tab. Blurring the page's own furniture to un-blur a rectangle is a worse
+        trade than this.
+
+        NO HEIGHT CAP ANY MORE. The cap existed to stop the box floating over
+        three screens of fog, and the viewport now does that job by simply being
+        the size it is. The content is taller than any phone or laptop screen
+        (about 1100px for the shortest bank), so the layer is covered edge to
+        edge and there is nothing to fade out.
 
         `inert` is the part that is easy to forget. A purely visual blur leaves
         every link and button underneath in the tab order and every word of it
         readable to a screen reader, which makes the gate no gate at all for
-        anyone not using it with their eyes — and worse, makes the page a
+        anyone not using it with their eyes, and worse, makes the page a
         confusing tab-trap for them. `inert` takes the whole subtree out of
         focus order and out of the accessibility tree in one attribute.
-
-        Height-capped to roughly one screen so the box has something to sit on
-        rather than floating over three screens of fog, with a fade at the
-        bottom so the cut reads as deliberate.
       */}
       <div
         inert
         aria-hidden="true"
-        className="max-h-[68vh] select-none overflow-hidden blur-[5px]"
+        className="pointer-events-none fixed inset-0 z-0 select-none overflow-hidden bg-paper blur-[5px]"
       >
-        <ResultsView test={test} result={masked} timedOut={timedOut} masked />
+        {/*
+          The same reading column the real results page uses, so what shows
+          through the glass has the shape of the thing being withheld. `pt` is
+          a little tighter than the live page's because the top of the screen is
+          the one part of the backdrop nothing covers.
+        */}
+        <div className="mx-auto w-full max-w-md px-4 pt-8 sm:max-w-lg sm:pt-10">
+          <ResultsView test={test} result={masked} timedOut={timedOut} masked />
+        </div>
       </div>
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent to-paper"
-      />
 
-      <div className="absolute inset-0 grid place-items-center p-3">
+      {/*
+        The card is now in normal flow, and the step shell centres it. It used
+        to be absolutely positioned over the blurred block, which meant its
+        position depended on that block's height; with the backdrop out of the
+        layout there is nothing left for it to depend on.
+      */}
+      <div className="relative z-10 flex w-full justify-center">
         <EmailGate
           audience={audience}
           testId={test.id}
@@ -99,6 +131,6 @@ export function GatedResults({
           onRestart={onRestart}
         />
       </div>
-    </div>
+    </>
   );
 }
