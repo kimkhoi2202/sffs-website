@@ -221,6 +221,34 @@ export function renderResultStoryCard(data: ResultCardData) {
             THE OFFICIAL SMART FELLA TEST
           </div>
 
+          {/* THE VERDICT FIRST, THE NUMBER SECOND, matching the order of the
+              results screen (components/test/results-view.tsx). Somebody posts
+              this image having just looked at that screen, and the two
+              disagreeing about which comes first reads as a different product.
+
+              Each sticker spells out its own words, so no heading is set next
+              to it. */}
+          {badge ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img
+              src={dataUri(badge.file)}
+              width={520}
+              height={Math.round((520 / badge.width) * badge.height)}
+              alt=""
+            />
+          ) : (
+            <div
+              style={{
+                fontSize: 96,
+                lineHeight: 1,
+                color: verdictColor,
+                textAlign: "center",
+              }}
+            >
+              {verdictTitle.toUpperCase()}
+            </div>
+          )}
+
           {/* The number, in the biggest box on the card. */}
           <div
             style={{
@@ -259,29 +287,7 @@ export function renderResultStoryCard(data: ResultCardData) {
               <span style={{ fontSize: 150, opacity: 0.35 }}>/{max}</span>
             </div>
           </div>
-
-          {/* The verdict, as its own art. Each sticker spells out its own
-              words, so no heading is set next to it. */}
-          {badge ? (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img
-              src={dataUri(badge.file)}
-              width={520}
-              height={Math.round((520 / badge.width) * badge.height)}
-              alt=""
-            />
-          ) : (
-            <div
-              style={{
-                fontSize: 96,
-                lineHeight: 1,
-                color: verdictColor,
-                textAlign: "center",
-              }}
-            >
-              {verdictTitle.toUpperCase()}
-            </div>
-          )}
+        
 
           {/* The invitation, which is the entire reason this image exists. */}
           <div
@@ -433,6 +439,19 @@ export function renderResultOgCard(data: ResultCardData) {
               THE OFFICIAL SMART FELLA TEST
             </div>
 
+            {/* Verdict above score here too, for the same reason as the story
+                card: one order across every surface a result appears on. */}
+            <div
+              style={{
+                fontSize: 54,
+                lineHeight: 1.02,
+                color: verdictColor,
+                marginTop: 22,
+              }}
+            >
+              {verdictTitle.toUpperCase()}
+            </div>
+
             <div
               style={{
                 display: "flex",
@@ -440,22 +459,11 @@ export function renderResultOgCard(data: ResultCardData) {
                 fontSize: 150,
                 lineHeight: 1,
                 color: INK,
-                marginTop: 20,
+                marginTop: 4,
               }}
             >
               {score}
               <span style={{ fontSize: 88, opacity: 0.35 }}>/{max}</span>
-            </div>
-
-            <div
-              style={{
-                fontSize: 54,
-                lineHeight: 1.02,
-                color: verdictColor,
-                marginTop: 8,
-              }}
-            >
-              {verdictTitle.toUpperCase()}
             </div>
 
             <div

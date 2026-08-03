@@ -116,18 +116,7 @@ export function ResultsView({
     <div className={cn("flex w-full flex-col gap-4", className)}>
       {/* -- score and verdict ------------------------------------------------ */}
       <div className="flex flex-col items-center gap-3 rounded-2xl border-[2.5px] border-ink bg-yellow p-5 text-center shadow-hard-lg sm:p-7">
-        {/* NO "YOUR SCORE" LABEL. The number is the largest thing on the
-            page and sits directly under the test's name; labelling it tells a
-            reader something they worked out before they read the label. The
-            timed-out case still says so, because that is news. */}
         {timedOut ? <span className="eyebrow text-ink/70">Time ran out</span> : null}
-        <p className="font-display text-[clamp(3.5rem,18vw,6rem)] leading-[0.85] tracking-[-0.02em]">
-          {/* The numerator is the thing being withheld. The denominator is not
-              a secret and keeping it real is what stops the mask reading as an
-              error state. */}
-          {masked ? MASKED_VALUE : result.score}
-          <span className="text-ink/40">/{result.max}</span>
-        </p>
         {/*
           ONE MASKED ELEMENT IS ENOUGH, AND IT IS THE SCORE.
 
@@ -150,12 +139,12 @@ export function ResultsView({
               width={badge.width}
               height={badge.height}
               /*
-                SIZED SO THE CARD READS SCORE, THEN BADGE, THEN LINE. At 20-24rem
-                it was the tallest thing on the page by a distance and pushed
-                the subline off a laptop screen entirely, which inverted the
-                order: the number is the information and the badge is the joke.
-                Capped against the VIEWPORT HEIGHT as well as the column width,
-                because the problem was never how wide it was.
+                STILL CAPPED AGAINST THE VIEWPORT HEIGHT, not just the column
+                width. At 20-24rem it was the tallest thing on the page by a
+                distance and pushed everything under it off a laptop screen
+                entirely. It leads the card now, which makes the cap matter
+                more rather than less: whatever comes first must not be able to
+                push the score below the fold.
               */
               className="mx-auto my-2 h-auto max-h-[28vh] w-[min(100%,11rem)] select-none object-contain sm:my-3 sm:w-[min(100%,13rem)]"
               draggable={false}
@@ -172,6 +161,36 @@ export function ResultsView({
             {result.verdict.title}
           </h1>
         )}
+
+        {/*
+          THE BADGE LEADS AND THE NUMBER SUPPORTS IT.
+
+          This was the other way round, and the order was arguing with itself:
+          the sticker is the answer to the question the product asks, and the
+          score is the evidence for it. Reading the evidence first and the
+          verdict second is the order of a marking scheme, not of a joke, and
+          it buried the one element people actually screenshot under a number
+          they have to interpret before it means anything.
+
+          NO "YOUR SCORE" LABEL, still. It is the largest piece of type on the
+          card and it sits directly under a sticker that just announced the
+          verdict; labelling it would tell a reader something they worked out
+          before they reached the label. The timed-out line above stays,
+          because that is news.
+
+          THE SHARE CARD FOLLOWS THIS ORDER TOO (app/_og/result-card.tsx).
+          Somebody posts that image having just looked at this screen, and the
+          two disagreeing about which thing comes first is the kind of small
+          wrongness that reads as a different product.
+        */}
+        <p className="font-display text-[clamp(3.5rem,18vw,6rem)] leading-[0.85] tracking-[-0.02em]">
+          {/* The numerator is the thing being withheld. The denominator is not
+              a secret and keeping it real is what stops the mask reading as an
+              error state. */}
+          {masked ? MASKED_VALUE : result.score}
+          <span className="text-ink/40">/{result.max}</span>
+        </p>
+
         <p className="text-pretty text-[0.975rem] font-semibold leading-snug text-ink/80">
           {result.verdict.subline}
         </p>

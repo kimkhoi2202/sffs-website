@@ -245,50 +245,91 @@ export function QuestionReview({ items }: { items: ScoredItem[] }) {
         </ol>
 
         {/* -- the panel ----------------------------------------------------- */}
+        {/*
+          TWO ELEMENTS, AND THE DIVIDER IS THE OUTER ONE.
+
+          The rule between the panes used to be a `border-left` on the scrolling
+          element itself, which also carries `pane-scroll` and therefore its
+          fade mask. A mask applies to the whole box INCLUDING its border, so
+          the line dissolved at exactly the same y as the last line of text and
+          the panel looked like it had been torn off at the bottom.
+
+          Content fading is the point of that mask: it is what replaces the
+          hidden scrollbar as the signal that there is more below. A structural
+          divider fading is just a bug wearing the same clothes. So the border
+          moves out to an unmasked wrapper, which stretches to the grid row's
+          full height, and the mask stays on the scroller inside it.
+        */}
         <div
-          ref={detailRef}
-          // Same reason as the list. See the note there.
-          data-lenis-prevent
           className={cn(
-            // SYMMETRIC PADDING. It was `pl-5` with nothing on the right, which
-            // put the panel's content 20px off the centre of its own column —
-            // invisible below `lg` and obvious above it, which is why it read
-            // as "text sitting off-centre" rather than as a padding bug.
-            "min-w-0 pane-scroll lg:max-h-[34rem] lg:px-5 lg:pt-2 lg:pb-12",
-            "lg:border-l-[2.5px] lg:border-ink/15",
+            // SYMMETRIC PADDING, still. The wrapper holds the left half and the
+            // scroller inside holds the right, which together are the `px-5`
+            // this used to be. It was once `pl-5` with nothing opposite, which
+            // put the content 20px off the centre of its own column.
+            "min-w-0 lg:border-l-[2.5px] lg:border-ink/15 lg:pl-5",
             open ? "block" : "hidden lg:block",
           )}
         >
-          {/*
-            WRAPS RATHER THAN OVERFLOWS. At 360 the back control and the two
-            arrows are wider than the column, and `overflow-x: clip` on the
-            document — which is there deliberately, so no page can be dragged
-            sideways — meant the Next button was cut off at the edge and
-            genuinely unreachable rather than merely off-screen. Wrapping is the
-            fix; letting the page scroll sideways would not be.
-          */}
-          <div className="mb-4 flex flex-wrap items-center gap-2">
-            <Button
-              variant="paper"
-              size="sm"
-              onClick={() => setOpen(false)}
-              className="lg:hidden"
-              /*
-                NO `aria-label` HERE. One would override the visible text, and
-                "Back to the list" does not contain "All questions" — which
-                fails WCAG 2.5.3, and more practically breaks voice control:
-                someone saying "click all questions" would find nothing. The
-                visible text is already the better label.
-              */
-            >
-              &larr; All questions
-            </Button>
-            <div className="ml-auto">{nav}</div>
+          <div
+            ref={detailRef}
+            // Same reason as the list. See the note there.
+            data-lenis-prevent
+            className="min-w-0 pane-scroll lg:max-h-[34rem] lg:pr-5 lg:pt-2 lg:pb-12"
+          >
+            {/*
+              WRAPS RATHER THAN OVERFLOWS. At 360 this control and the document's
+              deliberate `overflow-x: clip` used to fight, and the arrows that
+              shared this row were cut off at the column edge and genuinely
+              unreachable. The arrows have since moved to the foot of the panel,
+              so this row now holds one button, but the wrap stays: the fix was
+              never specific to how many controls were in it.
+            */}
+            <div className="mb-4 flex flex-wrap items-center gap-2 lg:hidden">
+              <Button
+                variant="paper"
+                size="sm"
+                onClick={() => setOpen(false)}
+                /*
+                  NO `aria-label` HERE. One would override the visible text, and
+                  "Back to the list" does not contain "All questions" — which
+                  fails WCAG 2.5.3, and more practically breaks voice control:
+                  someone saying "click all questions" would find nothing. The
+                  visible text is already the better label.
+                */
+              >
+                &larr; All questions
+              </Button>
+            </div>
+
+            {current ? (
+              <QuestionDetail scored={current} index={selected} total={items.length} />
+            ) : null}
           </div>
 
-          {current ? (
-            <QuestionDetail scored={current} index={selected} total={items.length} />
-          ) : null}
+          {/*
+            PREV AND NEXT LIVE AT THE FOOT OF THE PANEL, and OUTSIDE the
+            scroller.
+
+            At the top they occupied the corner the WRONG / CORRECT badge wants,
+            which is the one thing on this panel a reader looks for first, and
+            pushed it onto its own line underneath. Moving them down hands that
+            corner back.
+
+            Outside the scroller rather than at the end of its content, for two
+            reasons: inside, they would sit under the same bottom fade this
+            commit is fixing, and they would only be reachable after scrolling
+            a long explanation to its end. Out here they are always visible and
+            always solid. Arrow keys and escape are unchanged and remain the
+            fast path.
+
+            `pb-2` and the right padding are room for displacement, not
+            decoration: `btn-press` lifts -2px and grows its shadow to 6px on
+            hover, so the painted extent reaches about 4px past the bottom
+            right of where the button sits at rest.
+          */}
+          <div className="mt-4 flex flex-wrap items-center justify-end gap-2 pb-2 pr-1 lg:pr-5">
+            {nav}
+          </div>
         </div>
       </div>
 
