@@ -288,16 +288,21 @@ export function DevToolsPanel({ api }: { api: FlowDevApi }) {
           <Chip wide onClick={() => api.fillAnswers(1)}>
             100%
           </Chip>
-          {VERDICT_BANDS.filter((b) => b.min > 0).map((band) => (
-            <Chip
-              key={band.id}
-              onClick={() => api.fillAnswers((band.min + 5) / 100)}
-              // The band's lower bound plus a nudge, so it lands inside the band
-              // rather than on its boundary.
-            >
-              {band.min}%
-            </Chip>
-          ))}
+          {/*
+            The verdict is binary, so the useful forced scores are the two sides
+            of the threshold and the boundary itself — a row of chips per band
+            made sense when there were five. `min - 1` is the highest score that
+            is still the low verdict, which is the case most worth being able to
+            reach in one click.
+          */}
+          {VERDICT_BANDS.filter((b) => b.min > 0).flatMap((band) => [
+            <Chip key={`${band.id}-under`} onClick={() => api.fillAnswers((band.min - 1) / 100)}>
+              {band.min - 1}%
+            </Chip>,
+            <Chip key={band.id} onClick={() => api.fillAnswers(band.min / 100)}>
+              {band.min}% ({band.title.toLowerCase()})
+            </Chip>,
+          ])}
           <Chip wide onClick={() => api.fillAnswers(0)}>
             0% (fart smella)
           </Chip>

@@ -17,7 +17,7 @@ const EFFECTIVE_DATE = "July 25, 2026";
  * which children take. A page that says "last updated" and means "first
  * published" is a page nobody can tell has changed.
  */
-const LAST_UPDATED = "August 1, 2026";
+const LAST_UPDATED = "August 2, 2026";
 const SUPPORT_EMAIL = "smartfellaorfartsmella123@gmail.com";
 
 export const metadata: Metadata = {
@@ -544,10 +544,12 @@ const SECTIONS: LegalSection[] = [
         </p>
         <p>
           <strong>Test results.</strong>{" "}
-          A saved result from the test on this website is deleted twelve months
+          A saved result from the test on this website, and any email address
+          stored with it, is deleted twelve months
           after the test was taken. It holds a score and the answers given, is
-          reachable only through the random link we email, and carries no email
-          address. See <a href="#the-test">The test on this website</a>.
+          reachable only through the random link we email, and carries the
+          address the results were sent to, if any were.{" "}
+          See <a href="#the-test">The test on this website</a>.
         </p>
       </>
     ),
@@ -686,7 +688,9 @@ const SECTIONS: LegalSection[] = [
           <strong>Nothing identifies the child.</strong> There is no sign-in and
           no account. We do not ask for a name, an age, a birthday, a school, or
           a child&rsquo;s own email address, and there is no free-text box for
-          one to be typed into.
+          one to be typed into. The one address involved is a grown-up&rsquo;s,
+          typed by them or with their say-so, and it is stored against the
+          result &mdash; which is set out in full below.
         </p>
         <Card color="mint" shadow="sm" padding="lg" className="not-prose">
           <p className="mb-3 text-[1.02rem] font-bold leading-relaxed">
@@ -700,8 +704,7 @@ const SECTIONS: LegalSection[] = [
             <li>
               <strong>The answers given and the score</strong>. These are saved
               so the results page can be reopened from the link we email. They
-              are held against a random link and are not attached to a name or
-              an email address.
+              are held against a random link, and they carry no name.
             </li>
             <li>
               <strong>A parent or guardian&rsquo;s email address</strong>, given
@@ -709,7 +712,8 @@ const SECTIONS: LegalSection[] = [
               version the screen asks for a parent&rsquo;s address in so many
               words. This address joins the same list as any other signup on
               this site, tagged so we can tell which part of the site it came
-              from.
+              from, and it is also saved alongside that result &mdash; see
+              below.
             </li>
             <li>
               <strong>Anonymous usage events</strong>, which record that a test
@@ -727,19 +731,45 @@ const SECTIONS: LegalSection[] = [
           one.
         </p>
         <p>
-          <strong>The email address and the result are never stored
-          together.</strong> The address goes to our signup list and the score
-          goes to the results store, and the only moment the two are in the same
-          place is inside the request that sends the email. That means a saved
-          result is not attached to a person, and it is why asking us to send
-          the results again requires typing the address in again rather than us
-          looking one up.
+          <strong>
+            When you ask us to email a result, that address is stored with that
+            result.
+          </strong>{" "}
+          Until you type an address in, a result is just a score against a
+          random link with nothing identifying attached to it. Sending it is
+          what joins the two, and we keep them joined.
         </p>
         <p>
-          You can ask us to delete a signup address at any time through our{" "}
-          <a href="/support">support page</a>. Because a saved result holds no
-          address, tell us the link from the email if you also want that record
-          removed before its twelve months are up.
+          <strong>On the children&rsquo;s version that means a grown-up&rsquo;s
+          address stored against a child&rsquo;s test performance.</strong> We
+          would rather say that plainly than leave you to work it out. The
+          child&rsquo;s name is never asked for and there is nowhere to type
+          one, so what is stored is an adult&rsquo;s email address, a grade, a
+          score and the answers &mdash; not a named child.
+        </p>
+        <p>
+          <strong>What it is for.</strong> Three things, and nothing else: so we
+          can answer you if you write to us about your result, so we can delete
+          everything properly when you ask, and so we can see whether people who
+          ask for their results score differently from people who do not. We do
+          not sell it, we do not share it with anyone outside the people who run
+          this site, and we do not use it to advertise to you.
+        </p>
+        <p>
+          <strong>How long, and deleting it.</strong> A result and any address
+          stored with it are deleted twelve months after the test was taken.
+          Before that, you can ask us to delete them at any time through our{" "}
+          <a href="/support">support page</a>: tell us the address and we will
+          remove it from the mailing list <em>and</em> delete the results stored
+          against it. If you only have the link from the email, send us that
+          instead and it will find the same record.
+        </p>
+        <p>
+          One limit worth being honest about: anonymous usage events, which
+          carry a score and a grade band but never an address, cannot be traced
+          back to you and so cannot be picked out and deleted individually.
+          There is nothing in them that identifies you, which is the same reason
+          we cannot find yours.
         </p>
       </>
     ),

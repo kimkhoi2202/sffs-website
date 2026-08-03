@@ -24,17 +24,22 @@ import type { Audience, Grade, GradeBand } from "./types";
  * statistic is not worth failing a request the visitor cannot retry.
  *
  * ===========================================================================
- * NO EMAIL ADDRESS. NOT OPTIONALLY, NOT IN A META FIELD.
+ * THE ADDRESS IS STORED WITH THE RESULT, AND THE PRIVACY PAGE SAYS SO.
  * ===========================================================================
- * The privacy page states that the address and the result are never stored
- * together, so the separation has to be real rather than a convention. A row
- * here is a test id, a band, a grade, a score and a timestamp. There is no
- * column for an address, this module is never handed one, and the function
- * signature below has nowhere to put one.
+ * It did not used to be, and that separation was stated as a promise on
+ * /privacy. The promise changed deliberately rather than quietly: knowing which
+ * result a person is asking about is what makes it possible to answer them, to
+ * honour a deletion request properly, and to see whether the people who convert
+ * score differently from the people who do not.
  *
- * The consequence is deliberate: these rows can never be joined back to a
- * person, which also means they can only ever answer aggregate questions. That
- * is the only question they exist to answer.
+ * Two things follow and both are load-bearing. On the CHILD branch the address
+ * is a parent's and the result is their child's, which the privacy page now
+ * states in those words rather than leaving it to be inferred. And a deletion
+ * request has to remove these rows too, not just the mailing list — a promise
+ * to forget somebody that leaves their score behind is not one.
+ *
+ * The address is only ever attached to an `emailed` row, and only because the
+ * person typed it in asking us to send results there.
  *
  * ===========================================================================
  * THE ENDPOINT
@@ -53,6 +58,28 @@ import type { Audience, Grade, GradeBand } from "./types";
  * so a bug on this side becomes a 4xx in the log instead of a nonsense row.
  */
 
+/**
+ * WHEN THE ROW WAS WRITTEN, and therefore what is on it.
+ *
+ * ===========================================================================
+ * TWO ROWS PER EMAILED RESULT, AND WHY THAT IS NOT A BUG
+ * ===========================================================================
+ * A result is finished minutes before an address is typed, and the endpoint
+ * only inserts — there is no update, so a row written at completion can never
+ * gain an email later. That leaves exactly two options: write once at
+ * completion and never learn the address, or write again when it arrives.
+ *
+ * The second, because the address-to-result link is the thing that cannot be
+ * reconstructed afterwards. A missing percentile can be recomputed from the
+ * rows we have; a missing link is gone.
+ *
+ * SO ANYTHING COUNTING RESULTS MUST FILTER ON THIS. `completed` is one row per
+ * finished test and is the population for a percentile. `emailed` is the
+ * subset that converted, carrying the address. Counting both together
+ * double-counts every conversion.
+ */
+export type ResultStage = "completed" | "emailed";
+
 export interface ResultStatsRow {
   /** Which bank, e.g. "adult" or "grade-5". */
   testId: string;
@@ -68,6 +95,15 @@ export interface ResultStatsRow {
   timedOut: boolean;
   /** ISO 8601. */
   completedAt: string;
+  /** Which verdict the score earned. */
+  verdict: string;
+  stage: ResultStage;
+  /**
+   * The address the results were sent to. Present ONLY on an `emailed` row, and
+   * only because the person asked us to send them there — see the privacy page,
+   * which now describes this rather than promising the opposite.
+   */
+  email?: string;
 }
 
 /**
@@ -91,11 +127,16 @@ function toWireFormat(row: ResultStatsRow): Record<string, unknown> {
     max_score: row.maxScore,
     duration_secs: Math.max(0, Math.round(row.elapsedSeconds)),
     source: row.audience === "child" ? EMAIL_SOURCES.testChild : EMAIL_SOURCES.testParent,
+    verdict: row.verdict,
+    // Omitted rather than sent as null on a `completed` row, so the column is
+    // empty because nothing was known rather than because something was cleared.
+    ...(row.email ? { email: row.email } : {}),
     meta: {
       test_id: row.testId,
       answered: row.answered,
       timed_out: row.timedOut,
       completed_at: row.completedAt,
+      stage: row.stage,
     },
   };
 }

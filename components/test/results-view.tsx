@@ -53,10 +53,12 @@ const DOMAIN_ORDER: Domain[] = ["verbal", "quantitative", "spatial", "logic"];
  * still has text for a screen reader, and it is sized past the score above it
  * because these are the two results people screenshot.
  *
- * Only the CERTIFIED bands are in here, and that is the whole rule: both
- * stickers say "CERTIFIED", which is a claim the three middle bands cannot make
- * without contradicting the score printed directly above them. A new band gets
- * a badge only when there is art whose words match its own.
+ * EVERY VERDICT HAS ONE NOW, which it could not before. The rule used to be
+ * that only the two CERTIFIED bands got a sticker, because both pieces of art
+ * say "certified" and the three middle bands could not make that claim without
+ * contradicting the score printed directly above them. Those bands are gone, so
+ * the exception is gone with them: there are two outcomes and two stickers, and
+ * each one's words match its own verdict.
  *
  * Intrinsic dimensions are the real pixel size of each PNG, present so the
  * browser reserves the right box before the image loads and the card does not
@@ -65,12 +67,12 @@ const DOMAIN_ORDER: Domain[] = ["verbal", "quantitative", "spatial", "logic"];
 const VERDICT_BADGE: Partial<
   Record<VerdictId, { src: string; width: number; height: number }>
 > = {
-  "certified-smart-fella": {
+  "smart-fella": {
     src: "/certified-smart-fella.png",
     width: 560,
     height: 651,
   },
-  "certified-fart-smella": {
+  "fart-smella": {
     src: "/certified-fart-smella.png",
     width: 546,
     height: 592,

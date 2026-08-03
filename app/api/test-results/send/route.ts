@@ -50,6 +50,8 @@ import { captureEmailCapturedServer } from "@/lib/posthog-server";
 import { clientIp, isRateLimited } from "@/lib/rate-limit";
 import { EMAIL_SOURCES } from "@/lib/email-sources";
 import { getResult, MAX_SENDS_PER_RESULT, recordSend } from "@/lib/test/result-store";
+import { verdictFor } from "@/lib/test/scoring";
+import { recordResultStats } from "@/lib/test/result-stats";
 import { renderResultsEmail } from "@/lib/test/results-email";
 import { displayTestTitle, getTestById } from "@/lib/test/tests";
 import { resultsUrlFor } from "@/lib/test/results-url";
@@ -212,6 +214,32 @@ export async function POST(request: NextRequest) {
   // Counted only after the provider accepted it, so a failure does not burn one
   // of the five.
   recordSend(record.token);
+
+  /*
+   * THE LINK BETWEEN AN ADDRESS AND A RESULT, which is the one thing here that
+   * cannot be reconstructed later. A second row rather than an update, because
+   * the endpoint only inserts — see ResultStage in lib/test/result-stats.ts for
+   * why that means two rows per emailed result and what has to filter on it.
+   *
+   * Not awaited and never fatal, exactly like the completion row: the person
+   * has their email already, and failing their request over our own bookkeeping
+   * would be punishing them for our problem.
+   */
+  void recordResultStats({
+    testId: record.testId,
+    audience: record.audience,
+    band: record.band,
+    grade: record.grade,
+    score: record.score,
+    maxScore: record.maxScore,
+    answered: record.answered,
+    elapsedSeconds: record.elapsedSeconds,
+    timedOut: record.timedOut,
+    completedAt: new Date(record.createdAt).toISOString(),
+    verdict: verdictFor(Math.round((record.score / record.maxScore) * 100), record.audience).id,
+    stage: "emailed",
+    email,
+  });
 
   /*
    * The address goes to Aurora through the SAME path the rest of the site uses,

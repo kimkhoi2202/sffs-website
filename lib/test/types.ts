@@ -264,11 +264,8 @@ export const PUZZLE_INK = {
  * colour space from both (nearest is 192 units from the UI blue).
  */
 export const VERDICT_INK: Record<string, string> = {
-  "certified-smart-fella": "#0f5132",
-  "mostly-smart-fella": "#3f6b52",
-  borderline: "var(--color-ink)",
-  "mostly-fart-smella": "#8a3f3a",
-  "certified-fart-smella": "#8f1d17",
+  "smart-fella": "#0f5132",
+  "fart-smella": "#8f1d17",
 };
 
 export const STATE_COLORS = {

@@ -56,11 +56,8 @@ export interface Verdict {
 }
 
 export type VerdictId =
-  | "certified-smart-fella"
-  | "mostly-smart-fella"
-  | "borderline"
-  | "mostly-fart-smella"
-  | "certified-fart-smella"
+  | "smart-fella"
+  | "fart-smella"
   /**
    * Not a band. The placeholder the gated screen carries so that the object it
    * renders has no verdict in it at all — see `maskedResult`. `verdictFor`
@@ -69,18 +66,54 @@ export type VerdictId =
   | "masked";
 
 /**
- * The bands, high to low. `min` is the inclusive lower bound as a percentage.
+ * TWO OUTCOMES. THE BRAND ASKS A TWO-WAY QUESTION AND THIS IS THE ANSWER.
  *
- * The TITLE is identical for adults and kids on purpose. "Certified fart
- * smella" is the entire joke the brand is built on, and a nine-year-old who
- * gets it will screenshot it. Softening the title for children would be
+ * ===========================================================================
+ * WHY NOT A SCALE
+ * ===========================================================================
+ * There were five bands and the middle three were "Mostly Smart Fella",
+ * "Smart Fella, Faint Smell" and "Mostly Fart Smella". A five-point scale
+ * answers a question nobody asked: the product is called Smart Fella or Fart
+ * Smella, so the only verdict it can deliver is which one you are. "Smart
+ * Fella, Faint Smell" is not a thing a person would ever say about themselves,
+ * and it is not a thing anyone screenshots.
+ *
+ * NO PRECISION IS LOST, because the exact score sits directly above the
+ * verdict. The number carries the nuance and the verdict carries the joke,
+ * which is the right division of labour between them — a hedged verdict was
+ * doing the number's job badly and its own job not at all.
+ *
+ * ===========================================================================
+ * SEVENTY PERCENT, AND IT IS MEANT TO HURT
+ * ===========================================================================
+ * 35 of 50 on the adult test, against a measured average of 24 on the
+ * instrument this format models — roughly the 95th percentile. 11 of 15 for a
+ * child, which a sharp one reaches.
+ *
+ * So MOST PEOPLE WILL BE FART SMELLAS, and that is the design rather than a
+ * side effect. A Smart Fella nobody can get is a joke with no winners; one
+ * everybody gets is a participation award and worth nothing to post. Rare and
+ * reachable is the combination that makes the good outcome worth bragging
+ * about and the common outcome funny.
+ *
+ * ===========================================================================
+ * THE TITLE IS THE SAME FOR EVERYONE. THE SUBLINE IS NOT.
+ * ===========================================================================
+ * "Fart Smella" is the entire joke the brand is built on and a nine-year-old
+ * who gets it will screenshot it, so softening the title for children would be
  * softening the product.
  *
- * The SUBLINE is where the audiences split. An adult who scores low gets a
- * ribbing. A child who scores low gets something true and encouraging, because
- * the child branch is reached by a six-year-old sitting a test their parent
- * handed them, and "you are dumb" is not a thing this site should say to a
- * six-year-old. Same joke, different aftercare.
+ * The subline is where they split, and the split matters more now than it did
+ * on a scale. The low verdict is no longer the bottom of five bands reached by
+ * the worst performers — it is where MOST PEOPLE LAND. So it cannot read as a
+ * booby prize. The old line, "you have achieved the highest possible smell",
+ * was written for a floor that no longer exists and would now be aimed at the
+ * average player.
+ *
+ * An adult gets a ribbing that lets them in on the joke about the threshold. A
+ * child gets the same verdict with "for now" attached, because the child branch
+ * is reached by a six-year-old sitting a test a grown-up handed them, and the
+ * encouraging move is to frame the score as a starting point.
  */
 const VERDICTS: Array<{
   min: number;
@@ -90,39 +123,18 @@ const VERDICTS: Array<{
   child: string;
 }> = [
   {
-    min: 85,
-    id: "certified-smart-fella",
-    title: "Certified Smart Fella",
-    adult: "Genuinely, that is a very good score. Go tell someone about it.",
-    child: "Wow. That is a brilliant score. Go show a grown-up right now.",
-  },
-  {
-    min: 65,
-    id: "mostly-smart-fella",
-    title: "Mostly Smart Fella",
-    adult: "Solidly smart, with the occasional whiff. We all have those.",
-    child: "That is a really strong score. You got a lot of tricky ones right.",
-  },
-  {
-    min: 45,
-    id: "borderline",
-    title: "Smart Fella, Faint Smell",
-    adult: "Right down the middle. Could go either way on any given morning.",
-    child: "Nice work. You got a good chunk of them, and the rest are learnable.",
-  },
-  {
-    min: 25,
-    id: "mostly-fart-smella",
-    title: "Mostly Fart Smella",
-    adult: "Look, the important thing is that you tried. Sort of.",
-    child: "For now, anyway. You got a real chunk of these, and the ones that got you are the ones worth going back to.",
+    min: 70,
+    id: "smart-fella",
+    title: "Smart Fella",
+    adult: "About one in twenty gets here. Go and be insufferable about it.",
+    child: "That is a brilliant score, and hardly anyone gets it. Go and find a grown-up to tell.",
   },
   {
     min: 0,
-    id: "certified-fart-smella",
-    title: "Certified Fart Smella",
-    adult: "Congratulations, you have achieved the highest possible smell.",
-    child: "For now. You finished every single question, which most people do not, and these get a lot easier the second time round.",
+    id: "fart-smella",
+    title: "Fart Smella",
+    adult: "The bar for Smart Fella is set deliberately high. You are in enormous company down here.",
+    child: "For now, anyway. The bar is set really high on purpose, and these get easier every single time you meet one.",
   },
 ];
 
@@ -135,7 +147,7 @@ export function verdictFor(percent: number, audience: Audience): Verdict {
   };
 }
 
-/** Every verdict band, for the dev tools' score forcer. */
+/** Both verdicts, for the dev tools' score forcer. */
 export const VERDICT_BANDS = VERDICTS.map((v) => ({ id: v.id, min: v.min, title: v.title }));
 
 /**

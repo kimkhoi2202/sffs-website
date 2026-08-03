@@ -236,7 +236,7 @@ export function renderResultsEmail(input: ResultsEmailInput): RenderedEmail {
         <tr><td align="center" style="padding:24px;">
           <a href="${escapeAttr(input.resultsUrl)}"
              style="display:inline-block;background-color:${GREEN};border:3px solid ${INK};box-shadow:4px 4px 0 0 ${INK};color:${INK};font-family:${BODY_FONT};font-size:16px;font-weight:bold;letter-spacing:0.5px;text-transform:uppercase;text-decoration:none;padding:16px 30px;">
-            ${child ? "See their results" : "See my results"}
+            ${child ? "See the results" : "See my results"}
           </a>
         </td></tr>
 
