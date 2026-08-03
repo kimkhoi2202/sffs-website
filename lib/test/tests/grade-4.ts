@@ -84,7 +84,7 @@ export const GRADE_4_TEST: Test = {
           why: "WP-relation: who a doctor works alongside, not where.",
         },
       ],
-      explanation: "A teacher works in a school; a doctor works in a hospital.",
+      explanation: "A teacher works in a school, so we need the place a doctor works. That is a hospital. A patient is who a doctor works with and medicine is what they use — both are true about doctors, but the pair is asking about the place.",
       answer: "A",
     },
     {
@@ -181,7 +181,7 @@ export const GRADE_4_TEST: Test = {
           why: "WP-relation: what a bee does, not what it makes.",
         },
       ],
-      explanation: "A cow gives milk; a bee gives honey.",
+      explanation: "A cow gives us milk, so we need what a bee gives us. Bees make honey. A hive is where bees live and a sting is something they do, so both belong to bees — but neither is something the bee makes for us.",
       answer: "C",
     },
     {
@@ -294,7 +294,7 @@ export const GRADE_4_TEST: Test = {
         },
         { id: "D", text: "shovel" },
       ],
-      explanation: "A painter works with a brush; a gardener works with a shovel.",
+      explanation: "A painter works with a brush, so we need the tool a gardener holds. That is a shovel. A garden is where they work and a flower is what they grow, which is why both feel right — the pair is asking what is in their hand.",
       answer: "D",
     },
     {
@@ -391,7 +391,7 @@ export const GRADE_4_TEST: Test = {
           why: "D: where boats are found. Same field, no relation.",
         },
       ],
-      explanation: "A wheel is part of a bicycle; a sail is part of a boat.",
+      explanation: "A wheel is part of a bicycle, so we need the thing a sail is part of. A sail is part of a boat. A mast is the tempting one, because a sail really does hang on a mast — but that makes it another part, not the whole thing the sail belongs to.",
       answer: "A",
     },
     {
@@ -500,7 +500,7 @@ export const GRADE_4_TEST: Test = {
           why: "IC-partial: a real property of fire, but on a different dimension from the temperature the stem uses.",
         },
       ],
-      explanation: "Ice is cold; fire is hot. The property is temperature both times.",
+      explanation: "Each pair is a thing and a property it always has. Ice is cold, so fire is hot — the property is temperature both times. Bright is true of fire as well, which is what makes it tempting, but the first pair already decided that temperature is the property to follow.",
       answer: "C",
     },
     {

@@ -84,7 +84,7 @@ export const GRADE_7_8_TEST: Test = {
           why: "R-echo: the verb belonging to the first pair.",
         },
       ],
-      explanation: "A fragile thing is liable to break; a flammable thing is liable to burn.",
+      explanation: "Each first word describes what a thing is liable to do: fragile things break, flammable things burn. 'Extinguish' is what someone does TO a fire, not what the flammable thing itself does, and 'shatter' belongs to the fragile half of the pair.",
       answer: "A",
     },
     {
@@ -197,7 +197,7 @@ export const GRADE_7_8_TEST: Test = {
           why: "D: another means of communication, licensed by no relation.",
         },
       ],
-      explanation: "A vacant room is defined by the occupants it lacks; a mute thing by the speech it lacks.",
+      explanation: "Each pair names a state by what is missing from it: a vacant room lacks occupants, a mute thing lacks speech. 'Silence' is the strong near-miss — it is the RESULT of that absence rather than the thing that is absent.",
       answer: "C",
     },
     {
@@ -344,7 +344,7 @@ export const GRADE_7_8_TEST: Test = {
           why: "WP-relation: what accompanies a drought rather than what it is a shortage of.",
         },
       ],
-      explanation: "A famine is a shortage of food; a drought is a shortage of rain.",
+      explanation: "Each first word is a shortage of the second: a famine is a shortage of food, a drought is a shortage of rain. 'Desert' is tempting because it is dry, but it is a place where the shortage is normal rather than the thing in short supply.",
       answer: "B",
     },
     {
@@ -457,7 +457,7 @@ export const GRADE_7_8_TEST: Test = {
           why: "D: a mood word, licensed by no relation in the stem.",
         },
       ],
-      explanation: "Furious is the extreme of annoyed; overjoyed is the extreme of pleased.",
+      explanation: "Mild feeling to intense feeling on the same scale. Furious is extreme annoyance, so we need extreme pleasure: overjoyed. 'Satisfied' is roughly as strong as pleased, so it does not move up the scale at all, which is what the pair requires.",
       answer: "A",
     },
     {
@@ -618,7 +618,7 @@ export const GRADE_7_8_TEST: Test = {
           why: "D: a state sometimes associated with solitude, licensed by no relation.",
         },
       ],
-      explanation: "Neglect produces decay; isolation produces loneliness.",
+      explanation: "Each pair is a cause and what it leads to: neglect leads to decay, isolation leads to loneliness. 'Distance' is the near-miss, and it fails in an interesting way — it is a CAUSE of isolation rather than its effect, so it runs the pair backwards.",
       answer: "C",
     },
     {

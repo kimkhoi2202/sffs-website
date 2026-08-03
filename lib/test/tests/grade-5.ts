@@ -84,7 +84,7 @@ export const GRADE_5_TEST: Test = {
           why: "R-echo: an answer to the first pair rather than the second.",
         },
       ],
-      explanation: "A compass shows direction; a clock shows time.",
+      explanation: "An instrument and what it shows: a compass shows direction, a clock shows time. 'Hour' is a unit you measure time IN rather than the thing itself, and 'hands' are a part of the clock. 'North' is something a compass shows, so it belongs in the first half.",
       answer: "B",
     },
     {
@@ -193,7 +193,7 @@ export const GRADE_5_TEST: Test = {
           why: "IC-degree: further along the same chain than the first pair goes.",
         },
       ],
-      explanation: "A spark becomes a flame; a seed becomes a plant.",
+      explanation: "A small beginning and what it grows into: a spark becomes a flame, a seed becomes a plant. Soil is what a seed needs in order to do that, and a harvest comes much later — the pair wants the very next thing it turns into.",
       answer: "A",
     },
     {
@@ -290,7 +290,7 @@ export const GRADE_5_TEST: Test = {
         },
         { id: "D", text: "symphony" },
       ],
-      explanation: "An author writes a novel; a composer writes a symphony.",
+      explanation: "A maker and the work they make: an author writes a novel, a composer writes a symphony. An orchestra performs it and a concert is where you hear it, so both come after the work already exists. The pair is about what the composer creates.",
       answer: "D",
     },
     {
@@ -427,7 +427,7 @@ export const GRADE_5_TEST: Test = {
           why: "WP-relation: what practice consists of, not what it produces.",
         },
       ],
-      explanation: "Exercise builds strength; practice builds skill.",
+      explanation: "An activity and what it builds up over time: exercise builds strength, practice builds skill. 'Repetition' is the interesting near-miss — it is what practice IS, not what practice produces, and the pair is about the result.",
       answer: "C",
     },
     {
@@ -540,7 +540,7 @@ export const GRADE_5_TEST: Test = {
           why: "D: a property from another dimension entirely.",
         },
       ],
-      explanation: "A feather is light; a stone is heavy. The property is weight both times.",
+      explanation: "A thing and the property it is known for. A feather is light, so a stone is heavy: the property is weight both times. 'Hard' and 'gray' are both true of a stone, which is what makes them tempting, but neither one answers the question the first pair asked.",
       answer: "B",
     },
     {

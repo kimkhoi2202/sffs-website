@@ -84,7 +84,7 @@ export const GRADE_3_TEST: Test = {
           why: "WP-relation: another category rather than a member of this one.",
         },
       ],
-      explanation: "A hammer is a kind of tool; a banana is a kind of fruit.",
+      explanation: "A hammer is one kind of tool, so we need one kind of fruit. A banana is a fruit, so that fits. A tree is where fruit grows and a basket is what you carry it in — close to fruit, but neither of them IS a fruit.",
       answer: "B",
     },
     {
@@ -181,7 +181,7 @@ export const GRADE_3_TEST: Test = {
           why: "D: where lambs live. Same field, no relation to the one in the stem.",
         },
       ],
-      explanation: "A chick grows into a hen; a lamb grows into a sheep.",
+      explanation: "A chick is a baby and a hen is the grown-up it turns into, so we need the grown-up a lamb turns into. That is a sheep. A calf is also a baby animal, which is why it looks right, but it is a baby cow — it is on the wrong side of the pair.",
       answer: "B",
     },
     {
@@ -303,7 +303,7 @@ export const GRADE_3_TEST: Test = {
           why: "WP-relation: another body part at the same level, not a part of the hand.",
         },
       ],
-      explanation: "A branch is part of a tree; a finger is part of a hand.",
+      explanation: "A branch is a part of a tree, so we need a part of a hand. A finger is part of a hand. An arm is the tempting one, but it works the other way round: the hand is part of the arm, not the arm part of the hand.",
       answer: "C",
     },
     {
@@ -421,7 +421,7 @@ export const GRADE_3_TEST: Test = {
         },
         { id: "D", text: "cut" },
       ],
-      explanation: "A pencil is used to write; scissors are used to cut.",
+      explanation: "A pencil is for writing, so we need what scissors are for. Scissors are for cutting. Drawing is also something you do with a pencil, so it belongs with the first word — the answer has to be about the scissors.",
       answer: "D",
     },
     {
@@ -534,7 +534,7 @@ export const GRADE_3_TEST: Test = {
           why: "D: where clothing is kept. Same field, no relation.",
         },
       ],
-      explanation: "A chair is a kind of furniture; a shirt is a kind of clothing.",
+      explanation: "A chair is one kind of furniture, so we need one kind of clothing. A shirt is clothing. Cotton is what clothing is made of and a button is a part of it, and being made of something or being part of something is not the same as being one.",
       answer: "A",
     },
     {

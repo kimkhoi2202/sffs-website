@@ -22,6 +22,7 @@
  * near-identical sentences by hand would have produced 75 chances to attach the
  * wrong one.
  */
+import { EXPLANATIONS } from "./explanations.mjs";
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -976,6 +977,17 @@ function figureExplanation(m) {
   return parts.filter(Boolean).join(" ");
 }
 
+/**
+ * A rewritten explanation wins over a generated one.
+ *
+ * The verbal analogies were rewritten as content (see scripts/explanations.mjs)
+ * and this file would otherwise stamp the template back over them on the next
+ * rebuild — which is exactly how the first attempt at improving them was lost.
+ */
+function explanationFor(id, generated) {
+  return EXPLANATIONS[id] ?? generated;
+}
+
 function emitFigureItem(id, m, ruleId) {
   const rules = [...m.rules.h, ...m.rules.v].filter((r) => r !== "identity");
   // The first EIGHT. matRiks hands back all nine, and the ninth is the answer —
@@ -1007,7 +1019,7 @@ ${cells}
       options: [
 ${options}
       ],
-      explanation: "${esc(figureExplanation(m))}",
+      explanation: "${esc(explanationFor(id, figureExplanation(m)))}",
       answer: "${m.answer}",
     },`;
 }
@@ -1063,7 +1075,7 @@ for (const bank of BANKS) {
       options: [
 ${emitTextOptions(placed, String)}
       ],
-      explanation: "${esc(it.explain)}",
+      explanation: "${esc(explanationFor(`${bank.id}-${n(i * 3 + 1)}`, it.explain))}",
       answer: "${keys.va[i]}",
     },`);
     }
@@ -1084,7 +1096,7 @@ ${emitTextOptions(placed, String)}
       options: [
 ${emitTextOptions(placed, String)}
       ],
-      explanation: "${esc(it.explain)}",
+      explanation: "${esc(explanationFor(`${bank.id}-${n(i * 3 + 2)}`, it.explain))}",
       answer: "${keys.na[i]}",
     },`);
     }

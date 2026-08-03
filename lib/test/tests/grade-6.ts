@@ -84,7 +84,7 @@ export const GRADE_6_TEST: Test = {
           why: "D: a weather word, licensed by no relation in the stem.",
         },
       ],
-      explanation: "Soaked is an extreme version of damp; freezing is an extreme version of chilly.",
+      explanation: "Both pairs run from mild to extreme on the same scale. Soaked is very damp; freezing is very chilly. 'Drenched' is the trap: it IS the extreme version, but of the first pair — it is about wetness, and the second pair is about cold.",
       answer: "B",
     },
     {
@@ -181,7 +181,7 @@ export const GRADE_6_TEST: Test = {
         },
         { id: "D", text: "gulp" },
       ],
-      explanation: "A yell is the loud version of a whisper; a gulp is the large version of a sip.",
+      explanation: "Small version to large version: a yell is a loud whisper, a gulp is a big sip. 'Drink' is the general word that covers both a sip and a gulp, so it is the category rather than the large version, and the pair wants the large version.",
       answer: "D",
     },
     {
@@ -290,7 +290,7 @@ export const GRADE_6_TEST: Test = {
           why: "D: a time verb, licensed by no relation.",
         },
       ],
-      explanation: "Commence is a formal word for begin; conclude is a formal word for end.",
+      explanation: "Each pair is an everyday word and its formal twin. Commence is a formal way of saying begin; conclude is a formal way of saying end. 'Start' is a synonym for the wrong half — it matches begin, not end.",
       answer: "A",
     },
     {
@@ -437,7 +437,7 @@ export const GRADE_6_TEST: Test = {
           why: "D: a character word, licensed by no relation.",
         },
       ],
-      explanation: "Stingy is the opposite of generous; cowardly is the opposite of brave.",
+      explanation: "Each pair is a word and its opposite. Stingy is the opposite of generous, so we need the opposite of brave, which is cowardly. 'Heroic' is a synonym for brave — that is the reverse of what this pair does.",
       answer: "B",
     },
     {
@@ -550,7 +550,7 @@ export const GRADE_6_TEST: Test = {
           why: "D: a word from the same field, licensed by no relation.",
         },
       ],
-      explanation: "Scarce is the opposite of abundant; required is the opposite of voluntary.",
+      explanation: "Opposites both times. Scarce is the opposite of abundant, and required is the opposite of voluntary. 'Optional' is the tempting one because it is so close to voluntary — but it MEANS the same thing rather than the opposite, so it fails the rule.",
       answer: "C",
     },
     {

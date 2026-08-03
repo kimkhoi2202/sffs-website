@@ -198,7 +198,7 @@ export const ADULT_TEST: Test = {
           why: "D: where a scale is often found. Same field, no relation to the stem's.",
         },
       ],
-      explanation: "A ruler measures length; a scale measures weight.",
+      explanation: "The first word is an instrument and the second is the quantity it measures: a ruler measures length, a scale measures weight. 'Distance' is the trap, because it is a quantity and it is very close to length — but it is what the RULER measures. It belongs to the first half of the analogy, not the second.",
       answer: "B",
     },
     {
@@ -555,7 +555,7 @@ export const ADULT_TEST: Test = {
           why: "D: sparks come off metal, so it is field-matched, but no relation in the stem licenses it.",
         },
       ],
-      explanation: "Enough rain produces a flood; a spark produces a fire. Small cause, large consequence.",
+      explanation: "Small cause, large consequence. Enough rain makes a flood; a spark makes a fire. 'Smoke' is tempting because it genuinely does follow from a fire, but it is the consequence of the consequence — one step too far along the chain. 'Flint' runs the relation backwards: it makes the spark rather than being made by it.",
       answer: "A",
     },
     {
@@ -1050,7 +1050,7 @@ export const ADULT_TEST: Test = {
           why: "D: a perception verb, and the sense the first pair belongs to. Field-matched and licensed by nothing.",
         },
       ],
-      explanation: "A murmur is the quiet version of a shout; a glance is the brief version of a stare.",
+      explanation: "Both pairs run from a small version of an action to a large one: a murmur is a quiet shout, a glance is a brief stare. 'Blink' is the tempting one because it is also something eyes do quickly, but it is not a longer or more intense glance — it is a different action that happens to be short.",
       answer: "A",
     },
 
@@ -1405,7 +1405,7 @@ export const ADULT_TEST: Test = {
         },
         { id: "D", text: "sound" },
       ],
-      explanation: "Something opaque is defined by the light it withholds; something mute by the sound it withholds.",
+      explanation: "Each first word names a thing by what it withholds: opaque withholds light, mute withholds sound. 'Silence' is the near-miss, and a good one — but silence is what being mute PRODUCES, not what is withheld. The analogy wants the thing that is absent, not the state its absence creates.",
       answer: "D",
     },
     {
