@@ -28,7 +28,8 @@ const nextConfig: NextConfig = {
       // NOTE: `/tiktok` doubles as the internal Creator Studio tool, so it only
       // redirects for NON-authenticated visitors (no `tiktok_session` cookie) —
       // logged-in team members still get the Studio, and the connect flow starts
-      // at /api/tiktok/auth (unaffected). /instagram + /youtube are free paths.
+      // at /api/tiktok/auth (unaffected). Every other vanity path below is free,
+      // so it is a plain unconditional redirect.
       {
         source: "/tiktok",
         missing: [{ type: "cookie", key: "tiktok_session" }],
@@ -43,6 +44,21 @@ const nextConfig: NextConfig = {
       {
         source: "/youtube",
         destination: "/?utm_source=youtube&utm_medium=social",
+        permanent: false,
+      },
+      {
+        source: "/reddit",
+        destination: "/?utm_source=reddit&utm_medium=social",
+        permanent: false,
+      },
+      {
+        source: "/x",
+        destination: "/?utm_source=x&utm_medium=social",
+        permanent: false,
+      },
+      {
+        source: "/threads",
+        destination: "/?utm_source=threads&utm_medium=social",
         permanent: false,
       },
       // --- Team vanity link: Hermes content-pipeline dashboard (temporary 307) ---
