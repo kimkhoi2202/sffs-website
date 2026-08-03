@@ -30,19 +30,18 @@ import { cn } from "@/lib/utils";
 type Phase = "idle" | "submitting" | "done";
 
 /**
- * The survey's self-reported source values. "youtube" is a newly added option
- * that isn't in the shared `AttributionSource` union yet (that lives in
- * lib/analytics and is owned by the analytics/attribution pass) — model it
- * locally so the option is fully typed without reaching into that file. The API
- * route and the PostHog event both accept the raw source string, so "youtube"
- * flows through end-to-end.
+ * Platforms first, then the non-platform answers. Every value here must also be
+ * allowed by /api/attribution-survey AND by the Lambda's ALLOWED_SURVEY_SOURCES.
+ * If it is not, the durable Aurora write 400s while the PostHog event still
+ * fires, which looks healthy in analytics but silently loses the row.
  */
-type SurveySource = AttributionSource | "youtube";
-
-const OPTIONS: { value: SurveySource; label: string }[] = [
+const OPTIONS: { value: AttributionSource; label: string }[] = [
   { value: "tiktok", label: "TikTok" },
   { value: "instagram", label: "Instagram" },
   { value: "youtube", label: "YouTube" },
+  { value: "reddit", label: "Reddit" },
+  { value: "x", label: "X" },
+  { value: "threads", label: "Threads" },
   { value: "friend", label: "A friend" },
   { value: "search", label: "Search" },
   { value: "other", label: "Somewhere else" },
@@ -68,7 +67,7 @@ export function AttributionSurvey({
 }) {
   const legendId = useId();
   const groupName = useId();
-  const [selected, setSelected] = useState<SurveySource | null>(null);
+  const [selected, setSelected] = useState<AttributionSource | null>(null);
   const [openText, setOpenText] = useState("");
   const [phase, setPhase] = useState<Phase>("idle");
   const doneRef = useRef<HTMLDivElement>(null);
@@ -84,10 +83,8 @@ export function AttributionSurvey({
     setPhase("submitting");
 
     // 1) The analytics truth — source only, no PII. Fire first so attribution
-    //    lands even if the durable write below is blocked. ("youtube" isn't in
-    //    the shared AttributionSource union yet — owned by the analytics pass —
-    //    but the event still fires with the raw source value.)
-    trackAttributionSurveyAnswered(selected as AttributionSource);
+    //    lands even if the durable write below is blocked.
+    trackAttributionSurveyAnswered(selected);
 
     // 2) The durable write (best-effort — the event already captured attribution).
     try {

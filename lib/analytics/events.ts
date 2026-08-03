@@ -689,6 +689,10 @@ export function trackTestShareToChildClicked(method: "link" | "copy" | "open"): 
 export type AttributionSource =
   | "tiktok"
   | "instagram"
+  | "youtube"
+  | "reddit"
+  | "x"
+  | "threads"
   | "friend"
   | "search"
   | "other";
