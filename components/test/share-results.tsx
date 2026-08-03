@@ -82,6 +82,12 @@ const CONFIRM_MS = 2600;
 /** A cold Satori render is slow; an unbounded one is a hung button. */
 const CARD_TIMEOUT_MS = 12_000;
 
+/**
+ * How long to wait for the OS sheet to show itself before assuming it never
+ * will. See the watchdog in `runShare` for why this is not just a timeout.
+ */
+const SHEET_WATCHDOG_MS = 2000;
+
 const SHARE_TEXT = "I took the Official Smart Fella Test. Think you can beat me?";
 const SHARE_TITLE = "The Official Smart Fella Test";
 const CARD_FILENAME = "smart-fella-or-fart-smella.png";
@@ -270,18 +276,58 @@ export function ShareResults({
         }
       }
 
+      /*
+        THE WATCHDOG, AND WHY IT IS NOT JUST A TIMEOUT.
+
+        `navigator.share()` can be called successfully and then simply never
+        settle: measured on desktop Chrome, and reproducible on any device
+        where the OS declines to present a sheet. The earlier fix stopped that
+        from disabling the card, but stopping short of a lock-up is not the
+        same as telling somebody what happened. What was left was a 250ms
+        label flicker and then silence, which is indistinguishable from a dead
+        button and is exactly what was reported.
+
+        A plain timeout cannot fix it, because a sheet a person is actually
+        READING also leaves the promise pending, for as long as they like.
+        Firing an error at 2 seconds would cry wolf on every successful share.
+
+        What separates the two is FOCUS. When the OS puts a sheet up, this
+        document loses it. So the watchdog only acts when the promise has not
+        settled AND this page still has focus and is still visible, which
+        together mean no sheet was ever presented. Then it says so and opens
+        our own menu, so the tap ends somewhere instead of nowhere.
+      */
+      let settled = false;
+      const watchdog = window.setTimeout(() => {
+        if (settled) return;
+        const noSheetAppeared =
+          document.visibilityState === "visible" && document.hasFocus();
+        if (!noSheetAppeared) return;
+        settled = true; // the rejection that may follow is now redundant
+        trackTestResultShareFailed({
+          ...base,
+          mechanism: "native_sheet",
+          reason: "sheet_never_opened",
+        });
+        confirm("That did not open. Pick another way.");
+        setMenuOpen(true);
+      }, SHEET_WATCHDOG_MS);
+
       try {
         await navigator.share(payload);
+        if (settled) return;
+        settled = true;
         trackTestResultShareCompleted({ ...base, mechanism: "native_sheet" });
         // The OS gives us no way to know WHICH app was picked, so this is the
         // most we can honestly say back to the person.
         confirm("Shared");
       } catch (err) {
+        if (settled) return;
+        settled = true;
         if (err instanceof DOMException && err.name === "AbortError") {
           // Backing out of a sheet is a normal thing to do, not a failure. It
           // still needs to say something: a dismissed sheet and a dead button
-          // look identical from the outside, which is half of what made the
-          // first version of this feel broken.
+          // look identical from the outside.
           trackTestResultShareDismissed({ ...base, mechanism: "native_sheet" });
           confirm("Not shared");
         } else {
@@ -293,6 +339,7 @@ export function ShareResults({
           await copyCore("native_sheet");
         }
       } finally {
+        window.clearTimeout(watchdog);
         runningRef.current = false;
       }
     },
@@ -479,8 +526,14 @@ export function ShareResults({
           onFocus={prefetch}
           onTouchStart={prefetch}
           disabled={busy}
-          aria-haspopup={sheetIsEnough ? undefined : "menu"}
-          aria-expanded={sheetIsEnough ? undefined : menuOpen}
+          /*
+            Announced on every device, not just the ones that always open a
+            menu. Since the watchdog can fall back to the menu when a sheet
+            fails to appear, "this may open a menu" is now true everywhere,
+            and claiming otherwise would be the inaccurate choice.
+          */
+          aria-haspopup="menu"
+          aria-expanded={menuOpen}
           className={cn(buttonVariants({ variant: "paper", size: "lg" }), "w-full")}
         >
           {label}
