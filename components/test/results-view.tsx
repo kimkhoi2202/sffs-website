@@ -29,6 +29,7 @@
  * What is honest, and is here: how many out of how many, how that split across
  * the domains, and a joke.
  */
+import { QuestionReview } from "./review/question-review";
 import { ShareToChild } from "./share-to-child";
 import { MASKED_VALUE, type TestResult, type VerdictId } from "@/lib/test/scoring";
 import { VERDICT_INK } from "@/lib/test/types";
@@ -146,11 +147,15 @@ export function ResultsView({
               alt={result.verdict.title}
               width={badge.width}
               height={badge.height}
-              /* Positive margin on top of the card's gap. The badge is the
-                 loudest thing on the page and crowding it against the score
-                 and the subline makes all three fight; the air is what lets it
-                 read as the award it is. */
-              className="mx-auto my-4 h-auto w-[min(100%,20rem)] select-none sm:my-5 sm:w-[min(100%,24rem)]"
+              /*
+                SIZED SO THE CARD READS SCORE, THEN BADGE, THEN LINE. At 20-24rem
+                it was the tallest thing on the page by a distance and pushed
+                the subline off a laptop screen entirely, which inverted the
+                order: the number is the information and the badge is the joke.
+                Capped against the VIEWPORT HEIGHT as well as the column width,
+                because the problem was never how wide it was.
+              */
+              className="mx-auto my-2 h-auto max-h-[28vh] w-[min(100%,11rem)] select-none object-contain sm:my-3 sm:w-[min(100%,13rem)]"
               draggable={false}
             />
           </h1>
@@ -209,61 +214,36 @@ export function ResultsView({
       ) : null}
 
       {/* -- question by question ------------------------------------------------ */}
-      <div className="flex flex-col gap-2 rounded-2xl border-[2.5px] border-ink bg-paper p-4 shadow-hard-sm sm:p-5">
-        <h2 className="font-display text-lg uppercase leading-none">Question by question</h2>
-        <ol className="flex flex-col gap-1.5">
-          {result.items.map((scored, i) => (
-            <li key={scored.item.id} className="flex items-start gap-2.5 py-1">
-              {/* Masked: one neutral chip per question rather than a made-up
-                  run of ticks and crosses. Same chip, same size, same row
-                  height, so the list does not reflow on the real page. */}
-              <span
-                aria-hidden="true"
-                className={cn(
-                  "mt-0.5 grid size-6 shrink-0 place-items-center rounded-full border-[2.5px] border-ink text-xs font-black leading-none",
-                  masked
-                    ? "bg-cream text-ink/50"
-                    : scored.correct
-                      ? "bg-mint"
-                      : scored.picked === null
-                        ? "bg-gray-200"
-                        : "bg-coral",
-                )}
-              >
-                {masked
-                  ? ""
-                  : scored.correct
-                    ? "\u2713"
-                    : scored.picked === null
-                      ? "\u2013"
-                      : "\u2715"}
-              </span>
-              <span className="min-w-0 flex-1">
+      {masked ? (
+        /*
+          A SHAPE, NOT A BLURRED COPY. The real review holds every question,
+          every option and every answer, so the gated version does not render it
+          and style it out — it renders none of it. A blurred element is still
+          in the DOM and readable by anyone who opens a devtools panel, which is
+          not a standard the rest of this gate is held to.
+
+          The rows keep their count and height so the card does not jump when
+          the real page loads from the emailed link.
+        */
+        <div className="flex flex-col gap-2 rounded-2xl border-[2.5px] border-ink bg-paper p-4 shadow-hard-sm sm:p-5">
+          <h2 className="font-display text-lg uppercase leading-none">Question by question</h2>
+          <ol className="flex flex-col gap-1.5">
+            {result.items.map((scored, i) => (
+              <li key={scored.item.id} className="flex items-start gap-2.5 py-1">
+                <span
+                  aria-hidden="true"
+                  className="mt-0.5 size-6 shrink-0 rounded-full border-[2.5px] border-ink bg-cream"
+                />
                 <span className="block text-[0.8rem] font-extrabold uppercase leading-tight tracking-wide text-ink/60">
                   {i + 1}. {scored.item.tier}
-                  {masked ? null : (
-                    <span className="sr-only">
-                      {scored.correct
-                        ? " \u2014 correct"
-                        : scored.picked === null
-                          ? " \u2014 not answered"
-                          : " \u2014 incorrect"}
-                    </span>
-                  )}
                 </span>
-                {/* The explanation only appears under a wrong answer, so in
-                    masked mode showing it would both invent an outcome and
-                    hand over the reasoning for every question at once. */}
-                {!masked && !scored.correct && scored.item.explanation ? (
-                  <span className="mt-0.5 block text-pretty text-[0.85rem] font-medium leading-snug text-ink/75">
-                    {scored.item.explanation}
-                  </span>
-                ) : null}
-              </span>
-            </li>
-          ))}
-        </ol>
-      </div>
+              </li>
+            ))}
+          </ol>
+        </div>
+      ) : (
+        <QuestionReview items={result.items} />
+      )}
 
       {/* Only on the adult results. It is the one screen whose reader has
           definitely not already been offered the child test, and handing a

@@ -67,6 +67,15 @@ export function StepShell({
           reclaims the spare 16 rather than letting the puck sit on a button.
         */
         "[@media(max-height:700px)]:pb-20 [@media(max-height:700px)]:pt-4",
+        /*
+          And below 660 it goes further, because that is where the grade picker
+          and the sub-fork were still running 15px and 6px past the fold. The
+          bottom drops to the music toggle's actual footprint with nothing
+          spare, and the top to the same 8px, which is enough to close both with
+          room over. Nothing above 660 is affected, so the common phone sizes
+          keep their breathing room.
+        */
+        "[@media(max-height:660px)]:pb-[4.75rem] [@media(max-height:660px)]:pt-2",
         className,
       )}
     >

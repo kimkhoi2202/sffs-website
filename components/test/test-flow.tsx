@@ -411,7 +411,7 @@ export function TestFlow() {
       />
     ) : (
       <StepShell>
-      <div className="flex w-full max-w-md flex-col items-center gap-7 sm:max-w-lg">
+      <div className="flex w-full max-w-md flex-col items-center gap-7 [@media(max-height:660px)]:gap-5 sm:max-w-lg">
         {/* The results screen carries its own headline, so the full lockup only
             appears on the way in. */}
         {state.step !== "results" ? (

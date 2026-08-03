@@ -42,7 +42,10 @@ export function ChoiceCard({
       onClick={onClick}
       className={cn(
         "press-lg group flex w-full cursor-pointer flex-col items-start gap-1 rounded-2xl",
-        "border-[2.5px] border-ink p-5 text-left shadow-hard-lg",
+                // 8px less padding per card below 660px tall, which is 16 across the
+        // pair — the last of what the sub-fork needed to fit one screen on the
+        // shortest phone. Above that height nothing changes.
+        "border-[2.5px] border-ink p-5 [@media(max-height:660px)]:p-4 text-left shadow-hard-lg",
         "focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-[3px] focus-visible:outline-ink",
         TONES[tone],
         className,
