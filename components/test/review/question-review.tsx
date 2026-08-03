@@ -147,102 +147,145 @@ export function QuestionReview({ items }: { items: ScoredItem[] }) {
     >
       <div className="lg:grid lg:grid-cols-[minmax(0,18rem)_minmax(0,1fr)] lg:gap-6">
         {/* -- the list ------------------------------------------------------ */}
-        <ol
+        <div
           /*
-            LENIS IS WHY THIS NEEDS AN OPT-OUT.
+            THE LIST FILLS THE GRID ROW, AND THIS WRAPPER IS HOW.
 
-            The site runs a smooth-scroll library that intercepts wheel events
-            at the window and drives the document scroll itself. It does not
-            know about nested scrollers, so a wheel anywhere — including inside
-            a pane with 2000px of content below the fold — moved the PAGE and
-            left the pane at scrollTop 0. The pane was scrollable the whole
-            time: `overflow-y: auto`, a real max-height, scrollHeight well over
-            clientHeight, and `scrollTop = 200` stuck when set from script. It
-            simply never saw the event.
+            The row is as tall as the RIGHT column, which is the detail pane
+            at 34rem PLUS the PREV/NEXT row under it. The list was capped at
+            34rem as well, so it could never reach the bottom of its own cell
+            and the column ended in a band of nothing exactly the height of
+            the nav row: 60px, measured. Trimming the row down to the list
+            would have given a shorter card at the same proportions. Giving
+            the space to the list gives a longer list, which is the thing a
+            reader on this page actually wants more of.
 
-            That is worth spelling out because every plausible local cause was
-            wrong. It was not `overflow: hidden` inherited from the shell, not
-            the fit-to-viewport wrapper, not the document's `overflow-x: clip`,
-            not the breakout transform, not the mask, and not flex-vs-block on
-            the pane itself — all five were toggled off individually and none
-            of them changed anything. A plain nested scroller on a blank page
-            scrolled fine under the same synthetic gesture, which is what
-            proved the problem was ours rather than the harness.
+            THE LIST IS POSITIONED, NOT SIZED. Whatever holds the list has to
+            contribute NOTHING to the row, or the fifteen rows size the row
+            themselves and there is no overflow left to scroll. Taking the
+            list out of flow is the only way to make that contribution truly
+            zero. The empty wrapper stretches to the row the right column
+            defined, `inset-0` hands the list that height as a definite one,
+            and `overflow-y: auto` does the rest.
 
-            `data-lenis-prevent` tells the library to leave wheel events inside
-            this subtree alone, which hands them back to the browser.
+            `flex-1` with `min-h-0` is the shape this normally takes and it
+            does NOT work here. It reads as though a zero flex basis makes the
+            list contribute nothing, but a flex item with `flex-grow` still
+            contributes its CONTENT to the container's max-content height, so
+            the row resolved to 800px, the list swallowed all fifteen rows,
+            scrollHeight equalled clientHeight and a real wheel gesture did
+            nothing at all. Measured, not reasoned about. `min-h-0` only stops
+            the automatic minimum size; it does not stop that contribution.
+
+            All of it is `lg:` only. Below the breakpoint there is no grid, so
+            there is no cell to fill and the list is an ordinary block that
+            sizes to its content.
+
+            The hide toggle lives out here now rather than on the `ol`: below
+            lg the list is REPLACED by the detail rather than pushed
+            off-canvas, so the detail never renders under a list nobody can
+            see.
           */
-          data-lenis-prevent
-          className={cn(
-            /*
-              ROOM RESERVED FOR THINGS THAT LEAVE THEIR BOX, sized from the
-              treatments rather than guessed. `btn-press` moves -2px on hover
-              and grows its shadow to 6px, so its painted extent reaches 4px
-              past the bottom-right and 2px past the top-left; `press-lg`
-              reaches 6px; the Button's focus ring sits about 3.5px outside.
-              Eight pixels clears the worst of those with margin, and holds if
-              the treatment is retuned within reason.
-
-              This is the same bug three times over in one session — a sheared
-              focus ring, a Next button clipped at the column edge, and a
-              hover-displaced control cut off — so it is fixed once here, on
-              the container, rather than by asking each element not to move.
-
-              The bottom is deeper because the fade needs clearing too: content
-              under it is technically visible and hard to read, so the last row
-              has to end above it, not inside it.
-            */
-            "flex flex-col gap-1.5 pane-scroll lg:max-h-[34rem] lg:px-2 lg:pt-2 lg:pb-12",
-            // Below lg the list is replaced rather than pushed off-canvas, so
-            // the detail never renders under a list nobody can see.
-            open ? "hidden lg:flex" : "flex",
-          )}
+          className={cn("lg:relative", open ? "hidden lg:block" : "block")}
         >
-          {items.map((scored, i) => (
-            <li key={scored.item.id}>
-              <button
-                type="button"
-                onClick={() => pick(i)}
-                aria-current={i === selected ? "true" : undefined}
-                className={cn(
-                  /*
-                    `items-center`, not `items-start`. The row aligned to the
-                    top and the icon carried an `mt-0.5` nudge to compensate,
-                    so the icon looked centred and the label did not — measured
-                    at 5.2px high against the row's centre while the icon was
-                    within 1px of it, which is what made the row read as
-                    tilted. Centring both and dropping the nudge fixes it at
-                    the cause. (The residual all-caps optical offset is under a
-                    pixel and is not worth a magic number.)
+          <ol
+            /*
+              LENIS IS WHY THIS NEEDS AN OPT-OUT.
 
-                    `cursor-pointer` because the row is a button and did not
-                    say so.
+              The site runs a smooth-scroll library that intercepts wheel
+              events at the window and drives the document scroll itself. It
+              does not know about nested scrollers, so a wheel anywhere —
+              including inside a pane with 2000px of content below the fold —
+              moved the PAGE and left the pane at scrollTop 0. The pane was
+              scrollable the whole time: `overflow-y: auto`, a real
+              max-height, scrollHeight well over clientHeight, and
+              `scrollTop = 200` stuck when set from script. It simply never
+              saw the event.
 
-                    THE FOCUS RING IS DRAWN INSIDE. A default outline sits
-                    outside the border box and the pane clips it, so it showed
-                    on the left and was sheared off on the right. A negative
-                    offset puts it within the row's own bounds, where there is
-                    nothing to clip it — which keeps the indicator that
-                    keyboard users need on a page whose arrow-key navigation is
-                    a designed feature.
-                  */
-                  "flex w-full cursor-pointer items-center gap-2.5 rounded-xl border-[2.5px] px-2.5 py-2 text-left transition-colors",
-                  "focus-visible:outline focus-visible:outline-[3px] focus-visible:-outline-offset-[3px] focus-visible:outline-ink",
-                  i === selected
-                    ? "border-ink bg-blue"
-                    : "border-transparent hover:[@media(hover:hover)]:bg-cream",
-                )}
-              >
-                <StatusDot scored={scored} />
-                <span className="min-w-0 flex-1">
-                  <span className="block text-[0.78rem] font-extrabold uppercase leading-tight tracking-wide text-ink/60">
-                    {i + 1}. {scored.item.tier}
+              That is worth spelling out because every plausible local cause
+              was wrong. It was not `overflow: hidden` inherited from the
+              shell, not the fit-to-viewport wrapper, not the document's
+              `overflow-x: clip`, not the breakout transform, not the mask,
+              and not flex-vs-block on the pane itself — all five were toggled
+              off individually and none of them changed anything. A plain
+              nested scroller on a blank page scrolled fine under the same
+              synthetic gesture, which is what proved the problem was ours
+              rather than the harness.
+
+              `data-lenis-prevent` tells the library to leave wheel events
+              inside this subtree alone, which hands them back to the browser.
+            */
+            data-lenis-prevent
+            className={
+              /*
+                ROOM RESERVED FOR THINGS THAT LEAVE THEIR BOX, sized from the
+                treatments rather than guessed. `btn-press` moves -2px on
+                hover and grows its shadow to 6px, so its painted extent
+                reaches 4px past the bottom-right and 2px past the top-left;
+                `press-lg` reaches 6px; the Button's focus ring sits about
+                3.5px outside. Eight pixels clears the worst of those with
+                margin, and holds if the treatment is retuned within reason.
+
+                This is the same bug three times over in one session — a
+                sheared focus ring, a Next button clipped at the column edge,
+                and a hover-displaced control cut off — so it is fixed once
+                here, on the container, rather than by asking each element not
+                to move.
+
+                The bottom is deeper because the fade needs clearing too:
+                content under it is technically visible and hard to read, so
+                the last row has to end above it, not inside it.
+              */
+              "flex flex-col gap-1.5 pane-scroll lg:absolute lg:inset-0 lg:px-2 lg:pt-2 lg:pb-12"
+            }
+          >
+            {items.map((scored, i) => (
+              <li key={scored.item.id}>
+                <button
+                  type="button"
+                  onClick={() => pick(i)}
+                  aria-current={i === selected ? "true" : undefined}
+                  className={cn(
+                    /*
+                      `items-center`, not `items-start`. The row aligned to
+                      the top and the icon carried an `mt-0.5` nudge to
+                      compensate, so the icon looked centred and the label did
+                      not — measured at 5.2px high against the row's centre
+                      while the icon was within 1px of it, which is what made
+                      the row read as tilted. Centring both and dropping the
+                      nudge fixes it at the cause. (The residual all-caps
+                      optical offset is under a pixel and is not worth a magic
+                      number.)
+
+                      `cursor-pointer` because the row is a button and did not
+                      say so.
+
+                      THE FOCUS RING IS DRAWN INSIDE. A default outline sits
+                      outside the border box and the pane clips it, so it
+                      showed on the left and was sheared off on the right. A
+                      negative offset puts it within the row's own bounds,
+                      where there is nothing to clip it — which keeps the
+                      indicator that keyboard users need on a page whose
+                      arrow-key navigation is a designed feature.
+                    */
+                    "flex w-full cursor-pointer items-center gap-2.5 rounded-xl border-[2.5px] px-2.5 py-2 text-left transition-colors",
+                    "focus-visible:outline focus-visible:outline-[3px] focus-visible:-outline-offset-[3px] focus-visible:outline-ink",
+                    i === selected
+                      ? "border-ink bg-blue"
+                      : "border-transparent hover:[@media(hover:hover)]:bg-cream",
+                  )}
+                >
+                  <StatusDot scored={scored} />
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[0.78rem] font-extrabold uppercase leading-tight tracking-wide text-ink/60">
+                      {i + 1}. {scored.item.tier}
+                    </span>
                   </span>
-                </span>
-              </button>
-            </li>
-          ))}
-        </ol>
+                </button>
+              </li>
+            ))}
+          </ol>
+        </div>
 
         {/* -- the panel ----------------------------------------------------- */}
         {/*
@@ -274,7 +317,23 @@ export function QuestionReview({ items }: { items: ScoredItem[] }) {
             ref={detailRef}
             // Same reason as the list. See the note there.
             data-lenis-prevent
-            className="min-w-0 pane-scroll lg:max-h-[34rem] lg:pr-5 lg:pt-2 lg:pb-12"
+            /*
+              THE BOTTOM PADDING HERE CLEARS THE FADE AND NOTHING ELSE, which
+              is why it is shallower than the list's. The list's bottom is
+              also hover room, because every row in it is a button; there is
+              not one interactive element in this pane, so the only thing its
+              padding has to do is hold the last line above the mask. That is
+              1.75rem of fade plus the 8px this file allows everywhere else,
+              so 2.25rem.
+
+              It was 3rem, copied from the list, back when PREV and NEXT were
+              the last thing inside this scroller and needed the hover room
+              too. They moved out (see below) and the padding did not follow,
+              so it and the nav's own margin were both paying for the same
+              separation: 64px of it, measured, between the last card and the
+              buttons.
+            */
+            className="min-w-0 pane-scroll lg:max-h-[34rem] lg:pr-5 lg:pt-2 lg:pb-9"
           >
             {/*
               WRAPS RATHER THAN OVERFLOWS. At 360 this control and the document's
@@ -326,8 +385,17 @@ export function QuestionReview({ items }: { items: ScoredItem[] }) {
             decoration: `btn-press` lifts -2px and grows its shadow to 6px on
             hover, so the painted extent reaches about 4px past the bottom
             right of where the button sits at rest.
+
+            The TOP margin is the same kind of number and it is why it drops
+            to 8px at `lg`. Its job up there is not to separate these buttons
+            from the panel's last line, which is what the pane's own bottom
+            padding already does; it is to keep them off the pane's edge while
+            the pane is mid-scroll and content is still fading into it, and to
+            leave room for the -2px lift and the focus ring above. Below `lg`
+            the pane has no padding at all, so out there this margin is the
+            only thing holding the two apart and it stays at 16px.
           */}
-          <div className="mt-4 flex flex-wrap items-center justify-end gap-2 pb-2 pr-1 lg:pr-5">
+          <div className="mt-4 flex flex-wrap items-center justify-end gap-2 pb-2 pr-1 lg:mt-2 lg:pr-5">
             {nav}
           </div>
         </div>
