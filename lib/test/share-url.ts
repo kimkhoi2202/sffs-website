@@ -48,8 +48,43 @@
  */
 export const CHILD_ENTRY_PARAM = "for=child";
 
-/** How a share left the device. Also the `utm_content` value. */
-export type ShareMechanism = "native_sheet" | "image_download" | "copy_link";
+/**
+ * WHERE a share was headed. Also the `utm_content` value on the link.
+ *
+ * This replaced a three-value `ShareMechanism` when the share control stopped
+ * being a menu of three transports and became a sheet of eight destinations.
+ * The distinction it draws is the one that matters for reading the data: HOW
+ * the bytes left (a download, a clipboard write, the OS sheet, a web composer)
+ * is a small closed set that tells you almost nothing, whereas WHERE they went
+ * is the whole question a sharing loop is asking.
+ *
+ * `copy_link` and `native_sheet` keep their exact spelling from the previous
+ * version, so every link already in the wild and every saved insight reading
+ * `utm_content` keeps counting the same thing. Only new values were added.
+ */
+export type ShareDestination =
+  | "save"
+  | "copy_link"
+  | "instagram"
+  | "tiktok"
+  | "x"
+  | "whatsapp"
+  | "reddit"
+  | "native_sheet";
+
+/**
+ * The destinations a LINK travels to, which is not all of them.
+ *
+ * `save` hands over a PNG and nothing else. `instagram` and `tiktok` do too:
+ * neither app can be handed a URL that lands in a composer, which is the whole
+ * reason those two are a two-step flow (see the note on the sheet). A URL
+ * tagged for a destination that never carries one would be a tag on traffic
+ * that cannot exist.
+ */
+export type LinkDestination = Exclude<
+  ShareDestination,
+  "save" | "instagram" | "tiktok"
+>;
 
 /**
  * Matches the vanity redirects in next.config.ts, which all tag
@@ -72,19 +107,20 @@ export function shareCardPathFor(token: string): string {
 /**
  * The absolute link to hand somebody, tagged so the loop is measurable.
  *
- * `utm_content` records which mechanism produced the link, which is the only
- * way to tell a share sheet's traffic from a pasted copy-link. The image
- * download has no URL to tag, so it is measured by its client event alone.
+ * `utm_content` records the destination the link was handed to, which is the
+ * only way to tell a WhatsApp forward from a pasted copy-link once both have
+ * arrived as `utm_source=share`. The saved picture has no URL to tag, so it is
+ * measured by its client event alone; see gap 4 in the tracking audit.
  */
 export function beatUrlFor(
   token: string,
   origin: string,
-  mechanism: Exclude<ShareMechanism, "image_download">,
+  destination: LinkDestination,
 ): string {
   const params = new URLSearchParams({
     utm_source: SHARE_UTM_SOURCE,
     utm_medium: SHARE_UTM_MEDIUM,
-    utm_content: mechanism,
+    utm_content: destination,
   });
   return `${origin.replace(/\/+$/, "")}${beatPathFor(token)}?${params}`;
 }

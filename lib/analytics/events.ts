@@ -730,14 +730,27 @@ export function trackAttributionSurveyDismissed(): void {
  * ------------------------------------------------------------------------ */
 
 /**
- * How a share left the device.
+ * How a share left the device: the TRANSPORT, not the destination.
  *
- * Mirrors `ShareMechanism` in lib/test/share-url.ts, which is the same
- * vocabulary on the URL side (it becomes `utm_content`). Declared separately
- * rather than imported because that module is shared with server code and this
- * one pulls in `posthog-js`.
+ * `web_intent` joined the three originals when the share control became a
+ * sheet with per-app destinations. It means a link was opened in a composer on
+ * another site (x.com, wa.me, reddit.com), which is none of the other three:
+ * nothing was downloaded, nothing was copied, and no OS sheet was involved.
+ * Filing those under an existing value would have silently redefined whichever
+ * one it borrowed.
+ *
+ * WHERE a share went rides along as a `destination` PROPERTY on the four
+ * events below rather than as an event name per channel, and its vocabulary is
+ * `ShareDestination` in lib/test/share-url.ts (the same values become
+ * `utm_content`). Call sites pass it through; it is deliberately not in these
+ * signatures, because a transport and a destination are different questions
+ * and pairing them in one union would multiply out to a value per combination.
  */
-export type ShareMechanism = "native_sheet" | "image_download" | "copy_link";
+export type ShareMechanism =
+  | "native_sheet"
+  | "image_download"
+  | "copy_link"
+  | "web_intent";
 
 interface ShareEventBase {
   test_id: string;
