@@ -150,8 +150,33 @@ export function QuestionReview({ items }: { items: ScoredItem[] }) {
       <div className="lg:grid lg:grid-cols-[minmax(0,18rem)_minmax(0,1fr)] lg:gap-6">
         {/* -- the list ------------------------------------------------------ */}
         <ol
+          /*
+            LENIS IS WHY THIS NEEDS AN OPT-OUT.
+
+            The site runs a smooth-scroll library that intercepts wheel events
+            at the window and drives the document scroll itself. It does not
+            know about nested scrollers, so a wheel anywhere — including inside
+            a pane with 2000px of content below the fold — moved the PAGE and
+            left the pane at scrollTop 0. The pane was scrollable the whole
+            time: `overflow-y: auto`, a real max-height, scrollHeight well over
+            clientHeight, and `scrollTop = 200` stuck when set from script. It
+            simply never saw the event.
+
+            That is worth spelling out because every plausible local cause was
+            wrong. It was not `overflow: hidden` inherited from the shell, not
+            the fit-to-viewport wrapper, not the document's `overflow-x: clip`,
+            not the breakout transform, not the mask, and not flex-vs-block on
+            the pane itself — all five were toggled off individually and none
+            of them changed anything. A plain nested scroller on a blank page
+            scrolled fine under the same synthetic gesture, which is what
+            proved the problem was ours rather than the harness.
+
+            `data-lenis-prevent` tells the library to leave wheel events inside
+            this subtree alone, which hands them back to the browser.
+          */
+          data-lenis-prevent
           className={cn(
-            "flex flex-col gap-1.5 lg:max-h-[34rem] lg:overflow-y-auto lg:pr-1",
+            "flex flex-col gap-1.5 pane-scroll lg:max-h-[34rem] lg:pr-2",
             // Below lg the list is replaced rather than pushed off-canvas, so
             // the detail never renders under a list nobody can see.
             open ? "hidden lg:flex" : "flex",
@@ -184,13 +209,27 @@ export function QuestionReview({ items }: { items: ScoredItem[] }) {
         {/* -- the panel ----------------------------------------------------- */}
         <div
           ref={detailRef}
+          // Same reason as the list. See the note there.
+          data-lenis-prevent
           className={cn(
-            "min-w-0 lg:max-h-[34rem] lg:overflow-y-auto lg:pl-5",
+            // SYMMETRIC PADDING. It was `pl-5` with nothing on the right, which
+            // put the panel's content 20px off the centre of its own column —
+            // invisible below `lg` and obvious above it, which is why it read
+            // as "text sitting off-centre" rather than as a padding bug.
+            "min-w-0 pane-scroll lg:max-h-[34rem] lg:px-5",
             "lg:border-l-[2.5px] lg:border-ink/15",
             open ? "block" : "hidden lg:block",
           )}
         >
-          <div className="mb-4 flex items-center gap-2">
+          {/*
+            WRAPS RATHER THAN OVERFLOWS. At 360 the back control and the two
+            arrows are wider than the column, and `overflow-x: clip` on the
+            document — which is there deliberately, so no page can be dragged
+            sideways — meant the Next button was cut off at the edge and
+            genuinely unreachable rather than merely off-screen. Wrapping is the
+            fix; letting the page scroll sideways would not be.
+          */}
+          <div className="mb-4 flex flex-wrap items-center gap-2">
             <Button
               variant="paper"
               size="sm"
@@ -215,9 +254,6 @@ export function QuestionReview({ items }: { items: ScoredItem[] }) {
         </div>
       </div>
 
-      <p className="mt-4 hidden text-[0.75rem] font-semibold text-ink/50 lg:block">
-        Arrow keys move between questions.
-      </p>
     </div>
   );
 }

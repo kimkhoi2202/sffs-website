@@ -109,6 +109,29 @@ export function BrandLockup({
  * Measured maxima before anything overflows: 170 on the fork at 360x640, 280 at
  * both larger sizes, so `hero` keeps real headroom on the tightest screen.
  */
+/**
+ * How far the brain rides above the wordmark's box, as a fraction of the
+ * wordmark's height. Must match the `top-[-26%]` in BrandLockup.
+ *
+ * Named and exported because the space above the lockup has to be measured
+ * against the brain's VISUAL top, and the brain is not in the layout box at
+ * all — it is absolutely positioned, so the h1's border box stops at the
+ * wordmark and about a quarter of the sticker hangs above it invisibly as far
+ * as layout is concerned.
+ *
+ * Anything that puts a gap above the lockup and measures it against the box
+ * therefore comes out roughly this fraction of the lockup too small, and gets
+ * WORSE as the lockup grows, because the overhang scales with it. Measured on
+ * screen before this fix: 12px of margin produced −12px of actual air at 360,
+ * −27px at 390 and −31px at 1440. The pill was not near the brain, it was
+ * behind it.
+ *
+ * The same class of mistake as the letter badges on the option cards, where a
+ * rounded corner meant the visual edge and the box edge were not the same
+ * thing either.
+ */
+export const BRAIN_OVERHANG = 0.26;
+
 const LOCKUP_HEIGHT = {
   hero: "min(52vw, 23vh, 16rem)",
   compact: "min(38vw, 13vh, 9rem)",
@@ -193,7 +216,16 @@ export function BrandHeader({
         rather than leaving "Are you a" stranded as loose text next to a heading
         that starts mid-sentence.
       */}
-      <h1 className="mt-3 flex flex-col items-center">
+      {/*
+        The margin carries the brain's overhang, so what is left over is real
+        air between the pill and the top of the sticker. Because it is written
+        in terms of the same expression that sizes the lockup, it tracks every
+        breakpoint instead of being correct at one width and tight at the rest.
+      */}
+      <h1
+        style={{ marginTop: `calc(${BRAIN_OVERHANG} * ${LOCKUP_HEIGHT[size]} + 0.25rem)` }}
+        className="flex flex-col items-center"
+      >
         <span className="eyebrow text-ink/70">Are you a</span>
 
         <BrandLockup className="mt-2" height={LOCKUP_HEIGHT[size]} />

@@ -416,3 +416,48 @@
   .card-hover { transition: none; }
   .card-hover:hover { transform: none; }
 }
+
+/*
+  ============================================================================
+  A SCROLL PANE WITH NO SCROLLBAR, BUT NOT NO EVIDENCE
+  ============================================================================
+  The review's two panes scroll and the bars are ugly, so they are hidden the
+  standard way: `scrollbar-width: none` for Firefox and the WebKit pseudo
+  element for everything else. Nothing about the scrolling itself changes —
+  wheel, trackpad, keyboard, touch and programmatic scrollTop all still work,
+  which is exactly why this is the right mechanism and removing `overflow`
+  would not be.
+
+  HIDING THE BAR HIDES THE SIGNAL, THOUGH. A pane with content below the fold
+  and no visible bar looks like a pane that simply ends, and somebody who
+  believes that never scrolls it. So the fade replaces what the bar was telling
+  them: the content dissolving at the bottom edge reads as "there is more",
+  which is the one thing the bar was doing that was worth keeping.
+
+  `overscroll-behavior: contain` is the other half. Without it a wheel that
+  reaches the end of a pane keeps going and takes the whole page with it, so a
+  reader flicking through a long explanation gets thrown down the document.
+*/
+/*
+  THE BREAKPOINT IS INSIDE THE RULE, not a `lg:` prefix on the class. Tailwind
+  variants only apply to utilities it generates, so `lg:pane-scroll` on a
+  hand-written class silently produces nothing — the pane would have looked
+  fine and scrolled the page instead, which is the bug this is fixing.
+
+  It is gated at all because below 1024 there are no two panes: the detail
+  takes the whole screen and the DOCUMENT is the scroller, which is the right
+  behaviour on a phone and must not be turned into a 544px box.
+*/
+@media (min-width: 1024px) {
+  .pane-scroll {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 1.75rem), transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 1.75rem), transparent 100%);
+  }
+  .pane-scroll::-webkit-scrollbar {
+    display: none;
+  }
+}
