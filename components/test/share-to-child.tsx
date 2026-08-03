@@ -53,7 +53,9 @@ export function ShareToChild() {
       <p className="text-pretty text-[0.925rem] font-semibold leading-snug text-ink/75">
         Send them this and they land straight on the grade picker.
       </p>
-      <Button variant="ink" size="lg" onClick={share} className="w-full">
+      {/* Paper, not ink. Every control in this stack is white now, for
+          consistency with "Take it again" below it. */}
+      <Button variant="paper" size="lg" onClick={share} className="w-full">
         {copied ? "Link copied" : "Send it to your kid"}
       </Button>
       {/*
