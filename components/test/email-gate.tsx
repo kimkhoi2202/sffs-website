@@ -92,15 +92,18 @@ const COPY = {
    */
   child: {
     title: "Ask a parent!",
-    // Deliberately plain: an eight-year-old has to read this and understand
-    // that the address being asked for is not theirs.
-    //
     // It opens by acknowledging they finished, which is doing real work. The
     // intro no longer mentions the email step, so this is the first a child
     // hears of it, five minutes in. Leading with "you did it" makes the ask
     // read as the next step in something they completed rather than a wall
     // dropped in front of the thing they just earned.
-    body: "You did it. Now type in a parent's email and we will send them your results.",
+    //
+    // WHOSE ADDRESS IT IS NO LONGER STATED HERE, so the other three strings in
+    // this block are the only thing carrying it: the title, the field label and
+    // the placeholder. An eight-year-old has to come away knowing the address
+    // is not theirs, so none of those three may drift to a generic "email"
+    // without putting the requirement back into this line.
+    body: "You did it. Now we will send your results.",
     label: "Parent or guardian's email",
     placeholder: "parent@example.com",
     cta: "Send my results",
@@ -467,21 +470,18 @@ function Footnote() {
   const link =
     "font-bold text-ink underline decoration-2 underline-offset-2";
   return (
-    <div className="mt-3 flex flex-col items-center gap-1 text-center text-xs font-medium leading-snug text-ink/55">
-      <p>One email with your results. No spam.</p>
-      <p className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
-        <a href="/privacy" className={link}>
-          Privacy
-        </a>
-        <span aria-hidden="true">&middot;</span>
-        <a href="/terms" className={link}>
-          Terms
-        </a>
-        <span aria-hidden="true">&middot;</span>
-        <a href="/support" className={link}>
-          Support
-        </a>
-      </p>
-    </div>
+    <p className="mt-3 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-xs font-medium leading-snug text-ink/55">
+      <a href="/privacy" className={link}>
+        Privacy
+      </a>
+      <span aria-hidden="true">&middot;</span>
+      <a href="/terms" className={link}>
+        Terms
+      </a>
+      <span aria-hidden="true">&middot;</span>
+      <a href="/support" className={link}>
+        Support
+      </a>
+    </p>
   );
 }

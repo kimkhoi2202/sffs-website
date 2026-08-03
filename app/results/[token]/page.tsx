@@ -28,6 +28,7 @@ import type { Metadata } from "next";
 import { BrandLockup } from "@/components/test/brand-header";
 import { ResultsOpenedBeacon } from "@/components/test/results-opened-beacon";
 import { ResultsView } from "@/components/test/results-view";
+import { ShareResults } from "@/components/test/share-results";
 import { Button } from "@/components/ui/button";
 import { getResult } from "@/lib/test/result-store";
 import { scoreTest } from "@/lib/test/scoring";
@@ -37,17 +38,57 @@ export const dynamic = "force-dynamic";
 
 const LEGAL_LINK = "font-bold text-ink underline decoration-2 underline-offset-2";
 
-export const metadata: Metadata = {
-  title: { absolute: "Your results · The Official Smart Fella Test" },
-  description: "Your results from the Official Smart Fella Test.",
-  robots: {
-    index: false,
-    follow: false,
-    nocache: true,
-    noimageindex: true,
-    googleBot: { index: false, follow: false },
-  },
-};
+const ROBOTS = {
+  index: false,
+  follow: false,
+  nocache: true,
+  noimageindex: true,
+  googleBot: { index: false, follow: false },
+} as const;
+
+/**
+ * The TAB TITLE stays "Your results", because the person reading it is the
+ * person who earned them. The UNFURL says the score, because the only time
+ * anyone else sees this link is when it has been pasted somewhere, and a
+ * preview reading "Your results" is a preview about nobody.
+ *
+ * The two are set separately for exactly that reason: `title` alone would feed
+ * both. Being noindex does not stop Discord, Slack or iMessage from unfurling
+ * a link somebody pasted, which is the case this serves.
+ */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ token: string }>;
+}): Promise<Metadata> {
+  const { token } = await params;
+  const record = getResult(decodeURIComponent(token));
+  const test = record ? getTestById(record.testId) : null;
+
+  const base: Metadata = {
+    title: { absolute: "Your results · The Official Smart Fella Test" },
+    description: "Your results from the Official Smart Fella Test.",
+    robots: ROBOTS,
+  };
+  if (!record || !test) return base;
+
+  const { score, max, verdict } = scoreTest(test, record.answers);
+  const shared = `${verdict.title}. Scored ${score} out of ${max}.`;
+
+  return {
+    ...base,
+    openGraph: {
+      title: shared,
+      description: "Take the Official Smart Fella Test and find out which one you are.",
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: shared,
+      description: "Take the Official Smart Fella Test and find out which one you are.",
+    },
+  };
+}
 
 function NotFound() {
   return (
@@ -108,6 +149,18 @@ export default async function ResultsPage({
         </div>
 
         <ResultsView test={test} result={result} timedOut={record.timedOut} />
+
+        {/*
+          Only on the real results page, never on the gated screen behind the
+          email box. A masked result has no score and no verdict to put on a
+          card, and offering to share one would be offering to share "???".
+        */}
+        <ShareResults
+          token={record.token}
+          testId={test.id}
+          audience={test.audience}
+          verdict={result.verdict.id}
+        />
 
         {/* Fires results_link_opened. A tiny client island rather than making
             this whole page a client component for one analytics call. */}

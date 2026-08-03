@@ -711,3 +711,107 @@ export function trackAttributionSurveyAnswered(source: AttributionSource): void 
 export function trackAttributionSurveyDismissed(): void {
   posthog.capture("attribution_survey_dismissed");
 }
+
+/* --------------------------------------------------------------------------
+ * Sharing a result — the growth loop
+ *
+ * The one place a result leaves the person who earned it, so it is the one
+ * place the loop can be measured. Three mechanisms, because they are genuinely
+ * different behaviours with different reach and the aggregate hides that: the
+ * OS share sheet, saving the 1080x1920 card to the camera roll (what actually
+ * travels on TikTok and Instagram), and copying the link.
+ *
+ * WHAT THESE CARRY, AND WHAT THEY MUST NEVER CARRY. The same fields the rest
+ * of the test taxonomy uses: test id, audience, verdict band. No token, for
+ * the reason spelled out on `trackResultsLinkOpened` — a token is a durable
+ * handle to one person's result page, and a stream of them turns a no-PII
+ * dataset into a keyring. No address, obviously; `scrubAndEnrich` would strip
+ * one anyway, and nothing here has an address to pass.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * How a share left the device.
+ *
+ * Mirrors `ShareMechanism` in lib/test/share-url.ts, which is the same
+ * vocabulary on the URL side (it becomes `utm_content`). Declared separately
+ * rather than imported because that module is shared with server code and this
+ * one pulls in `posthog-js`.
+ */
+export type ShareMechanism = "native_sheet" | "image_download" | "copy_link";
+
+interface ShareEventBase {
+  test_id: string;
+  audience: TestAudience;
+  /** The verdict band, e.g. "smart-fella". Group on this. */
+  verdict: string;
+}
+
+/**
+ * A share was asked for. Fires the moment the control is pressed, BEFORE the
+ * browser is involved, so it counts intent rather than success.
+ *
+ * The gap between this and `test_result_share_completed` is the number worth
+ * watching: on the native sheet it is the share-sheet abandon rate, and it is
+ * invisible if only completions are recorded.
+ */
+export function trackTestResultShareInitiated(
+  p: ShareEventBase & { mechanism: ShareMechanism },
+): void {
+  posthog.capture("test_result_share_initiated", p);
+}
+
+/**
+ * The share actually happened, AS FAR AS THE PLATFORM WILL SAY.
+ *
+ * That qualifier is load-bearing and the number should be read with it in
+ * mind. `navigator.share()` resolves when the sheet reports success, and it
+ * deliberately does NOT say which app was chosen — that is a privacy property
+ * of the API, not a gap to work around. A download reports completion when the
+ * blob has been handed to the browser. Copy reports when the clipboard write
+ * resolved. None of the three can tell us whether anything was ever posted.
+ */
+export function trackTestResultShareCompleted(
+  p: ShareEventBase & { mechanism: ShareMechanism },
+): void {
+  posthog.capture("test_result_share_completed", p);
+}
+
+/**
+ * The share sheet opened and the person backed out of it.
+ *
+ * Its own event rather than a `reason` on the failure event, because it is not
+ * a failure: the machinery worked and they changed their mind. Folding the two
+ * together would make a healthy sheet look broken.
+ */
+export function trackTestResultShareDismissed(
+  p: ShareEventBase & { mechanism: ShareMechanism },
+): void {
+  posthog.capture("test_result_share_dismissed", p);
+}
+
+/**
+ * The share could not be completed. `reason` is a short enum of our own, never
+ * a thrown message: DOMException text varies by browser and has no contract.
+ */
+export function trackTestResultShareFailed(
+  p: ShareEventBase & {
+    mechanism: ShareMechanism;
+    /** "card_fetch" | "share_api" | "clipboard" | "download" */
+    reason: string;
+  },
+): void {
+  posthog.capture("test_result_share_failed", p);
+}
+
+/**
+ * Somebody opened a shared link and saw the challenge. The far end of the loop
+ * and the only evidence a share reached a human.
+ *
+ * Pairs with `test_result_share_completed` the way `results_link_opened` pairs
+ * with `test_email_sent`. `platform` is already a super property and the
+ * shared URL carries `utm_source=share`, so the two together separate shared
+ * traffic from every other arrival with no extra field here.
+ */
+export function trackTestChallengeViewed(p: ShareEventBase): void {
+  posthog.capture("test_challenge_viewed", p);
+}

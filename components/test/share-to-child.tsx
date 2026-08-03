@@ -15,9 +15,7 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { trackTestShareToChildClicked } from "@/lib/analytics/events";
-
-/** The query param that drops someone straight into the grade picker. */
-export const CHILD_ENTRY_PARAM = "for=child";
+import { CHILD_ENTRY_PARAM } from "@/lib/test/share-url";
 
 export function ShareToChild() {
   const [copied, setCopied] = useState(false);
