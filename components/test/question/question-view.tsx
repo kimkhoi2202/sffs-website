@@ -16,7 +16,7 @@
 import { Fragment } from "react";
 
 import { FigCellContent, FigCell, FigureCell, QuestionCell } from "./figure";
-import { OptionGroup, TextOptionCard, VisualOptionCard } from "./option-card";
+import { OptionGroup, StimulusOnlyProvider, TextOptionCard, VisualOptionCard } from "./option-card";
 import { DotSquare, FoldStrip, HoleGrid, PolygonShape, creaseAxes } from "./shapes";
 import { describeDot, describeFig, describeHoles, describePoly } from "./describe";
 import type { TableData, TestItem } from "@/lib/test/types";
@@ -381,7 +381,27 @@ const TIERS_WITHOUT_PROMPT = new Set([
   "LOGIC",
 ]);
 
-export function QuestionView({ item, picked, onPick }: QuestionViewProps) {
+export function QuestionView({
+  item,
+  picked,
+  onPick,
+  /**
+   * Draw the stimulus and nothing else. The review panel supplies its own
+   * option list carrying the answer state; see StimulusOnlyProvider.
+   */
+  stimulusOnly,
+}: QuestionViewProps & { stimulusOnly?: boolean }) {
+  if (stimulusOnly) {
+    return (
+      <StimulusOnlyProvider>
+        <QuestionView item={item} picked={picked} onPick={onPick} />
+      </StimulusOnlyProvider>
+    );
+  }
+  return <QuestionBody item={item} picked={picked} onPick={onPick} />;
+}
+
+function QuestionBody({ item, picked, onPick }: QuestionViewProps) {
   const legend = item.prompt;
   const name = `q-${item.id}`;
   const shared = { name, onSelect: onPick };

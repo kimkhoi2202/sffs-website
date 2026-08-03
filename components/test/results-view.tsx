@@ -116,9 +116,11 @@ export function ResultsView({
     <div className={cn("flex w-full flex-col gap-4", className)}>
       {/* -- score and verdict ------------------------------------------------ */}
       <div className="flex flex-col items-center gap-3 rounded-2xl border-[2.5px] border-ink bg-yellow p-5 text-center shadow-hard-lg sm:p-7">
-        <span className="eyebrow text-ink/70">
-          {timedOut ? "Time ran out" : "Your score"}
-        </span>
+        {/* NO "YOUR SCORE" LABEL. The number is the largest thing on the
+            page and sits directly under the test's name; labelling it tells a
+            reader something they worked out before they read the label. The
+            timed-out case still says so, because that is news. */}
+        {timedOut ? <span className="eyebrow text-ink/70">Time ran out</span> : null}
         <p className="font-display text-[clamp(3.5rem,18vw,6rem)] leading-[0.85] tracking-[-0.02em]">
           {/* The numerator is the thing being withheld. The denominator is not
               a secret and keeping it real is what stops the mask reading as an
@@ -183,7 +185,8 @@ export function ResultsView({
       {/* -- the split by domain ----------------------------------------------- */}
       {byDomain.length > 1 ? (
         <div className="flex flex-col gap-2.5 rounded-2xl border-[2.5px] border-ink bg-paper p-4 shadow-hard-sm sm:p-5">
-          <h2 className="font-display text-lg uppercase leading-none">How it broke down</h2>
+          {/* No heading: four labelled bars with scores beside them are self
+              evidently a breakdown. */}
           {byDomain.map((row) => (
             <div key={row.domain} className="flex items-center gap-3">
               <span className="w-[7.5rem] shrink-0 text-[0.85rem] font-bold leading-tight text-ink">
@@ -229,10 +232,10 @@ export function ResultsView({
           <h2 className="font-display text-lg uppercase leading-none">Question by question</h2>
           <ol className="flex flex-col gap-1.5">
             {result.items.map((scored, i) => (
-              <li key={scored.item.id} className="flex items-start gap-2.5 py-1">
+              <li key={scored.item.id} className="flex items-center gap-2.5 py-1">
                 <span
                   aria-hidden="true"
-                  className="mt-0.5 size-6 shrink-0 rounded-full border-[2.5px] border-ink bg-cream"
+                  className="size-6 shrink-0 rounded-full border-[2.5px] border-ink bg-cream"
                 />
                 <span className="block text-[0.8rem] font-extrabold uppercase leading-tight tracking-wide text-ink/60">
                   {i + 1}. {scored.item.tier}

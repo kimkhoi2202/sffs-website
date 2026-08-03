@@ -51,7 +51,7 @@ function StatusDot({ scored }: { scored: ScoredItem }) {
     <span
       aria-hidden="true"
       className={cn(
-        "mt-0.5 grid size-6 shrink-0 place-items-center rounded-full border-[2.5px] border-ink text-xs font-black leading-none",
+        "grid size-6 shrink-0 place-items-center rounded-full border-[2.5px] border-ink text-xs font-black leading-none",
         scored.correct ? "bg-mint" : scored.picked === null ? "bg-gray-200" : "bg-coral",
       )}
     >
@@ -145,8 +145,6 @@ export function QuestionReview({ items }: { items: ScoredItem[] }) {
         "lg:relative lg:left-1/2 lg:w-[min(72rem,94vw)] lg:max-w-none lg:-translate-x-1/2",
       )}
     >
-      <h2 className="mb-3 font-display text-lg uppercase leading-none">Question by question</h2>
-
       <div className="lg:grid lg:grid-cols-[minmax(0,18rem)_minmax(0,1fr)] lg:gap-6">
         {/* -- the list ------------------------------------------------------ */}
         <ol
@@ -176,7 +174,25 @@ export function QuestionReview({ items }: { items: ScoredItem[] }) {
           */
           data-lenis-prevent
           className={cn(
-            "flex flex-col gap-1.5 pane-scroll lg:max-h-[34rem] lg:pr-2",
+            /*
+              ROOM RESERVED FOR THINGS THAT LEAVE THEIR BOX, sized from the
+              treatments rather than guessed. `btn-press` moves -2px on hover
+              and grows its shadow to 6px, so its painted extent reaches 4px
+              past the bottom-right and 2px past the top-left; `press-lg`
+              reaches 6px; the Button's focus ring sits about 3.5px outside.
+              Eight pixels clears the worst of those with margin, and holds if
+              the treatment is retuned within reason.
+
+              This is the same bug three times over in one session — a sheared
+              focus ring, a Next button clipped at the column edge, and a
+              hover-displaced control cut off — so it is fixed once here, on
+              the container, rather than by asking each element not to move.
+
+              The bottom is deeper because the fade needs clearing too: content
+              under it is technically visible and hard to read, so the last row
+              has to end above it, not inside it.
+            */
+            "flex flex-col gap-1.5 pane-scroll lg:max-h-[34rem] lg:px-2 lg:pt-2 lg:pb-12",
             // Below lg the list is replaced rather than pushed off-canvas, so
             // the detail never renders under a list nobody can see.
             open ? "hidden lg:flex" : "flex",
@@ -189,7 +205,29 @@ export function QuestionReview({ items }: { items: ScoredItem[] }) {
                 onClick={() => pick(i)}
                 aria-current={i === selected ? "true" : undefined}
                 className={cn(
-                  "flex w-full items-start gap-2.5 rounded-xl border-[2.5px] px-2.5 py-2 text-left transition-colors",
+                  /*
+                    `items-center`, not `items-start`. The row aligned to the
+                    top and the icon carried an `mt-0.5` nudge to compensate,
+                    so the icon looked centred and the label did not — measured
+                    at 5.2px high against the row's centre while the icon was
+                    within 1px of it, which is what made the row read as
+                    tilted. Centring both and dropping the nudge fixes it at
+                    the cause. (The residual all-caps optical offset is under a
+                    pixel and is not worth a magic number.)
+
+                    `cursor-pointer` because the row is a button and did not
+                    say so.
+
+                    THE FOCUS RING IS DRAWN INSIDE. A default outline sits
+                    outside the border box and the pane clips it, so it showed
+                    on the left and was sheared off on the right. A negative
+                    offset puts it within the row's own bounds, where there is
+                    nothing to clip it — which keeps the indicator that
+                    keyboard users need on a page whose arrow-key navigation is
+                    a designed feature.
+                  */
+                  "flex w-full cursor-pointer items-center gap-2.5 rounded-xl border-[2.5px] px-2.5 py-2 text-left transition-colors",
+                  "focus-visible:outline focus-visible:outline-[3px] focus-visible:-outline-offset-[3px] focus-visible:outline-ink",
                   i === selected
                     ? "border-ink bg-blue"
                     : "border-transparent hover:[@media(hover:hover)]:bg-cream",
@@ -216,7 +254,7 @@ export function QuestionReview({ items }: { items: ScoredItem[] }) {
             // put the panel's content 20px off the centre of its own column —
             // invisible below `lg` and obvious above it, which is why it read
             // as "text sitting off-centre" rather than as a padding bug.
-            "min-w-0 pane-scroll lg:max-h-[34rem] lg:px-5",
+            "min-w-0 pane-scroll lg:max-h-[34rem] lg:px-5 lg:pt-2 lg:pb-12",
             "lg:border-l-[2.5px] lg:border-ink/15",
             open ? "block" : "hidden lg:block",
           )}

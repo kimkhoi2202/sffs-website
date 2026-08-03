@@ -53,6 +53,28 @@ import { cn } from "@/lib/utils";
  */
 const OptionLettersContext = createContext(false);
 
+/**
+ * Suppress the option group entirely, leaving only the stimulus.
+ *
+ * The review panel needs the QUESTION as the player saw it — the same
+ * component, so a figure matrix is a real matrix — but supplies its own option
+ * list with the answer state on it. Without this it rendered both: four
+ * neutral options from here, then the same four again with the colouring, so a
+ * reader met "A 54, B 26, C 25, D 31" and then immediately "A 54, B 26 THE
+ * RIGHT ANSWER, C 25, D 31 YOU PICKED THIS" and reasonably read the second set
+ * as a different question. It also doubled the panel's height.
+ *
+ * A context rather than a prop threaded through QuestionView's eight branches,
+ * for the same reason as the letters below: those branches have no opinion
+ * about this, and the default is the runner's behaviour.
+ */
+const StimulusOnlyContext = createContext(false);
+
+/** Render the stimulus without its options. Review surfaces only. */
+export function StimulusOnlyProvider({ children }: { children: ReactNode }) {
+  return <StimulusOnlyContext.Provider value={true}>{children}</StimulusOnlyContext.Provider>;
+}
+
 /** Show A/B/C/D on figural options within. Review surfaces only. */
 export function OptionLettersProvider({ children }: { children: ReactNode }) {
   return <OptionLettersContext.Provider value={true}>{children}</OptionLettersContext.Provider>;
@@ -286,6 +308,11 @@ export function OptionGroup({
   variant: "text" | "visual";
   children: ReactNode;
 }) {
+  // eslint-disable-next-line react-hooks/rules-of-hooks -- unconditional; the
+  // early return below it is what is conditional.
+  const stimulusOnly = useContext(StimulusOnlyContext);
+  if (stimulusOnly) return null;
+
   return (
     <fieldset className="w-full border-0 p-0">
       <legend className="sr-only">{legend}</legend>
