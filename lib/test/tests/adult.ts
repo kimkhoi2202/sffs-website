@@ -144,7 +144,7 @@ export const ADULT_TEST: Test = {
           why: "IC-initial: the second letter changed. Easiest to catch, so it is the option a solver who checked only the start rejects last.",
         },
       ],
-      explanation: "Only A is character-for-character identical.",
+      explanation: "Matching a code means checking every character in order rather than recognising its shape, which is what the eye wants to do instead. A is identical the whole way through. The other three each differ by exactly one character, and each is placed to catch a different habit: two adjacent digits swapped in the middle, a zero replaced by a capital O, and a change to the second letter, which is the one people check least. Reading left to right and stopping at the first mismatch is the method.",
       answer: "A",
     },
     {
@@ -169,7 +169,7 @@ export const ADULT_TEST: Test = {
           why: "WP-inverse: added the group size instead of dividing by it.",
         },
       ],
-      explanation: "84 shared between 6 is 14 each.",
+      explanation: "Sharing a total equally between a number of people is division: 84 divided by 6 is 14. The check worth building the habit of is multiplying back the other way — 6 times 14 is 84 — because it catches a slip on the division immediately and costs a second.",
       answer: "C",
     },
     {
@@ -348,7 +348,7 @@ export const ADULT_TEST: Test = {
           why: "WP-inverse: added the withdrawals to the tank instead of taking them away.",
         },
       ],
-      explanation: "200 − 45 − 68 = 87 liters.",
+      explanation: "Both withdrawals come off the same starting amount, so they subtract one after the other: 200 minus 45 is 155, minus 68 is 87. The order does not matter and adding the two withdrawals first gives the same answer. What goes wrong is subtracting only one of them, or reading the second figure as what was LEFT after the morning rather than as a second amount drawn off.",
       answer: "A",
     },
 
@@ -1590,7 +1590,7 @@ export const ADULT_TEST: Test = {
         },
         { id: "D", text: "500" },
       ],
-      explanation: "5 letters × 10 digits × 10 digits = 500.",
+      explanation: "The dials are set independently, so the settings multiply rather than add. Each of the 5 letters can go with any of the 10 first digits, which is 50 combinations, and each of those with any of the 10 second digits: 5 times 10 times 10 is 500. Adding the dials gives 25, which is the usual way this one goes wrong — it counts the choices available rather than the ways of combining them.",
       answer: "D",
     },
     {

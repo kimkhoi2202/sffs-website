@@ -94,4 +94,22 @@ export const EXPLANATIONS = {
     "Mild feeling to intense feeling on the same scale. Furious is extreme annoyance, so we need extreme pleasure: overjoyed. 'Satisfied' is roughly as strong as pleased, so it does not move up the scale at all, which is what the pair requires.",
   "grade-7-8-13":
     "Each pair is a cause and what it leads to: neglect leads to decay, isolation leads to loneliness. 'Distance' is the near-miss, and it fails in an interesting way — it is a CAUSE of isolation rather than its effect, so it runs the pair backwards.",
+  /* -- the four that stayed thin in context -------------------------------
+   *
+   * The rest of the bank was reviewed item by item AFTER the distractor notes
+   * started surfacing, and almost all of it reads adequately now: a number
+   * analogy saying "each number goes up by 3, so 10 becomes 13" already names
+   * the rule and shows the key satisfying it, and the note supplies the third
+   * part. Padding those would make them worse, not better — a child does not
+   * need four sentences for "add 3".
+   *
+   * These four do not clear the bar even in context. Each is a bare
+   * calculation or a bare assertion: it states what the answer IS without
+   * naming the method that produces it, so somebody who got it wrong learns
+   * only that they got it wrong.
+   */
+  a03: "Matching a code means checking every character in order rather than recognising its shape, which is what the eye wants to do instead. A is identical the whole way through. The other three each differ by exactly one character, and each is placed to catch a different habit: two adjacent digits swapped in the middle, a zero replaced by a capital O, and a change to the second letter, which is the one people check least. Reading left to right and stopping at the first mismatch is the method.",
+  a04: "Sharing a total equally between a number of people is division: 84 divided by 6 is 14. The check worth building the habit of is multiplying back the other way — 6 times 14 is 84 — because it catches a slip on the division immediately and costs a second.",
+  a10: "Both withdrawals come off the same starting amount, so they subtract one after the other: 200 minus 45 is 155, minus 68 is 87. The order does not matter and adding the two withdrawals first gives the same answer. What goes wrong is subtracting only one of them, or reading the second figure as what was LEFT after the morning rather than as a second amount drawn off.",
+  a47: "The dials are set independently, so the settings multiply rather than add. Each of the 5 letters can go with any of the 10 first digits, which is 50 combinations, and each of those with any of the 10 second digits: 5 times 10 times 10 is 500. Adding the dials gives 25, which is the usual way this one goes wrong — it counts the choices available rather than the ways of combining them.",
 };
