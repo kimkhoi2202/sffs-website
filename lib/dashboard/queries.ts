@@ -109,6 +109,12 @@ function cleanSessionsCte(): string {
     SELECT DISTINCT toString(properties.$session_id) AS sid
     FROM events
     WHERE {filters}
+      -- The mobile app shares this PostHog project and its sessions carry no
+      -- pathname, no referrer and no channel. Without this restriction they
+      -- all land in the sources table as "Direct or unknown" — 136 of 187
+      -- sessions in a week where the sessions tile reads 42, which makes the
+      -- rung breakdown read 73% unresolved when the real figure is far lower.
+      AND properties.$lib = 'web'
       AND notEmpty(toString(properties.$session_id))`;
 }
 
