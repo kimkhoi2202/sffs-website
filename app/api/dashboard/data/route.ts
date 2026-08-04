@@ -12,6 +12,16 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
+ * A cold start measured 14.8s against the platform's 15s default, and the page
+ * came up with an empty people list because the function was killed a moment
+ * before ClickHouse answered. Warm it takes five. The ceiling is headroom for
+ * the cold case and for a wide window, not an expectation — nothing here should
+ * ever run for a minute, and if it does the concurrency gate is the thing to
+ * look at.
+ */
+export const maxDuration = 60;
+
+/**
  * The dashboard's only data endpoint.
  *
  * ===========================================================================
