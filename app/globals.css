@@ -35,6 +35,12 @@
   --color-gray-400: #a5a5a5;
   --color-gray-500: #9b9b9b;
   --color-gray-600: #7a7a7a;
+  /* The first grey on this ramp dark enough to carry white text. gray-600 is
+     4.29:1 on white — below the 4.5:1 floor, let alone the 7:1 we want on a
+     control holding the dashboard's primary navigation. This is 8.86:1.
+     Also pins the slot: Tailwind's own gray-700 is a blue-tinted slate that
+     would read cold beside this neutral ramp. */
+  --color-gray-700: #4a4a4a;
 
   /* semantic aliases */
   --color-background: var(--color-paper);
@@ -48,6 +54,19 @@
   --radius-2xl: 2rem;
   --radius-3xl: 2.5rem;
   --radius-4xl: 3rem;
+
+  /* ---- Corner inset ----
+     Padding for content tucked into a rounded-3xl corner (the dashboard panel
+     headers). Uniform padding that is right along a straight edge is not right
+     beside a curve: the arc eats into it diagonally. At px-5 the heading's
+     top-left corner sits 6.6px from the border it is 20px from along a flat
+     edge — measured in the browser, not estimated.
+
+     Restoring that same 20px gap on the diagonal:
+       inset = Ri − (Ri − gap) / √2,  Ri = 40px radius − 2.5px border = 37.5
+             = 37.5 − 17.5 / 1.41421 = 25.1px
+     Rounded to 25px, which measures back as a 19.8px diagonal gap. */
+  --spacing-corner-inset: 25px;
 
   /* ---- Hard offset shadows (SIGNATURE, no blur) ---- */
   --shadow-hard-xs: 2px 2px 0 0 #000;

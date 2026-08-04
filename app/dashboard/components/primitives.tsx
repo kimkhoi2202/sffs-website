@@ -57,9 +57,15 @@ export function Panel({
     >
       {/* No rule between a panel header and its body. The two are one surface
           and the heading already separates them; see the people list, where the
-          same rule came off the same kind of header. */}
+          same rule came off the same kind of header.
+
+          Insets here follow the corner, not the straight edge — see
+          --spacing-corner-inset. The body takes the same inset even though its
+          own edges are flat: a header pushed in to clear the curve while the
+          text under it stayed at p-5 left a 5px jog down the panel's left
+          column, which is a worse thing to look at than the gap it fixed. */}
       {(title || right) && (
-        <header className="flex flex-wrap items-center justify-between gap-3 px-5 py-3">
+        <header className="flex flex-wrap items-center justify-between gap-3 px-corner-inset pb-3 pt-corner-inset">
           <div className="min-w-0">
             {title && (
               <h2 className="font-display text-lg uppercase leading-none tracking-[-0.01em]">
@@ -73,7 +79,7 @@ export function Panel({
           {right}
         </header>
       )}
-      <div className="p-5">{children}</div>
+      <div className="p-corner-inset">{children}</div>
     </section>
   );
 }

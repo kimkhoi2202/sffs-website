@@ -59,7 +59,7 @@ export function PeoplePanel({
         cards that look sliced at this boundary are being clipped by the
         scroller's own top edge, which is a different edge in the same place.
       */}
-      <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 px-5 py-3">
+      <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 px-corner-inset pb-3 pt-corner-inset">
         <div>
           <h2 className="font-display text-lg uppercase leading-none">
             {filterLabel ?? "Everyone"}
