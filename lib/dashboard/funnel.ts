@@ -164,7 +164,10 @@ const STAGES: {
   {
     id: "landed",
     label: "Landed on the site",
-    hint: "At least one $pageview",
+    // Any event, not just a $pageview: about a third of real arrivals reach
+    // PostHog with the pageview missing and only a $pageleave or a
+    // section_viewed surviving, because something ate the first capture.
+    hint: "Any event at all — a pageview can be blocked while a pageleave still lands",
     reached: (h) => h.landed,
   },
   {
