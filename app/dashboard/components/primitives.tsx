@@ -19,6 +19,13 @@ import {
  * its cards, so this does too. The v3 no-drop-shadow rule applies to the newer
  * test surfaces, not to the internal tooling, and having the two internal pages
  * disagree with each other would be the worse outcome.
+ *
+ * THAT IS NOW BEING UNWOUND, ONE SURFACE AT A TIME. The people list has had its
+ * shadow removed on the owner's call: the dashboard is a new surface and the
+ * v3 convention is the one it should be joining, rather than inheriting an
+ * older page's habits. The panels here and the journey sections still carry
+ * theirs, so the page is mid-migration on purpose — if you are adding a panel,
+ * the direction of travel is no shadow.
  */
 
 export function Panel({
@@ -48,8 +55,11 @@ export function Panel({
         className,
       )}
     >
+      {/* No rule between a panel header and its body. The two are one surface
+          and the heading already separates them; see the people list, where the
+          same rule came off the same kind of header. */}
       {(title || right) && (
-        <header className="flex flex-wrap items-center justify-between gap-3 border-b-[2.5px] border-ink px-5 py-3">
+        <header className="flex flex-wrap items-center justify-between gap-3 px-5 py-3">
           <div className="min-w-0">
             {title && (
               <h2 className="font-display text-lg uppercase leading-none tracking-[-0.01em]">

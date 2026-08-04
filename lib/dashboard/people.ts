@@ -352,6 +352,19 @@ async function fetchEmailCaptures(
  * dashboard is meant to surface. Without this list, turning the internal filter
  * on would still leave `delivered+link…@resend.dev` sitting in the people list
  * looking like a real customer.
+ *
+ * THIS LIST IS THE LAST RESORT, NOT THE FIRST LINE, AND IT IS NOT THE THING TO
+ * EXTEND. It is deliberately shorter than PostHog's own filter and that is not
+ * a gap: PostHog already wins wherever it can see the person at all. A signup
+ * that matches an UNFILTERED capture but no filtered one is dropped further
+ * down on exactly that basis, which catches a teammate whose address this list
+ * has never heard of — a personal gmail, say — as long as PostHog saw them.
+ *
+ * So the only rows this list decides are the ones PostHog never recorded, where
+ * there is nothing else to go on. Adding addresses here to "keep up with"
+ * PostHog duplicates a filter that has already run and drifts out of date
+ * silently; if someone internal is showing up, check whether their browser is
+ * marked via /internal first, because that fixes it everywhere at once.
  */
 const INTERNAL_EMAIL_PATTERNS = [
   /@alphaaiengineering\.com$/i,

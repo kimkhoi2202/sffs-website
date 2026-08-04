@@ -339,7 +339,9 @@ export function JourneyPanel({
 
       {/* ---- The stream ---------------------------------------------------- */}
       <section className="overflow-hidden rounded-3xl border-[2.5px] border-ink bg-paper shadow-hard-sm">
-        <header className="flex flex-wrap items-baseline justify-between gap-2 border-b-[2.5px] border-ink px-5 py-3">
+        {/* No rule under the header — same reasoning as the people list: the
+            <ol> below is its own scroller, not something passing underneath. */}
+        <header className="flex flex-wrap items-baseline justify-between gap-2 px-5 py-3">
           <h3 className="font-display text-lg uppercase leading-none">Everything they did</h3>
           <p className="text-[0.7rem] font-semibold text-ink/55">
             {journey.events.length} events

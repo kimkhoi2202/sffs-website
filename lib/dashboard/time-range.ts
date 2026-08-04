@@ -23,6 +23,8 @@
  */
 
 export type RangePresetId =
+  /** From the moment the v3 test flow went live until now. See FLOW_LAUNCH. */
+  | "since_launch"
   | "today"
   | "yesterday"
   | "last_hour"
@@ -56,6 +58,17 @@ export interface TimeRangeInput {
   to?: string;
 }
 
+/**
+ * What the dashboard opens on, and what an unspecified window falls back to.
+ *
+ * "Last 7 days" was the landing state and it was the wrong first number to show
+ * anyone: it reaches back before the test flow existed, so the first conversion
+ * rate on the page was computed against a denominator full of people who could
+ * not have converted. One place, so the client's initial state and the server's
+ * fallback cannot drift apart.
+ */
+export const DEFAULT_RANGE: TimeRangeInput = { preset: "since_launch" };
+
 export interface ResolvedRange {
   /** Inclusive lower bound, ISO-8601 in UTC. */
   from: string;
@@ -69,6 +82,7 @@ export interface ResolvedRange {
 
 /** The picker's menu, in the order it is rendered. */
 export const RANGE_PRESETS: { id: RangePresetId; label: string; group: string }[] = [
+  { id: "since_launch", label: "Since launch", group: "Recent" },
   { id: "today", label: "Today", group: "Recent" },
   { id: "yesterday", label: "Yesterday", group: "Recent" },
   { id: "last_hour", label: "Last hour", group: "Recent" },
@@ -93,6 +107,46 @@ export const RANGE_PRESETS: { id: RangePresetId; label: string; group: string }[
  * stops an unbounded `timestamp` predicate reaching ClickHouse.
  */
 export const PROJECT_EPOCH = "2026-07-22T00:00:00Z";
+
+/**
+ * The moment the v3 test flow went live, and the only honest floor for a
+ * conversion rate.
+ *
+ * ===========================================================================
+ * WHY THIS IS A PRESET AND NOT A PREFERENCE
+ * ===========================================================================
+ * Any window reaching back before this mixes two different products. A visitor
+ * on 30 July could not have taken a test, because there was no test; counting
+ * them as somebody who DIDN'T take one is not a rounding error, it is the
+ * wrong denominator. On a fortnight's window that quietly halves every rate on
+ * the page, and the funnel stops meaning anything.
+ *
+ * ===========================================================================
+ * WHERE THE TIMESTAMP COMES FROM
+ * ===========================================================================
+ * Measured, not assumed: it is the first `test_step_viewed` from a NON-INTERNAL
+ * browser — the first moment a real visitor saw the first screen of the flow.
+ *
+ * Three boundaries were candidates and two of them are wrong:
+ *
+ *   midnight on 2 Aug     WRONG. The old homepage — a signup form with no test
+ *                         on it — was still being served until at least 18:52
+ *                         that day. Three people visited before the cutover and
+ *                         would be counted as having failed to start a test
+ *                         that did not exist yet.
+ *   19:39:21 (first event
+ *   of any kind)          WRONG, though tempting. That is the owner's own load
+ *                         on deploying. The 19 events between then and 23:41
+ *                         are ALL `is_internal`; zero external.
+ *   23:41:09              RIGHT. First external visitor. Verified: the count of
+ *                         non-internal `test_step_viewed` before this instant
+ *                         is exactly zero.
+ *
+ * If the flow is ever redeployed in a shape that resets the funnel, this is the
+ * constant to move, and the query to move it with is the earliest `timestamp`
+ * where `event = 'test_step_viewed'` and `is_internal` is not true.
+ */
+export const FLOW_LAUNCH = "2026-08-02T23:41:09Z";
 
 const HOUR = 3600 * 1000;
 const DAY = 24 * HOUR;
@@ -173,6 +227,11 @@ export function resolveRange(input: TimeRangeInput, nowMs: number = Date.now()):
   let label: string;
 
   switch (input.preset) {
+    case "since_launch":
+      from = Date.parse(FLOW_LAUNCH);
+      to = now;
+      label = "Since launch";
+      break;
     case "today":
       from = today;
       to = now;
@@ -280,9 +339,9 @@ export function resolveRange(input: TimeRangeInput, nowMs: number = Date.now()):
       break;
     }
     default:
-      from = now - 7 * DAY;
+      from = Date.parse(FLOW_LAUNCH);
       to = now;
-      label = "Last 7 days";
+      label = "Since launch";
   }
 
   from = Math.max(epoch, Math.min(from, now));
@@ -291,17 +350,23 @@ export function resolveRange(input: TimeRangeInput, nowMs: number = Date.now()):
   return { from: iso(from), to: iso(to), label, granularity: granularityFor(to - from) };
 }
 
-/** Narrow untrusted JSON into a `TimeRangeInput`. */
+/**
+ * Narrow untrusted JSON into a `TimeRangeInput`.
+ *
+ * The fallback is `since_launch` rather than `last_7_days`, so that a request
+ * arriving with no window — or an unrecognised one — lands on the honest one
+ * instead of on a window that spans two different products.
+ */
 export function parseRangeInput(raw: unknown): TimeRangeInput {
   const value = (raw ?? {}) as Record<string, unknown>;
-  const preset = String(value.preset ?? "last_7_days") as RangePresetId;
+  const preset = String(value.preset ?? DEFAULT_RANGE.preset) as RangePresetId;
   const known =
     RANGE_PRESETS.some((p) => p.id === preset) ||
     preset === "last_n_days" ||
     preset === "since_date" ||
     preset === "custom";
   return {
-    preset: known ? preset : "last_7_days",
+    preset: known ? preset : DEFAULT_RANGE.preset,
     days: typeof value.days === "number" ? value.days : undefined,
     from: typeof value.from === "string" ? value.from : undefined,
     to: typeof value.to === "string" ? value.to : undefined,

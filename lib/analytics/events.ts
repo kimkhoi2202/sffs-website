@@ -124,13 +124,44 @@ function platformOnce(): string {
 }
 
 /**
- * Runs on EVERY outbound event. (1) hard-strips email/$ip from properties + the
- * person `$set`/`$set_once` bags — a guarantee no accidental PII ever leaves the
- * browser; (2) guarantees `platform` is present so the conversion funnel's
- * platform breakdown is never blank (including the first pageview).
+ * A surface that REPORTS on the project must not also feed it.
+ *
+ * /dashboard reads this PostHog project and renders it. Left alone it also
+ * captures its own pageviews, autocaptured clicks and session replays into the
+ * very numbers it is displaying, so anyone with the passphrase quietly inflates
+ * the traffic they came to read — and does it disproportionately, because at
+ * five completed tests a handful of internal page loads is not noise, it is a
+ * visible fraction of the chart.
+ *
+ * Dropped here rather than by skipping `posthog.init`, because init runs once
+ * per page load and the flow in and out of this route is a client-side
+ * navigation: a load-time guard would either miss the dashboard (arrived at
+ * from elsewhere) or kill capture for the rest of the session (left for
+ * elsewhere). `before_send` is the one place that sees every event with the
+ * current URL, so the rule is exactly "while you are on this route, nothing
+ * leaves", and normal capture resumes by itself on the way out.
+ *
+ * This is deliberately stronger than the `is_internal` stamp next door. That
+ * one keeps events and tags them so a filter can exclude them; this route
+ * should not be in the dataset at all, under any filter.
+ */
+function isSilentRoute(): boolean {
+  if (typeof window === "undefined") return false;
+  const p = window.location.pathname;
+  return p === "/dashboard" || p.startsWith("/dashboard/");
+}
+
+/**
+ * Runs on EVERY outbound event. (0) drops everything from the reporting
+ * surfaces that must not appear in their own numbers; (1) hard-strips
+ * email/$ip from properties + the person `$set`/`$set_once` bags — a guarantee
+ * no accidental PII ever leaves the browser; (2) guarantees `platform` is
+ * present so the conversion funnel's platform breakdown is never blank
+ * (including the first pageview).
  */
 export function scrubAndEnrich(cr: CaptureResult | null): CaptureResult | null {
   if (!cr) return cr;
+  if (isSilentRoute()) return null;
   for (const bag of [cr.properties, cr.$set, cr.$set_once]) {
     if (!bag) continue;
     for (const key of PII_KEYS) if (key in bag) delete bag[key];

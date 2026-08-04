@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { cn } from "@/lib/utils";
-import { resolveRange, type TimeRangeInput } from "@/lib/dashboard/time-range";
+import { DEFAULT_RANGE, resolveRange, type TimeRangeInput } from "@/lib/dashboard/time-range";
 import type {
   JourneyResponse,
   PeopleResponse,
@@ -35,7 +35,7 @@ import { TrafficPanel } from "./components/traffic-panel";
 type Tab = "journeys" | "funnel" | "traffic";
 
 export function DashboardApp({ queryKeyConfigured }: { queryKeyConfigured: boolean }) {
-  const [range, setRange] = useState<TimeRangeInput>({ preset: "last_7_days" });
+  const [range, setRange] = useState<TimeRangeInput>(DEFAULT_RANGE);
   const [filtered, setFiltered] = useState(true);
   const [tab, setTab] = useState<Tab>("journeys");
 
@@ -243,10 +243,14 @@ export function DashboardApp({ queryKeyConfigured }: { queryKeyConfigured: boole
           value={tiles ? duration(tiles.avgSessionSeconds) : "—"}
           hint="PostHog session duration"
         />
+        {/* The definition, not the name of the definition. PostHog's bounce is
+            all three of: one pageview, no autocaptured interaction, and under
+            ten seconds — stricter than the "one pageview" most people picture,
+            so the number reads lower than expected and gets mistrusted. */}
         <Stat
           label="Bounce rate"
           value={tiles ? pct(tiles.bounceRate) : "—"}
-          hint="PostHog bounce definition"
+          hint="1 pageview, no click, under 10s"
         />
         <Stat
           label="Tests started"

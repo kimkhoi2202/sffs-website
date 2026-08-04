@@ -51,8 +51,15 @@ export function PeoplePanel({
       `overflow-hidden` is the third small thing: a 40px `rounded-3xl` with
       `overflow: visible` does not clip its children to its own corners.
     */
-    <div className="flex max-h-[calc(100dvh-2rem)] flex-col overflow-hidden rounded-3xl border-[2.5px] border-ink bg-paper shadow-hard-sm xl:sticky xl:top-4 xl:self-start">
-      <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b-[2.5px] border-ink px-5 py-3">
+    <div className="flex max-h-[calc(100dvh-2rem)] flex-col overflow-hidden rounded-3xl border-[2.5px] border-ink bg-paper xl:sticky xl:top-4 xl:self-start">
+      {/*
+        NO RULE UNDER THIS HEADER, and it is safe to have none: the header is a
+        flex SIBLING of the scroller below it, not a sticky layer over it, so
+        nothing ever passes beneath it and there is no transition to mask. The
+        cards that look sliced at this boundary are being clipped by the
+        scroller's own top edge, which is a different edge in the same place.
+      */}
+      <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 px-5 py-3">
         <div>
           <h2 className="font-display text-lg uppercase leading-none">
             {filterLabel ?? "Everyone"}

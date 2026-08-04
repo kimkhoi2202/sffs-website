@@ -134,6 +134,32 @@
     overflow-x: clip;
   }
 
+  /*
+    A CONTROL SAYS SO ON HOVER, WITHOUT BEING ASKED TO.
+
+    The UA default for <button> is `cursor: default`, so a button only gets a
+    pointer if someone remembers to add one. Most of this site does — the
+    <Button> component, the fork cards, the grade squares and the quit control
+    each carry their own `cursor-pointer` — and the moment a surface is built
+    without reaching for those, the affordance quietly goes missing. That is
+    what happened to the whole /dashboard: its tabs, time range, filter toggle,
+    sign-out and person cards are all real <button>s with real handlers, and
+    not one of them looked clickable.
+
+    Made a base rule rather than a class to sprinkle, because "did you remember
+    the pointer" is exactly the kind of question that should not have an answer
+    per element. The existing `cursor-pointer` utilities are now redundant but
+    harmless, and are left alone.
+
+    `:disabled` keeps the default arrow, which is the one case where "you cannot
+    press this" is the honest signal.
+  */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  summary {
+    cursor: pointer;
+  }
+
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
     font-weight: 400;

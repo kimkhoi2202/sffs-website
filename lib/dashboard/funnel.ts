@@ -170,10 +170,30 @@ const STAGES: {
     hint: "Any event at all — a pageview can be blocked while a pageleave still lands",
     reached: (h) => h.landed,
   },
+  /*
+    THE FIRST STAGE THAT MEANS ANYTHING, AND IT USED TO BE MIS-NAMED.
+
+    "Landed" and "reached the fork" are the same event in disguise. The test IS
+    the homepage now, so `test_step_viewed step=audience` fires passively on
+    page load — nobody presses anything to arrive at the fork. Counting that as
+    a funnel step makes bouncers look like engaged visitors, which is how
+    "answered a question" ends up LOWER than "reached the fork".
+
+    Choosing a branch is the first moment a person deliberately does something,
+    so it is the first honest measurement of intent, and it is where the largest
+    single loss in the funnel actually happens.
+
+    The old label said "Activated the test" and the old hint named
+    `test_cta_activated`. That event is RETIRED — it last fired on 24 July, when
+    the take-the-test call to action was deleted along with the old homepage. It
+    stays in the predicate only so that pre-cutover windows still read correctly;
+    on any window since launch it contributes nothing, and naming it in the UI
+    invited people to look for a button that no longer exists.
+  */
   {
     id: "cta",
-    label: "Activated the test",
-    hint: "test_cta_activated or test_fork_selected",
+    label: "Chose a branch",
+    hint: "test_fork_selected — the first deliberate act, not a page load",
     reached: (h) => h.ctaActivated,
   },
   {

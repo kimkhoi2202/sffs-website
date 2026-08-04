@@ -32,19 +32,7 @@ export function FunnelPanel({
     <div className="space-y-5">
       <Panel
         title="Where people fall out"
-        subtitle={
-          <>
-            One row per stage. Press a row to read the people who stopped there.{" "}
-            <strong>
-              These count stitched humans, so they can differ from the tiles above, which
-              count PostHog persons.
-            </strong>{" "}
-            Two deliberate reasons: someone whose results visit minted a second person id is
-            one human here and two people up there, and someone whose client library was
-            blocked is counted as having taken the test — because they demonstrably did —
-            even though PostHog holds no <code>test_started</code> for them.
-          </>
-        }
+        subtitle="One row per stage. Press a row to read the people who stopped there."
         right={
           activeStage && (
             <button
@@ -57,6 +45,41 @@ export function FunnelPanel({
           )
         }
       >
+        {/*
+          THE DISAGREEMENT GOES ON SCREEN, NOT IN A FOOTNOTE.
+
+          Step one reads 61 while the Visitors tile a few inches above reads 41,
+          and both are correct. Left unexplained where the two are visible at the
+          same time, that is the kind of thing that costs a dashboard its
+          credibility in one glance — the reader does not conclude "these measure
+          different things", they conclude "this page cannot add up".
+        */}
+        {top > 0 && (
+          <p className="mb-4 rounded-2xl border-[2.5px] border-ink bg-blue px-4 py-3 text-[0.8rem] font-semibold leading-[1.55]">
+            <strong>{top} here, and a different number in the tiles above — both right.</strong>{" "}
+            These rows count stitched <em>humans</em>; the tiles count PostHog <em>persons</em>.
+            Someone whose results visit minted a second person id is one human here and two
+            people up there. Someone whose client library was blocked is counted here as
+            having taken the test, because they demonstrably did, even though PostHog holds
+            no <code className="font-mono text-[0.72rem]">test_started</code> for them.
+          </p>
+        )}
+
+        {/*
+          READ THE COUNTS, NOT THE RATES. At this volume a percentage is a
+          headline attached to two or three people, and the gap between a 68%
+          step and a 55% step is one visitor changing their mind. Saying so on
+          the page is cheaper than watching someone plan a quarter around it.
+        */}
+        {top > 0 && top < 200 && (
+          <p className="mb-4 text-[0.75rem] font-semibold leading-snug text-ink/60">
+            {top} people in this window. Percentages are shown because they are asked for,
+            but at this size one person moves a step by about{" "}
+            {Math.round((1 / top) * 100)} points — read the counts first and treat the rates
+            as a shape, not a rate.
+          </p>
+        )}
+
         <ol className="space-y-2">
           {stages.map((stage, i) => {
             const dropped = stage.droppedHumanIds.length;
@@ -105,6 +128,25 @@ export function FunnelPanel({
                         above
                       </span>
                     )}
+                    {/*
+                      Per-step and end-to-end answer different questions and the
+                      row now says both. "83% carried on" reads like a healthy
+                      step right up until you notice it is the fifth such step
+                      and eight percent of the people who landed are still here.
+                      Spelled out as "n of N" as well as a percentage, because
+                      at these volumes the percentage alone invites more
+                      confidence than five people can carry.
+                    */}
+                    {i > 0 && top > 0 && (
+                      <span
+                        className={cn(
+                          "rounded-full border-2 border-ink px-2 py-0.5",
+                          isActive ? "bg-paper text-ink" : "bg-mint",
+                        )}
+                      >
+                        {stage.count} of {top} overall · {Math.round((stage.count / top) * 100)}%
+                      </span>
+                    )}
                     {dropped > 0 && (
                       <span
                         className={cn(
@@ -147,11 +189,21 @@ export function FunnelPanel({
             </div>
 
             <p className="mt-4 text-[0.8rem] leading-[1.6] text-ink/70">
+              {/*
+                The `{" "}` AFTER the value is load-bearing, not decoration. The
+                plain space that used to follow the closing brace was eaten and
+                the sentence rendered "48 of 50and hits the limit". Same shape as
+                the "wantto play" bug on the marketing pages. It bites when an
+                interpolation ends a source line and the text after it runs on to
+                a second line; a value with text on ONE line either side is fine,
+                which is why the neighbouring counters read correctly and this
+                one did not.
+              */}
               <strong>Timed out is not walked away.</strong> Someone who answers 48 of{" "}
-              {summary.questionTotal || "?"} and hits the limit engaged completely; someone
-              who answers ten and vanishes did not. Counting only &ldquo;did not
-              finish&rdquo; would put them in the same bucket and they mean opposite
-              things.
+              {summary.questionTotal || "?"}{" "}
+              and hits the limit engaged completely; someone who answers ten and
+              vanishes did not. Counting only &ldquo;did not finish&rdquo; would put
+              them in the same bucket and they mean opposite things.
             </p>
 
             {summary.points.length === 0 ? (
