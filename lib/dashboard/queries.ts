@@ -109,12 +109,6 @@ function cleanSessionsCte(): string {
     SELECT DISTINCT toString(properties.$session_id) AS sid
     FROM events
     WHERE {filters}
-      -- The mobile app shares this PostHog project and its sessions carry no
-      -- pathname, no referrer and no channel. Without this restriction they
-      -- all land in the sources table as "Direct or unknown" — 136 of 187
-      -- sessions in a week where the sessions tile reads 42, which makes the
-      -- rung breakdown read 73% unresolved when the real figure is far lower.
-      AND properties.$lib = 'web'
       AND notEmpty(toString(properties.$session_id))`;
 }
 
@@ -175,6 +169,18 @@ async function fetchSources(range: ResolvedRange, filtered: boolean): Promise<So
      WHERE s.session_id IN (SELECT sid FROM clean)
        AND s.$start_timestamp >= ${dt(range.from)}
        AND s.$start_timestamp < ${dt(range.to)}
+       -- WEBSITE SESSIONS ONLY. The React Native app shares this project and
+       -- its sessions have no pathname, no referrer and no channel, so every
+       -- one of them resolved to "Direct or unknown" — 136 of 187 sessions in
+       -- a week where the sessions tile reads 42. That made the ladder look
+       -- far worse at resolving traffic than it is.
+       --
+       -- Tested on the events side first, as \`properties.$lib = 'web'\` inside
+       -- the CTE. That is a JSON lookup on every row of the scan and the query
+       -- hit the execution-time limit. This is a native column on a table with
+       -- one row per session, and it means the same thing: a session that
+       -- viewed a page is a session on the website.
+       AND s.$pageview_count > 0
      GROUP BY channel, rung
      ORDER BY sessions DESC, channel
      LIMIT 60`,
