@@ -35,12 +35,6 @@
   --color-gray-400: #a5a5a5;
   --color-gray-500: #9b9b9b;
   --color-gray-600: #7a7a7a;
-  /* The first grey on this ramp dark enough to carry white text. gray-600 is
-     4.29:1 on white — below the 4.5:1 floor, let alone the 7:1 we want on a
-     control holding the dashboard's primary navigation. This is 8.86:1.
-     Also pins the slot: Tailwind's own gray-700 is a blue-tinted slate that
-     would read cold beside this neutral ramp. */
-  --color-gray-700: #4a4a4a;
 
   /* semantic aliases */
   --color-background: var(--color-paper);

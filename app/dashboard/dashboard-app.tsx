@@ -282,7 +282,7 @@ export function DashboardApp({ queryKeyConfigured }: { queryKeyConfigured: boole
             onClick={() => setTab(id)}
             className={cn(
               "btn-press rounded-full border-[2.5px] border-ink px-4 py-2 font-sans text-sm font-bold uppercase leading-none",
-              tab === id ? "bg-gray-700 text-paper" : "bg-paper",
+              tab === id ? "bg-green" : "bg-paper",
             )}
           >
             {label}
