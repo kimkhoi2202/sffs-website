@@ -15,7 +15,9 @@
  */
 import { chromium } from "playwright-core";
 
-const BASE = process.argv[2] ?? "http://localhost:3000";
+import { resolveWriteTarget, SYNTHETIC } from "./harness-target.mjs";
+
+const BASE = resolveWriteTarget(process.argv[2], "scripts/verify-results-link.mjs");
 const EXE =
   process.env.CHROME_PATH ??
   "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
@@ -32,7 +34,7 @@ const GONE = "RESULTS HAVE GONE";
 async function createResult(testId = "grade-3", grade = 3) {
   const res = await fetch(`${BASE}/api/test-results`, {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: { "content-type": "application/json", ...SYNTHETIC },
     body: JSON.stringify({
       testId,
       grade,

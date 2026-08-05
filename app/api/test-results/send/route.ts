@@ -51,7 +51,7 @@ import { clientIp, isRateLimited } from "@/lib/rate-limit";
 import { EMAIL_SOURCES } from "@/lib/email-sources";
 import { getResult, MAX_SENDS_PER_RESULT, recordSend } from "@/lib/test/result-store";
 import { verdictFor } from "@/lib/test/scoring";
-import { recordResultStats } from "@/lib/test/result-stats";
+import { isSyntheticRequest, recordResultStats } from "@/lib/test/result-stats";
 import { renderResultsEmail } from "@/lib/test/results-email";
 import { displayTestTitle, getTestById } from "@/lib/test/tests";
 import { resultsUrlFor } from "@/lib/test/results-url";
@@ -239,6 +239,7 @@ export async function POST(request: NextRequest) {
     verdict: verdictFor(Math.round((record.score / record.maxScore) * 100), record.audience).id,
     stage: "emailed",
     email,
+    synthetic: isSyntheticRequest(request.headers),
   });
 
   /*

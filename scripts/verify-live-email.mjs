@@ -17,6 +17,8 @@
 import { chromium } from "playwright-core";
 import { readFileSync } from "node:fs";
 
+import { SYNTHETIC } from "./harness-target.mjs";
+
 const BASE = process.argv[2] ?? "https://www.smartfellaorfartsmella.com";
 const EXE =
   process.env.CHROME_PATH ??
@@ -35,7 +37,23 @@ const check = (name, pass, detail = "") => {
 };
 
 const browser = await chromium.launch({ executablePath: EXE });
-const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+/*
+ * THE ONE SCRIPT THAT IS SUPPOSED TO WRITE TO PRODUCTION, so it says so on the
+ * way in. It finishes a real test and sends a real email, which is two Aurora
+ * rows per run — a `completed` and an `emailed` — and that is the point: the
+ * live Resend and Aurora wiring cannot be exercised anywhere else, so unlike
+ * the other writing scripts this one does not call `resolveWriteTarget`.
+ *
+ * The header rides on the CONTEXT rather than a fetch call because the writes
+ * are made by the page, not by this script: the app posts to /api/test-results
+ * itself when the last question is answered. Every request the run causes
+ * carries the mark, so both rows land tagged `meta.synthetic = true` and a
+ * query for real completions can exclude them.
+ */
+const ctx = await browser.newContext({
+  viewport: { width: 1280, height: 900 },
+  extraHTTPHeaders: SYNTHETIC,
+});
 const page = await ctx.newPage();
 page.on("pageerror", (e) => console.log("  PAGE ERROR:", String(e).slice(0, 200)));
 

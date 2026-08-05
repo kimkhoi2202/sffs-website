@@ -50,12 +50,18 @@
  * against whatever secret signed it and then the suite has to be edited to stay
  * green, which is how assertions get loosened. This asks the running server for
  * a fresh one.
+ *
+ * MINTING ONE IS A WRITE, WHICH IS WHY THE TARGET IS CHECKED. Asking for a
+ * token means finishing a test, and on production that is a row in Aurora
+ * `test_results`. This script put fifteen of them there. See
+ * scripts/harness-target.mjs.
  */
 import { chromium } from "playwright-core";
 
 import { ADULT_TEST } from "../lib/test/tests/adult.ts";
+import { resolveWriteTarget, SYNTHETIC } from "./harness-target.mjs";
 
-const BASE = process.argv[2] ?? "http://localhost:3000";
+const BASE = resolveWriteTarget(process.argv[2], "scripts/verify-review-nav.mjs");
 
 let failures = 0;
 const check = (name, pass, detail = "") => {
@@ -80,7 +86,7 @@ async function mintToken() {
   });
   const res = await fetch(`${BASE}/api/test-results`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...SYNTHETIC },
     body: JSON.stringify({
       testId: ADULT_TEST.id,
       answers,
