@@ -104,6 +104,39 @@ export interface ResultStatsRow {
    * which now describes this rather than promising the opposite.
    */
   email?: string;
+  /** A machine took this test. See SYNTHETIC_HEADER. */
+  synthetic?: boolean;
+}
+
+/**
+ * The header a verification run sets on itself, so its rows say so.
+ *
+ * ===========================================================================
+ * WHY A ROW HAS TO BE ABLE TO ADMIT THIS
+ * ===========================================================================
+ * The Playwright suite finishes real tests to get a real token, and for a while
+ * it did that against the live site. Fifteen synthetic rows ended up in Aurora
+ * `test_results` against twenty-three genuine completions — a quarter of the
+ * scored adult rows were the harness measuring itself. They were identifiable
+ * only by accident: 900 seconds with `timed_out` false, which no person can
+ * produce, and a blank on every seventh question.
+ *
+ * Being identifiable by accident is not good enough, so a run now says what it
+ * is. `scripts/harness-target.mjs` stops the mutating scripts reaching
+ * production at all; this is the second belt, for the runs that legitimately
+ * DO touch production (`verify-live-email.mjs` exercises the real Resend and
+ * Aurora path on purpose) and for anything that slips past the first.
+ *
+ * It only ever ADDS a fact to the row. It does not skip the write, and there is
+ * deliberately no header that does — a request-path switch that makes results
+ * vanish is a bigger risk than the thing it fixes. A caller who lies by not
+ * setting it is no worse off than before.
+ */
+export const SYNTHETIC_HEADER = "x-sffs-synthetic";
+
+/** Whether this request admitted to being a verification run. */
+export function isSyntheticRequest(headers: Headers): boolean {
+  return headers.get(SYNTHETIC_HEADER)?.trim() === "1";
 }
 
 /**
@@ -137,6 +170,10 @@ function toWireFormat(row: ResultStatsRow): Record<string, unknown> {
       timed_out: row.timedOut,
       completed_at: row.completedAt,
       stage: row.stage,
+      // Present only when true, so an ordinary row is unchanged and a query for
+      // real results is `meta->>'synthetic' IS NULL`. The Lambda passes `meta`
+      // through verbatim, so this needs nothing on the AWS side.
+      ...(row.synthetic ? { synthetic: true } : {}),
     },
   };
 }

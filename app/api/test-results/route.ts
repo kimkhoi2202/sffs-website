@@ -27,7 +27,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { clientIp, isRateLimited } from "@/lib/rate-limit";
-import { recordResultStats } from "@/lib/test/result-stats";
+import { isSyntheticRequest, recordResultStats } from "@/lib/test/result-stats";
 import { saveResult } from "@/lib/test/result-store";
 import { scoreTest, verdictFor, type AnswerMap } from "@/lib/test/scoring";
 import { getTestById } from "@/lib/test/tests";
@@ -157,6 +157,7 @@ export async function POST(request: NextRequest) {
       completedAt: new Date().toISOString(),
       verdict: verdictFor(result.percent, test.audience).id,
       stage: "completed",
+      synthetic: isSyntheticRequest(request.headers),
     });
 
     return NextResponse.json({ ok: true, token: stored.token });
