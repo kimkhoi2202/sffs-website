@@ -14,7 +14,7 @@
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { trackTestShareToChildClicked } from "@/lib/analytics/events";
+import { isTouchDevice, trackTestShareToChildClicked } from "@/lib/analytics/events";
 import { CHILD_ENTRY_PARAM } from "@/lib/test/share-url";
 
 /**
@@ -80,7 +80,31 @@ export function ShareToChild() {
     const title = "The Official Smart Fella Test";
     const text = "I just did this. Your turn. Pick your grade and go.";
 
-    if (typeof navigator.share === "function") {
+    /*
+      THE OS SHEET IS FOR PHONES, AND ASKING FOR IT AT A DESK COSTS TWO SILENT
+      SECONDS.
+
+      `navigator.share` EXISTS in Chrome for macOS, so this used to be offered
+      everywhere — and at a desk it is the wrong trade twice over. It routinely
+      never presents anything, which means the watchdog above has to burn its
+      full two seconds before the clipboard is even attempted; and by the time
+      it gives up the gesture's transient activation is spent, so the clipboard
+      then refuses too and the honest outcome is an apology. Measured on the
+      live page in Chrome for macOS: nothing whatsoever on screen until 2.4s
+      after the press. Nobody waits that long before deciding a button is dead,
+      and this is what was reported, twice.
+
+      On a fine pointer the clipboard is simply the better answer, and taken
+      first — inside the gesture, with the activation intact — it is instant.
+      On a phone the sheet is still the point: it lands the link in the
+      messaging app the parent already uses, which is the whole purpose of this
+      card, so touch keeps it.
+
+      Capability is not sufficiency. The share card above this one reaches the
+      same conclusion for the same reason (see `readSheetTakesFiles`), and this
+      is the same test: what the browser CAN do, and whether it should.
+    */
+    if (isTouchDevice() && typeof navigator.share === "function") {
       if ((await presentSheet({ title, text, url })) === "shared") {
         trackTestShareToChildClicked("link");
         return;

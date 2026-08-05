@@ -488,6 +488,60 @@ console.log("-".repeat(72));
     await hp.keyboard.press("Escape");
     await hp.waitForTimeout(300);
   }
+
+  /*
+    AND THE SHEET SURVIVES BEING TOLD TO PICK ANOTHER WAY.
+
+    The watchdog's whole promise is that a sheet which never opens leaves you
+    somewhere you can act — it says "Pick another way" and puts our own sheet
+    back. It was saying that while holding the re-entry guard the OS promise
+    was supposed to release, so every destination behind that message was dead:
+    Save, Copy, all of them, for the life of the page. A press, an apology, and
+    nothing works afterwards is worse than the silence it replaced, and every
+    check above passed through it — they all stop at the first press.
+
+    So this one presses twice. Copy the link must still copy AFTER More has
+    failed.
+  */
+  const press = async (re) => {
+    const b = await hp.evaluate(
+      (s) => {
+        const rx = new RegExp(s.source, s.flags);
+        const el = [...document.querySelectorAll("button")].find((x) =>
+          rx.test((x.textContent ?? "").trim()),
+        );
+        if (!el) return null;
+        el.scrollIntoView({ block: "center", behavior: "instant" });
+        const r = el.getBoundingClientRect();
+        return { cx: Math.round(r.left + r.width / 2), cy: Math.round(r.top + r.height / 2) };
+      },
+      { source: re.source, flags: re.flags },
+    );
+    if (!b) return false;
+    await hp.mouse.click(b.cx, b.cy);
+    return true;
+  };
+  const clearStatus = () => hp.waitForTimeout(2800); // confirmations self-clear
+
+  await press(/^Share my result$/);
+  await hp.waitForTimeout(600);
+  const hadMore = await press(/^More$/);
+  if (!hadMore) {
+    console.log("  ..    no \"More\" entry at this pointer type — nothing to brick");
+  } else {
+    await hp.waitForTimeout(3200); // let the watchdog give up and say so
+    await clearStatus();
+    const reopened = await hp.evaluate(() =>
+      Boolean(document.querySelector("[role=dialog]")),
+    );
+    if (!reopened) await press(/^Share my result$/);
+    await hp.waitForTimeout(600);
+    await press(/^Copy the link$/);
+    const still = await perceivable(hp, 4000);
+    check("after a sheet that never opened, the destinations still work",
+      Boolean(still) && /copied/i.test(still),
+      still ?? "DEAD — every destination silently ignored");
+  }
   await hostile.close();
 }
 

@@ -601,6 +601,27 @@ export function ShareResults({
           document.visibilityState === "visible" && document.hasFocus();
         if (!noSheetAppeared) return;
         settled = true; // the rejection that may follow is now redundant
+        /*
+          THE RE-ENTRY GUARD COMES OFF WITH IT, AND LEAVING IT ON WAS THE WHOLE
+          BUG.
+
+          `runningRef` is released in the `finally` below — which is attached to
+          `await navigator.share(payload)`, the one promise on this page that
+          can never settle. When it doesn't, that `finally` never runs, the flag
+          stays true for the life of the page, and `choose()` starts by
+          returning on it. So every destination in this sheet went dead: Save,
+          Copy, X, WhatsApp, Reddit, all of them, silently, forever.
+
+          Which made this watchdog a liar. It said "Pick another way" and then
+          there was no other way. Reproduced on the live page in Chrome for
+          macOS: Copy worked, one press of More, and afterwards neither Copy nor
+          Save did anything at all.
+
+          It is the same rule the file already applies to `busy` and states at
+          the top — never gate the UI on a promise the OS owns — applied to the
+          other flag, which was quietly exempt from it.
+        */
+        runningRef.current = false;
         trackTestResultShareFailed(
           failProps("native_sheet", "native_sheet", "sheet_never_opened"),
         );
