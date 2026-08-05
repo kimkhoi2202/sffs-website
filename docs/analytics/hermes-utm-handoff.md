@@ -56,13 +56,26 @@ always used as `utm_content`.
 
 **Real-platform default:** if you omit `s`/`utm_source`, the route infers the
 platform from the post-id prefix — `ttk_…`→`tiktok`, `ig_…`→`instagram`,
-`yt_…`→`youtube` — so a rotated TikTok bio link still reports `utm_source=tiktok`
-(not the generic `social`). Setting `s` explicitly always wins; keep the `ttk_` /
+`yt_…`→`youtube` — so a rotated TikTok bio link still reports
+`utm_source=tiktok`. Setting `s` explicitly always wins; keep the `ttk_` /
 `ig_` prefix convention (below) for the inference to work.
+
+**When the platform is unknown, `utm_source` is OMITTED — not guessed.** It used
+to fall back to the literal string `social`, which is a *medium* in the source
+slot and named no platform at all. That was worse than leaving it blank:
+`utm_source` is the first rung of the site's attribution ladder, so a value
+there stops the ladder before it reads the referrer. Links posted to Facebook
+arrived with `www.facebook.com` as their referrer and were still filed under a
+channel called "Social". With the parameter absent, the referrer is read and the
+channel resolves correctly.
+
+This matters because the ids actually being minted are dated (`2026-07-27-r02`),
+not prefixed, so they hit exactly this path. **Send `s=` on dated ids** — it is
+the only thing that makes their platform knowable at redirect time.
 
 | Short param | Maps to        | Default          |
 | ----------- | -------------- | ---------------- |
-| `s`         | `utm_source`   | inferred from the post-id prefix (`ttk_`→`tiktok`, `ig_`→`instagram`, `yt_`→`youtube`), else `social` |
+| `s`         | `utm_source`   | inferred from the post-id prefix (`ttk_`→`tiktok`, `ig_`→`instagram`, `yt_`→`youtube`); **omitted entirely** when the prefix names no platform |
 | `m`         | `utm_medium`   | `social_organic` |
 | `c`         | `utm_campaign` | _(omitted)_      |
 | `t`         | `utm_term`     | _(omitted)_      |
@@ -102,7 +115,10 @@ Neither needs Hermes changes — they're mentioned so you know the coverage.
 
 ## 4. Convention checklist for Hermes
 
-- [ ] Lowercase `utm_source` (`tiktok`, `instagram`).
+- [ ] Lowercase `utm_source` (`tiktok`, `instagram`). Never `social` — that is a
+      medium, and the route now drops an unknown source rather than inventing one.
+- [ ] On a `/go/<postid>` link whose id carries no `ttk_`/`ig_`/`yt_` prefix,
+      pass `s=<platform>`, or the visit has no platform to be attributed to.
 - [ ] Keep `utm_medium=social_organic` (use `social_paid` only for boosted).
 - [ ] Set `utm_campaign` per series/month (e.g. `2026-07_quiz_series`).
 - [ ] Set `utm_content` to the **unique post ID** — this is non-negotiable for
