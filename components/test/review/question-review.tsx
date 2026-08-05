@@ -42,9 +42,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { QuestionDetail } from "./question-detail";
+import { scrollQuizBy } from "@/components/quiz/smooth-scroll";
 import { Button } from "@/components/ui/button";
 import type { ScoredItem } from "@/lib/test/scoring";
 import { cn } from "@/lib/utils";
+
+/** Breathing room left above the card when a question is opened below `lg`. */
+const OPEN_SCROLL_MARGIN = 12;
 
 function StatusDot({ scored }: { scored: ScoredItem }) {
   return (
@@ -65,6 +69,7 @@ export function QuestionReview({ items }: { items: ScoredItem[] }) {
   /** Only meaningful below `lg`, where the detail takes the whole screen. */
   const [open, setOpen] = useState(false);
   const detailRef = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   const go = useCallback(
     (delta: number) => {
@@ -94,6 +99,40 @@ export function QuestionReview({ items }: { items: ScoredItem[] }) {
   useEffect(() => {
     detailRef.current?.scrollTo?.({ top: 0 });
   }, [selected]);
+
+  /*
+    BELOW `lg`, OPENING A QUESTION SHRINKS THE PAGE OUT FROM UNDER THE READER,
+    AND WITHOUT THIS THEY LAND ABOVE IT.
+
+    Out here the detail REPLACES the list rather than sitting beside it, so the
+    card goes from fifty rows tall to one question tall in the same commit. The
+    document loses that height, the browser clamps the scroll position to the
+    new maximum, and the question the person just asked for ends up off the TOP
+    of the window. Measured on the live page at 393x720, tapping row 46: the
+    document went 3874 -> 2408, the scroll clamped 2620 -> 1688, and the detail
+    landed at y -928..-12 — entirely above the viewport, with the share card in
+    the middle of the screen instead.
+
+    That is indistinguishable from a tap that did nothing, and it is what it was
+    reported as. It is also what PostHog recorded: three separate people, three
+    $dead_click events, every one of them on a row far enough down the list for
+    the collapse to be bigger than the scroll position.
+
+    So: after the swap, if the card has ended up above the window, bring it
+    back. Through `scrollQuizBy` rather than `scrollIntoView` because the site
+    runs Lenis and that helper is the one path that composes with it (and falls
+    back to native scrolling when it is not running).
+
+    The `top >= 0` guard is what keeps this out of the way at `lg`, where both
+    panes are on screen, `open` is meaningless, and moving the page would be a
+    jump nobody asked for.
+  */
+  useEffect(() => {
+    if (!open) return;
+    const top = cardRef.current?.getBoundingClientRect().top;
+    if (top === undefined || top >= 0) return;
+    scrollQuizBy(top - OPEN_SCROLL_MARGIN);
+  }, [open, selected]);
 
   const current = items[selected];
   const pick = (i: number) => {
@@ -126,6 +165,7 @@ export function QuestionReview({ items }: { items: ScoredItem[] }) {
 
   return (
     <div
+      ref={cardRef}
       /*
         IT BREAKS OUT OF THE READING COLUMN ON LARGE SCREENS.
 
