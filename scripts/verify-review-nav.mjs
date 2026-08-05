@@ -209,6 +209,32 @@ async function revealRow(i) {
   return rowPoint(i);
 }
 
+/**
+ * Wait up to `ms` for a press to produce ANYTHING a person could notice: a
+ * sheet, a spoken status line, or a label that changed. Returns what it was,
+ * or null if the control stayed silent.
+ */
+async function perceivable(target, ms = 8000) {
+  const deadline = Date.now() + ms;
+  while (Date.now() < deadline) {
+    const seen = await target.evaluate(() => {
+      const said = [...document.querySelectorAll("[role=status]")]
+        .map((n) => n.textContent?.trim())
+        .find(Boolean);
+      if (said) return `said "${said}"`;
+      if (document.querySelector("[role=dialog], [role=menu]")) return "a sheet opened";
+      return [...document.querySelectorAll("button")].some((b) =>
+        /link copied|picture saved/i.test(b.textContent ?? ""),
+      )
+        ? "the label changed"
+        : null;
+    });
+    if (seen) return seen;
+    await target.waitForTimeout(200);
+  }
+  return null;
+}
+
 /** PREV / NEXT, measured the same way the rows are. */
 const controlState = (which) =>
   page.evaluate(
@@ -390,20 +416,15 @@ for (const [name, re] of [
   if (probe?.reaches) {
     // And it must actually DO something. A hit-testable button on a page whose
     // JS never ran passes the test above and nothing else.
-    const before = await page.evaluate(() => document.body.innerHTML.length);
+    //
+    // POLLED, NOT SLEPT. One of these hands the press to the OS and waits two
+    // seconds for a sheet before giving up on it, so a fixed pause short of
+    // that reports a working control as silent — which is what the first
+    // version of this check did.
     await page.mouse.click(probe.cx, probe.cy);
-    await page.waitForTimeout(700);
-    const spoke = await page.evaluate(
-      ([len]) => ({
-        grew: document.body.innerHTML.length !== len,
-        sheet: Boolean(document.querySelector("[role=dialog], [role=menu]")),
-        said: document.querySelector("[role=status]")?.textContent?.trim() ?? "",
-      }),
-      [before],
-    );
-    check(`${name}: pressing it changes something a person can see`,
-      spoke.grew || spoke.sheet || Boolean(spoke.said),
-      spoke.sheet ? "a sheet opened" : spoke.said ? `said "${spoke.said}"` : "NOTHING HAPPENED");
+    const spoke = await perceivable(page);
+    check(`${name}: pressing it changes something a person can see`, Boolean(spoke),
+      spoke ?? "NOTHING HAPPENED");
     await page.keyboard.press("Escape");
     await page.waitForTimeout(300);
   }
@@ -460,23 +481,8 @@ console.log("-".repeat(72));
       continue;
     }
     await hp.mouse.click(box.cx, box.cy);
-
-    // Long enough for a 2s watchdog to give up and say so.
-    let outcome = null;
-    for (let i = 0; i < 40 && !outcome; i++) {
-      await hp.waitForTimeout(200);
-      outcome = await hp.evaluate(() => {
-        const said = [...document.querySelectorAll("[role=status]")]
-          .map((n) => n.textContent?.trim())
-          .find(Boolean);
-        if (said) return `said "${said}"`;
-        if (document.querySelector("[role=dialog], [role=menu]")) return "a sheet opened";
-        const copied = [...document.querySelectorAll("button")].find((b) =>
-          /link copied/i.test(b.textContent ?? ""),
-        );
-        return copied ? "the label changed" : null;
-      });
-    }
+    // Generously past the 2s watchdog, so a slow give-up is not read as silence.
+    const outcome = await perceivable(hp);
     check(`${name}: the press ends somewhere instead of nowhere`, Boolean(outcome),
       outcome ?? "SILENT — no sheet, no status, no label change");
     await hp.keyboard.press("Escape");

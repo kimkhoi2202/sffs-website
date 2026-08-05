@@ -195,12 +195,24 @@ const seeable = (page, selector) =>
  * Confirmations clear themselves after CONFIRM_MS, so reading the status once
  * at the end of a wait finds an empty element and reports silence on a control
  * that spoke. Poll for the message instead, then let the caller keep waiting.
+ *
+ * THE ONE THAT SPOKE, NOT THE FIRST ONE IN THE DOCUMENT. This used to be a
+ * `querySelector`, which assumed the share card owned the only live region on
+ * the page. The hand-it-to-your-kid card above it has since grown one of its
+ * own — correctly, it had a failure path that said nothing — and being earlier
+ * in the document it started answering for this one, silent, so four
+ * assertions about what the SHARE control said began failing on a control that
+ * was saying it. Reading the first NON-EMPTY region keeps the assertions
+ * exactly as they were and drops the assumption that there is only one.
  */
 async function waitForStatus(page, ms) {
   const until = Date.now() + ms;
   while (Date.now() < until) {
     const said = await page.evaluate(
-      () => document.querySelector("[role=status]")?.textContent?.trim() ?? "",
+      () =>
+        [...document.querySelectorAll("[role=status]")]
+          .map((n) => n.textContent?.trim())
+          .find(Boolean) ?? "",
     );
     if (said) return said;
     await page.waitForTimeout(120);
@@ -459,8 +471,16 @@ section("EVERY DESTINATION FIRES ONE PAIR, CARRYING ITS OWN NAME");
     THE POINT OF THE WHOLE TAXONOMY. Eight destinations must not produce eight
     event names; if one ever does, every funnel built on these has to be
     rebuilt by hand and the destinations stop segmenting against each other.
+
+    PostHog's OWN events are not in scope and are filtered out by their `$`
+    prefix, which is reserved for them. This suite defaults to localhost, where
+    the SDK never boots (see the prod-host guard in instrumentation-client.ts)
+    and the question never comes up — but pointed at the real site it does,
+    and $autocapture, $web_vitals, $snapshot, $$heatmap and $dead_click are not
+    a destination inventing a name. Excluding them is what lets this run
+    against production, which is where the last two reports came from.
   */
-  const strays = [...everyName].filter((n) => !SHARE_EVENTS.has(n));
+  const strays = [...everyName].filter((n) => !SHARE_EVENTS.has(n) && !n.startsWith("$"));
   check(
     "no destination invented an event name of its own",
     strays.length === 0,

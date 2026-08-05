@@ -116,7 +116,12 @@ async function perceivableOutcome(page, ms = 6000) {
   while (Date.now() - start < ms) {
     const s = await page.evaluate(() => ({
       menu: Boolean(document.querySelector("[role=menu]")),
-      status: document.querySelector("[role=status]")?.textContent?.trim() ?? "",
+      // The region that SPOKE, not the first in the document: the card above
+      // this one has a live region of its own, and it is earlier in the page.
+      status:
+        [...document.querySelectorAll("[role=status]")]
+          .map((n) => n.textContent?.trim())
+          .find(Boolean) ?? "",
     }));
     if (s.menu) sawMenu = true;
     if (s.status) sawStatus = s.status;
