@@ -70,6 +70,7 @@ export function QuestionReview({ items }: { items: ScoredItem[] }) {
   const [open, setOpen] = useState(false);
   const detailRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
 
   const go = useCallback(
     (delta: number) => {
@@ -118,20 +119,40 @@ export function QuestionReview({ items }: { items: ScoredItem[] }) {
     $dead_click events, every one of them on a row far enough down the list for
     the collapse to be bigger than the scroll position.
 
-    So: after the swap, if the card has ended up above the window, bring it
-    back. Through `scrollQuizBy` rather than `scrollIntoView` because the site
-    runs Lenis and that helper is the one path that composes with it (and falls
-    back to native scrolling when it is not running).
+    So: after the swap, put the top of the card back under the top of the
+    window.
 
-    The `top >= 0` guard is what keeps this out of the way at `lg`, where both
-    panes are on screen, `open` is meaningless, and moving the page would be a
-    jump nobody asked for.
+    MEASURED IN A FRAME, NOT IN THE EFFECT, and that is the whole trick. The
+    clamp is not part of layout — it is applied by the scroll system after it —
+    so a `getBoundingClientRect()` taken in the effect reports the card exactly
+    where it was BEFORE the collapse. The first version of this fix read `top`
+    there, found it on screen, decided there was nothing to do, and shipped no
+    behaviour at all. One frame later the same read returns -691. Traced on the
+    live page: at the click scrollY was 1580 of 3884; by frame one it was 1461
+    of 2181 and the card was at -691, where it then stayed.
+
+    Through `scrollQuizBy` rather than `scrollIntoView` because the site runs
+    Lenis: measured on the same page, `scrollIntoView` lands 17px out and drifts
+    as Lenis argues with it, while going through the engine settles exactly.
+
+    THE `lg` GUARD IS THE LIST, NOT A BREAKPOINT. Up there both panes are on
+    screen, `open` means nothing, and moving the page would be a jump nobody
+    asked for. What actually distinguishes the two layouts is whether the list
+    is displayed — so that is what is asked, rather than restating `lg:` as a
+    media query here where it could drift from the class that sets it.
   */
   useEffect(() => {
     if (!open) return;
-    const top = cardRef.current?.getBoundingClientRect().top;
-    if (top === undefined || top >= 0) return;
-    scrollQuizBy(top - OPEN_SCROLL_MARGIN);
+    const frame = requestAnimationFrame(() => {
+      const card = cardRef.current;
+      // `offsetParent` is null exactly when the list is `display: none`, which
+      // is exactly the one-pane layout.
+      if (!card || listRef.current?.offsetParent !== null) return;
+      const top = card.getBoundingClientRect().top;
+      if (Math.abs(top - OPEN_SCROLL_MARGIN) < 2) return;
+      scrollQuizBy(top - OPEN_SCROLL_MARGIN);
+    });
+    return () => cancelAnimationFrame(frame);
   }, [open, selected]);
 
   const current = items[selected];
@@ -188,6 +209,7 @@ export function QuestionReview({ items }: { items: ScoredItem[] }) {
       <div className="lg:grid lg:grid-cols-[minmax(0,18rem)_minmax(0,1fr)] lg:gap-6">
         {/* -- the list ------------------------------------------------------ */}
         <div
+          ref={listRef}
           /*
             THE LIST FILLS THE GRID ROW, AND THIS WRAPPER IS HOW.
 

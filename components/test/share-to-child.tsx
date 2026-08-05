@@ -19,6 +19,7 @@ import { CHILD_ENTRY_PARAM } from "@/lib/test/share-url";
 
 export function ShareToChild() {
   const [copied, setCopied] = useState(false);
+  const [status, setStatus] = useState<string | null>(null);
 
   async function share() {
     const url = `${window.location.origin}/?${CHILD_ENTRY_PARAM}`;
@@ -38,10 +39,35 @@ export function ShareToChild() {
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
+      setStatus(null);
       trackTestShareToChildClicked("copy");
       window.setTimeout(() => setCopied(false), 2500);
     } catch {
-      // Clipboard blocked. The link below is still there.
+      /*
+        BOTH EXITS BLOCKED, AND THIS USED TO BE WHERE THE TAP DIED.
+
+        The comment here said "the link below is still there", which is true
+        and is not the same as telling anybody. Nothing changed on screen and
+        no event went out, so the button was indistinguishable from a dead one
+        — and that is how it was reported. PostHog had it exactly: an
+        $autocapture for the press, a $dead_click for the silence after it, and
+        no test_share_to_child_clicked between them, because the only two
+        places that fire one are the two paths that worked.
+
+        It is reachable in ordinary use. `navigator.share` exists on desktop
+        Chrome for macOS, so a dismissed OS sheet lands here, and by then the
+        gesture's transient activation can be spent — which is exactly what
+        `clipboard.writeText` needs. Two normal things in a row and the card
+        goes quiet.
+
+        Same rule the share sheet next to this one already follows: never be
+        silent. Say what happened, point at the exit that still works, and
+        record it so the next one of these is visible in the data instead of
+        arriving as a bug report.
+      */
+      setStatus("Could not copy. Use the link underneath instead.");
+      trackTestShareToChildClicked("failed");
+      window.setTimeout(() => setStatus(null), 4000);
     }
   }
 
@@ -58,6 +84,20 @@ export function ShareToChild() {
       <Button variant="paper" size="lg" onClick={share} className="w-full">
         {copied ? "Link copied" : "Send it to your kid"}
       </Button>
+      {/*
+        SPOKEN, NOT JUST SHOWN, and always in the DOM — a live region added at
+        the same moment its text is set is frequently missed by the
+        announcement. Same shape as the one on the share card above, because it
+        is the same job. It reserves no height when empty, so the card does not
+        move when it speaks.
+      */}
+      <p
+        role="status"
+        aria-live="polite"
+        className="text-center text-xs font-bold uppercase tracking-wide text-ink/70 empty:hidden"
+      >
+        {status}
+      </p>
       {/*
         Tracked like the other two exits. It is a real navigation rather than a
         handler, so the event has to go out before the browser leaves; a plain

@@ -706,8 +706,15 @@ export function trackResultsLinkOpened(p: {
  * parent who used it appeared to reach the child flow from nowhere. That is a
  * bad thing to be blind to on a sharing loop specifically, because the loop is
  * the growth mechanism and an untracked arm of it looks like no growth.
+ *
+ * `failed` is the fourth, and it exists for the same reason as the third. When
+ * the OS sheet was dismissed and the clipboard then refused, the card fired
+ * nothing at all — so the one outcome worth knowing about, a press that got the
+ * person nowhere, was the only one the data could not see. It read as no press.
  */
-export function trackTestShareToChildClicked(method: "link" | "copy" | "open"): void {
+export function trackTestShareToChildClicked(
+  method: "link" | "copy" | "open" | "failed",
+): void {
   posthog.capture("test_share_to_child_clicked", { method });
 }
 
