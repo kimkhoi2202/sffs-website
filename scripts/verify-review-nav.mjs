@@ -538,8 +538,17 @@ console.log("-".repeat(72));
     await hp.waitForTimeout(600);
     await press(/^Copy the link$/);
     const still = await perceivable(hp, 4000);
+    /*
+      EITHER ANSWER FROM THE CLIPBOARD COUNTS, and only those two: what
+      regressed was the destination never being REACHED. "Link copied" is what
+      a real browser gives; this context denies clipboard-write on purpose, so
+      here it is the honest refusal — and both prove `choose()` dispatched to
+      `copyCore` instead of returning on a guard that was never released.
+      Silence is the failure, and matching the copy path specifically is what
+      stops that from being satisfied by any stray message on the page.
+    */
     check("after a sheet that never opened, the destinations still work",
-      Boolean(still) && /copied/i.test(still),
+      Boolean(still) && /copied|could not copy/i.test(still),
       still ?? "DEAD — every destination silently ignored");
   }
   await hostile.close();
