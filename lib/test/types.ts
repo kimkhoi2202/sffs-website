@@ -466,7 +466,24 @@ interface ItemBase {
   id: string;
   tier: Tier;
   domain: Domain;
-  /** The question, above the stimulus. Sentence case, short. */
+  /**
+   * The question, above the stimulus. Sentence case, short.
+   *
+   * IT IS ONLY DRAWN WHEN THE STIMULUS DOES NOT ALREADY ASK. A stem ending in
+   * "?", a stem with a `______` blank, and a series carrying its "?" term have
+   * all asked their own question, so the heading would be a repeat and it is
+   * dropped — see `stimulusAsks` below. Everything else shows it.
+   *
+   * SO PUT THE QUESTION IN EXACTLY ONE OF THE TWO. If the stem asks, this can
+   * be the generic line ("Work out the answer.") and nobody will see it. If the
+   * stem is only context — five seating constraints, three statements to reason
+   * over — then this IS the question and it will be shown. What you must not do
+   * is write a stem that ends in a question mark about something OTHER than
+   * what this asks, because then the visible question and the real one differ.
+   *
+   * It is always in the accessibility tree and always the options fieldset's
+   * legend, shown or not.
+   */
   prompt: string;
   /** The id of the correct option. The ONLY answer field. */
   answer: OptionId;
@@ -610,6 +627,68 @@ export type TestItem =
   | DotItem;
 
 export type ItemKind = TestItem["kind"];
+
+/**
+ * Does the stimulus already ask the question?
+ *
+ * ===========================================================================
+ * THIS DECIDES WHETHER THE PROMPT IS DRAWN, AND IT IS PER ITEM, NOT PER TIER
+ * ===========================================================================
+ * "PLACEHOLDER is to SAMPLE as FILLER is to ?" does not need to be preceded by
+ * "Complete the analogy" — the question mark already IS the instruction, and a
+ * heading repeating it costs two lines on a 360px phone where the stimulus,
+ * four options and a running clock are already competing. So a self-contained
+ * item drops the heading.
+ *
+ * This used to be a list of TIERS that drop it, and that shipped an
+ * unanswerable question. LOGIC was on the list, on the strength of the
+ * syllogism items whose stems end in "Therefore: ...". But a tier is not a
+ * shape: the same tier also holds seating puzzles, where the stem is five
+ * constraints and the PROMPT is the entire question. Hiding it left a player
+ * looking at four names and no question — a46 shipped like that, and so did
+ * the three syllogisms, whose "if the statements are true" framing is what
+ * makes the item well-defined rather than a claim about the world.
+ *
+ * So the test is the item's own content, which is the thing that actually
+ * determines the answer. A written stimulus asks its own question when it ends
+ * in a question mark, or has a blank to fill, or is a series with its "?" term.
+ * Anything else keeps the heading.
+ *
+ * WHAT AN AUTHOR NEEDS TO KNOW, and the reason this is derived rather than a
+ * flag on the item: you never have to think about it. Write a stem that asks
+ * and the prompt is redundant, so it goes; write a stem that does not and the
+ * prompt is the question, so it stays. There is no field to remember, and the
+ * failure mode of a stem this does not recognise is a redundant heading rather
+ * than a question nobody can answer. It cannot fail the expensive way.
+ *
+ * ONE-WORD STEMS STILL GET THEIR PROMPT, which is what synonyms and antonyms
+ * need and used to need an explicit exception for: the items are interleaved
+ * rather than grouped into announced sections, so "RIGID" above four options
+ * gives no way to know whether we want the same meaning or the opposite. That
+ * now falls out of the rule instead of being a note somebody has to honour.
+ *
+ * A DRAWN "?" CELL IS NOT A WRITTEN QUESTION. Figural items keep their prompt:
+ * the empty cell says where the answer goes, not what to do, and visual
+ * odd-one-out has no stimulus at all — its options are the stimulus, so the
+ * prompt is the only thing on screen describing the task.
+ *
+ * ENDS WITH, NOT CONTAINS. A stem that merely mentions a question mark
+ * somewhere in the middle has not necessarily asked anything, and the cost of
+ * being wrong in that direction is an unanswerable item. Ends-with fails safe.
+ *
+ * IT LIVES HERE, NOT IN THE COMPONENT, so that `audit:content` can call the
+ * same function the renderer calls. The bug this replaces was invisible to
+ * every existing check precisely because no check knew the render rule: the
+ * item's DATA was faultless and both suites passed while the screen showed no
+ * question. A copy of this logic in the audit would drift; an import cannot.
+ */
+export function stimulusAsks(item: TestItem): boolean {
+  if (item.kind === "series") return item.seq.includes("?");
+  if (item.kind !== "text") return false;
+  const stem = item.stem?.trim();
+  if (!stem) return false;
+  return stem.endsWith("?") || /_{2,}/.test(stem);
+}
 
 /* ==========================================================================
  * Grades and banks

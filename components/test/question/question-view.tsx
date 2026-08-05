@@ -19,7 +19,7 @@ import { FigCellContent, FigCell, FigureCell, QuestionCell } from "./figure";
 import { OptionGroup, StimulusOnlyProvider, TextOptionCard, VisualOptionCard } from "./option-card";
 import { DotSquare, FoldStrip, HoleGrid, PolygonShape, creaseAxes } from "./shapes";
 import { describeDot, describeFig, describeHoles, describePoly } from "./describe";
-import type { TableData, TestItem } from "@/lib/test/types";
+import { stimulusAsks, type TableData, type TestItem } from "@/lib/test/types";
 import { cn } from "@/lib/utils";
 
 /* ==========================================================================
@@ -356,31 +356,6 @@ export interface QuestionViewProps {
   onPick: (optionId: string) => void;
 }
 
-/**
- * Tiers whose task is obvious from the item itself, so the instruction line is
- * hidden (it stays in the accessibility tree, see below).
- *
- * "PLACEHOLDER is to SAMPLE as FILLER is to ?" does not need to be preceded by
- * "Complete the analogy" — the question mark already is the instruction. Nor
- * does a sequence ending in a blank, or a sentence with a gap in it.
- *
- * TWO THAT ARE NOT ON THIS LIST AND ARGUABLY SHOULD BE. Synonyms and antonyms
- * were suggested as self-evident and they are not, for a specific reason: the
- * items are interleaved rather than grouped into announced sections, so a bare
- * word above four options gives the player no way to know whether we want the
- * same meaning or the opposite. The instruction is the only thing separating
- * the two tasks, so for those it is load-bearing rather than decorative.
- */
-const TIERS_WITHOUT_PROMPT = new Set([
-  "VERBAL ANALOGY",
-  "NUMBER ANALOGY",
-  "NUMBER SERIES",
-  "LETTER SERIES",
-  "SENTENCE COMPLETION",
-  "WORD PROBLEM",
-  "LOGIC",
-]);
-
 export function QuestionView({
   item,
   picked,
@@ -405,7 +380,7 @@ function QuestionBody({ item, picked, onPick }: QuestionViewProps) {
   const legend = item.prompt;
   const name = `q-${item.id}`;
   const shared = { name, onSelect: onPick };
-  const showPrompt = !TIERS_WITHOUT_PROMPT.has(item.tier);
+  const showPrompt = !stimulusAsks(item);
 
   return (
     <div className="flex w-full flex-col items-center gap-4 sm:gap-5">
@@ -415,10 +390,11 @@ function QuestionBody({ item, picked, onPick }: QuestionViewProps) {
         eight-year-old, and the real instruments do not label items by type to
         the person sitting them either.
 
-        Dropping it and the redundant instruction gives back two lines on the
-        screen where space is scarcest. On a 360x640 phone the stimulus, four
-        options and a persistent timer are already competing, and that is the
-        screen someone sits through fifteen times.
+        Dropping it gives back a line on the screen where space is scarcest. On
+        a 360x640 phone the stimulus, four options and a persistent timer are
+        already competing, and that is the screen someone sits through fifteen
+        times. The instruction below it goes too when the item already asks —
+        see `stimulusAsks`, which is what `showPrompt` turns on.
 
         The prompt stays in the ACCESSIBILITY TREE either way. When it is not
         shown it becomes `sr-only` rather than being removed: a sighted player

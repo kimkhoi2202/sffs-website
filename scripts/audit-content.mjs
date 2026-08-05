@@ -16,11 +16,14 @@
  *   - blocklisted culture- and region-bound vocabulary
  *   - stems over the per-band reading ceiling
  *   - two options that are identical
+ *   - an item that asks nothing ON SCREEN, which is a property of the item plus
+ *     the render rule and so was invisible to every check that read only data
  *
  * It also re-solves the one item type whose validity is a search problem: the
  * seating arrangement, by enumerating all 120 permutations.
  */
 import { ALL_TESTS } from "../lib/test/tests/index.ts";
+import { stimulusAsks } from "../lib/test/types.ts";
 
 const problems = [];
 const notes = [];
@@ -230,6 +233,36 @@ for (const test of ALL_TESTS) {
   for (const item of test.items) {
     const words = (item.stem ?? "").trim().split(/\s+/).filter(Boolean).length;
     if (words > ceiling) fail(`${test.id}/${item.id}: stem is ${words} words, ceiling is ${ceiling}`);
+  }
+}
+
+/* -------------------------------------------------------------------------
+ * 4b. Every item must ASK something on screen.
+ *
+ * The one defect class that every other check here is blind to, because the
+ * item's data can be flawless while the screen shows no question.
+ *
+ * `prompt` is drawn only when the stimulus does not already ask — see
+ * `stimulusAsks` in lib/test/types.ts. That used to be decided per TIER, and
+ * LOGIC was on the drop list because syllogism stems end in "Therefore: ...".
+ * The same tier also holds the seating puzzle a46, whose stem is five
+ * constraints and whose prompt IS the question, so a46 rendered as four names
+ * with nothing asked. It sat at question 46 of 50, where only the most engaged
+ * players ever reach it, and both verify:tests and this audit passed it.
+ *
+ * So the check imports the renderer's own predicate rather than restating it,
+ * and asks the question the player asks: is there anything on this screen that
+ * asks me for something? A stem that does not ask and a prompt that is not
+ * drawn is an unanswerable item, whatever the data says.
+ * ------------------------------------------------------------------------- */
+for (const test of ALL_TESTS) {
+  for (const item of test.items) {
+    if (stimulusAsks(item)) continue; // the stimulus asks, so the prompt is hidden and that is fine
+    if (item.prompt?.trim()) continue; // the prompt is drawn, and it is the question
+    fail(
+      `${test.id}/${item.id}: nothing on screen asks anything — the stimulus does not ask ` +
+        `and the prompt is empty, so the player sees a stem and four options with no question`,
+    );
   }
 }
 
