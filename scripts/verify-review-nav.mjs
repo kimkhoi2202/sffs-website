@@ -411,6 +411,80 @@ for (const [name, re] of [
 
 await ctx.close();
 
+/* == 5b. and the branch that actually killed one of them ================== */
+console.log("\nA SHEET THAT NEVER OPENS STILL ENDS SOMEWHERE");
+console.log("-".repeat(72));
+/*
+  The check above only catches this when the harness happens to reproduce it,
+  and a guard that depends on ambient browser behaviour is not a guard. So the
+  failure is induced: `navigator.share` resolves nothing, EVER, which is
+  measured desktop-Chrome behaviour and is what left "Send it to your kid"
+  hanging on an await with the clipboard fallback unreachable behind it. The
+  clipboard is denied too, because by the time a watchdog gives up on a sheet
+  the gesture's activation is spent and the real browser refuses that write.
+
+  With both exits gone there is exactly one acceptable outcome, and it is not
+  "no crash": within a few seconds the card must have SAID something.
+*/
+{
+  const hostile = await browser.newContext({
+    viewport: { width: 1440, height: 900 },
+    permissions: [], // no clipboard-write: writeText rejects, as it does live
+  });
+  const hp = await hostile.newPage();
+  await hp.addInitScript(() => {
+    Navigator.prototype.canShare = () => true;
+    Navigator.prototype.share = () => new Promise(() => {}); // never settles
+  });
+  await hp.goto(URL_RESULTS, { waitUntil: "networkidle" });
+  await hp.addStyleTag({ content: "nextjs-portal{display:none!important}" });
+  await hp.waitForTimeout(800);
+
+  for (const [name, re] of [
+    ["SHARE MY RESULT", /share my result|getting your picture/i],
+    ["SEND IT TO YOUR KID", /send it to your kid|link copied/i],
+  ]) {
+    const box = await hp.evaluate(
+      (src) => {
+        const rx = new RegExp(src.source, src.flags);
+        const b = [...document.querySelectorAll("button")].find((x) => rx.test(x.textContent ?? ""));
+        if (!b) return null;
+        b.scrollIntoView({ block: "center", behavior: "instant" });
+        const r = b.getBoundingClientRect();
+        return { cx: Math.round(r.left + r.width / 2), cy: Math.round(r.top + r.height / 2) };
+      },
+      { source: re.source, flags: re.flags },
+    );
+    if (!box) {
+      check(`${name}: on the page`, false);
+      continue;
+    }
+    await hp.mouse.click(box.cx, box.cy);
+
+    // Long enough for a 2s watchdog to give up and say so.
+    let outcome = null;
+    for (let i = 0; i < 40 && !outcome; i++) {
+      await hp.waitForTimeout(200);
+      outcome = await hp.evaluate(() => {
+        const said = [...document.querySelectorAll("[role=status]")]
+          .map((n) => n.textContent?.trim())
+          .find(Boolean);
+        if (said) return `said "${said}"`;
+        if (document.querySelector("[role=dialog], [role=menu]")) return "a sheet opened";
+        const copied = [...document.querySelectorAll("button")].find((b) =>
+          /link copied/i.test(b.textContent ?? ""),
+        );
+        return copied ? "the label changed" : null;
+      });
+    }
+    check(`${name}: the press ends somewhere instead of nowhere`, Boolean(outcome),
+      outcome ?? "SILENT — no sheet, no status, no label change");
+    await hp.keyboard.press("Escape");
+    await hp.waitForTimeout(300);
+  }
+  await hostile.close();
+}
+
 /* == 6. and the same journey on a phone, where it is a different one ====== */
 console.log("\nON A PHONE, THE QUESTION YOU TAPPED IS ON THE SCREEN");
 console.log("-".repeat(72));
