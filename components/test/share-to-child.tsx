@@ -17,6 +17,60 @@ import { Button } from "@/components/ui/button";
 import { trackTestShareToChildClicked } from "@/lib/analytics/events";
 import { CHILD_ENTRY_PARAM } from "@/lib/test/share-url";
 
+/**
+ * How long to wait for the OS sheet to show itself before deciding it never
+ * will. See `presentSheet`, which is where the reason this is not simply a
+ * timeout is written down.
+ */
+const SHEET_WATCHDOG_MS = 2000;
+
+/**
+ * Offer the OS sheet, and come back either way.
+ *
+ * `navigator.share()` CAN BE CALLED SUCCESSFULLY AND THEN NEVER SETTLE. It is
+ * measured behaviour on desktop Chrome, and the reason this file's one exit
+ * used to hang: `await navigator.share(...)` sat on a promise nobody was ever
+ * going to resolve, so the clipboard fallback below it was unreachable, no
+ * event went out, and the button was silent for the rest of the page's life.
+ * That is the whole of "I press it and nothing happens", and PostHog recorded
+ * it precisely — a press captured, a $dead_click after it, and no
+ * test_share_to_child_clicked in between.
+ *
+ * A PLAIN TIMEOUT CANNOT FIX IT, because a sheet somebody is actually reading
+ * leaves the promise pending too, for as long as they like. What separates the
+ * two is FOCUS: when the OS puts a sheet up, this document loses it. So the
+ * watchdog only gives up when the promise has not settled AND this page is
+ * still visible and still focused, which together mean no sheet was ever
+ * presented.
+ *
+ * The same reasoning, and the same two seconds, as the share card above this
+ * one (components/test/share-results.tsx). It is written out twice rather than
+ * shared because the two do different things with the answer, and a helper
+ * that hid this decision would be the easier of the two to get wrong later.
+ */
+function presentSheet(data: ShareData): Promise<"shared" | "no_sheet"> {
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = (outcome: "shared" | "no_sheet") => {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(watchdog);
+      resolve(outcome);
+    };
+    const watchdog = window.setTimeout(() => {
+      if (document.visibilityState !== "visible" || !document.hasFocus()) return;
+      finish("no_sheet");
+    }, SHEET_WATCHDOG_MS);
+    // Dismissing a sheet rejects, and that lands here too: from this card's
+    // point of view a backed-out sheet and an absent one both mean "still not
+    // sent", and both should end up at the clipboard rather than nowhere.
+    navigator.share(data).then(
+      () => finish("shared"),
+      () => finish("no_sheet"),
+    );
+  });
+}
+
 export function ShareToChild() {
   const [copied, setCopied] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
@@ -27,13 +81,11 @@ export function ShareToChild() {
     const text = "I just did this. Your turn. Pick your grade and go.";
 
     if (typeof navigator.share === "function") {
-      try {
-        await navigator.share({ title, text, url });
+      if ((await presentSheet({ title, text, url })) === "shared") {
         trackTestShareToChildClicked("link");
         return;
-      } catch {
-        // Sheet dismissed or not permitted. Fall through to the clipboard.
       }
+      // Dismissed, refused, or never presented. Fall through to the clipboard.
     }
 
     try {
@@ -44,25 +96,23 @@ export function ShareToChild() {
       window.setTimeout(() => setCopied(false), 2500);
     } catch {
       /*
-        BOTH EXITS BLOCKED, AND THIS USED TO BE WHERE THE TAP DIED.
+        THE LAST EXIT IS GONE TOO, AND SAYING SO IS THE POINT.
 
-        The comment here said "the link below is still there", which is true
-        and is not the same as telling anybody. Nothing changed on screen and
-        no event went out, so the button was indistinguishable from a dead one
-        — and that is how it was reported. PostHog had it exactly: an
-        $autocapture for the press, a $dead_click for the silence after it, and
-        no test_share_to_child_clicked between them, because the only two
-        places that fire one are the two paths that worked.
+        This used to be an empty catch under a comment reading "the link below
+        is still there". That is true, and it is not the same as telling
+        anybody: nothing changed on screen and no event went out, so a press
+        that got the person nowhere looked exactly like a button that does
+        nothing.
 
-        It is reachable in ordinary use. `navigator.share` exists on desktop
-        Chrome for macOS, so a dismissed OS sheet lands here, and by then the
-        gesture's transient activation can be spent — which is exactly what
-        `clipboard.writeText` needs. Two normal things in a row and the card
-        goes quiet.
+        It is an ordinary path, not a corner. Anything that spends the
+        gesture's transient activation before this line — a sheet the person
+        dismissed, or the two seconds the watchdog waits for one that never
+        appears — leaves `clipboard.writeText` without the activation it
+        requires, and it refuses.
 
-        Same rule the share sheet next to this one already follows: never be
+        Same rule the share card above this one already follows: never be
         silent. Say what happened, point at the exit that still works, and
-        record it so the next one of these is visible in the data instead of
+        report it, so the next one of these shows up in the data instead of
         arriving as a bug report.
       */
       setStatus("Could not copy. Use the link underneath instead.");
