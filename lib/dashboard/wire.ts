@@ -1,5 +1,15 @@
 import type { AttributionRung } from "./attribution";
-import type { DeviceRow, GeoRow, PageRow, SourceRow, Tiles, TrendPoint } from "./types";
+import type {
+  DeviceRow,
+  GeoRow,
+  PageRow,
+  SourceRow,
+  TestCompletionRow,
+  TestPlatformRow,
+  TestResultTotals,
+  Tiles,
+  TrendPoint,
+} from "./types";
 
 /** The exact shapes the data route sends. Imported by both sides of the wire. */
 
@@ -124,6 +134,15 @@ export interface TrafficResponse {
   geo?: GeoRow[];
   pages?: PageRow[];
   devices?: DeviceRow[];
+  error: string | null;
+}
+
+export interface TestResultsResponse {
+  range: WireRange;
+  filtered: boolean;
+  platforms?: TestPlatformRow[];
+  completions?: TestCompletionRow[];
+  totals?: TestResultTotals;
   error: string | null;
 }
 

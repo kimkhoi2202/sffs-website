@@ -1,12 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
 import { DEFAULT_RANGE, resolveRange, type TimeRangeInput } from "@/lib/dashboard/time-range";
 import type {
   JourneyResponse,
   PeopleResponse,
+  TestResultsResponse,
   TilesResponse,
   TrafficResponse,
   WireFunnelStage,
@@ -16,6 +17,7 @@ import { FunnelPanel } from "./components/funnel-panel";
 import { JourneyPanel } from "./components/journey-panel";
 import { PeoplePanel } from "./components/people-panel";
 import { Stat, duration, pct } from "./components/primitives";
+import { ResultsPanel } from "./components/results-panel";
 import { TimeRangePicker } from "./components/time-range-picker";
 import { TrafficPanel } from "./components/traffic-panel";
 
@@ -32,7 +34,7 @@ import { TrafficPanel } from "./components/traffic-panel";
  * to end, so the tiles are a thin strip and the journey gets half the width.
  */
 
-type Tab = "journeys" | "funnel" | "traffic";
+type Tab = "journeys" | "funnel" | "traffic" | "results";
 
 export function DashboardApp({ queryKeyConfigured }: { queryKeyConfigured: boolean }) {
   const [range, setRange] = useState<TimeRangeInput>(DEFAULT_RANGE);
@@ -44,6 +46,9 @@ export function DashboardApp({ queryKeyConfigured }: { queryKeyConfigured: boole
   const [traffic, setTraffic] = useState<TrafficResponse | null>(null);
   const [journey, setJourney] = useState<JourneyResponse | null>(null);
   const [trafficLoading, setTrafficLoading] = useState(false);
+  const [results, setResults] = useState<TestResultsResponse | null>(null);
+  /** True while a completions request is in flight. See the effect below. */
+  const resultsPending = useRef(false);
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [subset, setSubset] = useState<{ ids: string[]; label: string } | null>(null);
@@ -116,6 +121,30 @@ export function DashboardApp({ queryKeyConfigured }: { queryKeyConfigured: boole
     };
   }, [tab, traffic, trafficLoading, range, filtered, post]);
 
+  /* ---- Completions, likewise only when that tab is opened ---------------
+     Two warehouse queries rather than five event queries, and they are the
+     only ones on the page that read real email addresses, so there is no
+     reason to run them for somebody who never opens the tab.
+
+     The in-flight guard is a ref rather than a piece of state, which is why
+     this effect reads differently from the traffic one above it. A
+     `setResultsLoading(true)` in the effect body is a synchronous setState
+     inside an effect, and `react-hooks/set-state-in-effect` is right to flag
+     it: the four it already reports on this file are a known debt, and adding
+     a fifth would bury them one deeper. A ref needs no render to update, and
+     "loading" is fully derivable from `tab === "results" && !results`. */
+  useEffect(() => {
+    if (tab !== "results" || results || resultsPending.current) return;
+    resultsPending.current = true;
+    let cancelled = false;
+    post({ section: "results", range, filtered })
+      .then((r) => !cancelled && setResults(r as TestResultsResponse))
+      .catch((e: Error) => !cancelled && setError(e.message));
+    return () => {
+      cancelled = true;
+    };
+  }, [tab, results, range, filtered, post]);
+
   /* ---- A changed window invalidates the open journey ------------------- */
   useEffect(() => {
     setSelectedId(null);
@@ -123,6 +152,10 @@ export function DashboardApp({ queryKeyConfigured }: { queryKeyConfigured: boole
     setSubset(null);
     setActiveStage(null);
     setTraffic(null);
+    setResults(null);
+    // Cleared alongside the data it guards, or the completions tab would never
+    // refetch for the new window.
+    resultsPending.current = false;
   }, [range, filtered]);
 
   /* ---- Load one journey ------------------------------------------------ */
@@ -274,6 +307,7 @@ export function DashboardApp({ queryKeyConfigured }: { queryKeyConfigured: boole
             ["journeys", "Journeys"],
             ["funnel", "Funnel & drop-off"],
             ["traffic", "Traffic & sources"],
+            ["results", "Completions"],
           ] as const
         ).map(([id, label]) => (
           <button
@@ -333,6 +367,22 @@ export function DashboardApp({ queryKeyConfigured }: { queryKeyConfigured: boole
           ) : (
             <p className="rounded-2xl border-[2.5px] border-ink bg-paper px-4 py-6 text-center text-sm font-bold text-ink/50">
               {trafficLoading ? "Loading traffic…" : "No traffic data."}
+            </p>
+          ))}
+
+        {tab === "results" &&
+          (results ? (
+            <>
+              {results.error && (
+                <p className="mb-4 rounded-2xl border-[2.5px] border-ink bg-coral px-4 py-3 text-sm font-bold">
+                  Completions: {results.error}
+                </p>
+              )}
+              <ResultsPanel data={results} />
+            </>
+          ) : (
+            <p className="rounded-2xl border-[2.5px] border-ink bg-paper px-4 py-6 text-center text-sm font-bold text-ink/50">
+              Loading completions…
             </p>
           ))}
       </div>

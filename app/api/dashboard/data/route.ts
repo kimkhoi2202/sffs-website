@@ -5,6 +5,7 @@ import { PostHogQueryError, isQueryKeyConfigured } from "@/lib/dashboard/posthog
 import { parseRangeInput, resolveRange } from "@/lib/dashboard/time-range";
 import { fetchTiles, fetchTraffic } from "@/lib/dashboard/queries";
 import { fetchPeople } from "@/lib/dashboard/people";
+import { fetchTestResults } from "@/lib/dashboard/test-results";
 import { buildFunnel, groupIntoHumans, summariseAbandonment } from "@/lib/dashboard/funnel";
 import { buildJourney } from "@/lib/dashboard/journey";
 
@@ -38,7 +39,7 @@ export const maxDuration = 60;
  * right scope for what this does and a very wrong scope to expose over HTTP.
  */
 
-type Section = "tiles" | "people" | "journey" | "traffic";
+type Section = "tiles" | "people" | "journey" | "traffic" | "results";
 
 /**
  * Run something and report failure instead of throwing it.
@@ -95,6 +96,17 @@ export async function POST(req: NextRequest) {
     if (section === "traffic") {
       const traffic = await settle(() => fetchTraffic(range, filtered));
       return json({ ...meta, ...(traffic.data ?? {}), error: traffic.error });
+    }
+
+    /*
+      Completions come from the `test_results` warehouse mirror, not from
+      events, so `filtered` is deliberately not forwarded to it — the export is
+      already pre-filtered at source. It still rides along in `meta` so the
+      client can echo the window it asked for.
+    */
+    if (section === "results") {
+      const results = await settle(() => fetchTestResults(range));
+      return json({ ...meta, ...(results.data ?? {}), error: results.error });
     }
 
     if (section === "people") {

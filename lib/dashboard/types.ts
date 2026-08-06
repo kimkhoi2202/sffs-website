@@ -55,6 +55,46 @@ export interface DeviceRow {
   visitors: number;
 }
 
+/* --------------------------------------------------------------------------
+ * Test completions, from the `test_results` warehouse mirror.
+ *
+ * These describe real finished tests rather than analytics events, so they
+ * carry an email address where one was given. See lib/dashboard/test-results.ts
+ * for why nothing here is filtered a second time.
+ * ------------------------------------------------------------------------ */
+
+/** One acquisition platform's completions. `platform` may be "unattributable". */
+export interface TestPlatformRow {
+  platform: string;
+  adult: number;
+  child: number;
+  total: number;
+  /** Completions in this bucket that carry no email address. */
+  anonymous: number;
+}
+
+/** One finished test. */
+export interface TestCompletionRow {
+  id: string;
+  /** Null when nobody asked for the result by email. Still a real completion. */
+  email: string | null;
+  testType: string;
+  /** "3", "5", "7-8" for children; "adult" for the grown-up test. */
+  gradeBand: string;
+  score: number;
+  maxScore: number;
+  platform: string;
+  completedAt: string;
+}
+
+export interface TestResultTotals {
+  completions: number;
+  adult: number;
+  child: number;
+  anonymous: number;
+  withEmail: number;
+}
+
 /** A person as they appear in the list, before their journey is loaded. */
 export interface PersonSummary {
   personId: string;
