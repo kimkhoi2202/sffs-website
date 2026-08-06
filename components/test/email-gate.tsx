@@ -224,7 +224,7 @@ export function EmailGate({
         }),
       });
       const data = (await res.json().catch(() => null)) as
-        | { ok?: boolean; error?: string; code?: string }
+        | { ok?: boolean; deduped?: boolean; error?: string; code?: string }
         | null;
 
       if (!res.ok || !data?.ok) {
@@ -241,7 +241,14 @@ export function EmailGate({
 
       setSentTo(address);
       setStatus("sent");
-      trackTestEmailSent({ test_id: testId, audience, resend: isResend });
+      /*
+        ONLY A MESSAGE THAT LEFT IS REPORTED AS ONE. The server suppresses a
+        repeat of a send it made moments ago (see SEND_DEDUPE_WINDOW_MS in
+        lib/test/result-store.ts) and says so. The confirmation is still right —
+        results are on their way to that address — but counting the suppressed
+        attempt would inflate the exact number this bug was diagnosed from.
+      */
+      if (!data.deduped) trackTestEmailSent({ test_id: testId, audience, resend: isResend });
       onSent();
     } catch {
       setStatus("error");

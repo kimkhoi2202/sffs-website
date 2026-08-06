@@ -29,6 +29,21 @@
  * When the cap is hit the copy says so plainly rather than pretending to send.
  *
  * ===========================================================================
+ * AND ONE GUARD THAT IS NOT ABOUT ABUSE
+ * ===========================================================================
+ * All four above answer "how much may a stranger make us send". A separate
+ * question is whether this send is one we just did. It is asked because
+ * somebody received the same results twice, three seconds apart, when a second
+ * tap landed on "Send it again" — so a result-and-address pair is CLAIMED
+ * before the provider is called and stays claimed for a minute. See
+ * SEND_DEDUPE_WINDOW_MS in lib/test/result-store.ts for the window, and for why
+ * "Wrong address? Use a different one" is untouched by it.
+ *
+ * Claimed before the call rather than counted after it, which also closes the
+ * race the cap has always had: two requests arriving together both read the
+ * same count and both send.
+ *
+ * ===========================================================================
  * FAILURE IS REPORTED, NOT SWALLOWED
  * ===========================================================================
  * If Resend rejects or the network dies, this returns a failure and the UI
@@ -49,7 +64,13 @@ import { sendEmail } from "@/lib/email/resend";
 import { captureEmailCapturedServer } from "@/lib/posthog-server";
 import { clientIp, isRateLimited } from "@/lib/rate-limit";
 import { EMAIL_SOURCES } from "@/lib/email-sources";
-import { getResult, MAX_SENDS_PER_RESULT, recordSend } from "@/lib/test/result-store";
+import {
+  claimSend,
+  getResult,
+  MAX_SENDS_PER_RESULT,
+  recordSend,
+  releaseSend,
+} from "@/lib/test/result-store";
 import { verdictFor } from "@/lib/test/scoring";
 import { isSyntheticRequest, recordResultStats } from "@/lib/test/result-stats";
 import { renderResultsEmail } from "@/lib/test/results-email";
@@ -128,7 +149,10 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (isRateLimited("results-send-address", hashEmail(email), ADDRESS_LIMIT)) {
+  // The same opaque key serves the limiter below and the duplicate claim
+  // further down, so neither ever holds the address itself.
+  const addressKey = hashEmail(email);
+  if (isRateLimited("results-send-address", addressKey, ADDRESS_LIMIT)) {
     return NextResponse.json(
       {
         ok: false,
@@ -185,6 +209,27 @@ export async function POST(request: NextRequest) {
     resultsUrl: resultsUrlFor(record.token, request),
   });
 
+  /*
+   * THE LAST GATE BEFORE THE IRREVERSIBLE PART, and the only one that has to be
+   * on this side of the await. Everything above can be re-decided; a message
+   * cannot be unsent.
+   *
+   * A refusal is reported as success, and that is not the lie the docstring
+   * above forbids. What is forbidden is "check your inbox" for mail that never
+   * left — here mail did leave, to this exact address, seconds ago, and it is
+   * the thing the person is being pointed at. Nothing is filed for it: no send
+   * happened, so no send is recorded, which is what stops the second Aurora row
+   * that made this visible in the first place.
+   */
+  if (!claimSend(record.token, addressKey)) {
+    console.info("results-send: suppressed a repeat send inside the dedupe window");
+    return NextResponse.json({
+      ok: true,
+      deduped: true,
+      sendsRemaining: Math.max(0, MAX_SENDS_PER_RESULT - record.sendCount),
+    });
+  }
+
   const sent = forcedFailure
     ? ({ ok: false, reason: "rejected", detail: "forced by dev tools" } as const)
     : await sendEmail({
@@ -195,6 +240,9 @@ export async function POST(request: NextRequest) {
       });
 
   if (!sent.ok) {
+    // Nothing left, so the claim goes back. The copy below invites a retry and
+    // has to mean it.
+    releaseSend(record.token, addressKey);
     // The provider's message is for our logs only: it can name the recipient,
     // and the client gets a generic, retryable message instead.
     console.error(`results-send failed (${sent.reason}):`, sent.detail);

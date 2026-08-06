@@ -203,3 +203,86 @@ export function recordSend(token: string): number | null {
   sends.set(key, next);
   return next;
 }
+
+/* -------------------------------------------------------------------------
+ * The duplicate window
+ * ----------------------------------------------------------------------- */
+
+/**
+ * How long one address stays claimed against one result.
+ *
+ * ===========================================================================
+ * A SECOND COPY NOBODY DECIDED TO ASK FOR IS STILL A SECOND COPY
+ * ===========================================================================
+ * The cap above answers "how many of these will we ever send". This answers a
+ * different question: is the send in front of us the one we just did? Someone
+ * got the same results twice, three seconds apart, because they pressed "Send
+ * it again" two and a half seconds after the confirmation appeared — that
+ * button arrives where the submit button was, and a second tap finds it.
+ *
+ * A minute, because that is the shortest interval over which "it never
+ * arrived" can be a real observation. Mail takes tens of seconds to land, so
+ * nobody inside this window has learned anything since the first send; they
+ * are tapping, not deciding. Outside it, "Send it again" does what it says.
+ *
+ * KEYED ON THE ADDRESS AS WELL AS THE RESULT, which is what keeps "Wrong
+ * address? Use a different one" working. A typo correction goes to a different
+ * mailbox and has to leave immediately — it is the recovery path for somebody
+ * looking at a confirmation for mail they are never going to get. Only the
+ * same result to the same address is a duplicate.
+ *
+ * PER-INSTANCE, like the counter above and for the same reason: there is no
+ * shared store to keep it in, and not having one is the point of this file.
+ * That is weaker than it sounds for the case it is built for, since a second
+ * tap seconds after the first lands on the warm instance that served the
+ * first, and it is strictly more than the nothing that was here before.
+ */
+export const SEND_DEDUPE_WINDOW_MS = 60_000;
+
+/** claim key -> epoch ms of the send that took it. */
+const claims = new Map<string, number>();
+
+const claimKey = (token: string, addressKey: string) =>
+  `${keyFor(token)}:${addressKey}`;
+
+/**
+ * Take this result-and-address pair, or refuse because a send already has it.
+ *
+ * `addressKey` is an OPAQUE HASH of the address, never the address — see
+ * hashEmail in the send route, which already computes one for the per-address
+ * limiter and passes the same value here. No address may sit in a long-lived
+ * map in this process, which is why this file has never held one.
+ *
+ * SYNCHRONOUS, AND CALLED BEFORE THE PROVIDER. That is the whole mechanism:
+ * two requests arriving together must not both read "nothing sent yet" and
+ * both go. A check that happens after an await is not a guard, it is a race
+ * with a comment on it — which is what the cap above, counted only once the
+ * provider answers, has always been.
+ */
+export function claimSend(token: string, addressKey: string): boolean {
+  const key = claimKey(token, addressKey);
+  const now = Date.now();
+
+  const claimedAt = claims.get(key);
+  if (claimedAt !== undefined && now - claimedAt < SEND_DEDUPE_WINDOW_MS) return false;
+
+  // Same cheap eviction as the counter above, for the same reason.
+  if (!claims.has(key) && claims.size >= MAX_TRACKED) {
+    const oldest = claims.keys().next().value;
+    if (oldest !== undefined) claims.delete(oldest);
+  }
+
+  claims.set(key, now);
+  return true;
+}
+
+/**
+ * Give a claim back after a send that did not happen.
+ *
+ * The failure path tells the person to try again in a moment, so it has to
+ * mean it. Without this, one rejection from the provider would lock that
+ * address out for a minute and the retry it just invited would do nothing.
+ */
+export function releaseSend(token: string, addressKey: string): void {
+  claims.delete(claimKey(token, addressKey));
+}
