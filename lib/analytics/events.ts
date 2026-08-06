@@ -763,10 +763,10 @@ export function trackAttributionSurveyDismissed(): void {
  * Sharing a result — the growth loop
  *
  * The one place a result leaves the person who earned it, so it is the one
- * place the loop can be measured. Three mechanisms, because they are genuinely
- * different behaviours with different reach and the aggregate hides that: the
- * OS share sheet, saving the 1080x1920 card to the camera roll (what actually
- * travels on TikTok and Instagram), and copying the link.
+ * place the loop can be measured. Two mechanisms, because there are two ways
+ * out: the OS share sheet, which carries the 1080x1920 card wherever the
+ * browser will take a file, and the clipboard, which is both a deliberate
+ * choice and where a sheet that never appeared lands.
  *
  * WHAT THESE CARRY, AND WHAT THEY MUST NEVER CARRY. The same fields the rest
  * of the test taxonomy uses: test id, audience, verdict band. No token, for
@@ -777,27 +777,26 @@ export function trackAttributionSurveyDismissed(): void {
  * ------------------------------------------------------------------------ */
 
 /**
- * How a share left the device: the TRANSPORT, not the destination.
+ * How a share left the device: the TRANSPORT.
  *
- * `web_intent` joined the three originals when the share control became a
- * sheet with per-app destinations. It means a link was opened in a composer on
- * another site (x.com, wa.me, reddit.com), which is none of the other three:
- * nothing was downloaded, nothing was copied, and no OS sheet was involved.
- * Filing those under an existing value would have silently redefined whichever
- * one it borrowed.
+ * TWO REACHABLE VALUES. `image_download` and `web_intent` were the other two
+ * and both are HISTORICAL: they belonged to a share sheet of our own, which
+ * saved the PNG to the device and opened x.com, wa.me and reddit.com in a new
+ * tab. That sheet was removed in favour of the OS one (see the note at the top
+ * of components/test/share-results.tsx), so nothing emits either value any
+ * more. Events carrying them are still in the data and still mean what they
+ * meant; they are named here so a chart that includes them is readable, and
+ * left out of the union so nobody wires a call site to one by accident.
  *
- * WHERE a share went rides along as a `destination` PROPERTY on the four
- * events below rather than as an event name per channel, and its vocabulary is
- * `ShareDestination` in lib/test/share-url.ts (the same values become
- * `utm_content`). Call sites pass it through; it is deliberately not in these
- * signatures, because a transport and a destination are different questions
- * and pairing them in one union would multiply out to a value per combination.
+ * THERE IS NO `destination` PROPERTY ANY MORE. It carried WHERE a share went,
+ * which only our own sheet could know — `navigator.share()` deliberately does
+ * not say which app was chosen. With the sheet gone the property could only
+ * repeat the mechanism, so it was dropped rather than left as a duplicate.
+ * `ShareDestination` in lib/test/share-url.ts survives for the link's own
+ * `utm_content` tag, which is a different question: how the link left, not
+ * where it landed.
  */
-export type ShareMechanism =
-  | "native_sheet"
-  | "image_download"
-  | "copy_link"
-  | "web_intent";
+export type ShareMechanism = "native_sheet" | "copy_link";
 
 interface ShareEventBase {
   test_id: string;
@@ -826,9 +825,15 @@ export function trackTestResultShareInitiated(
  * That qualifier is load-bearing and the number should be read with it in
  * mind. `navigator.share()` resolves when the sheet reports success, and it
  * deliberately does NOT say which app was chosen — that is a privacy property
- * of the API, not a gap to work around. A download reports completion when the
- * blob has been handed to the browser. Copy reports when the clipboard write
- * resolved. None of the three can tell us whether anything was ever posted.
+ * of the API, not a gap to work around. Copy reports when the clipboard write
+ * resolved. Neither can tell us whether anything was ever posted.
+ *
+ * A FALLBACK FILES ITS OWN COMPLETION, so `initiated` and `completed` do not
+ * pair off by mechanism. A tap that asked for the OS sheet, got nothing, and
+ * ended on the clipboard files `initiated(native_sheet)`,
+ * `failed(native_sheet, sheet_never_opened)` and `completed(copy_link)`, in
+ * that order. Count taps on `initiated` and successes on `completed`; do not
+ * expect the two to match per mechanism.
  */
 export function trackTestResultShareCompleted(
   p: ShareEventBase & { mechanism: ShareMechanism },
@@ -853,10 +858,17 @@ export function trackTestResultShareDismissed(
  * The share could not be completed. `reason` is a short enum of our own, never
  * a thrown message: DOMException text varies by browser and has no contract.
  */
+/**
+ * `sheet_never_opened` IS THE ONE TO WATCH. It is the only signal that
+ * `navigator.share()` was called, returned a promise, and never settled —
+ * the desktop failure that produced a dead button twice in one day. Nothing
+ * else in this taxonomy can see it happening in the wild, because from every
+ * other angle it looks like somebody who tapped and walked away.
+ */
 export function trackTestResultShareFailed(
   p: ShareEventBase & {
     mechanism: ShareMechanism;
-    /** "card_fetch" | "share_api" | "clipboard" | "download" */
+    /** "card_fetch" | "share_api" | "sheet_never_opened" | "clipboard" */
     reason: string;
   },
 ): void {

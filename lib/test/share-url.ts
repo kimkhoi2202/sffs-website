@@ -49,42 +49,26 @@
 export const CHILD_ENTRY_PARAM = "for=child";
 
 /**
- * WHERE a share was headed. Also the `utm_content` value on the link.
+ * HOW a shared link left the device. Also the `utm_content` value on it.
  *
- * This replaced a three-value `ShareMechanism` when the share control stopped
- * being a menu of three transports and became a sheet of eight destinations.
- * The distinction it draws is the one that matters for reading the data: HOW
- * the bytes left (a download, a clipboard write, the OS sheet, a web composer)
- * is a small closed set that tells you almost nothing, whereas WHERE they went
- * is the whole question a sharing loop is asking.
+ * TWO VALUES, BECAUSE THERE ARE TWO WAYS OUT. The share control was briefly a
+ * sheet of eight destinations and this union listed all eight; the sheet was
+ * removed in favour of the OS one (see components/test/share-results.tsx), and
+ * `save`, `instagram`, `tiktok`, `x`, `whatsapp` and `reddit` went with it —
+ * they were tags for composers this site no longer opens, and a tag on traffic
+ * that cannot exist is a tag that will be misread.
  *
- * `copy_link` and `native_sheet` keep their exact spelling from the previous
- * version, so every link already in the wild and every saved insight reading
- * `utm_content` keeps counting the same thing. Only new values were added.
+ * THE TWO SURVIVORS KEEP THEIR EXACT SPELLING, which is the only reason this
+ * is safe to narrow. Every link already in the wild carries one of these
+ * strings, and every saved insight reading `utm_content` keeps counting the
+ * same thing. The six removed values still exist in historical data; nothing
+ * here erases them, and this type has never been used to READ a URL.
+ *
+ * `native_sheet` is the honest tag for a link the OS handed to an app we
+ * cannot see. `copy_link` is a link that went via the clipboard, including
+ * when it got there because the OS sheet never appeared.
  */
-export type ShareDestination =
-  | "save"
-  | "copy_link"
-  | "instagram"
-  | "tiktok"
-  | "x"
-  | "whatsapp"
-  | "reddit"
-  | "native_sheet";
-
-/**
- * The destinations a LINK travels to, which is not all of them.
- *
- * `save` hands over a PNG and nothing else. `instagram` and `tiktok` do too:
- * neither app can be handed a URL that lands in a composer, which is the whole
- * reason those two are a two-step flow (see the note on the sheet). A URL
- * tagged for a destination that never carries one would be a tag on traffic
- * that cannot exist.
- */
-export type LinkDestination = Exclude<
-  ShareDestination,
-  "save" | "instagram" | "tiktok"
->;
+export type ShareDestination = "copy_link" | "native_sheet";
 
 /**
  * Matches the vanity redirects in next.config.ts, which all tag
@@ -107,15 +91,16 @@ export function shareCardPathFor(token: string): string {
 /**
  * The absolute link to hand somebody, tagged so the loop is measurable.
  *
- * `utm_content` records the destination the link was handed to, which is the
- * only way to tell a WhatsApp forward from a pasted copy-link once both have
- * arrived as `utm_source=share`. The saved picture has no URL to tag, so it is
- * measured by its client event alone; see gap 4 in the tracking audit.
+ * `utm_content` records how the link left, which is the only way to tell a
+ * link the OS sheet passed on from one somebody pasted out of their clipboard
+ * once both have arrived as `utm_source=share`. It cannot record WHERE the OS
+ * sheet sent it; that is a privacy property of the Web Share API rather than a
+ * gap to work around.
  */
 export function beatUrlFor(
   token: string,
   origin: string,
-  destination: LinkDestination,
+  destination: ShareDestination,
 ): string {
   const params = new URLSearchParams({
     utm_source: SHARE_UTM_SOURCE,
