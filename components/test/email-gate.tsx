@@ -69,6 +69,41 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type Status = "idle" | "submitting" | "error" | "sent";
 
+/**
+ * What the last "Send it again" press did.
+ *
+ * ===========================================================================
+ * A RESEND IS NOT A SUBMISSION AND MUST NOT SHARE ITS STATE
+ * ===========================================================================
+ * It used to. `send` set `status` to "submitting" whichever button called it,
+ * and since the confirmation only renders while `status` is "sent", every
+ * resend UNMOUNTED the confirmation, showed the empty form for as long as the
+ * request took, and then put the confirmation back. Measured on the real
+ * screen: a 112ms flash to a form nobody asked for, ending on a card identical
+ * to the one they started with.
+ *
+ * That is a dead button. The person who presses it is, by definition, someone
+ * who thinks their mail has not arrived, and the answer they got was a flicker.
+ * The one in the incident pressed again a second later and PostHog logged it as
+ * a `$dead_click`, which is the instrumentation agreeing.
+ *
+ * So the resend keeps its own state, the confirmation stays mounted throughout,
+ * and every outcome says what it was — including the suppressed one, which is
+ * not a failure and must not be dressed as one.
+ */
+type ResendState =
+  | { kind: "idle" }
+  | { kind: "sending" }
+  | { kind: "sent" }
+  /** The server refused a repeat inside its dedupe window. Nothing went wrong. */
+  | { kind: "already" }
+  | { kind: "failed"; message: string };
+
+/** What one call to the send endpoint did. */
+type SendOutcome =
+  | { ok: true; deduped: boolean }
+  | { ok: false; message: string };
+
 const COPY = {
   adult: {
     title: "Where should we send it?",
@@ -83,6 +118,22 @@ const COPY = {
     cta: "Email me my results",
     sentTitle: "Check your email",
     sentBody: "Your results are on their way. You can also see them right below.",
+    /*
+     * THE RECOVERY BLOCK, WHICH IS A MINORITY PATH AND NOW READS LIKE ONE.
+     *
+     * The prompt is what turns two controls into an offer: it names the
+     * situation they are for, so nobody has to work out from a bare button
+     * whether pressing it is the next step. It is also what stands between
+     * the eye and those controls, which is the point — see the note on the
+     * confirmation layout below.
+     */
+    resendPrompt: "Not in your inbox? Mail can take a minute to arrive.",
+    resentNote: "Sent again. Check your inbox.",
+    // Names the actual rule rather than shrugging. Somebody who just pressed a
+    // button and got "ok!" has learned nothing; somebody told we will not send
+    // the same thing twice in a minute knows why, and knows what to do next.
+    alreadyNote:
+      "Already on its way. We do not send the same results twice in a minute, so give it a moment to land.",
   },
   /*
    * PARENT, NOT GROWN-UP, ON THIS BRANCH.
@@ -123,6 +174,10 @@ const COPY = {
     sentTitle: "Sent!",
     sentBody:
       "Ask your parent to check their email. You can see your results right below.",
+    resendPrompt: "Not there yet? Email can take a minute.",
+    resentNote: "Sent again! Ask your parent to look.",
+    alreadyNote:
+      "It is already on its way. We only send it once a minute, so give it a moment.",
   },
 } as const;
 
@@ -164,6 +219,8 @@ export function EmailGate({
   const [sentTo, setSentTo] = useState<string | null>(null);
   /** Set when the server says this result has had all the sends it gets. */
   const [capped, setCapped] = useState(false);
+  /** The outcome of the last "Send it again". See ResendState. */
+  const [resendState, setResendState] = useState<ResendState>({ kind: "idle" });
 
   const inputRef = useRef<HTMLInputElement>(null);
   const focusedRef = useRef(false);
@@ -180,22 +237,13 @@ export function EmailGate({
   const submitting = status === "submitting";
   const invalid = status === "error" && Boolean(error);
 
-  async function send(address: string, isResend: boolean) {
-    if (sendingRef.current) return;
-    if (!token) {
-      setStatus("error");
-      setError("Still saving your results. Give it a second and try again.");
-      return;
-    }
-    sendingRef.current = true;
-
+  /**
+   * One call to the endpoint, with the analytics that belong to it and no
+   * opinion about the UI. Both buttons go through here; what they do with the
+   * answer is their own business, which is the whole reason it is split out.
+   */
+  async function postSend(address: string, isResend: boolean): Promise<SendOutcome> {
     try {
-      setStatus("submitting");
-      setError(null);
-
-      if (isResend) trackTestResendRequested({ test_id: testId, audience });
-      else trackTestEmailSubmitted({ test_id: testId, audience, source });
-
       const res = await fetch("/api/test-results/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -228,19 +276,18 @@ export function EmailGate({
         | null;
 
       if (!res.ok || !data?.ok) {
-        setStatus("error");
-        setError(data?.error ?? "That didn't go through. Give it another shot.");
         if (data?.code === "send_cap") setCapped(true);
         trackTestEmailSendFailed({
           test_id: testId,
           audience,
           code: data?.code ?? "unknown",
         });
-        return;
+        return {
+          ok: false,
+          message: data?.error ?? "That didn't go through. Give it another shot.",
+        };
       }
 
-      setSentTo(address);
-      setStatus("sent");
       /*
         ONLY A MESSAGE THAT LEFT IS REPORTED AS ONE. The server suppresses a
         repeat of a send it made moments ago (see SEND_DEDUPE_WINDOW_MS in
@@ -249,11 +296,68 @@ export function EmailGate({
         attempt would inflate the exact number this bug was diagnosed from.
       */
       if (!data.deduped) trackTestEmailSent({ test_id: testId, audience, resend: isResend });
-      onSent();
+      return { ok: true, deduped: data.deduped === true };
     } catch {
-      setStatus("error");
-      setError("Couldn't reach the server. Check your connection and try again.");
       trackTestEmailSendFailed({ test_id: testId, audience, code: "network" });
+      return {
+        ok: false,
+        message: "Couldn't reach the server. Check your connection and try again.",
+      };
+    }
+  }
+
+  /** The typed submission. Owns `status`, and is the only thing that unlocks the score. */
+  async function submit(address: string) {
+    if (sendingRef.current) return;
+    if (!token) {
+      setStatus("error");
+      setError("Still saving your results. Give it a second and try again.");
+      return;
+    }
+    sendingRef.current = true;
+
+    try {
+      setStatus("submitting");
+      setError(null);
+      trackTestEmailSubmitted({ test_id: testId, audience, source });
+
+      const outcome = await postSend(address, false);
+      if (!outcome.ok) {
+        setStatus("error");
+        setError(outcome.message);
+        return;
+      }
+
+      setSentTo(address);
+      setResendState({ kind: "idle" });
+      setStatus("sent");
+      onSent();
+    } finally {
+      sendingRef.current = false;
+    }
+  }
+
+  /**
+   * "Send it again". Never touches `status`, so the confirmation stays on
+   * screen for the whole round trip and the answer lands next to the button
+   * that asked for it.
+   */
+  async function resend() {
+    if (sendingRef.current || !sentTo) return;
+    sendingRef.current = true;
+
+    try {
+      setResendState({ kind: "sending" });
+      trackTestResendRequested({ test_id: testId, audience });
+
+      const outcome = await postSend(sentTo, true);
+      setResendState(
+        !outcome.ok
+          ? { kind: "failed", message: outcome.message }
+          : outcome.deduped
+            ? { kind: "already" }
+            : { kind: "sent" },
+      );
     } finally {
       sendingRef.current = false;
     }
@@ -273,7 +377,7 @@ export function EmailGate({
       inputRef.current?.focus();
       return;
     }
-    void send(trimmed, false);
+    void submit(trimmed);
   }
 
   /* -- the confirmation ---------------------------------------------------- */
@@ -285,15 +389,34 @@ export function EmailGate({
           aria-live="polite"
           className="flex flex-col items-center gap-2 text-center"
         >
-          <span
-            aria-hidden="true"
-            className="grid size-12 place-items-center rounded-full border-[2.5px] border-ink bg-mint text-xl font-black"
-          >
-            &#10003;
-          </span>
-          <h2 className="text-balance font-display text-[clamp(1.5rem,6vw,2rem)] uppercase leading-[1.05] tracking-[-0.01em]">
-            {copy.sentTitle}
-          </h2>
+          {/*
+            THE TICK SITS BESIDE THE HEADLINE, NOT ABOVE IT, and that is a
+            budget decision rather than a stylistic one. Stacked, the mark and
+            its gap spent 56px of card height on decoration, and every pixel
+            spent above the recovery block pushes everything below it further
+            down. The first draft of that block cost 49px and shifted "Start
+            over" — the one control here that throws the attempt away — down
+            into the band the submit button had occupied on the viewport being
+            measured. Reclaiming this space put the card at 426px against the
+            429px it replaces, so nothing below it moved down at all and no
+            screen is worse off than before.
+
+            It also suits what this screen became. The confirmation is no
+            longer the destination — the score is, right underneath — so a
+            full ceremonial lockup for "sent" is more announcement than the
+            moment deserves.
+          */}
+          <div className="flex items-center justify-center gap-2.5">
+            <span
+              aria-hidden="true"
+              className="grid size-9 shrink-0 place-items-center rounded-full border-[2.5px] border-ink bg-mint text-base font-black"
+            >
+              &#10003;
+            </span>
+            <h2 className="text-balance font-display text-[clamp(1.5rem,6vw,2rem)] uppercase leading-[1.05] tracking-[-0.01em]">
+              {copy.sentTitle}
+            </h2>
+          </div>
           <p className="text-pretty text-[0.95rem] font-semibold leading-snug text-ink/75">
             {copy.sentBody}
           </p>
@@ -302,37 +425,121 @@ export function EmailGate({
           </p>
         </div>
 
-        {/* Typos are the whole reason this exists: someone who mistyped their
-            address sees a confirmation for mail they will never get, and needs
-            a way out that is not "take the test again".
+        {/*
+          ===================================================================
+          THE RECOVERY BLOCK, BELOW A RULE AND BELOW A REASON
+          ===================================================================
+          "Send it again" used to be a 331px full-width bordered button
+          sitting directly under the confirmation, which made it the loudest
+          thing on the card — the same full-width weight the submit button had
+          carried a second earlier. On a screen whose actual payload is the
+          score underneath, the most emphatic control was the one that mails a
+          duplicate, and somebody duly pressed it two and a half seconds after
+          their mail was already in flight.
 
-            IT PUTS THE FORM BACK, NOT THE BLUR. Once a message has left, the
-            results below stay where they are for the rest of the visit — see
-            the latch in ./gated-results.tsx. Re-hiding a score somebody has
-            already paid for, because they want to correct the address it was
-            paid to, would punish exactly the recovery this button is for. */}
-        <div className="mt-4 flex flex-col gap-2">
-          <Button
-            variant="paper"
-            size="md"
-            onClick={() => void send(sentTo, true)}
-            disabled={capped}
-            className="w-full"
-          >
-            Send it again
-          </Button>
-          <button
-            type="button"
-            onClick={() => {
-              setStatus("idle");
-              setError(null);
-              setEmail("");
-              requestAnimationFrame(() => inputRef.current?.focus());
-            }}
-            className="min-h-11 cursor-pointer text-center text-xs font-bold uppercase tracking-wide text-ink/60 underline decoration-2 underline-offset-2"
-          >
-            Wrong address? Use a different one
-          </button>
+          It is 157px now: same 44px target, half the width, under a line that
+          says when to use it. The divider is doing real work rather than
+          decorating — it puts a band of nothing between where the eye lands
+          and anything that fires a request.
+
+          NOTE FOR ANYONE TEMPTED TO CHASE THIS FURTHER. The obvious theory,
+          that the button inherits the submit button's screen position and
+          catches a stray second tap, was measured and is FALSE: a successful
+          send reveals the results, the page grows from one screen to about
+          4,000px, the shell stops centring, and the card jumps to the top. On
+          a 500x844 viewport the two sit 182px apart. The position also moves
+          with viewport height, so there is no layout that keeps this card
+          clear of every screen's danger band — which is why the real defences
+          are the server's claim and the fact that every press below now
+          answers, not geometry.
+
+          Both exits are still here and still labelled. Burying them would
+          swap a duplicate email for somebody with a mistyped address and no
+          way back, which is the worse trade. Quieter, not hidden.
+
+          Typos are the whole reason the second one exists: someone who
+          mistyped sees a confirmation for mail they will never get, and needs
+          a way out that is not "take the test again".
+
+          IT PUTS THE FORM BACK, NOT THE BLUR. Once a message has left, the
+          results below stay where they are for the rest of the visit — see
+          the latch in ./gated-results.tsx. Re-hiding a score somebody has
+          already paid for, because they want to correct the address it was
+          paid to, would punish exactly the recovery this button is for.
+        */}
+        <div className="mt-5 border-t-[2.5px] border-dashed border-ink/15 pt-5">
+          {/*
+            ONE SLOT, TWO JOBS, AND THE ANSWER LANDS WHERE THE QUESTION WAS.
+            ===================================================================
+            At rest this says when the controls below are for. After a press it
+            says what the press did, replacing the prompt rather than stacking
+            under the buttons — which is both why the card barely grows and why
+            the sentence cannot be misread as belonging to whichever control
+            happens to sit above it.
+
+            The live region is the slot itself, present from first render and
+            never unmounted, so a replacement is announced. A region that
+            appears at the same instant as its content frequently is not, and
+            the entire point of this element is that somebody who is not
+            looking at the screen still learns what happened.
+
+            Three outcomes, three appearances. A suppressed ask is NOT tinted
+            like a failure: nothing went wrong, and colouring it red would tell
+            somebody their results are lost at the exact moment they are in
+            flight.
+          */}
+          <div role="status" aria-live="polite">
+            {resendState.kind === "idle" || resendState.kind === "sending" ? (
+              <p className="text-pretty text-center text-xs font-semibold leading-snug text-ink/55">
+                {copy.resendPrompt}
+              </p>
+            ) : (
+              <p
+                className={cn(
+                  "text-pretty rounded-lg border-[2.5px] border-ink px-3 py-2 text-center text-xs font-semibold leading-snug",
+                  resendState.kind === "failed" ? "bg-coral" : "bg-cream",
+                )}
+              >
+                {resendState.kind === "sent"
+                  ? copy.resentNote
+                  : resendState.kind === "already"
+                    ? copy.alreadyNote
+                    : resendState.message}
+              </p>
+            )}
+          </div>
+
+          <div className="mt-3 flex flex-col items-center gap-1">
+            {/*
+              `md` rather than `sm`, and auto-width rather than `w-full`. The
+              demotion this button needed was in WIDTH and weight, not in
+              height: `sm` is 36px, and the rule the rest of this card keeps —
+              see StartOver below — is that a quiet control is still a 44px
+              target. Fiddly is not the same as understated.
+            */}
+            <Button
+              variant="paper"
+              size="md"
+              onClick={() => void resend()}
+              disabled={capped || resendState.kind === "sending"}
+              aria-busy={resendState.kind === "sending"}
+            >
+              {resendState.kind === "sending" ? "Sending…" : "Send it again"}
+            </Button>
+            <button
+              type="button"
+              onClick={() => {
+                setStatus("idle");
+                setError(null);
+                setEmail("");
+                setResendState({ kind: "idle" });
+                requestAnimationFrame(() => inputRef.current?.focus());
+              }}
+              className="min-h-11 cursor-pointer px-2 text-center text-xs font-bold uppercase tracking-wide text-ink/60 underline decoration-2 underline-offset-2"
+            >
+              Wrong address? Use a different one
+            </button>
+          </div>
         </div>
 
         <Footnote />

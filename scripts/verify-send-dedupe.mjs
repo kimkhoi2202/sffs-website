@@ -8,10 +8,10 @@
  * ===========================================================================
  * Somebody received the same results email twice, three seconds apart. It was
  * not a double submit and it was not a retry: they pressed "Send it again" two
- * and a half seconds after the confirmation appeared, which puts that button
- * where the submit button had just been. The server had nothing to say about
- * it — every limit it carried was about volume, and two identical messages in
- * three seconds is well inside all of them.
+ * and a half seconds after the confirmation appeared, while the first message
+ * was still in flight. The server had nothing to say about it — every limit it
+ * carried was about volume, and two identical messages in three seconds is well
+ * inside all of them.
  *
  * So the route now claims a result-and-address pair before it calls the
  * provider. This is the suite that holds that claim in place, and it counts

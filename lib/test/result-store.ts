@@ -217,8 +217,11 @@ export function recordSend(token: string): number | null {
  * The cap above answers "how many of these will we ever send". This answers a
  * different question: is the send in front of us the one we just did? Someone
  * got the same results twice, three seconds apart, because they pressed "Send
- * it again" two and a half seconds after the confirmation appeared — that
- * button arrives where the submit button was, and a second tap finds it.
+ * it again" two and a half seconds after the confirmation appeared — it was
+ * the loudest control on that card, and they took it for the next step. The
+ * card has since been rebalanced (see the recovery block in
+ * components/test/email-gate.tsx), but a button nobody should have to resist
+ * is not a guarantee, and this is.
  *
  * A minute, because that is the shortest interval over which "it never
  * arrived" can be a real observation. Mail takes tens of seconds to land, so

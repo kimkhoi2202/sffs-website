@@ -33,9 +33,10 @@
  * ===========================================================================
  * All four above answer "how much may a stranger make us send". A separate
  * question is whether this send is one we just did. It is asked because
- * somebody received the same results twice, three seconds apart, when a second
- * tap landed on "Send it again" — so a result-and-address pair is CLAIMED
- * before the provider is called and stays claimed for a minute. See
+ * somebody received the same results twice, three seconds apart, by pressing
+ * "Send it again" while the first was still in flight — so a result-and-address
+ * pair is CLAIMED before the provider is called and stays claimed for a minute.
+ * See
  * SEND_DEDUPE_WINDOW_MS in lib/test/result-store.ts for the window, and for why
  * "Wrong address? Use a different one" is untouched by it.
  *
