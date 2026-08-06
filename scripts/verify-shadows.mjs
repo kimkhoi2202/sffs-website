@@ -40,16 +40,22 @@ async function probe(page, spec) {
 }
 
 const rows = [];
+/**
+ * `want` is "shadow" or "flat" for a surface that must be on screen, and
+ * "absent" for one that must NOT be. A surface that vanishes still fails every
+ * expectation except "absent", so this cannot quietly excuse a missing control.
+ */
 const record = (screen, results, expected) => {
   for (const r of results) {
     const lifted = !r.missing && r.shadow !== null;
     const want = expected[r.label];
+    const got = r.missing ? "absent" : lifted ? "shadow" : "flat";
     rows.push({
       screen,
       surface: r.label,
-      got: r.missing ? "MISSING" : lifted ? "shadow" : "flat",
+      got: got === "absent" && want !== "absent" ? "MISSING" : got,
       want,
-      ok: r.missing ? false : (lifted ? "shadow" : "flat") === want,
+      ok: got === want,
       detail: r.missing ? "" : brief(r.shadow),
       count: r.count ?? 0,
     });
@@ -152,7 +158,11 @@ if (await quit.count()) {
 /* -- gated results --------------------------------------------------------- */
 await page.getByRole("button", { name: "DEV", exact: true }).click();
 await page.waitForTimeout(400);
-await page.getByRole("button", { name: "65%", exact: true }).click({ force: true });
+// One under the Smart Fella bar, so the score card lands on the losing verdict
+// this screen is checked against. The dev panel builds these chips from
+// VERDICT_BANDS, so moving that bar renames the chip and this goes with it —
+// it was still reaching for "65%" long after the bar moved to 70.
+await page.getByRole("button", { name: "69%", exact: true }).click({ force: true });
 await page.waitForTimeout(1500);
 await page.getByRole("button", { name: "Close dev tools" }).click({ force: true });
 await page.waitForTimeout(600);
@@ -161,13 +171,16 @@ record(
   await probe(page, [
     { label: "email gate card", sel: "form >> xpath=ancestor::div[contains(@class,'rounded')][1]" },
     { label: "Send my results button", sel: "button:has-text('Send my results')" },
-    { label: "Start over (quiet)", sel: "button:has-text('Start over')" },
+    // Deliberately not here. It only appears once the send has succeeded, so
+    // nothing competes with the address field while the result is worth the
+    // most. See the note above `StartOver` in components/test/email-gate.tsx.
+    { label: "Start over", sel: "button:has-text('Start over')" },
     { label: "results score card", sel: "div.bg-yellow" },
   ]),
   {
     "email gate card": "shadow",
     "Send my results button": "shadow",
-    "Start over (quiet)": "flat",
+    "Start over": "absent",
     "results score card": "shadow",
   },
 );

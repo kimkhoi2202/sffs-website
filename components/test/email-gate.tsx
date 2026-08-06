@@ -394,7 +394,6 @@ export function EmailGate({
       </form>
 
       <Footnote />
-      <StartOver onRestart={onRestart} />
     </Card>
   );
 }
@@ -402,15 +401,25 @@ export function EmailGate({
 /**
  * The way out, and deliberately the smallest thing on the card.
  *
- * It is inside the card because the blurred results behind it are `inert`, so
- * the card is the only interactive surface on the screen and a control floating
- * outside it broke that. It is a text button rather than a filled one because
- * the card already has a green primary and a paper secondary above it, and a
- * third button-shaped object turns a single obvious next step into a menu.
+ * ===========================================================================
+ * IT ONLY EXISTS AFTER THE SEND HAS SUCCEEDED
+ * ===========================================================================
+ * It used to render under the form as well, and a grade-3 child who had just
+ * scored a perfect 15 out of 15 — the most shareable result this product can
+ * produce — pressed it five seconds after the gate appeared. The control
+ * worked. It was simply the one they chose, because it was sitting next to the
+ * request for their parent's address at the exact moment the result was worth
+ * the most. Offering "throw this away" beside "tell us where to send it" makes
+ * the two read as a pair of equal options, and it costs conversions.
  *
- * It also discards a finished attempt, which is the one irreversible thing a
- * person can do here, so it should take a deliberate tap rather than an idle
- * one. Still a full 44px target: quiet is not the same as fiddly.
+ * So the form now has one next step and no alternative to it. Retaking stays
+ * possible, but on the confirmation below, where the attempt has already been
+ * banked and starting again costs nothing.
+ *
+ * It is a text button rather than a filled one because the confirmation already
+ * has a paper secondary above it, and a second button-shaped object turns a
+ * single obvious next step into a menu. Still a full 44px target: quiet is not
+ * the same as fiddly.
  */
 function StartOver({ onRestart }: { onRestart: () => void }) {
   return (
