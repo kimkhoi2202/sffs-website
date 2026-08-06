@@ -45,17 +45,28 @@ export function DashboardApp({ queryKeyConfigured }: { queryKeyConfigured: boole
   const [people, setPeople] = useState<PeopleResponse | null>(null);
   const [traffic, setTraffic] = useState<TrafficResponse | null>(null);
   const [journey, setJourney] = useState<JourneyResponse | null>(null);
-  const [trafficLoading, setTrafficLoading] = useState(false);
   const [results, setResults] = useState<TestResultsResponse | null>(null);
-  /** True while a completions request is in flight. See the effect below. */
+
+  /*
+    THE IN-FLIGHT GUARDS ARE REFS, THE THINGS ON SCREEN ARE STATE.
+    Both on-demand tabs need to know "a request is already out" the instant
+    their effect runs, which is a question no render has to answer. A ref can
+    be set in the effect body without the cascading render that
+    `react-hooks/set-state-in-effect` exists to prevent; a `setLoading(true)`
+    there cannot. What a person actually sees is derived from the data instead.
+  */
+  const trafficPending = useRef(false);
   const resultsPending = useRef(false);
 
+  /** A traffic request has come back for this window, with data or without. */
+  const [trafficSettled, setTrafficSettled] = useState(false);
+
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  /** Who the journey we are holding belongs to. See journeyLoading below. */
+  const [journeyFor, setJourneyFor] = useState<string | null>(null);
   const [subset, setSubset] = useState<{ ids: string[]; label: string } | null>(null);
   const [activeStage, setActiveStage] = useState<string | null>(null);
 
-  const [loading, setLoading] = useState(true);
-  const [journeyLoading, setJourneyLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const rangeLabel = useMemo(() => resolveRange(range).label, [range]);
@@ -71,6 +82,42 @@ export function DashboardApp({ queryKeyConfigured }: { queryKeyConfigured: boole
     return payload;
   }, []);
 
+  /* ---- Changing the window clears everything scoped to it ----------------
+     Every panel below the picker answers a question about one time window, so
+     none of them survive a change of window. This used to be an effect on
+     [range, filtered] whose entire body was six setState calls, which is the
+     second thing `react-hooks/set-state-in-effect` is pointing at: work caused
+     by an action, done in an effect watching the result of that action.
+
+     The two callbacks below are the ONLY things that can change the window, so
+     doing it there is complete rather than merely equivalent. */
+  const resetWindow = useCallback(() => {
+    setError(null);
+    setSelectedId(null);
+    setJourney(null);
+    setJourneyFor(null);
+    setSubset(null);
+    setActiveStage(null);
+    setTraffic(null);
+    setTrafficSettled(false);
+    trafficPending.current = false;
+    setResults(null);
+    resultsPending.current = false;
+  }, []);
+
+  const changeRange = useCallback(
+    (next: TimeRangeInput) => {
+      setRange(next);
+      resetWindow();
+    },
+    [resetWindow],
+  );
+
+  const toggleFiltered = useCallback(() => {
+    setFiltered((v) => !v);
+    resetWindow();
+  }, [resetWindow]);
+
   /* ---- Load the window --------------------------------------------------
      Only what the default tab needs: the tiles (two PostHog queries) and the
      people set (five). The traffic panels are another five and nobody has
@@ -82,8 +129,6 @@ export function DashboardApp({ queryKeyConfigured }: { queryKeyConfigured: boole
      busy query cluster no longer blanks the whole page. */
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
-    setError(null);
     Promise.allSettled([
       post({ section: "tiles", range, filtered }),
       post({ section: "people", range, filtered }),
@@ -100,39 +145,41 @@ export function DashboardApp({ queryKeyConfigured }: { queryKeyConfigured: boole
           });
         if (p.status === "fulfilled") setPeople(p.value as PeopleResponse);
         else setError(p.reason?.message ?? "Could not load people.");
-      })
-      .finally(() => !cancelled && setLoading(false));
+      });
     return () => {
       cancelled = true;
     };
   }, [range, filtered, post]);
 
-  /* ---- The traffic tab pays for itself only when opened ----------------- */
+  /* ---- The traffic tab pays for itself only when opened -----------------
+     The guard is the ref rather than a loading flag, which also ends a retry
+     loop that was here: a `trafficLoading` in the dependency array flips back
+     to false when a request fails, the effect re-runs, `traffic` is still null,
+     and it asks again — forever, for as long as the tab is open, against the
+     query cluster this file already had to stop overloading. */
   useEffect(() => {
-    if (tab !== "traffic" || traffic || trafficLoading) return;
+    if (tab !== "traffic" || traffic || trafficPending.current) return;
+    trafficPending.current = true;
     let cancelled = false;
-    setTrafficLoading(true);
     post({ section: "traffic", range, filtered })
       .then((t) => !cancelled && setTraffic(t as TrafficResponse))
       .catch((e: Error) => !cancelled && setError(e.message))
-      .finally(() => !cancelled && setTrafficLoading(false));
+      .finally(() => !cancelled && setTrafficSettled(true));
     return () => {
       cancelled = true;
     };
-  }, [tab, traffic, trafficLoading, range, filtered, post]);
+  }, [tab, traffic, range, filtered, post]);
 
   /* ---- Completions, likewise only when that tab is opened ---------------
      Two warehouse queries rather than five event queries, and they are the
      only ones on the page that read real email addresses, so there is no
      reason to run them for somebody who never opens the tab.
 
-     The in-flight guard is a ref rather than a piece of state, which is why
-     this effect reads differently from the traffic one above it. A
-     `setResultsLoading(true)` in the effect body is a synchronous setState
-     inside an effect, and `react-hooks/set-state-in-effect` is right to flag
-     it: the four it already reports on this file are a known debt, and adding
-     a fifth would bury them one deeper. A ref needs no render to update, and
-     "loading" is fully derivable from `tab === "results" && !results`. */
+     The in-flight guard is a ref, and "loading" is fully derivable from
+     `tab === "results" && !results`. That was written here first, against four
+     `react-hooks/set-state-in-effect` errors elsewhere in this file that were
+     then a known debt; the rest of the file has since been brought to it and
+     the debt is gone. */
   useEffect(() => {
     if (tab !== "results" || results || resultsPending.current) return;
     resultsPending.current = true;
@@ -145,32 +192,29 @@ export function DashboardApp({ queryKeyConfigured }: { queryKeyConfigured: boole
     };
   }, [tab, results, range, filtered, post]);
 
-  /* ---- A changed window invalidates the open journey ------------------- */
-  useEffect(() => {
-    setSelectedId(null);
-    setJourney(null);
-    setSubset(null);
-    setActiveStage(null);
-    setTraffic(null);
-    setResults(null);
-    // Cleared alongside the data it guards, or the completions tab would never
-    // refetch for the new window.
-    resultsPending.current = false;
-  }, [range, filtered]);
-
-  /* ---- Load one journey ------------------------------------------------ */
+  /* ---- Load one journey ------------------------------------------------
+     What is recorded on the way out is WHO the answer was for, not that an
+     answer is pending. Both endings record it, so a failed request stops the
+     spinner exactly as it did when a `.finally` cleared a loading flag. */
   useEffect(() => {
     if (!selectedId) return;
     let cancelled = false;
-    setJourneyLoading(true);
     post({ section: "journey", range, filtered, humanId: selectedId })
       .then((j) => !cancelled && setJourney(j as JourneyResponse))
       .catch((e: Error) => !cancelled && setError(e.message))
-      .finally(() => !cancelled && setJourneyLoading(false));
+      .finally(() => !cancelled && setJourneyFor(selectedId));
     return () => {
       cancelled = true;
     };
   }, [selectedId, range, filtered, post]);
+
+  /*
+    Derived, not stored. The journey pane is loading exactly when the selection
+    has moved ahead of the answer we hold — true from the click, false the
+    moment the request settles either way. Storing that meant setting it in the
+    effect that started the fetch, which is what the rule was pointing at.
+  */
+  const journeyLoading = selectedId !== null && journeyFor !== selectedId;
 
   const visibleHumans = useMemo(() => {
     if (!people) return [];
@@ -210,11 +254,11 @@ export function DashboardApp({ queryKeyConfigured }: { queryKeyConfigured: boole
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <TimeRangePicker value={range} label={rangeLabel} onChange={setRange} />
+          <TimeRangePicker value={range} label={rangeLabel} onChange={changeRange} />
 
           <button
             type="button"
-            onClick={() => setFiltered((v) => !v)}
+            onClick={toggleFiltered}
             aria-pressed={filtered}
             title={
               filtered
@@ -366,7 +410,7 @@ export function DashboardApp({ queryKeyConfigured }: { queryKeyConfigured: boole
             <TrafficPanel data={traffic} />
           ) : (
             <p className="rounded-2xl border-[2.5px] border-ink bg-paper px-4 py-6 text-center text-sm font-bold text-ink/50">
-              {trafficLoading ? "Loading traffic…" : "No traffic data."}
+              {trafficSettled ? "No traffic data." : "Loading traffic…"}
             </p>
           ))}
 
