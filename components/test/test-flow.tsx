@@ -232,30 +232,30 @@ export function TestFlow() {
   );
 
   /**
-   * A results email has landed, which is the one thing that unlocks the score.
+   * A results email has landed, so this BROWSER gets a durable pointer back to
+   * it and closing the tab is no longer the end of the story.
    *
-   * Two effects, and they are the same decision seen from two timescales: this
-   * visit gets the results in place of the blur, and this BROWSER gets a
-   * durable pointer back to them so closing the tab is no longer the end of
-   * it. Both hang off the send succeeding and nothing else, which is what
-   * keeps the gate a gate — a token persisted at completion instead would be a
-   * bypass with a delay on it.
+   * NOTHING IS REVEALED HERE. This screen keeps its blur for the life of the
+   * visit — the score lives at /results/[token] and the link in the inbox is
+   * how anybody reaches it. What this buys is the recovery case: a return
+   * visit is offered the SAME link back rather than being dropped on the fork
+   * with no route to what it earned.
    *
-   * `revealed` goes into the flow state rather than into the results component
-   * so a refresh here does not re-blur what has already been paid for.
+   * It hangs off the send succeeding and nothing else, which is what keeps the
+   * gate a gate. A token persisted at completion instead would be a bypass
+   * with a delay on it: abandon at the email box, come back tomorrow, take the
+   * offer.
    */
   const handleSent = useCallback(() => {
     // `state.token` is the same value the gate just sent with, so there is no
     // window in which this could remember a different attempt.
-    if (state.token) {
-      rememberResult({ token: state.token, savedAt: Date.now() });
-      // And in this mount too, so pressing "Start over" straight afterwards
-      // lands on a fork that already offers the result back rather than on one
-      // that will not know about it until the next page load.
-      setSavedToken(state.token);
-    }
-    patch({ revealed: true });
-  }, [patch, state.token]);
+    if (!state.token) return;
+    rememberResult({ token: state.token, savedAt: Date.now() });
+    // And in this mount too, so pressing "Start over" straight afterwards
+    // lands on a fork that already offers the result back rather than on one
+    // that will not know about it until the next page load.
+    setSavedToken(state.token);
+  }, [state.token]);
 
   /* -- transitions --------------------------------------------------------- */
 
@@ -312,7 +312,6 @@ export function TestFlow() {
       finishedAt: null,
       timedOut: false,
       token: null,
-      revealed: false,
     });
   }, [patch, test, state.grade]);
 
@@ -350,14 +349,7 @@ export function TestFlow() {
         // read a verdict and typed an address the token is already there.
         saveResult(test, s.grade, s.answers, elapsed, timedOut);
 
-        return {
-          ...s,
-          step: "results",
-          finishedAt: Date.now(),
-          timedOut,
-          token: null,
-          revealed: false,
-        };
+        return { ...s, step: "results", finishedAt: Date.now(), timedOut, token: null };
       });
 
       // Let the state settle before allowing another finish (a restart, later).
@@ -405,7 +397,6 @@ export function TestFlow() {
         finishedAt: Date.now(),
         timedOut: false,
         token: null,
-        revealed: false,
       }));
     },
     [test, state.grade, saveResult],
@@ -423,10 +414,9 @@ export function TestFlow() {
   /* -- render ---------------------------------------------------------------- */
 
   /*
-   * Nothing here scores anything for the screen. `GatedResults` is handed the
-   * raw answers and decides for itself: a masked shape with every earned value
-   * replaced by "???" until a results email has left, and the real thing
-   * afterwards. See the notes at the top of that file and on `maskedResult` in
+   * The real result is computed only for the analytics event fired at finish,
+   * never for the gated screen. GatedResults renders the SHAPE of the results
+   * with every earned value masked — see the note on `maskedResult` in
    * lib/test/scoring.ts.
    */
   const onResults = state.step === "results" && test !== null;
@@ -521,9 +511,7 @@ export function TestFlow() {
           <GatedResults
             test={test}
             timedOut={state.timedOut}
-            answers={state.answers}
             token={state.token}
-            revealed={state.revealed}
             onSent={handleSent}
             onRestart={reset}
           />

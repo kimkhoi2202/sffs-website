@@ -2,29 +2,29 @@
  * The email box over the blurred results.
  *
  * ===========================================================================
- * NOTHING IS UNBLURRED UNTIL A MESSAGE HAS ACTUALLY LEFT
+ * NOTHING IS EVER UNBLURRED IN PLACE
  * ===========================================================================
- * Before a send, this box is the only thing on the screen and the results
- * behind it are a masked shape with no score in them at all. That has not
- * changed and must not: the gate is what the address is exchanged for.
+ * Submitting an address does not reveal the results on this page. It sends an
+ * email containing a link, and the link opens the real results page. The blur
+ * stays; the box turns into a "go and check your inbox" confirmation.
  *
- * What changed is what happens AFTER. A successful send calls `onSent`, and
- * the caller then shows the real results underneath this card — see the note
- * on the reveal in ./gated-results.tsx. The email still goes, and this card
- * still says so, because the mail is the durable copy: it survives the tab
- * closing, this device, and next year.
+ * That is the point of the design rather than an inconvenience in it. If the
+ * email is the ONLY way to see the score, then a junk address gets the person
+ * nothing, so the addresses that come out of this are addresses that work. An
+ * unblur-on-submit gate collects `a@a.com` all day and cannot tell.
  *
- * THE COPY NO LONGER CLAIMS THE EMAIL IS THE ONLY ROUTE, because it is not,
- * and a gate that lies about its own terms is worse than one that asks
- * plainly. It also does not advertise the reveal before the send. Both of
- * those are deliberate: stating "you will see them here anyway" turns every
- * address into a throwaway, and stating the opposite would be untrue.
+ * THE COPY SAYS SO, PLAINLY, because it is true. An in-place reveal shipped
+ * for part of one afternoon and was taken back out (see the note in
+ * ./gated-results.tsx); while it existed this line was softened to "so you
+ * keep them after this tab is gone", which was the honest wording THEN. The
+ * claim below is the honest wording now, and the two must keep moving
+ * together: a gate that overstates its own terms is worse than one that asks
+ * plainly, and a gate that understates them collects throwaway addresses.
  *
- * The failure path matters as much as it ever did, which is why this component
- * has a real one: if the send fails, it says so and offers a retry. It never
- * shows "check your inbox" for a message that did not leave, and it never
- * reveals a score for one either — `onSent` fires on the same branch as the
- * confirmation, and only there.
+ * It also means the failure path matters more than usual, which is why this
+ * component has a real one: if the send fails, it says so and offers a retry.
+ * It never shows "check your inbox" for a message that did not leave. Somebody
+ * waiting on mail that was never sent has no way to work out what went wrong.
  *
  * ===========================================================================
  * THE CHILD BRANCH NEVER ASKS A CHILD FOR THEIR OWN EMAIL
@@ -107,17 +107,12 @@ type SendOutcome =
 const COPY = {
   adult: {
     title: "Where should we send it?",
-    // NOT "it is the only way to see them" any more, which is what this line
-    // used to end on. The results appear on this page once the send lands, so
-    // that sentence became false the day the reveal shipped. What replaces it
-    // is the reason the email is still worth giving a real address for: it
-    // outlives this tab.
-    body: "We will email you a link to your full results, so you keep them after this tab is gone.",
+    body: "We will email you a link to your full results. It is the only way to see them.",
     label: "Your email",
     placeholder: "you@example.com",
     cta: "Email me my results",
     sentTitle: "Check your email",
-    sentBody: "Your results are on their way. You can also see them right below.",
+    sentBody: "Your results are on their way. Open the link in the email to see them.",
     /*
      * THE RECOVERY BLOCK, WHICH IS A MINORITY PATH AND NOW READS LIKE ONE.
      *
@@ -173,7 +168,7 @@ const COPY = {
     cta: "Send my results",
     sentTitle: "Sent!",
     sentBody:
-      "Ask your parent to check their email. You can see your results right below.",
+      "Ask your parent to check their email. The link in it shows your results.",
     resendPrompt: "Not there yet? Email can take a minute.",
     resentNote: "Sent again! Ask your parent to look.",
     alreadyNote:
@@ -188,12 +183,15 @@ export interface EmailGateProps {
   /** The stored result's token. Null until the server has created the record. */
   token: string | null;
   /**
-   * A message has genuinely left. THE ONLY SIGNAL THAT UNLOCKS THE SCORE, so
-   * it is called on exactly one branch: after the API has confirmed the send,
-   * next to the confirmation this card shows. A validation failure, a capped
-   * result, a rejected provider and a dead network all miss it, which is the
-   * whole point. Fires again on a second address, which is harmless: the
-   * caller latches it.
+   * A message has genuinely left, so there is now a link worth remembering.
+   *
+   * It reveals NOTHING on this screen. Its only consumer is the browser-local
+   * pointer behind ./saved-result-offer.tsx, and it is called on exactly one
+   * branch — after the API has confirmed the send, next to the confirmation
+   * this card shows. A validation failure, a capped result, a rejected
+   * provider and a dead network all miss it, which is what keeps the offer
+   * from pointing at a result whose owner never got the mail. Fires again on
+   * a second address, which is harmless: it overwrites with the same token.
    */
   onSent: () => void;
   /** Throw the attempt away and go back to the start. Rendered inside the card. */
@@ -306,7 +304,7 @@ export function EmailGate({
     }
   }
 
-  /** The typed submission. Owns `status`, and is the only thing that unlocks the score. */
+  /** The typed submission. Owns `status`, and is the only thing that reports a send. */
   async function submit(address: string) {
     if (sendingRef.current) return;
     if (!token) {
@@ -401,10 +399,9 @@ export function EmailGate({
             429px it replaces, so nothing below it moved down at all and no
             screen is worse off than before.
 
-            It also suits what this screen became. The confirmation is no
-            longer the destination — the score is, right underneath — so a
-            full ceremonial lockup for "sent" is more announcement than the
-            moment deserves.
+            The measurement is what this rests on, and it survives the reveal
+            being taken back out: both numbers are heights of THIS card, and
+            neither depended on what was underneath it.
           */}
           <div className="flex items-center justify-center gap-2.5">
             <span
@@ -442,16 +439,21 @@ export function EmailGate({
           decorating — it puts a band of nothing between where the eye lands
           and anything that fires a request.
 
-          NOTE FOR ANYONE TEMPTED TO CHASE THIS FURTHER. The obvious theory,
-          that the button inherits the submit button's screen position and
-          catches a stray second tap, was measured and is FALSE: a successful
-          send reveals the results, the page grows from one screen to about
-          4,000px, the shell stops centring, and the card jumps to the top. On
-          a 500x844 viewport the two sit 182px apart. The position also moves
-          with viewport height, so there is no layout that keeps this card
-          clear of every screen's danger band — which is why the real defences
-          are the server's claim and the fact that every press below now
-          answers, not geometry.
+          DO NOT REACH FOR GEOMETRY TO FIX A DUPLICATE SEND. The tempting
+          theory is that this button inherits the submit button's screen
+          position and catches a stray second tap. It was briefly true that
+          the layout ruled that out — while the in-place reveal existed the
+          page grew to several thousand pixels, the shell stopped centring and
+          the card jumped to the top. The reveal is gone, so that argument is
+          gone with it: this screen is one card again, centred, and the two
+          controls sit within a card-height of each other on any viewport.
+
+          Which changes nothing about the fix, because position was never the
+          defence. A layout that clears one screen's danger band does not
+          clear another's, and the card moves with viewport height anyway. The
+          two things that actually hold are the server's dedupe claim (see
+          SEND_DEDUPE_WINDOW_MS in lib/test/result-store.ts) and the fact that
+          every press below answers in the slot the prompt occupies.
 
           Both exits are still here and still labelled. Burying them would
           swap a duplicate email for somebody with a mistyped address and no
@@ -460,12 +462,6 @@ export function EmailGate({
           Typos are the whole reason the second one exists: someone who
           mistyped sees a confirmation for mail they will never get, and needs
           a way out that is not "take the test again".
-
-          IT PUTS THE FORM BACK, NOT THE BLUR. Once a message has left, the
-          results below stay where they are for the rest of the visit — see
-          the latch in ./gated-results.tsx. Re-hiding a score somebody has
-          already paid for, because they want to correct the address it was
-          paid to, would punish exactly the recovery this button is for.
         */}
         <div className="mt-5 border-t-[2.5px] border-dashed border-ink/15 pt-5">
           {/*
@@ -686,12 +682,6 @@ function Card({ children }: { children: React.ReactNode }) {
        * A modal lifting off deliberately blurred content: the depth is what
        * says "this is on top and it is the thing to deal with". Nothing strips
        * it, since the flat scope is now only on the question surfaces.
-       *
-       * It keeps the lift after the send too, where there is no longer a blur
-       * under it. That is right rather than leftover: this card is still the
-       * transaction the screen is about, and it is one of the two documented
-       * exemptions from the flat rule (the other being the quit modal), so
-       * dropping the shadow here would be the change that needs arguing for.
        */
       className="w-full max-w-sm rounded-2xl border-[2.5px] border-ink bg-paper p-5 shadow-hard-lg sm:p-6"
     >

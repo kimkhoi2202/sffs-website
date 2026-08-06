@@ -1,22 +1,38 @@
 /**
- * The score is hidden before a send and on the screen after one.
+ * The score is hidden before a send, hidden after one, and reachable only by
+ * the link.
  *
  *   node --import ./scripts/ts-resolve-hook.mjs scripts/verify-results-after-send.mjs [baseUrl]
  *
  * ===========================================================================
- * THE ONE ASSERTION
+ * THIS FILE ASSERTED THE OPPOSITE THIS MORNING, AND THAT IS THE POINT
  * ===========================================================================
- * Everything else in this file is scaffolding around a single pair. The SAME
- * element on the SAME screen reads "???/15" before an address is handed over
- * and the real "5/15" after, and both halves have to hold or the change is
- * either a leak or a no-op. Checking only the second half would pass a build
- * with no gate at all; checking only the first is what the code already did.
+ * For part of one afternoon a confirmed send unblurred this screen in place,
+ * and this suite existed to prove it: "???/15" before an address was handed
+ * over and a readable "5/15" after. The reveal was taken back out on purpose —
+ * a score on the screen leaves the email with no job, and the inbox is what
+ * the whole flow is built to reach.
+ *
+ * So the pair is inverted rather than deleted, and the inverted pair is a
+ * stronger statement than the original: THE SAME ELEMENT ON THE SAME SCREEN
+ * READS "???/15" BEFORE THE SEND AND STILL READS IT AFTER. A suite that only
+ * checked the before would pass on a build that reveals a second later.
  *
  * scripts/verify-gate-leak.mjs still owns the BEFORE side in depth — every
  * stem, every option, every explanation, in the rendered text, the hydrated
- * DOM and the server HTML. This does not duplicate that. It asserts the
- * before/after transition that suite cannot see, because that suite never
- * types an address.
+ * DOM and the server HTML. This does not duplicate that. It asserts what that
+ * suite cannot see, because it never types an address: that handing one over
+ * changes what the screen SAYS and not what it SHOWS.
+ *
+ * ===========================================================================
+ * AND THAT THE LINK STILL WORKS, WHICH IS NOW LOAD-BEARING
+ * ===========================================================================
+ * With the reveal gone there is exactly one route to a score: /results/[token].
+ * A suite that proved only the hiding would be green on a build where nobody
+ * can ever see their result at all. So section 6 walks the recovery path end
+ * to end — the browser remembers the emailed link, offers it back on a return
+ * visit, and that page shows the real score, the question review and the share
+ * control. That page is where sharing lives now.
  *
  * ===========================================================================
  * "VISIBLE" IS MEASURED, NOT ASSUMED
@@ -24,10 +40,10 @@
  * The house rule from scripts/verify-share-visible.mjs applies here more than
  * anywhere: an element being in the document is not the question a reader is
  * asking. A score can be present and inert, present and aria-hidden, present
- * behind a 5px blur, or present with no box at all — and the first three are
- * exactly the states this screen puts it in BEFORE the send, by design. So the
- * check reads the computed filter chain, the inert/aria-hidden ancestry and
- * the bounding box, and only counts a score a person could actually read.
+ * behind a 5px blur, or present with no box at all — and the masked shape is
+ * deliberately in the first three of those states. So the check reads the
+ * computed filter chain, the inert/aria-hidden ancestry and the bounding box,
+ * and only counts a score a person could actually read.
  *
  * ===========================================================================
  * THE SEND IS STUBBED, AND THAT IS THE POINT
@@ -40,8 +56,8 @@
  *   2. It is hermetic. Without a key configured the route answers 502
  *      `not_configured`, so the unstubbed version of this file would pass or
  *      fail on whether a `.env.local` happened to exist.
- *   3. What is under test is the CLIENT's contract: on a confirmed send, and
- *      only then, the score appears. The server's send path has its own
+ *   3. What is under test is the CLIENT's contract: on a confirmed send the
+ *      screen says so and reveals nothing. The server's send path has its own
  *      coverage (verify-results-email, verify-live-email) and is not this.
  *
  * Nothing is stubbed on the way in. The result itself is minted by the real
@@ -123,6 +139,19 @@ const scoreState = (wanted) =>
 const readable = (s) =>
   Boolean(s.present && s.boxed && s.onScreen && !s.blurred && !s.withheld);
 
+/** Everything the gate withholds, asked of the whole document at once. */
+const screenState = async () => {
+  const dom = await page.evaluate(() => document.documentElement.outerHTML);
+  const text = await page.evaluate(() => document.body.innerText);
+  return {
+    verdictSticker: /certified-(smart-fella|fart-smella)\.png/.test(dom),
+    questionReview: /<article/.test(dom),
+    shareControl: /Share my result/.test(dom),
+    anyStem: test.items.some((i) => i.stem && text.includes(i.stem)),
+    text,
+  };
+};
+
 /* == getting to the gate, the long way, like a person =================== */
 await page.goto(BASE, { waitUntil: "networkidle" });
 await page.evaluate(() => {
@@ -161,13 +190,12 @@ console.log("-".repeat(72));
 {
   const masked = await scoreState(MASKED);
   const real = await scoreState(REAL);
+  const s = await screenState();
   check("the mask is what is on the card", masked.present, `looking for "${MASKED}"`);
-  check(`the real score is nowhere on the page`, !real.present, `would be "${REAL}"`);
-
-  const dom = await page.evaluate(() => document.documentElement.outerHTML);
-  check("no verdict sticker", !/certified-(smart-fella|fart-smella)\.png/.test(dom));
-  check("no question review", !/<article/.test(dom));
-  check("no share control", !/Share my result/.test(dom));
+  check("the real score is nowhere on the page", !real.present, `would be "${REAL}"`);
+  check("no verdict sticker", !s.verdictSticker);
+  check("no question review", !s.questionReview);
+  check("no share control", !s.shareControl);
   check(
     "the email box is the thing on screen",
     await page.getByRole("button", { name: /send my results/i }).isVisible(),
@@ -185,44 +213,58 @@ await page.route("**/api/test-results/send", (route) =>
 await page.getByRole("textbox").fill(ADDRESS);
 await page.getByRole("button", { name: /send my results/i }).click();
 await page.getByText(/sent!/i).first().waitFor({ state: "visible", timeout: 15000 });
-await page.waitForTimeout(600);
+await page.waitForTimeout(900);
 
-/* == 3. AFTER: the thing they earned ==================================== */
-console.log("\nAFTER THE SEND, THE SCORE IS ON THE SCREEN");
+/* == 3. AFTER: the screen says it went, and shows nothing ================ */
+console.log("\nAFTER THE SEND, THE SCORE IS STILL NOT THERE");
 console.log("-".repeat(72));
 {
   const real = await scoreState(REAL);
   const masked = await scoreState(MASKED);
-  check(
-    `the real score is readable`,
-    readable(real),
-    real.present
-      ? `"${REAL}" boxed=${real.boxed} onScreen=${real.onScreen} blurred=${real.blurred} withheld=${real.withheld}`
-      : `"${REAL}" is not on the page at all`,
-  );
-  check("the mask is gone", !masked.present);
+  const s = await screenState();
 
-  const dom = await page.evaluate(() => document.documentElement.outerHTML);
-  const text = await page.evaluate(() => document.body.innerText);
-  check("the verdict landed", /certified-(smart-fella|fart-smella)\.png/.test(dom));
-  check("the question review opened", /<article/.test(dom));
   check(
-    "a real question is in it",
-    test.items.some((i) => i.stem && text.includes(i.stem)),
+    "the real score is still nowhere on the page",
+    !real.present,
+    real.present ? `"${REAL}" appeared` : `"${REAL}" absent`,
   );
+  check("the mask is still the only number", masked.present, `looking for "${MASKED}"`);
+  /*
+    STILL BEHIND THE GLASS, not merely still present. A mask that stayed in the
+    DOM while the blur came off it would pass a presence check and fail a
+    person, and a mask that lost its `inert` would be readable to a screen
+    reader whatever it looked like.
+  */
   check(
-    "the share control arrived",
-    await page.getByRole("button", { name: /share my result/i }).isVisible(),
+    "and it is still blurred and still out of the accessibility tree",
+    masked.blurred && masked.withheld,
+    `blurred=${masked.blurred} withheld=${masked.withheld}`,
   );
+  check("no verdict sticker arrived", !s.verdictSticker);
+  check("no question review opened", !s.questionReview);
+  check("no question stem is readable", !s.anyStem);
+  check("no share control appeared on this screen", !s.shareControl);
 }
 
-/* == 4. and the send was not broken to get there ======================== */
-console.log("\nTHE CONFIRMATION IS STILL A CONFIRMATION");
+/* == 4. and the confirmation is a real confirmation ===================== */
+console.log("\nWHAT IT SAYS INSTEAD");
 console.log("-".repeat(72));
 {
-  const text = await page.evaluate(() => document.body.innerText);
+  const { text } = await screenState();
   check("it says the mail has gone", /Sent!/i.test(text));
   check("it names the address it went to", text.includes(ADDRESS));
+  /*
+    THE COPY HAS TO MOVE WITH THE BEHAVIOUR. While the reveal existed this
+    line read "You can see your results right below", which is now false. A
+    confirmation that points at a score this screen does not have is the
+    worst of both: the person hunts for it, does not find it, and does not
+    open the email either.
+  */
+  check(
+    "it points at the email rather than at this page",
+    /link in it shows your results/i.test(text) && !/right below/i.test(text),
+    text.match(/Ask your parent[^.]*\./)?.[0] ?? "(confirmation body not found)",
+  );
   for (const label of [/send it again/i, /use a different one/i, /start over/i]) {
     check(
       `"${String(label).slice(1, -2)}" is still offered`,
@@ -231,22 +273,16 @@ console.log("-".repeat(72));
   }
 }
 
-/* == 4b. and nothing puts the glass back ================================ */
-console.log("\nONCE PAID FOR, THE SCORE STAYS PAID FOR");
+/* == 5. and nothing later takes the glass off =========================== */
+console.log("\nNOTHING ON THIS SCREEN EVER LIFTS IT");
 console.log("-".repeat(72));
 {
   /*
-    THE TWO WAYS IT COULD COME BACK, AND BOTH ARE CLOSED.
-
-    The first is the typo path: "Wrong address? Use a different one" returns
-    the card to an empty form, and if the reveal were tied to that card's own
-    state it would take the results down with it — punishing somebody for
-    correcting the address they already paid with.
-
-    The second is a refresh. The reveal lives in the flow's persisted state
-    rather than in a component precisely so that reloading this screen does not
-    re-blur it. Get that wrong and the bug is invisible until somebody hits F5
-    on the one screen they were told to look at.
+    THE TWO WAYS A REVEAL COULD SNEAK BACK. "Wrong address? Use a different
+    one" returns the card to an empty form, and a refresh remounts the whole
+    flow from persisted state. Both used to be the interesting cases for the
+    opposite reason — they had to NOT re-blur — and both are now the cases
+    where a leftover latch would show itself.
   */
   await page.getByRole("button", { name: /use a different one/i }).click();
   await page.waitForTimeout(400);
@@ -254,22 +290,23 @@ console.log("-".repeat(72));
     "the address form comes back",
     await page.getByRole("button", { name: /send my results/i }).isVisible(),
   );
-  check("and the score stays put", readable(await scoreState(REAL)));
+  check("and the score is still not on the page", !(await scoreState(REAL)).present);
 
   await page.reload({ waitUntil: "networkidle" });
   await page.addStyleTag({ content: "nextjs-portal{display:none!important}" });
-  await page.waitForTimeout(800);
-  check("a refresh does not re-blur it", readable(await scoreState(REAL)));
-  check("and the mask does not return", !(await scoreState(MASKED)).present);
+  await page.waitForTimeout(900);
+  check("a refresh does not reveal it either", !(await scoreState(REAL)).present);
+  check("and the mask is what comes back", (await scoreState(MASKED)).present);
+  check("still no share control", !(await screenState()).shareControl);
 }
 
-/* == 5. the browser remembers, and offers it back ======================= */
-console.log("\nA RETURN VISIT IS OFFERED THE RESULT INSTEAD OF THE FORK");
+/* == 6. the one route that does show it ================================= */
+console.log("\nTHE LINK IS THE WAY IN, AND IT STILL WORKS");
 console.log("-".repeat(72));
 {
   const stored = await page.evaluate(() => localStorage.getItem("sffs_result_v1"));
   const saved = stored ? JSON.parse(stored) : null;
-  check("the token was kept in this browser", Boolean(saved?.token));
+  check("the emailed link was kept in this browser", Boolean(saved?.token));
   // An exact key list, not a search for forbidden words: a score, a verdict or
   // an address creeping into browser storage should fail loudly whatever it is
   // called, and a token is base64 so a substring scan of it proves nothing.
@@ -302,11 +339,45 @@ console.log("-".repeat(72));
     await page.getByRole("button", { name: /I'm a kid/i }).isVisible(),
   );
   // Whoever picks this device up next sees an offer, not somebody's verdict.
-  const text = await page.evaluate(() => document.body.innerText);
-  const dom = await page.evaluate(() => document.documentElement.outerHTML);
+  {
+    const s = await screenState();
+    check(
+      "the offer prints no score and no verdict",
+      !s.text.includes(REAL) && !s.verdictSticker,
+    );
+  }
+
+  /*
+    AND THROUGH IT. This is the half that stops the whole change from being a
+    lock-out: the link the email carries, which is the link this offer hands
+    back, opens the real thing.
+  */
+  await offer.click();
+  await page.waitForURL(/\/results\//, { timeout: 15000 });
+  await page.addStyleTag({ content: "nextjs-portal{display:none!important}" });
+  await page.waitForTimeout(600);
+
+  const real = await scoreState(REAL);
+  const s = await screenState();
   check(
-    "the offer prints no score and no verdict",
-    !text.includes(REAL) && !/certified-(smart-fella|fart-smella)\.png/.test(dom),
+    "the results page shows the real score, readable",
+    readable(real),
+    real.present
+      ? `"${REAL}" boxed=${real.boxed} onScreen=${real.onScreen} blurred=${real.blurred} withheld=${real.withheld}`
+      : `"${REAL}" is not on the page at all`,
+  );
+  check("no mask on it", !(await scoreState(MASKED)).present);
+  check("the verdict is there", s.verdictSticker);
+  check("the question review is there", s.questionReview);
+  check("a real question is in it", s.anyStem);
+  /*
+    THE SHARE CONTROL LIVES HERE AND NOWHERE ELSE. It was briefly on the
+    in-flow screen too, while that screen revealed results; with the reveal
+    gone this is the only page it appears on, and the only page it should.
+  */
+  check(
+    "and the share control is on this page",
+    await page.getByRole("button", { name: /share my result/i }).isVisible(),
   );
 }
 
@@ -316,7 +387,7 @@ await browser.close();
 console.log("-".repeat(72));
 console.log(
   failures === 0
-    ? "\nPASS: hidden before the send, theirs after it.\n"
+    ? "\nPASS: hidden before the send, hidden after it, and reachable only by the link.\n"
     : `\nFAIL: ${failures}\n`,
 );
 process.exit(failures === 0 ? 0 : 1);
