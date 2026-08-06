@@ -13,11 +13,13 @@ const BUSINESS_ADDRESS = "1143 Sultana Spgs Ct, Houston, TX 77090";
 const EFFECTIVE_DATE = "July 25, 2026";
 /**
  * Kept separate from the effective date on purpose. The policy took effect in
- * July; this revision adds the section describing the test on this website,
- * which children take. A page that says "last updated" and means "first
- * published" is a page nobody can tell has changed.
+ * July; the revisions since then describe the test on this website, which
+ * children take, and the results of that test being mirrored into PostHog's
+ * data warehouse alongside the address they were emailed to. A page that says
+ * "last updated" and means "first published" is a page nobody can tell has
+ * changed.
  */
-const LAST_UPDATED = "August 2, 2026";
+const LAST_UPDATED = "August 6, 2026";
 const SUPPORT_EMAIL = "smartfellaorfartsmella123@gmail.com";
 
 export const metadata: Metadata = {
@@ -493,10 +495,15 @@ const SECTIONS: LegalSection[] = [
           <li>
             <strong>PostHog.</strong> Privacy-friendly product analytics, used to
             understand how the app is used in aggregate. Analytics data is not
-            used for advertising and is not sold. PostHog also holds the waitlist
-            emails collected on our website, kept as a separate list and never
+            used for advertising and is not sold. PostHog also holds the email
+            addresses collected on our website, and the results of tests taken
+            on it, kept in its data warehouse as separate lists rather than
             joined to the analytics above; see{" "}
-            <a href="#about-this-website">About this website</a> below.{" "}
+            <a href="#about-this-website">About this website</a> and{" "}
+            <a href="#test-results-in-analytics">
+              Test results in our analytics warehouse
+            </a>{" "}
+            below.{" "}
             <a
               href="https://posthog.com/privacy"
               target="_blank"
@@ -548,8 +555,15 @@ const SECTIONS: LegalSection[] = [
           stored with it, is deleted twelve months
           after the test was taken. It holds a score and the answers given, is
           reachable only through the random link we email, and carries the
-          address the results were sent to, if any were.{" "}
-          See <a href="#the-test">The test on this website</a>.
+          address the results were sent to, if any were. The copy of these
+          results in PostHog works the same way as the email list above: it is
+          replaced whole every hour and keeps no history, so a result deleted
+          from our database is gone from PostHog within the hour.{" "}
+          See <a href="#the-test">The test on this website</a> and{" "}
+          <a href="#test-results-in-analytics">
+            Test results in our analytics warehouse
+          </a>
+          .
         </p>
       </>
     ),
@@ -748,6 +762,14 @@ const SECTIONS: LegalSection[] = [
           score and the answers &mdash; not a named child.
         </p>
         <p>
+          That pairing is also readable in our analytics warehouse, which is set
+          out in{" "}
+          <a href="#test-results-in-analytics">
+            Test results in our analytics warehouse
+          </a>
+          . If you read one more section of this policy, read that one.
+        </p>
+        <p>
           <strong>What it is for.</strong> Three things, and nothing else: so we
           can answer you if you write to us about your result, so we can delete
           everything properly when you ask, and so we can see whether people who
@@ -815,7 +837,18 @@ const SECTIONS: LegalSection[] = [
               routes apart. That list stands on its own: it is not linked to the
               anonymous analytics above, it is not joined to any profile or to
               anyone&rsquo;s browsing behavior, it is not used for advertising,
-              and it is not sold.
+              and it is not sold. That remains true of the list. What is no
+              longer true of everything in the warehouse is set out next: an
+              address given so that a test result could be emailed is now also
+              held beside that result, which is a link the sentence above does
+              not cover. See{" "}
+              <a
+                href="#test-results-in-analytics"
+                className="font-semibold text-ink underline decoration-2 underline-offset-2"
+              >
+                Test results in our analytics warehouse
+              </a>
+              .
             </li>
             <li>
               <strong>SFFS Creator Studio (our own posting tool).</strong> We
@@ -835,6 +868,82 @@ const SECTIONS: LegalSection[] = [
             </li>
           </ul>
         </Card>
+      </>
+    ),
+  },
+  {
+    id: "test-results-in-analytics",
+    heading: "Test results in our analytics warehouse",
+    body: (
+      <>
+        <p>
+          We mirror completed tests from our own database into PostHog&rsquo;s
+          data warehouse, in the same way and for the same reason as the email
+          list described above: so we can count and read them internally without
+          going to the live site for every question. This section says plainly
+          what that means for anyone who asked to have a result emailed to them.
+        </p>
+        <p>
+          <strong>No new addresses, but a new link.</strong> This did not send a
+          single new email address to PostHog. Every address involved was
+          already there as part of the email list. What is new is the link:
+          an address now sits beside the result it belongs to, where before the
+          two were held apart.
+        </p>
+        <p>
+          <strong>What is now attached to an address.</strong> For a completed
+          test that carries one: which test was taken, the score and the score
+          it was out of, how many questions were answered, how long it took in
+          seconds, whether the time ran out, the verdict the test gave, the
+          moment it was finished recorded to the second, and the platform and
+          referring domain the visit arrived from. A test finished without an
+          address being given carries no address here either, and those results
+          are still counted.
+        </p>
+        <p>
+          <strong>
+            This includes children&rsquo;s tests, held against a
+            grown-up&rsquo;s address.
+          </strong>{" "}
+          The children&rsquo;s test asks for a parent or guardian&rsquo;s
+          address, so where one was given, what can now be read together is an
+          adult&rsquo;s email address, the grade band the test was set for, and
+          the score the child got. A grade band says roughly how old the child
+          is, which makes this the most sensitive thing described on this page.
+          That is why it has a paragraph of its own rather than a line in a
+          list. The child&rsquo;s name is still never asked for, and there is
+          still nowhere for one to be typed in.
+        </p>
+        <p>
+          <strong>How separate this really is.</strong> The separation is
+          structural rather than enforced, and the difference is worth stating.
+          We do not identify anyone to PostHog, we do not create or update any
+          PostHog profile from this data, and nothing joins these rows to the
+          anonymous analytics automatically. But the table can be queried by
+          anyone with access to our PostHog project, and a query could join an
+          address to event data. So the honest sentence is that we do not link
+          them, rather than that they can never be linked. Access to the project
+          is limited to the people who run this site.
+        </p>
+        <p>
+          <strong>What it is not used for.</strong> It is not used for
+          advertising, it is not sold, it is not shared with anyone outside the
+          people who run this site, and it is not used to send you anything you
+          did not ask for.
+        </p>
+        <p>
+          <strong>Deleting it, and why that works here.</strong> The mirror
+          keeps no history: each hourly refresh replaces the whole table rather
+          than adding to it. Deleting a result from our database therefore
+          removes it from PostHog at the next refresh, within the hour. That is
+          a real deletion rather than a request to a third party, and it is
+          worth contrasting with the anonymous analytics events described under{" "}
+          <a href="#retention">Data retention</a>, which our provider keeps for
+          seven years on a schedule we cannot shorten. To ask for a deletion,
+          use our <a href="/support">support page</a>: tell us the address, and
+          we will remove it from the email list and delete the results stored
+          against it.
+        </p>
       </>
     ),
   },
