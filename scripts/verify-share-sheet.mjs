@@ -1,7 +1,13 @@
 /**
  * Does our own share sheet actually work, on the real page?
  *
- *   node scripts/verify-share-sheet.mjs [baseUrl] [token]
+ *   node --import ./scripts/ts-resolve-hook.mjs scripts/verify-share-sheet.mjs [baseUrl] [token]
+ *
+ * The token is optional and is MINTED against the target when it is left out;
+ * see scripts/share-result.mjs for why it is no longer a literal, and for the
+ * timeout-on-"Share my result" that the literal caused. Pass one to run this
+ * read-only against a deployment, which is what section 3's stray-event check
+ * is written for.
  *
  * ===========================================================================
  * THE RULE THIS FILE IS BUILT AROUND
@@ -48,10 +54,11 @@
  */
 import { chromium } from "playwright-core";
 
-const BASE = process.argv[2] ?? "http://localhost:3000";
+import { mintShareToken } from "./share-result.mjs";
+
+const BASE = (process.argv[2] ?? "http://localhost:3000").replace(/\/+$/, "");
 const TOKEN =
-  process.argv[3] ??
-  "eyJ2IjoxLCJ0IjoiZ3JhZGUtNCIsImciOjQsImEiOiJERENERENEQ0NERENDREMiLCJlIjoyMCwibyI6MCwiYyI6MTc4NTc3MzIwMSwieCI6MTgxNzMwOTIwMX0.nWmuTcl8X6NxIXbB3IwukQtJU_SulA_B-9Xdfcp5IQQ";
+  process.argv[3] ?? (await mintShareToken(BASE, "scripts/verify-share-sheet.mjs"));
 const URL_RESULTS = `${BASE}/results/${encodeURIComponent(TOKEN)}`;
 
 /** The four share events, and the only four names any destination may emit. */
