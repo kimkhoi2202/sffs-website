@@ -946,6 +946,177 @@ const SECTIONS: LegalSection[] = [
       </>
     ),
   },
+  {
+    id: "browser-storage",
+    heading: "What this website keeps in your browser",
+    body: (
+      <>
+        <p>
+          This website leaves four things in your browser&rsquo;s own storage.
+          Here they all are, with how long each one lasts and how to get rid of
+          it. Three of them are ours. The fourth belongs to PostHog, our
+          analytics provider, which is listed under{" "}
+          <a href="#subprocessors">Third-party service providers</a> above. This
+          section is about the website; the app is a separate thing and is
+          described further up.
+        </p>
+        <div
+          role="region"
+          aria-label="What this website keeps in your browser"
+          tabIndex={0}
+          className="not-prose -mx-1 overflow-x-auto rounded-2xl border-[2.5px] border-ink shadow-hard-sm focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-ink"
+        >
+          <table className="w-full min-w-[34rem] border-collapse text-left align-top text-[0.95rem] leading-relaxed">
+            <thead>
+              <tr className="border-b-[2.5px] border-ink bg-cream">
+                <th scope="col" className="px-4 py-3 font-bold">
+                  What it is, and whose
+                </th>
+                <th scope="col" className="px-4 py-3 font-bold">
+                  How long it lasts
+                </th>
+                <th scope="col" className="px-4 py-3 font-bold">
+                  How to remove it
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-b-2 border-ink/15">
+                <td className="px-4 py-3 align-top">
+                  <span className="font-semibold">
+                    A link back to your last result
+                  </span>
+                  <br />
+                  <span className="text-ink/70">
+                    Ours, in this browser&rsquo;s local storage.
+                  </span>
+                </td>
+                <td className="px-4 py-3 align-top">
+                  Until you clear it. We stop offering it once it is twelve
+                  months old, which is when the link itself expires.
+                </td>
+                <td className="px-4 py-3 align-top">
+                  Clear this site&rsquo;s data in your browser settings. Having
+                  another result emailed to you replaces it.
+                </td>
+              </tr>
+              <tr className="border-b-2 border-ink/15">
+                <td className="px-4 py-3 align-top">
+                  <span className="font-semibold">
+                    A flag marking this browser as one of ours
+                  </span>
+                  <br />
+                  <span className="text-ink/70">
+                    Ours, in this browser&rsquo;s local storage.
+                  </span>
+                </td>
+                <td className="px-4 py-3 align-top">Until you clear it.</td>
+                <td className="px-4 py-3 align-top">
+                  Clear this site&rsquo;s data, or use the control on the page
+                  that sets it to switch it back off.
+                </td>
+              </tr>
+              <tr className="border-b-2 border-ink/15">
+                <td className="px-4 py-3 align-top">
+                  <span className="font-semibold">
+                    PostHog&rsquo;s analytics entries
+                  </span>
+                  <br />
+                  <span className="text-ink/70">
+                    PostHog&rsquo;s, in one cookie plus several browser storage
+                    entries.
+                  </span>
+                </td>
+                <td className="px-4 py-3 align-top">
+                  The cookie lasts twelve months. Most of the storage entries
+                  last until you clear them, and a few last only as long as the
+                  tab is open.
+                </td>
+                <td className="px-4 py-3 align-top">
+                  Clear this site&rsquo;s cookies and data in your browser
+                  settings.
+                </td>
+              </tr>
+              <tr>
+                <td className="px-4 py-3 align-top">
+                  <span className="font-semibold">
+                    How far you have got through the test
+                  </span>
+                  <br />
+                  <span className="text-ink/70">
+                    Ours, in this tab&rsquo;s session storage.
+                  </span>
+                </td>
+                <td className="px-4 py-3 align-top">
+                  Until the tab closes, when the browser discards it.
+                </td>
+                <td className="px-4 py-3 align-top">Close the tab.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          <strong>The saved link is the one we emailed you.</strong> We write it
+          only after a results email has actually been sent, never before, and
+          what we keep is that link and the date we kept it. Nothing is stored
+          beside it: no email address, and nothing that would let a returning
+          visit display a score or a verdict before the link is opened. It is
+          there so that someone who finished the test and closed the tab is
+          offered their result above the opening question, rather than being
+          dropped at that question with no way back to what they earned. It is a
+          copy of the same link, kept locally, and not a second route to the
+          result.
+        </p>
+        <p>
+          <strong>
+            The internal-user flag is a team tool, and an ordinary visit never
+            sets it.
+          </strong>{" "}
+          Someone working on this site opens <code>/internal</code> in their own
+          browser so that their visits stop skewing our numbers. It does not
+          stop those visits being recorded. It labels them, and the label is
+          what keeps them out of the reports we read.
+        </p>
+        <p>
+          <strong>
+            The <code>ph_</code> entries are PostHog&rsquo;s rather than ours.
+          </strong>{" "}
+          They are what its software uses to tell one visit from the next, and
+          they are the mechanics behind the anonymous website analytics
+          described in{" "}
+          <a href="#about-this-website">About this website</a>. What is in them
+          is a randomly generated visitor and session id, the kind of device and
+          the page you arrived from, and the analytics settings themselves. No
+          email address and no test result is kept in any of them.
+        </p>
+        <p>
+          <strong>
+            Your progress through the test is deliberately the shortest-lived
+            thing here.
+          </strong>{" "}
+          It holds the answers given so far and the time left on the clock, and
+          it sits in session storage, which belongs to one tab and is thrown
+          away when that tab closes. That is enough for an accidental refresh
+          part-way through a timed test not to lose the answers already given.
+          Storage that outlived the tab would have kept a half-finished attempt
+          for days, and we chose against it on purpose: this is often a phone a
+          parent hands to a child, and nobody should open the site and land in
+          somebody else&rsquo;s abandoned test.
+        </p>
+        <p>
+          <strong>
+            There is no cookie banner here, and this section is not asking you
+            to agree to anything.
+          </strong>{" "}
+          Where a browser sends a Global Privacy Control or Do Not Track signal,
+          we turn analytics capture off in response rather than putting the
+          question to you. Worth knowing either way: the <code>ph_</code>{" "}
+          entries are still created when capture is off, so finding them in your
+          browser does not on its own mean anything is being recorded.
+        </p>
+      </>
+    ),
+  },
 ];
 
 export default function PrivacyPage() {
