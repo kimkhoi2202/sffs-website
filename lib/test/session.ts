@@ -74,6 +74,21 @@ export interface FlowState {
    * the durable copy of this token is the link in the person's inbox.
    */
   token: string | null;
+  /**
+   * WHETHER THE GATE HAS BEEN PAID, which is the only thing that unblurs the
+   * score on the results screen.
+   *
+   * Set once a results email has actually left, never by anything else. It
+   * lives in the persisted state rather than in the results component so that
+   * a refresh on that screen does not put the blur back over results somebody
+   * has already handed over an address for.
+   *
+   * Every route into a FRESH attempt sets it false again, so a new test always
+   * starts behind the gate. A state written before this field existed reads
+   * back as false, because `loadState` spreads over INITIAL_STATE — which is
+   * the safe answer and is why the storage key does not need bumping.
+   */
+  revealed: boolean;
 }
 
 export const INITIAL_STATE: FlowState = {
@@ -88,6 +103,7 @@ export const INITIAL_STATE: FlowState = {
   finishedAt: null,
   timedOut: false,
   token: null,
+  revealed: false,
 };
 
 /** Bump when the shape changes so a stale saved state is discarded, not crashed on. */

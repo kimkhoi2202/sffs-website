@@ -38,3 +38,37 @@ export function resultsOrigin(request?: { headers: Headers }): string {
 export function resultsUrlFor(token: string, request?: { headers: Headers }): string {
   return `${resultsOrigin(request)}/results/${encodeURIComponent(token)}`;
 }
+
+/* -------------------------------------------------------------------------
+ * WHERE THE PAGE WAS OPENED FROM
+ * -------------------------------------------------------------------------
+ * There are now two ways onto a results page: the link in the email, and the
+ * offer a returning visitor gets in a browser that remembers finishing (see
+ * components/test/saved-result-offer.tsx).
+ *
+ * They have to stay separable, because `results_link_opened` answers exactly
+ * one question — DID THE EMAIL ARRIVE — and it can only answer it if every
+ * event under that name is somebody who opened an email. Letting the second
+ * route file under the first would inflate deliverability with people who
+ * never left the site, silently and permanently.
+ *
+ * A query parameter rather than a second event name, so the existing funnel
+ * keeps counting and the split is a breakdown. Absent means the email, which
+ * is what every link already in an inbox says.
+ * ----------------------------------------------------------------------- */
+
+/** Which route onto the results page this was. */
+export type ResultsOpenSource = "email" | "saved";
+
+/** The in-app path for the returning-visitor offer. Relative: same origin. */
+export function savedResultHref(token: string): string {
+  return `/results/${encodeURIComponent(token)}?from=saved`;
+}
+
+/** Read the parameter above, treating anything unrecognised as the email. */
+export function resultsOpenSource(
+  from: string | string[] | undefined,
+): ResultsOpenSource {
+  const value = Array.isArray(from) ? from[0] : from;
+  return value === "saved" ? "saved" : "email";
+}

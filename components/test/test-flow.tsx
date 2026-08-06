@@ -42,6 +42,7 @@ import {
 import { BrandHeader } from "./brand-header";
 import { DevToolsGate } from "./dev/dev-tools-gate";
 import { GatedResults } from "./gated-results";
+import { SavedResultOffer } from "./saved-result-offer";
 import { StepShell } from "./step-shell";
 import { AudienceFork, GradePicker, ParentIntentFork, TestIntro } from "./steps/pre-test-steps";
 import { TestRunner } from "./test-runner";
@@ -55,6 +56,7 @@ import {
   trackTestStarted,
   trackTestStepViewed,
 } from "@/lib/analytics/events";
+import { loadSavedResult, rememberResult } from "@/lib/test/saved-result";
 import { scoreTest } from "@/lib/test/scoring";
 import {
   clearState,
@@ -106,6 +108,12 @@ export function TestFlow() {
   const [state, setState] = useState<FlowState>(INITIAL_STATE);
   const [hydrated, setHydrated] = useState(false);
   /**
+   * The token of a result this BROWSER finished and emailed, if there is one.
+   * Read once on the way in, alongside the session restore, because the only
+   * screen that offers it is the first one. See ./saved-result-offer.tsx.
+   */
+  const [savedToken, setSavedToken] = useState<string | null>(null);
+  /**
    * Dev-tools-only. In production the panel cannot render (see
    * dev/dev-tools-gate.tsx), so nothing can ever set this false and it is a
    * constant `true` that the bundler is free to see through.
@@ -141,6 +149,9 @@ export function TestFlow() {
 
   /* -- restore, or seed from the hand-off link ----------------------------- */
   useIsomorphicLayoutEffect(() => {
+    // Ahead of the early return below, so it is read on every path in.
+    setSavedToken(loadSavedResult()?.token ?? null);
+
     const saved = loadState();
     if (saved && saved.step !== "audience") {
       // A tab that reloaded past its deadline goes straight to the results
@@ -220,6 +231,32 @@ export function TestFlow() {
     [],
   );
 
+  /**
+   * A results email has landed, which is the one thing that unlocks the score.
+   *
+   * Two effects, and they are the same decision seen from two timescales: this
+   * visit gets the results in place of the blur, and this BROWSER gets a
+   * durable pointer back to them so closing the tab is no longer the end of
+   * it. Both hang off the send succeeding and nothing else, which is what
+   * keeps the gate a gate — a token persisted at completion instead would be a
+   * bypass with a delay on it.
+   *
+   * `revealed` goes into the flow state rather than into the results component
+   * so a refresh here does not re-blur what has already been paid for.
+   */
+  const handleSent = useCallback(() => {
+    // `state.token` is the same value the gate just sent with, so there is no
+    // window in which this could remember a different attempt.
+    if (state.token) {
+      rememberResult({ token: state.token, savedAt: Date.now() });
+      // And in this mount too, so pressing "Start over" straight afterwards
+      // lands on a fork that already offers the result back rather than on one
+      // that will not know about it until the next page load.
+      setSavedToken(state.token);
+    }
+    patch({ revealed: true });
+  }, [patch, state.token]);
+
   /* -- transitions --------------------------------------------------------- */
 
   const pickFork = useCallback(
@@ -275,6 +312,7 @@ export function TestFlow() {
       finishedAt: null,
       timedOut: false,
       token: null,
+      revealed: false,
     });
   }, [patch, test, state.grade]);
 
@@ -312,7 +350,14 @@ export function TestFlow() {
         // read a verdict and typed an address the token is already there.
         saveResult(test, s.grade, s.answers, elapsed, timedOut);
 
-        return { ...s, step: "results", finishedAt: Date.now(), timedOut, token: null };
+        return {
+          ...s,
+          step: "results",
+          finishedAt: Date.now(),
+          timedOut,
+          token: null,
+          revealed: false,
+        };
       });
 
       // Let the state settle before allowing another finish (a restart, later).
@@ -360,6 +405,7 @@ export function TestFlow() {
         finishedAt: Date.now(),
         timedOut: false,
         token: null,
+        revealed: false,
       }));
     },
     [test, state.grade, saveResult],
@@ -377,9 +423,10 @@ export function TestFlow() {
   /* -- render ---------------------------------------------------------------- */
 
   /*
-   * The real result is computed only for the analytics event fired at finish,
-   * never for the gated screen. GatedResults renders the SHAPE of the results
-   * with every earned value masked — see the note on `maskedResult` in
+   * Nothing here scores anything for the screen. `GatedResults` is handed the
+   * raw answers and decides for itself: a masked shape with every earned value
+   * replaced by "???" until a results email has left, and the real thing
+   * afterwards. See the notes at the top of that file and on `maskedResult` in
    * lib/test/scoring.ts.
    */
   const onResults = state.step === "results" && test !== null;
@@ -418,6 +465,16 @@ export function TestFlow() {
           /* The opening fork is the front door, so the lockup leads there and
              is merely present on the steps after it. See LOCKUP_HEIGHT. */
           <BrandHeader size={state.step === "audience" ? "hero" : "compact"} />
+        ) : null}
+
+        {/*
+          Above the fork and only on the fork: a browser that finished and
+          emailed a result gets it offered back, rather than being dropped at
+          the front door with no way back to what it earned. An offer and not a
+          restore, for the reasons in ./saved-result-offer.tsx.
+        */}
+        {state.step === "audience" && savedToken ? (
+          <SavedResultOffer token={savedToken} />
         ) : null}
 
         {state.step === "audience" ? <AudienceFork onPick={pickFork} /> : null}
@@ -464,7 +521,10 @@ export function TestFlow() {
           <GatedResults
             test={test}
             timedOut={state.timedOut}
+            answers={state.answers}
             token={state.token}
+            revealed={state.revealed}
+            onSent={handleSent}
             onRestart={reset}
           />
         ) : null}

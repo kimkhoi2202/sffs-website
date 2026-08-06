@@ -16,6 +16,7 @@
     "verify:result-token": "node --import ./scripts/ts-resolve-hook.mjs scripts/verify-result-token.mjs",
     "verify:results-email": "node --import ./scripts/ts-resolve-hook.mjs scripts/verify-results-email.mjs",
     "verify:gate-leak": "node --import ./scripts/ts-resolve-hook.mjs scripts/verify-gate-leak.mjs",
+    "verify:results-after-send": "node --import ./scripts/ts-resolve-hook.mjs scripts/verify-results-after-send.mjs",
     "verify:review-nav": "node --import ./scripts/ts-resolve-hook.mjs scripts/verify-review-nav.mjs",
     "verify:share-visible": "node scripts/verify-share-visible.mjs",
     "verify:share-sheet": "node scripts/verify-share-sheet.mjs"

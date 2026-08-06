@@ -31,6 +31,7 @@ import { ResultsView } from "@/components/test/results-view";
 import { ShareResults } from "@/components/test/share-results";
 import { Button } from "@/components/ui/button";
 import { getResult } from "@/lib/test/result-store";
+import { resultsOpenSource } from "@/lib/test/results-url";
 import { scoreTest } from "@/lib/test/scoring";
 import { displayTestTitle, getTestById } from "@/lib/test/tests";
 
@@ -112,8 +113,11 @@ function NotFound() {
 
 export default async function ResultsPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ token: string }>;
+  /** `?from=saved` when a returning visitor took the offer. See resultsOpenSource. */
+  searchParams: Promise<{ from?: string | string[] }>;
 }) {
   const { token } = await params;
   const record = getResult(decodeURIComponent(token));
@@ -164,7 +168,11 @@ export default async function ResultsPage({
 
         {/* Fires results_link_opened. A tiny client island rather than making
             this whole page a client component for one analytics call. */}
-        <ResultsOpenedBeacon testId={test.id} audience={test.audience} />
+        <ResultsOpenedBeacon
+          testId={test.id}
+          audience={test.audience}
+          source={resultsOpenSource((await searchParams).from)}
+        />
 
         <Button variant="paper" size="lg" href="/" className="w-full">
           Take it again

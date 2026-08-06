@@ -684,8 +684,15 @@ export function trackTestResendRequested(p: {
 }
 
 /**
- * Someone followed the link from their inbox. The other half of the funnel's
- * only real question: did the email actually land.
+ * Someone opened a results page. The other half of the funnel's only real
+ * question: did the email actually land.
+ *
+ * `source` is what keeps it able to answer that. There is a second route onto
+ * that page now — a browser that remembers finishing offers the result back on
+ * a return visit — and folding those in under the same name would inflate
+ * deliverability with people who never opened an inbox. "email" is the default
+ * for every link already sitting in one, so historical events read correctly
+ * and the existing funnel keeps counting; the split is a breakdown.
  *
  * Carries no token. A token is a durable handle to one person's result page,
  * and putting one in an event stream turns a no-PII dataset into a keyring.
@@ -693,6 +700,8 @@ export function trackTestResendRequested(p: {
 export function trackResultsLinkOpened(p: {
   test_id: string;
   audience: TestAudience;
+  /** "email" | "saved" — see ResultsOpenSource in lib/test/results-url.ts. */
+  source: string;
 }): void {
   posthog.capture("results_link_opened", p);
 }
