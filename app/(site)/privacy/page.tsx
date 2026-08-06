@@ -704,7 +704,7 @@ const SECTIONS: LegalSection[] = [
           a child&rsquo;s own email address, and there is no free-text box for
           one to be typed into. The one address involved is a grown-up&rsquo;s,
           typed by them or with their say-so, and it is stored against the
-          result &mdash; which is set out in full below.
+          result. That is set out in full below.
         </p>
         <Card color="mint" shadow="sm" padding="lg" className="not-prose">
           <p className="mb-3 text-[1.02rem] font-bold leading-relaxed">
@@ -726,8 +726,7 @@ const SECTIONS: LegalSection[] = [
               version the screen asks for a parent&rsquo;s address in so many
               words. This address joins the same list as any other signup on
               this site, tagged so we can tell which part of the site it came
-              from, and it is also saved alongside that result &mdash; see
-              below.
+              from, and it is also saved alongside that result. See below.
             </li>
             <li>
               <strong>Anonymous usage events</strong>, which record that a test
@@ -759,7 +758,7 @@ const SECTIONS: LegalSection[] = [
           would rather say that plainly than leave you to work it out. The
           child&rsquo;s name is never asked for and there is nowhere to type
           one, so what is stored is an adult&rsquo;s email address, a grade, a
-          score and the answers &mdash; not a named child.
+          score and the answers. Not a named child.
         </p>
         <p>
           That pairing is also readable in our analytics warehouse, which is set
