@@ -554,7 +554,7 @@ const SECTIONS: LegalSection[] = [
           A saved result from the test on this website, and any email address
           stored with it, is deleted twelve months
           after the test was taken. It holds a score and the answers given, is
-          reachable only through the random link we email, and carries the
+          reachable only through the link we email, and carries the
           address the results were sent to, if any were. The copy of these
           results in PostHog works the same way as the email list above: it is
           replaced whole every hour and keeps no history, so a result deleted
@@ -718,7 +718,7 @@ const SECTIONS: LegalSection[] = [
             <li>
               <strong>The answers given and the score</strong>. These are saved
               so the results page can be reopened from the link we email. They
-              are held against a random link, and they carry no name.
+              are held in the link itself, and they carry no name.
             </li>
             <li>
               <strong>A parent or guardian&rsquo;s email address</strong>, given
@@ -739,18 +739,33 @@ const SECTIONS: LegalSection[] = [
         <p>
           <strong>How long results are kept.</strong> A saved result is deleted
           twelve months after the test was taken, and after that the emailed
-          link stops working and says so. The link is a random string that
-          reveals nothing about the result and cannot be guessed from another
-          one.
+          link stops working and says so.
+        </p>
+        <p>
+          <strong>The link carries the result inside it.</strong> What it holds
+          is which test was taken, the grade it was set for, the answers given,
+          how long it took, whether the clock ran out, and when it was
+          finished. That is encoded rather than encrypted, so anyone holding
+          the link can read it. It carries no name and no email address. Treat
+          it as private for the same reason you would treat a shared document
+          link as private: whoever has the link can see the result.
+        </p>
+        <p>
+          <strong>What it cannot do is be forged or altered.</strong> The link
+          is signed with a key only we hold, so changing any character of it
+          makes the page refuse the whole thing rather than show an edited
+          result, and nobody can invent a working link or work one out from
+          another. The twelve-month expiry is inside that signature too, which
+          is why it cannot be stretched.
         </p>
         <p>
           <strong>
             When you ask us to email a result, that address is stored with that
             result.
           </strong>{" "}
-          Until you type an address in, a result is just a score against a
-          random link with nothing identifying attached to it. Sending it is
-          what joins the two, and we keep them joined.
+          Until you type an address in, a result is just a score and a set of
+          answers with nothing identifying attached to it. Sending it is what
+          joins the two, and we keep them joined.
         </p>
         <p>
           <strong>On the children&rsquo;s version that means a grown-up&rsquo;s
@@ -1065,7 +1080,9 @@ const SECTIONS: LegalSection[] = [
           offered their result above the opening question, rather than being
           dropped at that question with no way back to what they earned. It is a
           copy of the same link, kept locally, and not a second route to the
-          result.
+          result. What that link itself carries, and why it is worth treating
+          as private, is set out under{" "}
+          <a href="#the-test">The test on this website</a> above.
         </p>
         <p>
           <strong>
