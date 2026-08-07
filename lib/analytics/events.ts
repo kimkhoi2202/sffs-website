@@ -474,7 +474,31 @@ export function trackTestGradeSelected(grade: number): void {
  * Without this the share is a dead end in the data: `test_share_to_child_clicked`
  * says a link went out and nothing says one ever came back, so the loop's
  * conversion rate cannot be computed at all. It fires from the `?for=child`
- * seed in the flow, which is the only way to arrive in that state.
+ * seed in the flow.
+ *
+ * ===========================================================================
+ * IT OVER-COUNTS THE PARENT HAND-OFF, AND `platform` IS HOW YOU SPLIT IT
+ * ===========================================================================
+ * This used to say `?for=child` was the only way to arrive in that state. It
+ * is not, and has not been since /beat/[token] shipped. A stranger who opens
+ * a shared CHILD result is sent to `/?for=child` by the challenge page's
+ * "Take the test" button (see the `startHref` in app/beat/[token]/page.tsx),
+ * so they file this event too — and they are not a parent handing a test to
+ * their kid, which is the only thing this name describes.
+ *
+ * READ IT WITH A BREAKDOWN ON `platform`, NOT ON ITS OWN. A shared link is
+ * tagged `utm_source=share` (see beatUrlFor in lib/test/share-url.ts) and
+ * `derivePlatform` turns that into `platform: "share"`, while a genuine
+ * parent-to-child hand-off is a bare `/?for=child` with no UTM at all and
+ * cannot produce that value. So:
+ *
+ *   platform = "share"   -> a challenge recipient, from somebody's share
+ *   platform ≠ "share"   -> the parent hand-off this event is named for
+ *
+ * The two are already separable, which is why this is a note rather than a
+ * change: renaming the event or splitting it would silently redefine every
+ * historical number filed under it, and the distinction is recoverable from
+ * data already being collected.
  */
 export function trackTestChildLinkOpened(): void {
   posthog.capture("test_child_link_opened");

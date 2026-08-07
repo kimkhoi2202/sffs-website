@@ -292,12 +292,35 @@ await shared.page.waitForURL((u) => !u.pathname.startsWith("/beat/"), { timeout:
 await shared.page.waitForTimeout(900);
 
 const survived = await shared.page.evaluate(() => window.__survivedTheTrip === true);
+/*
+  IF THIS IS THE ASSERTION THAT JUST WENT RED, READ THIS BEFORE "FIXING" IT.
+
+  It looks like a routing test. It is not. It is the only thing standing
+  between this codebase and silently losing every share it ever converts.
+
+  You have probably just changed a `<Link>` into an `<a>`, or added a
+  `router.refresh()`, or moved the challenge page's CTA onto a redirect. Any
+  of those turns the trip from /beat into the flow into a FULL PAGE LOAD, and
+  a full load re-runs registerLaunchSuperProperties() on a URL that has no
+  `utm_source` and a same-origin referrer — so `platform` is re-registered as
+  "direct" and every event after it, INCLUDING test_started and
+  test_completed, is filed as though the person arrived from nowhere.
+
+  Nothing breaks. No error appears. The share loop simply stops being
+  measurable, the recipients keep converting, and the numbers say the channel
+  is dead. That is the failure this exists to prevent, and it is invisible in
+  code review, which is why it is asserted here instead.
+
+  The fix is to keep the navigation client-side, not to relax this check.
+*/
 check(
-  "reaching the test does not reload the page",
+  "a recipient who starts the test is still attributed to the share",
   survived,
   survived
-    ? "client-side nav — the arrival tag still applies"
-    : "FULL LOAD — platform re-registers as 'direct' and the recipient is lost",
+    ? "client-side nav — the arrival tag survives onto test_started"
+    : "SHARE ATTRIBUTION SEVERED: a full page load re-registers platform as " +
+      "'direct', so this recipient — and every future one — is counted as " +
+      "organic. See the note above this check.",
 );
 check(
   "and it lands somewhere the test can actually be started",
