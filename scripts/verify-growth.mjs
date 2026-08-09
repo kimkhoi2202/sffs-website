@@ -79,14 +79,22 @@ const utc = (msAgo) =>
  * bought against 27.27% earned. TikTok is the volume, Google is a small organic
  * tail, and Meta is a live-but-quiet paid source that has not been seen for
  * three days — the "channel going quiet" case.
+ *
+ * THE AUDIENCE SPLIT IS BUILT TO BE AWKWARD ON PURPOSE. The four extra columns
+ * decompose `emailed` as `adult + child − both + unknown`, and a fixture where
+ * that reduced to `adult + child` would pass whether or not the two residuals
+ * were plumbed through at all. So TikTok carries BOTH residuals, Reddit paid
+ * carries only the overlap, and two rows carry neither — and the two channels
+ * lean opposite ways, which is the comparison the split exists to make.
  */
 const CHANNELS = [
-  // channel, paid, landed, started, completed, emailed, minutes since last event
-  ["TikTok", 1, 5591, 400, 250, 71, 4],
-  ["Reddit", 1, 641, 120, 90, 80, 9],
-  ["Reddit", 0, 44, 20, 14, 12, 130],
-  ["Google Search", 0, 70, 30, 20, 14, 47],
-  ["Meta", 1, 12, 1, 0, 0, 3 * 24 * 60],
+  // channel, paid, landed, started, completed, emailed,
+  //   adult, child, both, unknown, minutes since last event
+  ["TikTok", 1, 5591, 400, 250, 71, 22, 50, 4, 3, 4],
+  ["Reddit", 1, 641, 120, 90, 80, 77, 5, 2, 0, 9],
+  ["Reddit", 0, 44, 20, 14, 12, 11, 1, 0, 0, 130],
+  ["Google Search", 0, 70, 30, 20, 14, 10, 4, 0, 0, 47],
+  ["Meta", 1, 12, 1, 0, 0, 0, 0, 0, 0, 3 * 24 * 60],
 ];
 
 const FUNNEL = {
@@ -145,16 +153,20 @@ globalThis.fetch = async (url, init) => {
 
   if (sql.includes("last_activity")) {
     return answer(
-      ["channel", "paid", "landed", "started", "completed", "emailed", "last_activity"],
-      CHANNELS.map(([channel, paid, landed, started, completed, emailed, mins]) => [
-        channel,
-        paid,
-        landed,
-        started,
-        completed,
-        emailed,
-        utc(mins * MINUTE),
-      ]),
+      [
+        "channel",
+        "paid",
+        "landed",
+        "started",
+        "completed",
+        "emailed",
+        "emailed_adult",
+        "emailed_child",
+        "emailed_both",
+        "emailed_unknown",
+        "last_activity",
+      ],
+      CHANNELS.map((row) => [...row.slice(0, 10), utc(row[10] * MINUTE)]),
     );
   }
 
@@ -450,9 +462,110 @@ const near = (a, b) => a !== null && Math.abs(a - b) < 1e-9;
   );
 }
 
+/* -- 9. the adult/child split decomposes Emailed, and never reallocates --- */
+/*
+  The defect this guards: a per-channel audience split that "adds up" because
+  the people it could not resolve were dropped, or shared out across the
+  channels that could. Either makes the column tidy and wrong, and this project
+  has paid for that shape of error twice.
+
+  The identity below is the whole contract. It is asserted PER ROW rather than
+  only on the totals, because a split can be wrong on two rows in opposite
+  directions and still total correctly.
+*/
+{
+  const g = await run();
+  const rows = g.channels;
+
+  for (const row of rows) {
+    const side = row.paid ? "paid" : "organic";
+    check(
+      row.emailedAdult + row.emailedChild - row.emailedBoth + row.emailedAudienceUnknown ===
+        row.emailed,
+      `${row.channel} ${side}: the audience split reconciles with its own Emailed figure`,
+      `${row.emailedAdult} adult + ${row.emailedChild} child − ${row.emailedBoth} both + ${row.emailedAudienceUnknown} unresolved ≠ ${row.emailed}`,
+    );
+  }
+
+  const sum = (key) => rows.reduce((acc, row) => acc + row[key], 0);
+  check(
+    sum("emailedAdult") === 120 && sum("emailedChild") === 60,
+    "the split totals across the table",
+    `${sum("emailedAdult")} adult, ${sum("emailedChild")} child`,
+  );
+  check(
+    sum("emailedAdult") + sum("emailedChild") - sum("emailedBoth") + sum("emailedAudienceUnknown") ===
+      g.funnel.emailed,
+    "…and the whole split reconciles with the funnel's last stage",
+    String(g.funnel.emailed),
+  );
+
+  /*
+    The two residuals must SURVIVE the trip. Both are the numbers a tidier
+    implementation would have quietly absorbed, so each is asserted as a
+    standing figure rather than inferred from the identity above — which would
+    hold just as well if both were zeroed and the adult count inflated to match.
+  */
+  check(
+    sum("emailedBoth") === 6,
+    "people who sat both papers are carried, not folded into one audience",
+    String(sum("emailedBoth")),
+  );
+  check(
+    sum("emailedAudienceUnknown") === 3,
+    "and emailed people with no finished test stay unresolved rather than being assigned an audience",
+    String(sum("emailedAudienceUnknown")),
+  );
+
+  const tiktok = rows.find((r) => r.channel === "TikTok");
+  const redditPaid = rows.find((r) => r.channel === "Reddit" && r.paid);
+  check(
+    tiktok.emailedBoth === 4 && tiktok.emailedAudienceUnknown === 3,
+    "a channel carrying both residuals keeps them apart from each other",
+  );
+  check(
+    redditPaid.emailedAudienceUnknown === 0 && redditPaid.emailedBoth === 2,
+    "and a channel where everyone resolves reports no unresolved people rather than a share of somebody else's",
+  );
+
+  /*
+    The comparison the split exists to make: two channels that convert at a
+    similar rate but bring different households. A blend of the two would say
+    neither, which is the same mistake the paid/organic split already guards.
+  */
+  check(
+    redditPaid.emailedAdult > redditPaid.emailedChild * 10 &&
+      tiktok.emailedChild > tiktok.emailedAdult * 2,
+    "two channels leaning opposite ways stay distinguishable",
+    `Reddit ${redditPaid.emailedAdult}/${redditPaid.emailedChild}, TikTok ${tiktok.emailedAdult}/${tiktok.emailedChild}`,
+  );
+
+  /*
+    WHERE THE AUDIENCE COMES FROM. The mirror's own `platform` column resolves
+    only reddit and instagram — 507 of 666 live rows carry no channel at all —
+    so a split sourced there could not describe TikTok, Google or direct
+    traffic. It is read off `test_completed.audience` in the events half
+    instead, and that must stay true: sourcing it from the warehouse would also
+    put two clocks in one table.
+  */
+  const channelQuery = sent.find((r) => r.sql.includes("last_activity"));
+  check(
+    /test_completed'\s+AND\s+toString\(properties\.audience\)/.test(channelQuery.sql),
+    "the audience is read off the test_completed event",
+  );
+  check(
+    !channelQuery.sql.includes("test_results"),
+    "and the channel table never reaches into the warehouse mirror, which carries no usable channel",
+  );
+  check(
+    channelQuery.sql.includes("{filters}"),
+    "…so the split inherits the same exclusions as the column it decomposes",
+  );
+}
+
 console.log(
   failures === 0
-    ? `\nverify-growth: OK. Four stages of people over one population, finished tests kept distinct from them, Reddit split in two, and neither clock lies.`
+    ? `\nverify-growth: OK. Four stages of people over one population, finished tests kept distinct from them, Reddit split in two, the audience split reconciling per row, and neither clock lies.`
     : `\nverify-growth: ${failures} failure(s).`,
 );
 if (failures > 0) process.exit(1);

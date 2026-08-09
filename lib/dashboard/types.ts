@@ -145,6 +145,32 @@ export interface GrowthChannelRow {
   started: number;
   completed: number;
   emailed: number;
+  /**
+   * The `emailed` figure split by which test they finished, read off the
+   * `audience` property of `test_completed` — see the note on `fetchChannels`
+   * for why this cannot come from the warehouse mirror.
+   *
+   * These four decompose `emailed` exactly, and the identity is the reason
+   * all four are carried rather than two:
+   *
+   *   emailed = emailedAdult + emailedChild − emailedBoth + emailedAudienceUnknown
+   *
+   * `emailedAdult` and `emailedChild` are each counted within their own
+   * audience, so somebody who sat the grown-up paper and then their child's is
+   * in both and the pair overcounts by `emailedBoth`.
+   */
+  emailedAdult: number;
+  emailedChild: number;
+  /** People in BOTH columns above, so the pair sums past `emailed`. */
+  emailedBoth: number;
+  /**
+   * Emailed people with no finished test in the window, so no audience.
+   *
+   * Carried as its own number so the panel can show them. Dropping them, or
+   * sharing them out across the channels that do resolve, would make the split
+   * add up by inventing an answer for people who have not given one.
+   */
+  emailedAudienceUnknown: number;
   startRate: number | null;
   /** Landed to gave-an-email, end to end. */
   signupRate: number | null;

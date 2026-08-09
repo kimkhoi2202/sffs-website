@@ -177,6 +177,8 @@ function arrivedSubquery(): string {
       maxIf(1, event = 'test_started') AS started,
       maxIf(1, event = 'test_completed') AS completed,
       maxIf(1, event = 'email_captured') AS emailed,
+      maxIf(1, event = 'test_completed' AND toString(properties.audience) = 'adult') AS took_adult,
+      maxIf(1, event = 'test_completed' AND toString(properties.audience) = 'child') AS took_child,
       max(timestamp) AS last_seen
     FROM events
     WHERE {filters}
@@ -270,6 +272,10 @@ interface RawChannelRow {
   started: number;
   completed: number;
   emailed: number;
+  emailed_adult: number;
+  emailed_child: number;
+  emailed_both: number;
+  emailed_unknown: number;
   last_activity: string;
 }
 
@@ -281,6 +287,58 @@ interface RawChannelRow {
  * Reddit row reads 13.4%, which describes neither of them, and it has already
  * been shown to the owner once and drawn the wrong conclusion. So `paid` is a
  * grouping key, not a filter, and a channel that runs both appears twice.
+ *
+ * ===========================================================================
+ * THE ADULT/CHILD SPLIT COMES OFF THE EVENTS, NOT OFF THE MIRROR
+ * ===========================================================================
+ * The obvious source for "which test did they sit" is `test_results`, since
+ * that is where the Email addresses panel below gets its adult and child
+ * figures. It cannot answer this question, and the reason is worth writing
+ * down so nobody spends the afternoon rediscovering it.
+ *
+ * The mirror does carry an audience per row, but its acquisition channel is
+ * enriched by the export Lambda's `_channel()`, which recognises exactly two
+ * values. Measured on the live table on 9 August, all 666 rows:
+ *
+ *   platform = reddit       150
+ *   platform = instagram      9
+ *   platform = NULL         507   (76%)
+ *
+ * Its `referrer_domain` is thinner still — null on 591 of the 666. A channel
+ * table built on either column could say nothing at all about TikTok, Google
+ * Search, the results-email link or direct traffic, and would file three
+ * quarters of the audience under "unknown". That is not a split, it is a
+ * rounding error with a column heading.
+ *
+ * PostHog can answer it directly. `test_completed` carries `audience` as a
+ * first-class property on every single event — verified over 90 days: 685
+ * events, 347 adult, 338 child, ZERO missing. So the audience is read off the
+ * same person rows the rest of this table is built from, which means the split
+ * inherits the channel ladder, the population and the counting unit for free
+ * and cannot drift from the `emailed` column it decomposes.
+ *
+ * It also keeps the panel honest about time. The channel table carries the
+ * PostHog stamp; the mirror carries its own and is frozen behind an AWS cost
+ * lockdown as this is written. Sourcing two columns of one table from two
+ * clocks is exactly the "one shared as-of" the panel refuses to print.
+ *
+ * ===========================================================================
+ * FOUR NUMBERS, BECAUSE THREE WOULD NOT ADD UP
+ * ===========================================================================
+ * `emailed_adult` and `emailed_child` are each counted within their own
+ * audience, so a person who sat both is in both — the same overlap the
+ * addresses panel already reports for households. And an emailed person with
+ * no `test_completed` in the window belongs to neither.
+ *
+ * Both residuals are counted and returned rather than absorbed:
+ *
+ *   emailed = adult + child − both + unknown
+ *
+ * Measured over 90 days at the time of writing: 337 emailed people, 200 adult,
+ * 123 child, 15 both, 29 unresolved — and the identity holds exactly. The
+ * unresolved 29 are NOT dropped and NOT shared out across the channels that do
+ * resolve; they are carried as their own number so the panel can show them.
+ * Reallocating people quietly is a thing that has cost this project twice.
  */
 async function fetchChannels(
   range: ResolvedRange,
@@ -295,6 +353,10 @@ async function fetchChannels(
        sum(${col("started")}) AS started,
        sum(${col("completed")}) AS completed,
        sum(${col("emailed")}) AS emailed,
+       countIf(${col("emailed")} = 1 AND ${col("took_adult")} = 1) AS emailed_adult,
+       countIf(${col("emailed")} = 1 AND ${col("took_child")} = 1) AS emailed_child,
+       countIf(${col("emailed")} = 1 AND ${col("took_adult")} = 1 AND ${col("took_child")} = 1) AS emailed_both,
+       countIf(${col("emailed")} = 1 AND ${col("took_adult")} = 0 AND ${col("took_child")} = 0) AS emailed_unknown,
        toString(max(${col("last_seen")})) AS last_activity
      FROM (${arrivedSubquery()}) AS ${ARRIVED}
      WHERE ${POPULATION}
@@ -325,6 +387,10 @@ async function fetchChannels(
       started,
       completed,
       emailed,
+      emailedAdult: Number(row.emailed_adult),
+      emailedChild: Number(row.emailed_child),
+      emailedBoth: Number(row.emailed_both),
+      emailedAudienceUnknown: Number(row.emailed_unknown),
       startRate: rate(started, landed),
       signupRate: rate(emailed, landed),
       lastActivity: lastActivityMs === null ? "" : new Date(lastActivityMs).toISOString(),

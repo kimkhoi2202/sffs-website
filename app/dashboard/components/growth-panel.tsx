@@ -158,7 +158,7 @@ export function GrowthPanel({ data }: { data: GrowthResponse }) {
       {/* ---- 2. The channel table ----------------------------------------- */}
       <Panel
         title="Channels"
-        subtitle="One row per channel per side. A channel running both appears twice, adjacent, because a blended row describes neither half."
+        subtitle="One row per channel per side. A channel running both appears twice, adjacent, because a blended row describes neither half. Adult and Child split the Emailed column by which test the person finished."
         right={posthog ? <Stamp freshness={posthog} /> : undefined}
       >
         {channels.length === 0 ? (
@@ -413,52 +413,168 @@ function Stamp({ freshness }: { freshness: SourceFreshness }) {
 
 function ChannelTable({ rows }: { rows: GrowthChannelRow[] }) {
   return (
-    <div
-      role="region"
-      aria-label="Channels, paid and organic separated"
-      tabIndex={0}
-      className="-mx-1 overflow-x-auto px-1 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-ink"
-    >
-      <table className="w-full min-w-[52rem] border-collapse text-left text-[0.82rem]">
-        <thead>
-          <tr className="border-b-[2.5px] border-ink">
-            <th scope="col" className="py-2 pr-3 font-sans text-xs font-bold uppercase">
-              Channel
-            </th>
-            <Cell as="th">Landed</Cell>
-            <Cell as="th">Started</Cell>
-            <Cell as="th">Start rate</Cell>
-            <Cell as="th">Completed</Cell>
-            <Cell as="th">Emailed</Cell>
-            <Cell as="th">Visitor to signup</Cell>
-            <th scope="col" className="py-2 font-sans text-xs font-bold uppercase">
-              Last activity
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <tr key={`${row.channel}:${row.paid ? "paid" : "organic"}`} className="border-b-2 border-ink/15">
-              <th scope="row" className="py-2 pr-3 font-normal">
-                <span className="flex flex-wrap items-center gap-1.5">
-                  <span className="font-semibold">{row.channel}</span>
-                  <SideChip paid={row.paid} />
-                </span>
+    <>
+      <div
+        role="region"
+        aria-label="Channels, paid and organic separated"
+        tabIndex={0}
+        className="-mx-1 overflow-x-auto px-1 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-ink"
+      >
+        <table className="w-full min-w-[60rem] border-collapse text-left text-[0.82rem]">
+          <thead>
+            <tr className="border-b-[2.5px] border-ink">
+              <th scope="col" className="py-2 pr-3 font-sans text-xs font-bold uppercase">
+                Channel
               </th>
-              <Cell strong>{count(row.landed)}</Cell>
-              <Cell>{count(row.started)}</Cell>
-              <Cell muted>{rate(row.startRate)}</Cell>
-              <Cell>{count(row.completed)}</Cell>
-              <Cell>{count(row.emailed)}</Cell>
-              <Cell strong>{rate(row.signupRate)}</Cell>
-              <td className="whitespace-nowrap py-2">
-                <LastActivity iso={row.lastActivity} seconds={row.lastActivityAgeSeconds} />
-              </td>
+              <Cell as="th">Landed</Cell>
+              <Cell as="th">Started</Cell>
+              <Cell as="th">Start rate</Cell>
+              <Cell as="th">Completed</Cell>
+              <Cell as="th">Emailed</Cell>
+              <Cell as="th" title="Of the emailed, how many finished the grown-up test.">
+                Adult
+              </Cell>
+              <Cell as="th" title="Of the emailed, how many finished a children's test.">
+                Child
+              </Cell>
+              <Cell as="th">Visitor to signup</Cell>
+              <th scope="col" className="py-2 font-sans text-xs font-bold uppercase">
+                Last activity
+              </th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={`${row.channel}:${row.paid ? "paid" : "organic"}`} className="border-b-2 border-ink/15">
+                <th scope="row" className="py-2 pr-3 font-normal">
+                  <span className="flex flex-wrap items-center gap-1.5">
+                    <span className="font-semibold">{row.channel}</span>
+                    <SideChip paid={row.paid} />
+                  </span>
+                </th>
+                <Cell strong>{count(row.landed)}</Cell>
+                <Cell>{count(row.started)}</Cell>
+                <Cell muted>{rate(row.startRate)}</Cell>
+                <Cell>{count(row.completed)}</Cell>
+                <EmailedCell row={row} />
+                <Cell>{count(row.emailedAdult)}</Cell>
+                <Cell>{count(row.emailedChild)}</Cell>
+                <Cell strong>{rate(row.signupRate)}</Cell>
+                <td className="whitespace-nowrap py-2">
+                  <LastActivity iso={row.lastActivity} seconds={row.lastActivityAgeSeconds} />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <AudienceSplitNote rows={rows} />
+    </>
+  );
+}
+
+/**
+ * The emailed total, and — only where it applies — why its two parts do not
+ * add up to it.
+ *
+ * The residual is printed ON THE ROW rather than left to the note below,
+ * because the note cannot say WHICH rows it is talking about without listing
+ * fourteen channels, and a reader doing the subtraction in their head on
+ * TikTok's row needs the answer there and not four paragraphs later.
+ */
+function EmailedCell({ row }: { row: GrowthChannelRow }) {
+  const parts: string[] = [];
+  if (row.emailedBoth > 0) parts.push(`${count(row.emailedBoth)} both`);
+  if (row.emailedAudienceUnknown > 0) {
+    parts.push(`${count(row.emailedAudienceUnknown)} no test`);
+  }
+  return (
+    <td className="py-2 pr-3 text-right font-mono text-[0.78rem] tabular-nums">
+      {count(row.emailed)}
+      {parts.length > 0 && (
+        <span
+          title={residualTitle(row)}
+          className="block font-sans text-[0.62rem] font-semibold leading-tight text-ink/50"
+        >
+          {parts.join(" · ")}
+        </span>
+      )}
+    </td>
+  );
+}
+
+function residualTitle(row: GrowthChannelRow): string {
+  const said: string[] = [];
+  if (row.emailedBoth > 0) {
+    said.push(
+      `${count(row.emailedBoth)} of these people finished both a grown-up test and a children's one, so they are counted in Adult AND in Child.`,
+    );
+  }
+  if (row.emailedAudienceUnknown > 0) {
+    said.push(
+      `${count(row.emailedAudienceUnknown)} gave an email without finishing a test in this window, so they are in neither column.`,
+    );
+  }
+  return said.join(" ");
+}
+
+/**
+ * Why Adult + Child is not Emailed, stated once under the table.
+ *
+ * ===========================================================================
+ * THE ARITHMETIC IS PRINTED BECAUSE THE ALTERNATIVES ARE BOTH LIES
+ * ===========================================================================
+ * Two numbers that do not sum to the third next to them is the fastest way to
+ * lose a reader, and there were only ever three ways to handle it. Dropping
+ * the people who cannot be resolved would make the column add up by quietly
+ * shrinking the population. Sharing them out across the channels that DO
+ * resolve would make it add up by inventing an answer on their behalf, which
+ * is the failure mode that has already cost this project twice. Saying it out
+ * loud is the third, and it is the only one that leaves the reader with a
+ * number they can act on.
+ *
+ * Rendered only when there is something to explain: on a window where every
+ * emailed person resolves to exactly one audience the two columns DO sum to
+ * Emailed, and a standing paragraph explaining a discrepancy that is not on
+ * screen would be its own kind of noise.
+ */
+function AudienceSplitNote({ rows }: { rows: GrowthChannelRow[] }) {
+  const total = (key: keyof GrowthChannelRow) =>
+    rows.reduce((acc, row) => acc + (row[key] as number), 0);
+  const both = total("emailedBoth");
+  const unknown = total("emailedAudienceUnknown");
+  if (both === 0 && unknown === 0) return null;
+
+  return (
+    <p className="mt-4 rounded-2xl border-2 border-dashed border-ink/30 px-4 py-3 text-xs font-semibold leading-relaxed text-ink/65">
+      <strong className="font-bold text-ink">Adult and Child will not always sum to Emailed</strong>
+      , and the two reasons are both printed on the rows they apply to. They come from the test
+      itself — the signup does not record which paper was sat — so a person is counted in an
+      audience only once they have finished one.
+      {both > 0 && (
+        <>
+          {" "}
+          <strong className="font-bold text-ink">
+            {count(both)} {both === 1 ? "person" : "people"} finished both
+          </strong>{" "}
+          a grown-up test and a children&rsquo;s one, and are counted in each column — the same
+          overlap the addresses panel below reports for households, here broken out per channel.
+          The two are measured off different systems and need not agree exactly.
+        </>
+      )}
+      {unknown > 0 && (
+        <>
+          {" "}
+          <strong className="font-bold text-ink">
+            {count(unknown)} gave an email without finishing a test
+          </strong>{" "}
+          in this window, so there is no audience to file them under. They are left in neither
+          column rather than picked for them or shared out across the channels that do resolve,
+          which would make the split add up by inventing an answer.
+        </>
+      )}{" "}
+      Every row still reconciles exactly: Emailed = Adult + Child − both + no test.
+    </p>
   );
 }
 
@@ -581,11 +697,13 @@ function Cell({
   as = "td",
   strong,
   muted,
+  title,
 }: {
   children: ReactNode;
   as?: "td" | "th";
   strong?: boolean;
   muted?: boolean;
+  title?: string;
 }) {
   const className = cn(
     "py-2 pr-3 text-right tabular-nums",
@@ -596,10 +714,14 @@ function Cell({
   );
   if (as === "th") {
     return (
-      <th scope="col" className={className}>
+      <th scope="col" className={className} title={title}>
         {children}
       </th>
     );
   }
-  return <td className={className}>{children}</td>;
+  return (
+    <td className={className} title={title}>
+      {children}
+    </td>
+  );
 }
