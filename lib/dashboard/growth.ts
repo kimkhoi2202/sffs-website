@@ -39,6 +39,44 @@ import type {
  * page is a stated number rather than a discrepancy somebody has to discover.
  *
  * ===========================================================================
+ * THIS PAGE CARRIES TWO COUNTING UNITS, AND THEY ARE NOT INTERCHANGEABLE
+ * ===========================================================================
+ * `GrowthFunnel.completed` counts PEOPLE. `GrowthEmails.finishedTests` counts
+ * FINISHED TESTS. They are different quantities measured off different
+ * systems, they will not agree, and neither is wrong when they don't.
+ *
+ * They were both called "completions" once, four scroll-lines apart on the
+ * same tab, and the page was read as reporting one number twice. It reported
+ * two, and the owner had no way to see that from the page.
+ *
+ * A person is more than one finished test whenever they retake the paper or
+ * sit one audience and then the other — measured at 21 people behind 26 extra
+ * tests when this was written. In the other direction a finished test that
+ * gave no address belongs to nobody the mirror can name, so the people behind
+ * `finishedTests` can be BOUNDED but never counted, and the panel says so
+ * rather than picking an end of the range.
+ *
+ * ===========================================================================
+ * AND AURORA'S ROW COUNT IS A THIRD QUANTITY AGAIN
+ * ===========================================================================
+ * Counting `test_results` in Aurora directly gives a much bigger number than
+ * this page shows and the difference is entirely by design, so anyone
+ * reconciling the two needs the shape of it. Measured on 9 August: 898 rows
+ * against 533 finished tests, and the 365 splits exactly.
+ *
+ *   +346  the two-stage write. Finishing a test writes a `stage=completed`
+ *         row; giving an address afterwards writes a SECOND row,
+ *         `stage=emailed`, carrying the same test. The export keeps the
+ *         first and merges the address off the second.
+ *   +19   attempts where `answered` is zero. Nobody answered a question, so
+ *         the export does not call it a completion.
+ *
+ * The filter lives in the export Lambda (`sffs-test-results-dw-export`), NOT
+ * here, so that nothing downstream can surface a contaminated row by
+ * forgetting a WHERE clause. Do not reimplement it in this file; the point of
+ * putting it at the export is that there is one copy.
+ *
+ * ===========================================================================
  * THE BOT COHORT IS NOT REIMPLEMENTED HERE, AND MUST NOT BE
  * ===========================================================================
  * An automated fleet was inflating the YouTube and Google visitor counts. The
@@ -152,6 +190,7 @@ interface RawFunnel {
   emailed: number;
   seen_without_pageview: number;
   without_pageview_emailed: number;
+  without_pageview_completed: number;
 }
 
 /**
@@ -174,7 +213,8 @@ async function fetchFunnel(
        countIf(${POPULATION} AND ${col("completed")} = 1) AS completed,
        countIf(${POPULATION} AND ${col("emailed")} = 1) AS emailed,
        countIf(NOT (${POPULATION})) AS seen_without_pageview,
-       countIf(NOT (${POPULATION}) AND ${col("emailed")} = 1) AS without_pageview_emailed
+       countIf(NOT (${POPULATION}) AND ${col("emailed")} = 1) AS without_pageview_emailed,
+       countIf(NOT (${POPULATION}) AND ${col("completed")} = 1) AS without_pageview_completed
      FROM (${arrivedSubquery()}) AS ${ARRIVED}`,
     scopeFor(range, filtered),
   );
@@ -196,6 +236,7 @@ async function fetchFunnel(
       emailRate: rate(emailed, completed),
       seenWithoutPageview: Number(row?.seen_without_pageview ?? 0),
       withoutPageviewEmailed: Number(row?.without_pageview_emailed ?? 0),
+      withoutPageviewCompleted: Number(row?.without_pageview_completed ?? 0),
     },
     computedAt,
   };
@@ -385,6 +426,11 @@ interface RawEmails {
  *
  * No exclusion logic, deliberately: the export that fills this table is
  * pre-filtered at source. See the header of test-results.ts.
+ *
+ * `rows_total` is a count of FINISHED TESTS, which is why it is carried as
+ * `finishedTests` and not as `completions`. One row here is one finished test,
+ * never one person and never one row of Aurora `test_results` — see the note
+ * on the two counting units at the top of this file.
  */
 async function fetchEmails(range: ResolvedRange): Promise<GrowthEmails> {
   const has = `notEmpty(trim(coalesce(toString(email), '')))`;
@@ -404,7 +450,7 @@ async function fetchEmails(range: ResolvedRange): Promise<GrowthEmails> {
   const adult = Number(row?.adult ?? 0);
   const child = Number(row?.child ?? 0);
   return {
-    completions: Number(row?.rows_total ?? 0),
+    finishedTests: Number(row?.rows_total ?? 0),
     rowsWithEmail: Number(row?.rows_with_email ?? 0),
     addresses,
     adult,

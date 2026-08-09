@@ -123,6 +123,17 @@ export interface GrowthFunnel {
   seenWithoutPageview: number;
   /** How many of those still gave an email — the ad-blocked signups. */
   withoutPageviewEmailed: number;
+  /**
+   * How many of those finished a test, and so are missing from `completed`.
+   *
+   * Measured rather than assumed, because "the pageview-only population is
+   * hiding completers" is the first explanation anyone reaches for when this
+   * stage is compared against the warehouse figure, and on this project it is
+   * false — it read zero when this was added. A standing number settles that
+   * on the page every time it is asked, which a comment saying "it was zero
+   * once" would not.
+   */
+  withoutPageviewCompleted: number;
 }
 
 /** One channel, on one side of the paid/organic line. */
@@ -165,8 +176,19 @@ export interface GrowthSideTotals {
 
 /** Deduplicated addresses from the `test_results` warehouse mirror. */
 export interface GrowthEmails {
-  /** Rows in the window, one per finished test. */
-  completions: number;
+  /**
+   * Finished TESTS in the window, one per row of the mirror. NOT people.
+   *
+   * Named `finishedTests` rather than `completions` because the short word is
+   * what caused the trouble: "completions" was read off this page as the
+   * number of people who finished the test, and it is not that number in
+   * either direction. Someone who retakes the test, or who sits the adult
+   * paper and then their child's, is two finished tests and one person; and a
+   * finished test that gave no address cannot be attributed to a person at
+   * all, so the people behind this figure can only be bounded, never counted.
+   * `GrowthFunnel.completed` is the people number.
+   */
+  finishedTests: number;
   /** Rows carrying an address. Larger than `addresses` when someone repeats. */
   rowsWithEmail: number;
   /** Distinct addresses. The real size of the list. */

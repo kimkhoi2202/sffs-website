@@ -87,7 +87,7 @@ export function GrowthPanel({ data }: { data: GrowthResponse }) {
               />
               <FunnelRow
                 label="Completed"
-                hint="finished it"
+                hint="people who finished a test, not tests finished"
                 people={funnel.completed}
                 rate={funnel.completionRate}
               />
@@ -125,6 +125,30 @@ export function GrowthPanel({ data }: { data: GrowthResponse }) {
                 </strong>
                 , which is why “Gave an email” here reads {count(funnel.withoutPageviewEmailed)}{" "}
                 lower than the Signups tile above.
+              </>
+            )}{" "}
+            {/*
+              Stated whether or not it is zero.
+
+              "The pageview-only population must be hiding the missing
+              finishers" is the first explanation anyone reaches for when
+              Completed is compared against the finished-tests count below,
+              and on this project it has been false. Printing the number every
+              time answers it on the page instead of costing somebody an
+              investigation.
+            */}
+            {funnel.withoutPageviewCompleted === 0 ? (
+              <>
+                <strong className="font-bold text-ink">None of them finished a test</strong>,
+                so “Completed” above is every finisher PostHog recorded — the missing pageview
+                costs that row nobody.
+              </>
+            ) : (
+              <>
+                <strong className="font-bold text-ink">
+                  {count(funnel.withoutPageviewCompleted)} of them finished a test
+                </strong>
+                , so “Completed” above is that many short of every finisher PostHog recorded.
               </>
             )}
           </p>
@@ -197,7 +221,7 @@ export function GrowthPanel({ data }: { data: GrowthResponse }) {
           behind, these four numbers are behind and the stamp says so. */}
       <Panel
         title="Email addresses"
-        subtitle="Distinct addresses from the completions mirror, deduplicated. Somebody who took two tests is one address."
+        subtitle="Distinct addresses from the finished-tests mirror, deduplicated. Somebody who took two tests is one address."
         right={warehouse ? <Stamp freshness={warehouse} /> : undefined}
       >
         {data.warehouseError ? (
@@ -230,18 +254,88 @@ export function GrowthPanel({ data }: { data: GrowthResponse }) {
                 tone="yellow"
               />
             </div>
-            <p className="mt-4 text-xs font-semibold leading-relaxed text-ink/60">
-              {count(emails.completions)} completions in this window,{" "}
-              {count(emails.rowsWithEmail)} of them carrying an address, which deduplicate to{" "}
-              {count(emails.addresses)} people. Adult and child are each distinct within their own
-              audience, so they sum to {count(emails.adult + emails.child)} rather than{" "}
-              {count(emails.addresses)} — the difference is the {count(emails.both)} household
-              {emails.both === 1 ? "" : "s"} that did both.
-            </p>
+            <FinishedTests emails={emails} peopleWhoCompleted={funnel.completed} />
           </>
         )}
       </Panel>
     </div>
+  );
+}
+
+/* --------------------------------------------------------------------------
+ * Finished tests, and what they are not
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The sentence that stops this figure being read as a headcount.
+ *
+ * ===========================================================================
+ * WHY THIS IS PROSE AND NOT ANOTHER TILE
+ * ===========================================================================
+ * This number used to read "N completions in this window" and nothing else,
+ * and it was read — reasonably — as the number of people who finished the
+ * test. It is not that, it cannot be turned into that, and the honest move is
+ * to say what it IS and give the range the headcount lies in rather than to
+ * print a single figure that would have to be wrong at one end.
+ *
+ * Three facts have to survive together, which is why they are spelled out
+ * rather than compressed into a label:
+ *
+ *   1. The unit is a finished TEST. Retakes and a household sitting both
+ *      audiences are two tests and one person.
+ *   2. Anonymous finishers cannot be resolved to people at all, so the
+ *      headcount has a floor and a ceiling and no exact value.
+ *   3. The funnel above DOES count people, and reads a different number for
+ *      that reason and not because either half is broken.
+ */
+function FinishedTests({
+  emails,
+  peopleWhoCompleted,
+}: {
+  emails: NonNullable<GrowthResponse["emails"]>;
+  peopleWhoCompleted: number;
+}) {
+  const anonymous = Math.max(0, emails.finishedTests - emails.rowsWithEmail);
+  return (
+    <>
+      <p className="mt-4 text-xs font-semibold leading-relaxed text-ink/60">
+        <strong className="font-bold text-ink">
+          {count(emails.finishedTests)} finished tests
+        </strong>{" "}
+        in this window — tests, not people. {count(emails.rowsWithEmail)} of them carry an
+        address and those deduplicate to {count(emails.addresses)} people
+        {anonymous > 0 && (
+          <>
+            ; the other {count(anonymous)} finished without giving one, so the number of PEOPLE
+            behind this figure is somewhere between {count(emails.addresses)} and{" "}
+            {count(emails.addresses + anonymous)} and cannot be pinned down from this table
+          </>
+        )}
+        . The funnel above counts people, and reads {count(peopleWhoCompleted)} at its Completed
+        row for exactly that reason.
+      </p>
+      <p className="mt-2 text-xs font-semibold leading-relaxed text-ink/60">
+        Adult and child are each distinct within their own audience, so they sum to{" "}
+        {count(emails.adult + emails.child)} rather than {count(emails.addresses)} — the
+        difference is the {count(emails.both)} household{emails.both === 1 ? "" : "s"} that did
+        both.
+      </p>
+      {/*
+        The reconciliation somebody will need at some point.
+
+        Counting rows in Aurora `test_results` by hand gives roughly 1.7x this
+        number, and has already been reported as a dashboard defect once. The
+        gap is the export's definition of a completion, so the definition
+        belongs on the page next to the figure it produces.
+      */}
+      <p className="mt-2 text-xs font-semibold leading-relaxed text-ink/50">
+        Counting rows in the product database directly gives a considerably larger number, and
+        that is expected rather than a disagreement: a test that is finished and then emailed is
+        stored there as two rows, and attempts where nobody answered a question are kept. The
+        export collapses each pair and drops the unanswered, so one finished test is one row
+        here.
+      </p>
+    </>
   );
 }
 

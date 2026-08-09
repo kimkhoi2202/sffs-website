@@ -96,6 +96,9 @@ const FUNNEL = {
   emailed: CHANNELS.reduce((a, c) => a + c[5], 0),
   seen_without_pageview: 754,
   without_pageview_emailed: 12,
+  // Non-zero on purpose. Zero is the live value, and a fixture that agreed
+  // with it would pass whether or not the number was plumbed through at all.
+  without_pageview_completed: 3,
 };
 
 const answer = (columns, results, extra = {}) =>
@@ -215,6 +218,11 @@ const near = (a, b) => a !== null && Math.abs(a - b) < 1e-9;
   check(
     f.withoutPageviewEmailed === 12,
     "and so is how many of them converted, which is why this stage differs from the Signups tile",
+  );
+  check(
+    f.withoutPageviewCompleted === 3,
+    "and how many of them finished a test, so the pageview-only population can be ruled in or out by reading rather than by investigating",
+    String(f.withoutPageviewCompleted),
   );
 }
 
@@ -388,7 +396,7 @@ const near = (a, b) => a !== null && Math.abs(a - b) < 1e-9;
   const g = await run();
   check(g.emails.addresses === 215, "the headline is distinct addresses");
   check(
-    g.emails.rowsWithEmail === 231 && g.emails.completions === 377,
+    g.emails.rowsWithEmail === 231 && g.emails.finishedTests === 377,
     "the rows behind it are shown too, so the deduplication is visible rather than implied",
   );
   check(g.emails.adult === 152 && g.emails.child === 71, "the adult and child split is reported");
@@ -399,9 +407,52 @@ const near = (a, b) => a !== null && Math.abs(a - b) < 1e-9;
   );
 }
 
+/* -- 8. the two counting units stay apart --------------------------------- */
+/*
+  The defect this guards: the funnel's PEOPLE figure and the warehouse's
+  FINISHED TESTS figure were both called "completions" on one tab, so the page
+  looked like it was reporting one number twice and disagreeing with itself.
+  They are different quantities off different systems and they are allowed to
+  differ — what is not allowed is for the payload to name them the same thing.
+*/
+{
+  const g = await run();
+
+  check(
+    !("completions" in g.emails),
+    "the warehouse figure is not called `completions`, the word that got it read as a headcount",
+    Object.keys(g.emails).join(", "),
+  );
+  check(
+    typeof g.emails.finishedTests === "number" && typeof g.funnel.completed === "number",
+    "both units are carried, separately named",
+  );
+  check(
+    g.funnel.completed === 374 && g.emails.finishedTests === 377,
+    "and they are free to differ, because people and finished tests are not the same quantity",
+    `${g.funnel.completed} people, ${g.emails.finishedTests} tests`,
+  );
+
+  /*
+    The people behind the warehouse figure are a RANGE, never a number: the
+    addresses are a floor and the anonymous finishers are the rest of the
+    ceiling. A panel that resolved this to one figure would be guessing.
+  */
+  const anonymous = g.emails.finishedTests - g.emails.rowsWithEmail;
+  check(
+    anonymous === 146 && g.emails.addresses === 215,
+    "anonymous finishers are recoverable from the payload, which is what makes the headcount a bounded range",
+    `${anonymous} anonymous`,
+  );
+  check(
+    g.emails.addresses <= g.emails.finishedTests,
+    "distinct people can never exceed the finished tests they came from",
+  );
+}
+
 console.log(
   failures === 0
-    ? `\nverify-growth: OK. Four stages of people over one population, Reddit split in two, and neither clock lies.`
+    ? `\nverify-growth: OK. Four stages of people over one population, finished tests kept distinct from them, Reddit split in two, and neither clock lies.`
     : `\nverify-growth: ${failures} failure(s).`,
 );
 if (failures > 0) process.exit(1);
