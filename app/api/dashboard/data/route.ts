@@ -4,6 +4,7 @@ import { isAuthenticated } from "@/lib/dashboard/auth";
 import { PostHogQueryError, isQueryKeyConfigured } from "@/lib/dashboard/posthog-query";
 import { parseRangeInput, resolveRange } from "@/lib/dashboard/time-range";
 import { fetchTiles, fetchTraffic } from "@/lib/dashboard/queries";
+import { fetchGrowth } from "@/lib/dashboard/growth";
 import { fetchPeople } from "@/lib/dashboard/people";
 import { fetchTestResults } from "@/lib/dashboard/test-results";
 import { buildFunnel, groupIntoHumans, summariseAbandonment } from "@/lib/dashboard/funnel";
@@ -39,7 +40,7 @@ export const maxDuration = 60;
  * right scope for what this does and a very wrong scope to expose over HTTP.
  */
 
-type Section = "tiles" | "people" | "journey" | "traffic" | "results";
+type Section = "tiles" | "people" | "journey" | "traffic" | "results" | "growth";
 
 /**
  * Run something and report failure instead of throwing it.
@@ -107,6 +108,18 @@ export async function POST(req: NextRequest) {
     if (section === "results") {
       const results = await settle(() => fetchTestResults(range));
       return json({ ...meta, ...(results.data ?? {}), error: results.error });
+    }
+
+    /*
+      Growth reads BOTH sources — the event stream for the funnel and the
+      channel table, the warehouse mirror for the deduplicated address count —
+      and reports each one's age separately. `filtered` is forwarded because
+      the event half needs it; the warehouse half ignores it, for the same
+      reason `results` does.
+    */
+    if (section === "growth") {
+      const growth = await settle(() => fetchGrowth(range, filtered));
+      return json({ ...meta, ...(growth.data ?? {}), error: growth.error });
     }
 
     if (section === "people") {

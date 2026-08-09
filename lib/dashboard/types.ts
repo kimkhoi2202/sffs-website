@@ -95,6 +95,99 @@ export interface TestResultTotals {
   withEmail: number;
 }
 
+/* --------------------------------------------------------------------------
+ * Growth: the funnel, the channel table, paid against organic, and the list.
+ *
+ * Every count in this block is DISTINCT PEOPLE over one population — those who
+ * loaded a page in the window — except the ones on `GrowthEmails`, which are
+ * distinct email ADDRESSES out of the warehouse mirror. The two are labelled
+ * separately on the panel and carry separate freshness stamps, because they
+ * come from two systems that can be, and currently are, different ages.
+ * ------------------------------------------------------------------------ */
+
+export interface GrowthFunnel {
+  /** People who loaded a page. The denominator for everything else here. */
+  landed: number;
+  started: number;
+  completed: number;
+  emailed: number;
+  /** Fractions, 0–1. Null when the stage above them was empty. */
+  startRate: number | null;
+  completionRate: number | null;
+  emailRate: number | null;
+  /**
+   * People PostHog saw who never recorded a pageview, and so are in none of
+   * the four counts above. Mostly ad clicks that left before the page
+   * finished loading. Printed on the panel rather than dropped.
+   */
+  seenWithoutPageview: number;
+  /** How many of those still gave an email — the ad-blocked signups. */
+  withoutPageviewEmailed: number;
+}
+
+/** One channel, on one side of the paid/organic line. */
+export interface GrowthChannelRow {
+  channel: string;
+  /** True when the first pageview carried `utm_medium=cpc`. */
+  paid: boolean;
+  landed: number;
+  started: number;
+  completed: number;
+  emailed: number;
+  startRate: number | null;
+  /** Landed to gave-an-email, end to end. */
+  signupRate: number | null;
+  /** Last event from anyone in this row — how a quiet channel gets noticed. */
+  lastActivity: string;
+  /**
+   * Age of `lastActivity` in seconds, measured server-side against the same
+   * clock as the freshness stamps.
+   *
+   * Computed here rather than in the browser so the whole payload describes one
+   * instant. It also keeps the render pure: a `Date.now()` in a component body
+   * is a lint error in this codebase, and rightly — the row would silently
+   * re-age on every unrelated re-render.
+   */
+  lastActivityAgeSeconds: number | null;
+}
+
+export interface GrowthSideTotals {
+  side: "paid" | "organic";
+  landed: number;
+  started: number;
+  completed: number;
+  emailed: number;
+  signupRate: number | null;
+  shareOfTraffic: number | null;
+  /** How many channels make up this side. */
+  channels: number;
+}
+
+/** Deduplicated addresses from the `test_results` warehouse mirror. */
+export interface GrowthEmails {
+  /** Rows in the window, one per finished test. */
+  completions: number;
+  /** Rows carrying an address. Larger than `addresses` when someone repeats. */
+  rowsWithEmail: number;
+  /** Distinct addresses. The real size of the list. */
+  addresses: number;
+  adult: number;
+  child: number;
+  /** Addresses appearing in both audiences, so `adult + child` overcounts. */
+  both: number;
+}
+
+/** When one of the two sources behind this page was last brought up to date. */
+export interface SourceFreshness {
+  source: "posthog" | "warehouse";
+  /** ISO-8601, or null when it could not be established. */
+  at: string | null;
+  ageSeconds: number | null;
+  /** Unknown counts as stale. Never imply currency that was not verified. */
+  stale: boolean;
+  note: string;
+}
+
 /** A person as they appear in the list, before their journey is loaded. */
 export interface PersonSummary {
   personId: string;

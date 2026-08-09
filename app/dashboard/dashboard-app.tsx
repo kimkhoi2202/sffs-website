@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { DEFAULT_RANGE, resolveRange, type TimeRangeInput } from "@/lib/dashboard/time-range";
 import type {
+  GrowthResponse,
   JourneyResponse,
   PeopleResponse,
   TestResultsResponse,
@@ -14,6 +15,7 @@ import type {
 } from "@/lib/dashboard/wire";
 
 import { FunnelPanel } from "./components/funnel-panel";
+import { GrowthPanel } from "./components/growth-panel";
 import { JourneyPanel } from "./components/journey-panel";
 import { PeoplePanel } from "./components/people-panel";
 import { Stat, duration, pct } from "./components/primitives";
@@ -34,18 +36,27 @@ import { TrafficPanel } from "./components/traffic-panel";
  * to end, so the tiles are a thin strip and the journey gets half the width.
  */
 
-type Tab = "journeys" | "funnel" | "traffic" | "results";
+type Tab = "growth" | "journeys" | "funnel" | "traffic" | "results";
 
 export function DashboardApp({ queryKeyConfigured }: { queryKeyConfigured: boolean }) {
   const [range, setRange] = useState<TimeRangeInput>(DEFAULT_RANGE);
   const [filtered, setFiltered] = useState(true);
-  const [tab, setTab] = useState<Tab>("journeys");
+  /*
+    Growth opens the page.
+
+    The four numbers on it were being pulled by hand every few hours and read
+    off a chat message; the point of building them was that the owner can open
+    this URL instead. Landing him on Journeys and asking him to find a tab
+    would leave the manual pull as the path of least resistance.
+  */
+  const [tab, setTab] = useState<Tab>("growth");
 
   const [tilesData, setTilesData] = useState<TilesResponse | null>(null);
   const [people, setPeople] = useState<PeopleResponse | null>(null);
   const [traffic, setTraffic] = useState<TrafficResponse | null>(null);
   const [journey, setJourney] = useState<JourneyResponse | null>(null);
   const [results, setResults] = useState<TestResultsResponse | null>(null);
+  const [growth, setGrowth] = useState<GrowthResponse | null>(null);
 
   /*
     THE IN-FLIGHT GUARDS ARE REFS, THE THINGS ON SCREEN ARE STATE.
@@ -57,6 +68,7 @@ export function DashboardApp({ queryKeyConfigured }: { queryKeyConfigured: boole
   */
   const trafficPending = useRef(false);
   const resultsPending = useRef(false);
+  const growthPending = useRef(false);
 
   /** A traffic request has come back for this window, with data or without. */
   const [trafficSettled, setTrafficSettled] = useState(false);
@@ -103,6 +115,8 @@ export function DashboardApp({ queryKeyConfigured }: { queryKeyConfigured: boole
     trafficPending.current = false;
     setResults(null);
     resultsPending.current = false;
+    setGrowth(null);
+    growthPending.current = false;
   }, []);
 
   const changeRange = useCallback(
@@ -191,6 +205,24 @@ export function DashboardApp({ queryKeyConfigured }: { queryKeyConfigured: boole
       cancelled = true;
     };
   }, [tab, results, range, filtered, post]);
+
+  /* ---- Growth, the tab the page opens on --------------------------------
+     Four queries: two over events for the funnel and the channel table, two
+     against the warehouse for the address count and the mirror's own sync
+     time. Same ref-guard shape as the two above — see the note on the traffic
+     effect for why the guard is a ref and why "loading" is derived rather
+     than stored. */
+  useEffect(() => {
+    if (tab !== "growth" || growth || growthPending.current) return;
+    growthPending.current = true;
+    let cancelled = false;
+    post({ section: "growth", range, filtered })
+      .then((g) => !cancelled && setGrowth(g as GrowthResponse))
+      .catch((e: Error) => !cancelled && setError(e.message));
+    return () => {
+      cancelled = true;
+    };
+  }, [tab, growth, range, filtered, post]);
 
   /* ---- Load one journey ------------------------------------------------
      What is recorded on the way out is WHO the answer was for, not that an
@@ -348,6 +380,7 @@ export function DashboardApp({ queryKeyConfigured }: { queryKeyConfigured: boole
       <nav className="mt-4 flex flex-wrap gap-2">
         {(
           [
+            ["growth", "Growth"],
             ["journeys", "Journeys"],
             ["funnel", "Funnel & drop-off"],
             ["traffic", "Traffic & sources"],
@@ -370,6 +403,22 @@ export function DashboardApp({ queryKeyConfigured }: { queryKeyConfigured: boole
 
       {/* ---- Body --------------------------------------------------------- */}
       <div className="mt-4 pb-16">
+        {tab === "growth" &&
+          (growth ? (
+            <>
+              {growth.error && (
+                <p className="mb-4 rounded-2xl border-[2.5px] border-ink bg-coral px-4 py-3 text-sm font-bold">
+                  Growth: {growth.error}
+                </p>
+              )}
+              <GrowthPanel data={growth} />
+            </>
+          ) : (
+            <p className="rounded-2xl border-[2.5px] border-ink bg-paper px-4 py-6 text-center text-sm font-bold text-ink/50">
+              Loading growth…
+            </p>
+          ))}
+
         {tab === "journeys" && (
           <div className="grid gap-4 xl:grid-cols-[minmax(0,26rem)_minmax(0,1fr)]">
             <PeoplePanel

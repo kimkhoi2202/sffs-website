@@ -2,7 +2,12 @@ import type { AttributionRung } from "./attribution";
 import type {
   DeviceRow,
   GeoRow,
+  GrowthChannelRow,
+  GrowthEmails,
+  GrowthFunnel,
+  GrowthSideTotals,
   PageRow,
+  SourceFreshness,
   SourceRow,
   TestCompletionRow,
   TestPlatformRow,
@@ -143,6 +148,19 @@ export interface TestResultsResponse {
   platforms?: TestPlatformRow[];
   completions?: TestCompletionRow[];
   totals?: TestResultTotals;
+  error: string | null;
+}
+
+export interface GrowthResponse {
+  range: WireRange;
+  filtered: boolean;
+  funnel?: GrowthFunnel;
+  channels?: GrowthChannelRow[];
+  sides?: GrowthSideTotals[];
+  /** Null when the warehouse half failed; `warehouseError` says why. */
+  emails?: GrowthEmails | null;
+  warehouseError?: string | null;
+  freshness?: { posthog: SourceFreshness; warehouse: SourceFreshness };
   error: string | null;
 }
 

@@ -44,13 +44,20 @@ export interface QueryScope {
   filtered: boolean;
 }
 
+/**
+ * The status is assigned in the body rather than declared as a constructor
+ * parameter property. Same class, but parameter properties are the one piece of
+ * TypeScript that Node's strip-only type removal refuses outright, and the
+ * verify scripts load this module through exactly that path — see
+ * scripts/ts-resolve-hook.mjs.
+ */
 export class PostHogQueryError extends Error {
-  constructor(
-    message: string,
-    readonly status: number,
-  ) {
+  readonly status: number;
+
+  constructor(message: string, status: number) {
     super(message);
     this.name = "PostHogQueryError";
+    this.status = status;
   }
 }
 
@@ -136,6 +143,46 @@ export async function hogql<T = Record<string, unknown>>(
   query: string,
   scope?: QueryScope,
 ): Promise<T[]> {
+  return (await hogqlWithMeta<T>(query, scope)).rows;
+}
+
+/**
+ * What PostHog said about the answer, alongside the answer.
+ *
+ * `computedAt` is PostHog's `last_refresh`: the moment the rows were actually
+ * calculated, which is NOT the moment they were asked for.
+ */
+export interface HogqlAnswer<T> {
+  rows: T[];
+  /** ISO-8601, or null when PostHog did not say. */
+  computedAt: string | null;
+  cached: boolean;
+}
+
+/**
+ * The same statement, plus the age of the answer — and the ability to refuse a
+ * cached one.
+ *
+ * ===========================================================================
+ * WHY ANYTHING WOULD EVER PASS `refresh`
+ * ===========================================================================
+ * PostHog serves most of these out of its own result cache, which is a good
+ * deal everywhere on this page except in one place: the query that reports HOW
+ * STALE THE DATA IS. Measured on this project, the warehouse-freshness
+ * statement came back `is_cached: true` with a six-hour target age. A cached
+ * "last refreshed at 06:37" would keep reading 06:37 long after the mirror had
+ * either moved on or died, which is the exact failure this dashboard exists to
+ * make impossible — an old number wearing a current number's clothes.
+ *
+ * So the freshness query, and only the freshness query, asks for
+ * `force_blocking`. It is one row off a Postgres-backed system table, so
+ * bypassing the cache costs nothing worth counting.
+ */
+export async function hogqlWithMeta<T = Record<string, unknown>>(
+  query: string,
+  scope?: QueryScope,
+  options?: { refresh?: "blocking" | "force_blocking" },
+): Promise<HogqlAnswer<T>> {
   const body: Record<string, unknown> = { kind: "HogQLQuery", query };
   if (scope) {
     body.filters = {
@@ -143,7 +190,7 @@ export async function hogql<T = Record<string, unknown>>(
       dateRange: { date_from: hogDate(scope.from), date_to: hogDate(scope.to) },
     };
   }
-  return withRetry(() => post<T>({ query: body }));
+  return withRetry(() => post<T>({ query: body, refresh: options?.refresh }));
 }
 
 /**
@@ -165,7 +212,7 @@ export interface WebOverview {
 }
 
 export async function webOverview(scope: QueryScope): Promise<WebOverview> {
-  const rows = await withRetry(() =>
+  const { rows } = await withRetry(() =>
     post<{ key?: string; value?: number }>({
       query: {
         kind: "WebOverviewQuery",
@@ -195,7 +242,7 @@ function hogDate(iso: string): string {
   return iso.replace(/\.\d{3}Z$/, "Z").replace("Z", "");
 }
 
-async function withRetry<T>(run: () => Promise<T[]>): Promise<T[]> {
+async function withRetry<R>(run: () => Promise<R>): Promise<R> {
   await acquire();
   try {
     let lastError: PostHogQueryError | null = null;
@@ -220,17 +267,22 @@ async function withRetry<T>(run: () => Promise<T[]>): Promise<T[]> {
 async function post<T>({
   query,
   raw,
+  refresh,
 }: {
   query: Record<string, unknown>;
   raw?: boolean;
-}): Promise<T[]> {
+  refresh?: string;
+}): Promise<HogqlAnswer<T>> {
   const res = await fetch(`${HOST}/api/projects/${PROJECT_ID}/query/`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey()}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ query }),
+    // `refresh` is a sibling of `query`, not a member of it — PostHog ignores
+    // it silently in the wrong position, which reads exactly like a cache that
+    // will not turn off.
+    body: JSON.stringify(refresh ? { query, refresh } : { query }),
     // Analytics is read-only and this data changes by the minute at most; the
     // route sets its own caching policy, so never let fetch memoize for us.
     cache: "no-store",
@@ -248,24 +300,36 @@ async function post<T>({
     throw new PostHogQueryError(`PostHog query failed (${res.status}): ${detail}`, res.status);
   }
 
-  const body = JSON.parse(text) as { results?: unknown[]; columns?: string[] };
+  const body = JSON.parse(text) as {
+    results?: unknown[];
+    columns?: string[];
+    last_refresh?: string;
+    is_cached?: boolean;
+  };
   const rows = body.results ?? [];
+  const meta = {
+    computedAt: typeof body.last_refresh === "string" ? body.last_refresh : null,
+    cached: body.is_cached === true,
+  };
 
   // HogQLQuery answers with rows-as-arrays plus a `columns` list; the typed
   // query kinds (WebOverviewQuery and friends) answer with rows-as-objects and
   // no columns at all. Zipping the second kind against an empty column list
   // silently produced empty objects, which is how five traffic tiles read zero
   // while the query itself succeeded.
-  if (raw || !body.columns) return rows as T[];
+  if (raw || !body.columns) return { rows: rows as T[], ...meta };
 
   const columns = body.columns;
-  return (rows as unknown[][]).map((row) => {
-    const obj: Record<string, unknown> = {};
-    columns.forEach((name, i) => {
-      obj[name] = row[i];
-    });
-    return obj as T;
-  });
+  return {
+    rows: (rows as unknown[][]).map((row) => {
+      const obj: Record<string, unknown> = {};
+      columns.forEach((name, i) => {
+        obj[name] = row[i];
+      });
+      return obj as T;
+    }),
+    ...meta,
+  };
 }
 
 /**
