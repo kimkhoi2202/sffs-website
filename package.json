@@ -18,6 +18,7 @@
     "verify:send-dedupe": "node --import ./scripts/ts-resolve-hook.mjs scripts/verify-send-dedupe.mjs",
     "verify:gate-leak": "node --import ./scripts/ts-resolve-hook.mjs scripts/verify-gate-leak.mjs",
     "verify:growth": "node --import ./scripts/ts-resolve-hook.mjs scripts/verify-growth.mjs",
+    "verify:tiles-window": "node --import ./scripts/ts-resolve-hook.mjs scripts/verify-tiles-window.mjs",
     "verify:shared-view": "node --import ./scripts/ts-resolve-hook.mjs scripts/verify-shared-view.mjs",
     "verify:results-after-send": "node --import ./scripts/ts-resolve-hook.mjs scripts/verify-results-after-send.mjs",
     "verify:review-nav": "node --import ./scripts/ts-resolve-hook.mjs scripts/verify-review-nav.mjs",

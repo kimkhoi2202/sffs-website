@@ -217,7 +217,7 @@ export async function webOverview(scope: QueryScope): Promise<WebOverview> {
       query: {
         kind: "WebOverviewQuery",
         properties: [],
-        dateRange: { date_from: hogDate(scope.from), date_to: hogDate(scope.to) },
+        dateRange: { date_from: hogDate(scope.from), date_to: webOverviewEnd(scope) },
         filterTestAccounts: scope.filtered,
       },
       raw: true,
@@ -240,6 +240,57 @@ export async function webOverview(scope: QueryScope): Promise<WebOverview> {
 /** ISO-8601 without the milliseconds, which the query API prefers. */
 function hogDate(iso: string): string {
   return iso.replace(/\.\d{3}Z$/, "Z").replace("Z", "");
+}
+
+/**
+ * The end of the window as `WebOverviewQuery` needs it: the last instant
+ * INSIDE it, not the exclusive bound.
+ *
+ * ===========================================================================
+ * WEBOVERVIEWQUERY THROWS AWAY THE TIME OF DAY ON `date_to`
+ * ===========================================================================
+ * It truncates the bound to a date and then includes that whole day. Measured
+ * against this project on 9 August, window starting 3 August:
+ *
+ *   date_to                 WebOverviewQuery   the same window in HogQL
+ *   2026-08-07T06:00:00     366                103
+ *   2026-08-07T12:00:00     366                108
+ *   2026-08-07T23:59:59     366                366
+ *   2026-08-08T00:00:00     5066               366
+ *
+ * `ResolvedRange.to` is an EXCLUSIVE bound, so every preset that ends on a day
+ * boundary — yesterday, last week, last month, and every custom range — was
+ * handing over a midnight that WebOverviewQuery read as "and all of that day
+ * too". A custom 3–7 August reported 5,066 visitors where 366 was the truth.
+ * The four tiles built from this query are the visible ones at the top of the
+ * page, so the page was overstating a fourteen-fold on a range somebody had
+ * deliberately chosen.
+ *
+ * Subtracting a second lands the truncation on the intended day. Presets that
+ * end at "now" are unaffected either way: their bound is already mid-day, and
+ * rounding up to the end of today only reaches into a future that holds no
+ * events. Verified preset by preset — only the day-boundary ones move.
+ *
+ * ===========================================================================
+ * THIS IS NOT `hogDate`'S PROBLEM, AND MUST NOT BE FIXED THERE
+ * ===========================================================================
+ * HogQL's `dateRange` handles the exclusive bound correctly: the same window
+ * expressed as `timestamp >= from AND timestamp < to` returns an identical
+ * count, checked directly. Shifting `hogDate` by a second would move every
+ * HogQL window on the dashboard by a second to fix a defect in a query kind
+ * that does not use it, and would break the agreement between the funnel and
+ * the tiles that this very fix exists to restore. The adjustment belongs at
+ * the one call site with the problem.
+ *
+ * The floor at `from` is for the degenerate window `resolveRange` can emit
+ * when `from` is clamped forward to now: `to` is then only a millisecond
+ * later, and a naive subtraction would invert the range.
+ */
+function webOverviewEnd(scope: QueryScope): string {
+  const from = Date.parse(scope.from);
+  const to = Date.parse(scope.to);
+  if (!Number.isFinite(from) || !Number.isFinite(to)) return hogDate(scope.to);
+  return hogDate(new Date(Math.max(from, to - 1000)).toISOString());
 }
 
 async function withRetry<R>(run: () => Promise<R>): Promise<R> {
