@@ -188,6 +188,67 @@ export interface GrowthChannelRow {
   lastActivityAgeSeconds: number | null;
 }
 
+/* --------------------------------------------------------------------------
+ * The channel table, read the other way round.
+ *
+ * The table answers "for this channel, how many adults and children". This
+ * answers "for this audience, which channels bring them", which is the
+ * question the numbers actually pose once you notice that the two biggest
+ * channels are close to inverted — one is effectively an adults' pipeline and
+ * the other a children's, and reading that off fifteen rows means doing the
+ * comparison in your head.
+ *
+ * IT DESCRIBES ONE POPULATION, AND IT IS A NARROW ONE. Every count here is a
+ * person who GAVE AN ADDRESS and finished a test. It is not the audience mix
+ * of a channel's traffic, and it must never be labelled as one: "TikTok is 69%
+ * children" is a claim about everyone TikTok sends, which nobody has measured
+ * and this cannot measure. Whether the people who convert look like the people
+ * who bounce is exactly the assumption that would be smuggled in.
+ * ------------------------------------------------------------------------ */
+
+/** One channel's contribution to one audience. */
+export interface AudienceChannelSlice {
+  channel: string;
+  people: number;
+  /** Share of this audience, 0–1. Null when the audience is empty. */
+  share: number | null;
+  /**
+   * True for the pooled tail.
+   *
+   * Most channels contribute one or two people, and giving each its own row in
+   * both columns buries the comparison the panel exists to make under a dozen
+   * rows of noise. Pooled rather than dropped: the count still has to be on
+   * the page.
+   */
+  pooled: boolean;
+  /** How many channels this row covers — always 1 unless `pooled`. */
+  channels: number;
+}
+
+export interface GrowthAudienceSplit {
+  audience: "adult" | "child";
+  /** Emailed people who finished a test of this audience. */
+  people: number;
+  /**
+   * Both audiences carry THE SAME channels in THE SAME order, so the two
+   * columns can be read across. A column that ranked its own channels would
+   * make the inversion invisible, which is the one thing this panel is for.
+   */
+  slices: AudienceChannelSlice[];
+}
+
+/** The channel table inverted: two audiences, each by channel. */
+export interface GrowthAudiences {
+  adult: GrowthAudienceSplit;
+  child: GrowthAudienceSplit;
+  /** Emailed people who finished tests in both audiences — in both columns. */
+  both: number;
+  /** Emailed people with no finished test — in neither column. */
+  neither: number;
+  /** The population the two columns are drawn from. */
+  emailed: number;
+}
+
 export interface GrowthSideTotals {
   side: "paid" | "organic";
   landed: number;

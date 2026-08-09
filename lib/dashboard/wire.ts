@@ -2,6 +2,7 @@ import type { AttributionRung } from "./attribution";
 import type {
   DeviceRow,
   GeoRow,
+  GrowthAudiences,
   GrowthChannelRow,
   GrowthEmails,
   GrowthFunnel,
@@ -157,6 +158,8 @@ export interface GrowthResponse {
   funnel?: GrowthFunnel;
   channels?: GrowthChannelRow[];
   sides?: GrowthSideTotals[];
+  /** The channel table inverted: each audience by the channels that bring it. */
+  audiences?: GrowthAudiences;
   /** Null when the warehouse half failed; `warehouseError` says why. */
   emails?: GrowthEmails | null;
   warehouseError?: string | null;

@@ -86,6 +86,11 @@ const utc = (msAgo) =>
  * were plumbed through at all. So TikTok carries BOTH residuals, Reddit paid
  * carries only the overlap, and two rows carry neither — and the two channels
  * lean opposite ways, which is the comparison the split exists to make.
+ *
+ * Meta carries exactly one emailed adult, which is what puts it under the
+ * naming threshold in the audience panel and into the pooled tail. A fixture
+ * where every channel was big enough to name would never execute the pooling
+ * branch at all, and that branch is the one that can silently lose people.
  */
 const CHANNELS = [
   // channel, paid, landed, started, completed, emailed,
@@ -94,7 +99,7 @@ const CHANNELS = [
   ["Reddit", 1, 641, 120, 90, 80, 77, 5, 2, 0, 9],
   ["Reddit", 0, 44, 20, 14, 12, 11, 1, 0, 0, 130],
   ["Google Search", 0, 70, 30, 20, 14, 10, 4, 0, 0, 47],
-  ["Meta", 1, 12, 1, 0, 0, 0, 0, 0, 0, 3 * 24 * 60],
+  ["Meta", 1, 12, 1, 1, 1, 1, 0, 0, 0, 3 * 24 * 60],
 ];
 
 const FUNNEL = {
@@ -277,7 +282,7 @@ const near = (a, b) => a !== null && Math.abs(a - b) < 1e-9;
   const p = g.sides.find((s) => s.side === "paid");
   const o = g.sides.find((s) => s.side === "organic");
   check(p.landed === 6244 && o.landed === 114, "paid and organic visitors are separated");
-  check(near(p.signupRate, 151 / 6244), "paid conversion is its own number");
+  check(near(p.signupRate, 152 / 6244), "paid conversion is its own number");
   check(near(o.signupRate, 26 / 114), "organic conversion is its own number");
   check(o.signupRate > p.signupRate * 5, "the gap the owner is deciding on survives the maths");
   check(near(p.shareOfTraffic, 6244 / 6358), "share of traffic is reported for each side");
@@ -440,7 +445,7 @@ const near = (a, b) => a !== null && Math.abs(a - b) < 1e-9;
     "both units are carried, separately named",
   );
   check(
-    g.funnel.completed === 374 && g.emails.finishedTests === 377,
+    g.funnel.completed === 375 && g.emails.finishedTests === 377,
     "and they are free to differ, because people and finished tests are not the same quantity",
     `${g.funnel.completed} people, ${g.emails.finishedTests} tests`,
   );
@@ -489,7 +494,7 @@ const near = (a, b) => a !== null && Math.abs(a - b) < 1e-9;
 
   const sum = (key) => rows.reduce((acc, row) => acc + row[key], 0);
   check(
-    sum("emailedAdult") === 120 && sum("emailedChild") === 60,
+    sum("emailedAdult") === 121 && sum("emailedChild") === 60,
     "the split totals across the table",
     `${sum("emailedAdult")} adult, ${sum("emailedChild")} child`,
   );
@@ -563,9 +568,104 @@ const near = (a, b) => a !== null && Math.abs(a - b) < 1e-9;
   );
 }
 
+/* -- 10. the audience panel is the same numbers, regrouped ---------------- */
+/*
+  The defect this guards: a second panel answering the same question off a
+  second query, which is how two figures on one page start disagreeing by three
+  people and nobody can say which is right. `audiences` must be a REGROUPING of
+  the channel rows — same scan, same population, same counting unit — and the
+  cheapest way to keep it that way is to assert that no extra query was sent
+  and that every total still ties back to the table it came from.
+*/
+{
+  const g = await run();
+  const a = g.audiences;
+
+  const events = sent.filter((r) => !r.sql.includes("test_results") && !r.sql.includes("system."));
+  check(
+    events.length === 2,
+    "the audience panel costs no extra query — it is the channel rows regrouped",
+    `${events.length} events queries`,
+  );
+
+  const sum = (key) => g.channels.reduce((acc, row) => acc + row[key], 0);
+  check(
+    a.adult.people === sum("emailedAdult") && a.child.people === sum("emailedChild"),
+    "each audience total ties back to the column it was grouped from",
+    `${a.adult.people} adult, ${a.child.people} child`,
+  );
+  check(
+    a.emailed === g.funnel.emailed && a.both === 6 && a.neither === 3,
+    "and the residuals travel with it, so the panel can say why the columns overshoot",
+    `${a.emailed} emailed, ${a.both} both, ${a.neither} neither`,
+  );
+
+  /* -- nobody is lost to the tail ---------------------------------------- */
+  for (const split of [a.adult, a.child]) {
+    const sliced = split.slices.reduce((acc, s) => acc + s.people, 0);
+    check(
+      sliced === split.people,
+      `the ${split.audience} column's rows add up to its own total, tail included`,
+      `${sliced} of ${split.people}`,
+    );
+    check(
+      split.slices.every((s) => s.share === null || Math.abs(s.share - s.people / split.people) < 1e-9),
+      `…and every ${split.audience} share is that row over that column`,
+    );
+  }
+
+  /* -- the tail is pooled, not dropped ------------------------------------ */
+  const pooled = a.adult.slices.filter((s) => s.pooled);
+  check(pooled.length === 1, "small channels are pooled into one row rather than printed");
+  check(
+    pooled[0].people === 1 && pooled[0].channels === 1,
+    "the pooled row keeps its people and says how many channels it covers",
+    `${pooled[0].people} people across ${pooled[0].channels}`,
+  );
+  check(
+    !a.adult.slices.some((s) => !s.pooled && s.channel === "Meta"),
+    "a channel under the threshold does not also get a row of its own",
+  );
+
+  /* -- one row order, or the comparison cannot be read across ------------- */
+  const adultOrder = a.adult.slices.map((s) => s.channel).join(" > ");
+  const childOrder = a.child.slices.map((s) => s.channel).join(" > ");
+  check(
+    adultOrder === childOrder,
+    "both columns carry the same channels in the same order, so a row can be read across",
+    `${adultOrder} vs ${childOrder}`,
+  );
+  check(
+    adultOrder === "Reddit > TikTok > Google Search > Other channels",
+    "ranked by the two audiences together, largest first, tail last",
+    adultOrder,
+  );
+
+  /* -- paid and organic are one channel here, which they are not above ---- */
+  const reddit = a.adult.slices.find((s) => s.channel === "Reddit");
+  check(
+    reddit.people === 88,
+    "a channel running both sides is one row here, because this counts people rather than rates",
+    String(reddit.people),
+  );
+  check(
+    g.channels.filter((r) => r.channel === "Reddit").length === 2,
+    "…while the table above still keeps its two sides apart",
+  );
+
+  /* -- the finding the panel exists for ----------------------------------- */
+  const share = (split, channel) =>
+    split.slices.find((s) => s.channel === channel).people / split.people;
+  check(
+    share(a.adult, "Reddit") > 0.7 && share(a.child, "TikTok") > 0.7,
+    "the two biggest channels come out inverted, which is the whole reason for the panel",
+    `Reddit ${(share(a.adult, "Reddit") * 100).toFixed(0)}% of adults, TikTok ${(share(a.child, "TikTok") * 100).toFixed(0)}% of children`,
+  );
+}
+
 console.log(
   failures === 0
-    ? `\nverify-growth: OK. Four stages of people over one population, finished tests kept distinct from them, Reddit split in two, the audience split reconciling per row, and neither clock lies.`
+    ? `\nverify-growth: OK. Four stages of people over one population, finished tests kept distinct from them, Reddit split in two, the audience split reconciling per row and regrouped without a second query, and neither clock lies.`
     : `\nverify-growth: ${failures} failure(s).`,
 );
 if (failures > 0) process.exit(1);

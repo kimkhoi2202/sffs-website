@@ -3,7 +3,13 @@
 import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
-import type { GrowthChannelRow, SourceFreshness } from "@/lib/dashboard/types";
+import { channelTint } from "@/lib/dashboard/attribution";
+import type {
+  GrowthAudiences,
+  GrowthAudienceSplit,
+  GrowthChannelRow,
+  SourceFreshness,
+} from "@/lib/dashboard/types";
 import type { GrowthResponse } from "@/lib/dashboard/wire";
 
 import { Empty, Panel, Stat, when } from "./primitives";
@@ -16,8 +22,11 @@ import { Empty, Panel, Stat, when } from "./primitives";
  * ===========================================================================
  * The funnel and the channel table come from PostHog's event stream, which is
  * current within seconds. The address count comes from an hourly mirror of the
- * product database, which at the time of writing is frozen behind an AWS cost
- * lockdown and will drift further until it lifts.
+ * product database, so it is an hour behind at best and can stop entirely
+ * without PostHog stopping — which it has done before, behind an AWS cost
+ * lockdown. Whether it is behind right now is a question for the stamp on the
+ * panel, and deliberately not for this comment: the last one to name a state
+ * here said "frozen" and was still saying it after the mirror recovered.
  *
  * Printing one shared timestamp over both would be a lie about whichever half
  * is older, and this project has twice been bitten by a number that looked
@@ -38,6 +47,7 @@ export function GrowthPanel({ data }: { data: GrowthResponse }) {
   const channels = data.channels ?? [];
   const sides = data.sides ?? [];
   const emails = data.emails ?? null;
+  const audiences = data.audiences ?? null;
   const posthog = data.freshness?.posthog ?? null;
   const warehouse = data.freshness?.warehouse ?? null;
 
@@ -168,7 +178,20 @@ export function GrowthPanel({ data }: { data: GrowthResponse }) {
         )}
       </Panel>
 
-      {/* ---- 3. Paid against organic --------------------------------------- */}
+      {/* ---- 3. The same numbers, read by audience ------------------------- */}
+      <Panel
+        title="Where each audience comes from"
+        subtitle="The table above, read the other way round. Same people, regrouped — no second count."
+        right={posthog ? <Stamp freshness={posthog} /> : undefined}
+      >
+        {!audiences || audiences.emailed === 0 ? (
+          <Empty>Nobody gave an address in this window.</Empty>
+        ) : (
+          <AudienceSplit audiences={audiences} />
+        )}
+      </Panel>
+
+      {/* ---- 4. Paid against organic --------------------------------------- */}
       <Panel
         title="Paid against organic"
         subtitle="The comparison the spend decision turns on. Paid is utm_medium=cpc on the person's first pageview."
@@ -216,7 +239,7 @@ export function GrowthPanel({ data }: { data: GrowthResponse }) {
         )}
       </Panel>
 
-      {/* ---- 4. The address list ------------------------------------------
+      {/* ---- 5. The address list ------------------------------------------
           Warehouse-sourced, so it carries the OTHER stamp. If the mirror is
           behind, these four numbers are behind and the stamp says so. */}
       <Panel
@@ -335,7 +358,293 @@ function FinishedTests({
         export collapses each pair and drops the unanswered, so one finished test is one row
         here.
       </p>
+      <SignupsTileNote addresses={emails.addresses} />
     </>
+  );
+}
+
+/**
+ * Why this figure and the Signups tile at the top of the page disagree.
+ *
+ * ===========================================================================
+ * FOUR DIFFERENCES, PULLING BOTH WAYS, WHICH IS WHY THE GAP IS NOT A NUMBER
+ * ===========================================================================
+ * The obvious move is to name the difference — "the tile is N lower because of
+ * X". That was tried and it does not survive contact with a second window.
+ * Measured on 9 August: since launch the tile read 320 against 326 addresses,
+ * but 3–8 August was 66 addresses against 68 people, 5–7 August 22 against 25,
+ * and 8–9 August 88 against 87. The gap changes SIGN. Any single-cause
+ * explanation printed on this page would be wrong within a day, and a
+ * confident wrong explanation is worse than the discrepancy it explains.
+ *
+ * What is stable is the list of reasons, and each was checked rather than
+ * assumed:
+ *
+ *   UNIT      The tile counts PEOPLE. This counts ADDRESSES. Over the launch
+ *             window PostHog recorded 347 signup events across 326 people, so
+ *             some people gave more than one address.
+ *   POPULATION The tile counts anyone who triggered a signup. This counts only
+ *             addresses attached to a FINISHED TEST. Measured: 343 distinct
+ *             addresses in the signups table against 326 on finished tests —
+ *             17 people gave an address without finishing one in the window.
+ *   EXCLUSION The tile is filtered by PostHog's test-account rules, which
+ *             removed 6 people from it on 9 August. This table is filtered by
+ *             the export's Aurora markers instead. They are different rule
+ *             sets over different systems and they do not cover the same
+ *             humans.
+ *   CLOCK     The tile is live; this is an hourly mirror.
+ *
+ * They cannot be netted off against each other on the page, because events
+ * carry no address — that is the privacy invariant in lib/analytics/events.ts,
+ * not an oversight — so no row-by-row reconciliation between the two is
+ * possible by construction. Saying that plainly is the honest end of this.
+ */
+function SignupsTileNote({ addresses }: { addresses: number }) {
+  return (
+    <p className="mt-2 text-xs font-semibold leading-relaxed text-ink/50">
+      <strong className="font-bold text-ink/70">
+        The Signups tile at the top of this page will not match {count(addresses)}
+      </strong>
+      , and neither figure is wrong. That tile counts PEOPLE who triggered a signup, live from
+      PostHog and with its internal-user filter applied. This counts ADDRESSES attached to a
+      finished test, from the hourly mirror, filtered instead by the export&rsquo;s own rules —
+      so somebody who gave two addresses, or gave one without finishing a test, or was excluded
+      by one filter and not the other, lands in one and not the other. The difference is small
+      but it is a net of four such effects and it runs in both directions depending on the
+      window, so it is not a fixed number and no single cause explains it. The two cannot be
+      reconciled row by row on purpose: events never carry an email address, so there is nothing
+      to join them on.
+    </p>
+  );
+}
+
+/* --------------------------------------------------------------------------
+ * The audiences, side by side
+ * ------------------------------------------------------------------------ */
+
+/**
+ * Two columns, one row order, bars in the channel's own colour.
+ *
+ * ===========================================================================
+ * WHY THIS IS NOT TWO PIE CHARTS
+ * ===========================================================================
+ * The question is not "what is the adult mix" — it is "do these two mixes
+ * differ", and that is a comparison between two distributions. Comparing
+ * angles across two pies is the hardest read there is: you cannot line up a
+ * slice on the left with its twin on the right, and the eye is bad at angle
+ * even within one pie. Two bar columns sharing a row order turn the same
+ * question into "is this row longer on the left or the right", which is
+ * answered without counting anything.
+ *
+ * The channel keeps its tint from `channelTint`, the same one it wears
+ * everywhere else on this dashboard, so Reddit is the same colour in both
+ * columns and the crossover is visible before any label is read.
+ */
+function AudienceSplit({ audiences }: { audiences: GrowthAudiences }) {
+  return (
+    <>
+      <Inversion audiences={audiences} />
+      <div className="grid gap-4 sm:grid-cols-2">
+        <AudienceColumn
+          split={audiences.adult}
+          title="Adults"
+          hint="finished the grown-up test"
+        />
+        <AudienceColumn
+          split={audiences.child}
+          title="Children"
+          hint="finished a children's test"
+        />
+      </div>
+      <AudiencePopulationNote audiences={audiences} />
+    </>
+  );
+}
+
+function AudienceColumn({
+  split,
+  title,
+  hint,
+}: {
+  split: GrowthAudienceSplit;
+  title: string;
+  hint: string;
+}) {
+  return (
+    <div className="rounded-2xl border-[2.5px] border-ink p-4">
+      <p className="flex flex-wrap items-baseline gap-x-2">
+        <span className="font-display text-2xl uppercase leading-none tracking-[-0.01em]">
+          {title}
+        </span>
+        <span className="font-mono text-sm font-bold">{count(split.people)}</span>
+        <span className="font-sans text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-ink/50">
+          people
+        </span>
+      </p>
+      <p className="mt-1 text-[0.72rem] font-semibold text-ink/55">{hint}</p>
+
+      {split.people === 0 ? (
+        <p className="mt-4 text-xs font-semibold text-ink/50">
+          Nobody in this window finished one.
+        </p>
+      ) : (
+        <ul className="mt-4 space-y-2.5">
+          {split.slices.map((slice) => (
+            <li key={slice.channel}>
+              <p className="flex items-baseline justify-between gap-2 text-[0.78rem]">
+                <span className="min-w-0 truncate font-semibold">
+                  {slice.channel}
+                  {slice.pooled && (
+                    <span className="ml-1.5 font-sans text-[0.68rem] font-semibold text-ink/45">
+                      {slice.channels} channel{slice.channels === 1 ? "" : "s"}
+                    </span>
+                  )}
+                </span>
+                <span className="shrink-0 font-mono tabular-nums">
+                  {count(slice.people)}
+                  <span className="ml-1.5 text-ink/50">{rate(slice.share)}</span>
+                </span>
+              </p>
+              <ShareBar
+                people={slice.people}
+                total={split.people}
+                channel={slice.pooled ? "" : slice.channel}
+              />
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+/**
+ * A share of the column's own audience.
+ *
+ * NOT the primitive `Bar`, which floors every value at 2% so a bar is always
+ * visible. That is right where it is used and wrong here: a channel that
+ * brought nobody would draw a sliver, and a sliver in the column this panel
+ * exists to compare reads as "a few" rather than as none.
+ */
+function ShareBar({
+  people,
+  total,
+  channel,
+}: {
+  people: number;
+  total: number;
+  channel: string;
+}) {
+  const width = total > 0 ? (people / total) * 100 : 0;
+  return (
+    <div className="mt-1 h-3 w-full overflow-hidden rounded-full border-2 border-ink bg-paper">
+      {people > 0 && (
+        <div
+          className={cn("h-full", channel ? channelTint(channel) : "bg-gray-100")}
+          style={{ width: `${Math.max(2, width)}%` }}
+        />
+      )}
+    </div>
+  );
+}
+
+/**
+ * The finding, in a sentence, above the thing that shows it.
+ *
+ * The panel was asked for because two channels are close to inverted and that
+ * was only visible to somebody who read fifteen rows and held them in their
+ * head. Bars fix that for anyone who looks; a sentence fixes it for anyone who
+ * glances, which is the stated reason this page exists.
+ *
+ * Computed, never written down. A hardcoded "Reddit brings adults" would still
+ * be on the page the week Reddit stops doing that, and would be believed.
+ */
+function Inversion({ audiences }: { audiences: GrowthAudiences }) {
+  const skews = audiences.adult.slices
+    .filter((slice) => !slice.pooled)
+    .map((slice) => {
+      const child = audiences.child.slices.find((s) => s.channel === slice.channel);
+      const people = slice.people + (child?.people ?? 0);
+      return { channel: slice.channel, adult: slice.people, people };
+    })
+    // Below this a single person swings the ratio, and a claim about a channel
+    // that sent nine people is not a finding.
+    .filter((s) => s.people >= 10);
+
+  if (skews.length < 2) return null;
+
+  const mostAdult = skews.reduce((a, b) => (b.adult / b.people > a.adult / a.people ? b : a));
+  const mostChild = skews.reduce((a, b) => (b.adult / b.people < a.adult / a.people ? b : a));
+  if (mostAdult.channel === mostChild.channel) return null;
+
+  const adultShare = mostAdult.adult / mostAdult.people;
+  const childShare = 1 - mostChild.adult / mostChild.people;
+  // Two channels that lean the same way are not an inversion, and saying so
+  // would be reading a pattern into noise.
+  if (adultShare < 0.5 || childShare < 0.5) return null;
+
+  return (
+    <p className="mb-4 rounded-2xl border-[2.5px] border-ink bg-cream px-4 py-3 text-sm font-semibold leading-relaxed">
+      <strong className="font-bold">{mostAdult.channel}</strong> brings mostly grown-ups —{" "}
+      {rate(adultShare)} of the addresses it earned finished the adult test. Of the ones{" "}
+      <strong className="font-bold">{mostChild.channel}</strong> earned, {rate(childShare)}{" "}
+      finished a children&rsquo;s test. Same funnel, different households.
+    </p>
+  );
+}
+
+/**
+ * What this panel is a mix OF, said before anyone can read it as something
+ * bigger.
+ *
+ * ===========================================================================
+ * THE SENTENCE THIS EXISTS TO PREVENT
+ * ===========================================================================
+ * "TikTok's audience is 69% children." The panel does not say that and cannot:
+ * it describes people who finished a test AND gave an address, which is under
+ * two percent of what TikTok sends. Whether the converters look like the
+ * bouncers is precisely the unmeasured assumption that would be smuggled in,
+ * and it is the kind of claim that ends up in a deck.
+ */
+function AudiencePopulationNote({ audiences }: { audiences: GrowthAudiences }) {
+  return (
+    <p className="mt-4 rounded-2xl border-2 border-dashed border-ink/30 px-4 py-3 text-xs font-semibold leading-relaxed text-ink/65">
+      <strong className="font-bold text-ink">
+        This is the mix of people who gave an address
+      </strong>{" "}
+      — {count(audiences.emailed)}{" "}
+      of them — and not the mix of a channel&rsquo;s traffic. A channel that reads mostly
+      children here sends mostly children{" "}
+      <em>among the people who finished a test and asked for the result</em>; what the rest of
+      its visitors were after is not measured anywhere on this page.
+      {(audiences.both > 0 || audiences.neither > 0) && (
+        <>
+          {" "}
+          The two columns come to{" "}
+          {count(audiences.adult.people + audiences.child.people)} rather than{" "}
+          {count(audiences.emailed)}{" "}
+          for the reasons the table above prints on the rows:
+          {audiences.both > 0 && (
+            <>
+              {" "}
+              <strong className="font-bold text-ink">{count(audiences.both)} sat both</strong>{" "}
+              and are counted in each column
+            </>
+          )}
+          {audiences.both > 0 && audiences.neither > 0 && ","}
+          {audiences.neither > 0 && (
+            <>
+              {" "}
+              <strong className="font-bold text-ink">
+                {count(audiences.neither)} finished no test
+              </strong>{" "}
+              and are in neither
+            </>
+          )}
+          .
+        </>
+      )}
+    </p>
   );
 }
 

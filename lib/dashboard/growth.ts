@@ -4,6 +4,9 @@ import { channelExpr, type LadderColumns } from "./attribution";
 import { hogql, hogqlWithMeta, sqlString, type QueryScope } from "./posthog-query";
 import type { ResolvedRange } from "./time-range";
 import type {
+  AudienceChannelSlice,
+  GrowthAudiences,
+  GrowthAudienceSplit,
   GrowthChannelRow,
   GrowthEmails,
   GrowthFunnel,
@@ -318,9 +321,11 @@ interface RawChannelRow {
  * and cannot drift from the `emailed` column it decomposes.
  *
  * It also keeps the panel honest about time. The channel table carries the
- * PostHog stamp; the mirror carries its own and is frozen behind an AWS cost
- * lockdown as this is written. Sourcing two columns of one table from two
- * clocks is exactly the "one shared as-of" the panel refuses to print.
+ * PostHog stamp and is current within seconds; the mirror carries its own and
+ * is an hour behind at best. Sourcing two columns of one table from two clocks
+ * is exactly the "one shared as-of" the panel refuses to print — and it would
+ * be worse here than elsewhere, because the two columns would sit inside the
+ * same row as the figure they decompose.
  *
  * ===========================================================================
  * FOUR NUMBERS, BECAUSE THREE WOULD NOT ADD UP
@@ -450,6 +455,107 @@ function summariseSides(rows: GrowthChannelRow[]): GrowthSideTotals[] {
 
   const total = sides.reduce((acc, s) => acc + s.landed, 0);
   return sides.map((s) => ({ ...s, shareOfTraffic: rate(s.landed, total) }));
+}
+
+/**
+ * How much of an audience a channel must hold to be named rather than pooled.
+ *
+ * Under this it goes into the tail. Not a rounding-away: the pooled row keeps
+ * its count and says how many channels it covers, so the column still adds up
+ * to the audience total. It exists because eight of the fifteen rows in the
+ * table above contribute nobody at all, and printing those twice more would
+ * bury the one comparison this panel is built to make.
+ *
+ * Tested on EITHER audience, not on the combined total. A channel that is
+ * invisible overall but supplies a tenth of the children is exactly the row
+ * worth naming, and a combined test would pool it.
+ */
+const NAMED_AUDIENCE_SHARE = 0.03;
+
+/**
+ * The channel table read the other way round: two audiences, each by channel.
+ *
+ * Summed from the channel rows rather than asked for again, for the same
+ * reason `summariseSides` is — a second query over the same scan could only
+ * introduce a way for this panel and the table above it to disagree. Every
+ * number here is one of the numbers already on the page, regrouped.
+ *
+ * PAID AND ORGANIC ARE COMBINED HERE, WHICH WOULD BE WRONG ONE PANEL UP. The
+ * table splits them because a blended CONVERSION RATE describes neither side —
+ * Reddit's 12.5% bought against 27.3% earned averages to a number that is true
+ * of nobody. This panel counts PEOPLE, and 117 adults from Reddit is just how
+ * many adults came from Reddit however they arrived. Sums do not lie the way
+ * ratios do, and splitting every channel in two here would double the rows to
+ * preserve a distinction the question does not ask about.
+ */
+function summariseAudiences(rows: GrowthChannelRow[]): GrowthAudiences {
+  const byChannel = new Map<string, { adult: number; child: number }>();
+  for (const row of rows) {
+    const acc = byChannel.get(row.channel) ?? { adult: 0, child: 0 };
+    acc.adult += row.emailedAdult;
+    acc.child += row.emailedChild;
+    byChannel.set(row.channel, acc);
+  }
+
+  const adultTotal = rows.reduce((acc, row) => acc + row.emailedAdult, 0);
+  const childTotal = rows.reduce((acc, row) => acc + row.emailedChild, 0);
+
+  const reaches = (count: number, total: number): boolean =>
+    total > 0 && count / total >= NAMED_AUDIENCE_SHARE;
+
+  /*
+    One ordering, shared by both columns, ranked on the two audiences together.
+
+    Ranking each column by its own size would sort Reddit to the top on the
+    left and to the bottom on the right, and the reader would have to match
+    labels across the gap to see that they are the same channel. Holding the
+    order still is what turns the inversion into something you see rather than
+    something you work out.
+  */
+  const named = [...byChannel.entries()]
+    .filter(([, v]) => reaches(v.adult, adultTotal) || reaches(v.child, childTotal))
+    .sort((a, b) => {
+      const size = b[1].adult + b[1].child - (a[1].adult + a[1].child);
+      return size || a[0].localeCompare(b[0]);
+    })
+    .map(([channel]) => channel);
+
+  const namedSet = new Set(named);
+  const pooledChannels = [...byChannel.entries()].filter(
+    ([channel, v]) => !namedSet.has(channel) && v.adult + v.child > 0,
+  );
+
+  const split = (audience: "adult" | "child", total: number): GrowthAudienceSplit => {
+    const slices: AudienceChannelSlice[] = named.map((channel) => {
+      const people = byChannel.get(channel)?.[audience] ?? 0;
+      return {
+        channel,
+        people,
+        share: rate(people, total),
+        pooled: false,
+        channels: 1,
+      };
+    });
+    const pooledPeople = pooledChannels.reduce((acc, [, v]) => acc + v[audience], 0);
+    if (pooledChannels.length > 0) {
+      slices.push({
+        channel: "Other channels",
+        people: pooledPeople,
+        share: rate(pooledPeople, total),
+        pooled: true,
+        channels: pooledChannels.length,
+      });
+    }
+    return { audience, people: total, slices };
+  };
+
+  return {
+    adult: split("adult", adultTotal),
+    child: split("child", childTotal),
+    both: rows.reduce((acc, row) => acc + row.emailedBoth, 0),
+    neither: rows.reduce((acc, row) => acc + row.emailedAudienceUnknown, 0),
+    emailed: rows.reduce((acc, row) => acc + row.emailed, 0),
+  };
 }
 
 /* --------------------------------------------------------------------------
@@ -616,6 +722,7 @@ export interface GrowthPayload {
   funnel: GrowthFunnel;
   channels: GrowthChannelRow[];
   sides: GrowthSideTotals[];
+  audiences: GrowthAudiences;
   emails: GrowthEmails | null;
   /** Set when the warehouse half failed while the PostHog half succeeded. */
   warehouseError: string | null;
@@ -630,13 +737,20 @@ export async function fetchGrowth(
   /*
     The two halves settle independently.
 
-    Aurora is in a cost lockdown as this is written, which freezes the hourly
-    mirror behind `test_results`. Frozen still answers — it just answers with
-    old rows, which is what the freshness stamp is for. But if the source is
-    ever removed rather than merely stopped, these queries fail outright, and a
-    failed email count must not take the funnel and the channel table down with
-    it. Those are the two things the owner reads every time, and they come from
-    PostHog, which is up.
+    The hourly mirror behind `test_results` can stop without PostHog stopping —
+    it has an AWS cost lockdown behind it in its history, and a paused export
+    is a normal operational state rather than an exotic one. A stopped mirror
+    still answers: it just answers with old rows, which is what the freshness
+    stamp is for. But if the source is ever removed rather than merely stopped,
+    these queries fail outright, and a failed email count must not take the
+    funnel and the channel table down with it. Those are the two things the
+    owner reads every time, and they come from PostHog, which is up.
+
+    Measured 9 August 2026: the mirror is running normally, 42 minutes behind
+    inside an hourly cadence. Earlier copies of this comment described it as
+    frozen; that was true during the lockdown and stopped being true when
+    credentials were restored, which is the hazard of writing an operational
+    state into a comment at all. Read the stamp on the panel, not this.
   */
   const [funnelPart, channels, warehouse] = await Promise.all([
     fetchFunnel(range, filtered),
@@ -648,6 +762,7 @@ export async function fetchGrowth(
     funnel: funnelPart.funnel,
     channels,
     sides: summariseSides(channels),
+    audiences: summariseAudiences(channels),
     emails: warehouse.emails,
     warehouseError: warehouse.error,
     freshness: {

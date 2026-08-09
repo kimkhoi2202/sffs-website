@@ -139,6 +139,15 @@ copy of a pre-change version was whatever happened to be in someone's `/tmp`.
   are still inside the signup count and the exported address list. What it
   would take, and the one open decision it needs, are in
   [`docs/analytics/signup-internal-marker.md`](../../docs/analytics/signup-internal-marker.md).
+- **The warehouse cannot say where a completion came from.**
+  `sffs-test-results-dw-export` resolves an acquisition channel for 159 of 666
+  rows and can only ever name two — `reddit` and `instagram` — because that is
+  all `_channel()` returns. Worse, what it does resolve is copied out of
+  PostHog, so the database cannot act as an independent check on PostHog's
+  channel numbers. The signal to fix it already exists in
+  `email_signups.meta.referrer`. Measurements, the correction to the obvious
+  approach, and what it would take are in
+  [`docs/analytics/warehouse-attribution-gap.md`](../../docs/analytics/warehouse-attribution-gap.md).
 - **No infrastructure-as-code.** Function configuration, IAM roles, the
   EventBridge rules and the API Gateway all still exist only as console state.
   Vendoring the source closes the worst of the exposure; it does not close that.
