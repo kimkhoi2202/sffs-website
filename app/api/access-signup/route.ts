@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { EMAIL_SOURCES, isKnownEmailSource } from "@/lib/email-sources";
-import { insertEmailSignup } from "@/lib/email-store";
+import { insertEmailSignup, signupMeta } from "@/lib/email-store";
 import { captureEmailCapturedServer } from "@/lib/posthog-server";
 import { clientIp, isRateLimited } from "@/lib/rate-limit";
 
@@ -119,13 +119,12 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  const meta = {
-    referrer: request.headers.get("referer"),
-    userAgent: request.headers.get("user-agent"),
-  };
-
   try {
-    const { inserted } = await insertEmailSignup({ email, source, meta });
+    const { inserted } = await insertEmailSignup({
+      email,
+      source,
+      meta: signupMeta(request.headers),
+    });
     // Ad-blocker-proof server-side conversion truth (no PII — source/attribution
     // only). Runs after the durable insert; never throws.
     //

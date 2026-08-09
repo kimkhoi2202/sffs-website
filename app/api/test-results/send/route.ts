@@ -60,7 +60,7 @@ import { createHash } from "node:crypto";
 
 import { NextResponse, type NextRequest } from "next/server";
 
-import { insertEmailSignup } from "@/lib/email-store";
+import { insertEmailSignup, signupMeta } from "@/lib/email-store";
 import { sendEmail } from "@/lib/email/resend";
 import { captureEmailCapturedServer } from "@/lib/posthog-server";
 import { clientIp, isRateLimited } from "@/lib/rate-limit";
@@ -320,10 +320,13 @@ export async function POST(request: NextRequest) {
        * the address at all.
        */
       countsAsSubmission: body.isResend !== true,
-      meta: {
-        referrer: request.headers.get("referer"),
-        userAgent: request.headers.get("user-agent"),
-      },
+      /*
+        The same builder the pricing form uses, so the synthetic marker reaches
+        both tables from one place. This route already tags its `test_results`
+        row via `isSyntheticRequest` a few lines above; before this, the signup
+        it writes immediately afterwards from the SAME request went in untagged.
+      */
+      meta: signupMeta(request.headers),
     });
     if (process.env.NODE_ENV !== "production") {
       console.info(

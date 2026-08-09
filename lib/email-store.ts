@@ -4,6 +4,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 
 import { emailStoreMode, emailStoreReason, type EmailStoreMode } from "./email-store-mode";
+import { isSyntheticRequest } from "./test/result-stats";
 
 /**
  * Server-only client for the SFFS email-signup proxy, and the boundary that
@@ -71,6 +72,41 @@ import { emailStoreMode, emailStoreReason, type EmailStoreMode } from "./email-s
  * It is logged once at first use, and the dev tools panel shows it. A boundary
  * you have to reason about is a boundary somebody gets wrong.
  */
+
+/**
+ * The `meta` every signup write should carry, built from the request.
+ *
+ * ===========================================================================
+ * WHY THIS IS A FUNCTION AND NOT TWO OBJECT LITERALS
+ * ===========================================================================
+ * It was two object literals, identical apart from where they sat, and neither
+ * consulted `x-sffs-synthetic`. So the header was honoured on `test_results`
+ * and silently dropped here, and a verification run that had correctly tagged
+ * itself still wrote an untagged row into the signup count — which is exactly
+ * what happened, and the row had to be found by eye and deleted by hand.
+ *
+ * Two call sites that must agree are a rule nobody can see. One function is a
+ * rule the next call site gets for free, and forgetting it now means passing
+ * no `meta` at all rather than passing a subtly incomplete one.
+ *
+ * `synthetic` is present ONLY when true, so an ordinary row is byte-identical
+ * to what it was before and the query for real signups stays
+ * `meta->>'synthetic' IS NULL`. Same convention as the `test_results` writer in
+ * lib/test/result-stats.ts, deliberately — the two tables are read together and
+ * a marker that meant something different on each would be worse than none.
+ *
+ * Like the results marker, this only ever ADDS a fact. It does not skip the
+ * write: a request-path switch that makes signups vanish is a bigger risk than
+ * the mislabelling it would fix, and a caller who lies by not setting the
+ * header is no worse off than before.
+ */
+export function signupMeta(headers: Headers): Record<string, unknown> {
+  return {
+    referrer: headers.get("referer"),
+    userAgent: headers.get("user-agent"),
+    ...(isSyntheticRequest(headers) ? { synthetic: true } : {}),
+  };
+}
 
 export interface EmailSignupInput {
   email: string;
