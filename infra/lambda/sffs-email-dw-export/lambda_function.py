@@ -13,6 +13,32 @@ Why push (upload) instead of PostHog pulling from S3:
   ("reads fall back to the node role, never a user-supplied key"), so Aurora stays
   private and PostHog holds no keys into our account.
 
+WHAT COUNTS AS A SIGNUP (the filter lives here, not in the dashboard)
+---------------------------------------------------------------------
+Contaminated rows are dropped at export so nothing downstream can surface them
+by forgetting a WHERE clause. A row is exported only when:
+
+  meta->>'synthetic' IS NULL     no verification run wrote this
+
+The marker is a JSONB boolean written only when true, so ABSENT MEANS COUNTED
+and an ordinary row is untouched. It is set by `signupMeta()` in
+lib/email-store.ts when the request carries `x-sffs-synthetic: 1`, which is the
+same header the `test_results` writer already honoured.
+
+That asymmetry is why this filter exists. The header was read on `test_results`
+and dropped on this table, so a run that had correctly tagged itself still
+wrote an untagged row into the signup count, and it had to be found by eye and
+deleted by hand.
+
+NOT FILTERED HERE, AND DELIBERATELY: internal rows. `email_signups` has no
+internal marker at all -- the team's own addresses are currently caught only by
+a hardcoded pattern list in the dashboard's people.ts, which by its own comment
+is a last resort rather than the mechanism. Giving this table a durable
+internal marker is a decision that has been taken and deferred, not an
+oversight. When it lands the clause belongs beside the one above; adding a
+speculative `meta->>'internal' IS NULL` before the marker's shape is agreed
+would be a filter that silently matches nothing.
+
 PRIVACY: this creates ONLY a standalone warehouse table. It does not touch
 PostHog persons/events, sends no identify calls, and creates no join. The emails
 are queryable in the warehouse but never attached to behavioral data.
@@ -69,7 +95,13 @@ def _field(value):
 
 
 def fetch_rows():
-    """Return the full email_signups snapshot as a list of dicts (ordered)."""
+    """Return the filtered email_signups snapshot as a list of dicts (ordered).
+
+    See the module docstring for what "filtered" means. The predicate is pinned
+    to IS NULL rather than negated away from true, so a marker written as
+    anything other than the boolean we expect still excludes the row instead of
+    leaking it back into the count.
+    """
     rows = []
     offset = 0
     while True:
@@ -78,6 +110,7 @@ def fetch_rows():
             "to_char(created_at AT TIME ZONE 'UTC','YYYY-MM-DD\"T\"HH24:MI:SS.US\"Z\"'), "
             "source, meta::text "
             "FROM public.email_signups "
+            "WHERE meta->>'synthetic' IS NULL "
             f"ORDER BY created_at, id LIMIT {PAGE_SIZE} OFFSET {offset}"
         )
         resp = rds.execute_statement(
@@ -98,6 +131,27 @@ def fetch_rows():
             break
         offset += PAGE_SIZE
     return rows
+
+
+# What the filter threw away, and why. Logged every run so drift in the
+# exclusion machinery is visible without anyone querying Aurora by hand.
+# Deliberately NOT asserted on: the number of real signups is a fact about the
+# world and climbs whenever somebody signs up, so a hard check would go red on
+# success. A synthetic count that starts climbing, though, is worth noticing.
+CENSUS_SQL = (
+    "SELECT count(*), "
+    "count(*) FILTER (WHERE meta->>'synthetic' IS NOT NULL) "
+    "FROM public.email_signups"
+)
+
+
+def fetch_census():
+    """Total rows in Aurora against how many the synthetic marker excludes."""
+    resp = rds.execute_statement(
+        resourceArn=CLUSTER_ARN, secretArn=SECRET_ARN, database=DB_NAME, sql=CENSUS_SQL
+    )
+    total, synthetic = (_field(f) for f in resp["records"][0])
+    return {"aurora_rows": total, "synthetic": synthetic}
 
 
 def build_ndjson(rows):
@@ -197,6 +251,13 @@ def s3_get_text(key):
 def handler(event, context):
     rows = fetch_rows()
     n = len(rows)
+
+    census = fetch_census()
+    print(
+        f"census aurora_rows={census['aurora_rows']} "
+        f"excluded_synthetic={census['synthetic']} exported={n}"
+    )
+
     if n == 0:
         print("email_signups is empty; leaving existing warehouse table untouched.")
         return {"status": "empty", "rows": 0}
