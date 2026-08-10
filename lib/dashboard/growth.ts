@@ -1,10 +1,24 @@
 import "server-only";
 
 import { channelExpr, type LadderColumns } from "./attribution";
+import {
+  ANSWERED_SHARE,
+  EVENT_COLUMNS,
+  OUTAGE_FROM,
+  OUTAGE_TO,
+  WAREHOUSE_COLUMNS,
+  abandonedExpr,
+  eventInOutageExpr,
+  finishedExpr,
+  inOutageExpr,
+  rangeHitsOutage,
+  sparseExpr,
+} from "./completion-rule";
 import { hogql, hogqlWithMeta, sqlString, type QueryScope } from "./posthog-query";
 import type { ResolvedRange } from "./time-range";
 import type {
   AudienceChannelSlice,
+  CompletionSplit,
   GrowthAudiences,
   GrowthAudienceSplit,
   GrowthChannelRow,
@@ -157,6 +171,9 @@ const PERSON_LADDER: LadderColumns = {
   surveySource: col("survey_source"),
 };
 
+/** The rule, against `test_completed` properties. Named once, used three times. */
+const FINISHED_EVENT = finishedExpr(EVENT_COLUMNS);
+
 /**
  * One row per person, with their arrival and how far they got.
  *
@@ -182,6 +199,19 @@ function arrivedSubquery(): string {
       maxIf(1, event = 'email_captured') AS emailed,
       maxIf(1, event = 'test_completed' AND toString(properties.audience) = 'adult') AS took_adult,
       maxIf(1, event = 'test_completed' AND toString(properties.audience) = 'child') AS took_child,
+
+      -- The completion stage, split. One attempt is enough: somebody who
+      -- abandoned at lunchtime and finished properly in the evening finished.
+      maxIf(1, event = 'test_completed' AND ${FINISHED_EVENT}) AS finished,
+      maxIf(1, event = 'test_completed' AND ${FINISHED_EVENT}
+            AND toString(properties.audience) = 'adult') AS finished_adult,
+      maxIf(1, event = 'test_completed' AND ${FINISHED_EVENT}
+            AND toString(properties.audience) = 'child') AS finished_child,
+
+      -- Typed in an address while the sends were failing. Paired with the
+      -- emailed flag above, this recovers a conversion the outage swallowed.
+      maxIf(1, event = 'test_email_submitted' AND ${eventInOutageExpr()}) AS outage_submit,
+
       max(timestamp) AS last_seen
     FROM events
     WHERE {filters}
@@ -196,6 +226,10 @@ interface RawFunnel {
   seen_without_pageview: number;
   without_pageview_emailed: number;
   without_pageview_completed: number;
+  finished: number;
+  finished_emailed: number;
+  finished_emailed_corrected: number;
+  outage_lost: number;
 }
 
 /**
@@ -219,7 +253,13 @@ async function fetchFunnel(
        countIf(${POPULATION} AND ${col("emailed")} = 1) AS emailed,
        countIf(NOT (${POPULATION})) AS seen_without_pageview,
        countIf(NOT (${POPULATION}) AND ${col("emailed")} = 1) AS without_pageview_emailed,
-       countIf(NOT (${POPULATION}) AND ${col("completed")} = 1) AS without_pageview_completed
+       countIf(NOT (${POPULATION}) AND ${col("completed")} = 1) AS without_pageview_completed,
+       countIf(${POPULATION} AND ${col("finished")} = 1) AS finished,
+       countIf(${POPULATION} AND ${col("finished")} = 1 AND ${col("emailed")} = 1) AS finished_emailed,
+       countIf(${POPULATION} AND ${col("finished")} = 1
+               AND (${col("emailed")} = 1 OR ${col("outage_submit")} = 1)) AS finished_emailed_corrected,
+       countIf(${POPULATION} AND ${col("emailed")} = 0
+               AND ${col("outage_submit")} = 1) AS outage_lost
      FROM (${arrivedSubquery()}) AS ${ARRIVED}`,
     scopeFor(range, filtered),
   );
@@ -229,6 +269,9 @@ async function fetchFunnel(
   const started = Number(row?.started ?? 0);
   const completed = Number(row?.completed ?? 0);
   const emailed = Number(row?.emailed ?? 0);
+  const finished = Number(row?.finished ?? 0);
+  const finishedEmailed = Number(row?.finished_emailed ?? 0);
+  const finishedEmailedCorrected = Number(row?.finished_emailed_corrected ?? 0);
 
   return {
     funnel: {
@@ -242,6 +285,16 @@ async function fetchFunnel(
       seenWithoutPageview: Number(row?.seen_without_pageview ?? 0),
       withoutPageviewEmailed: Number(row?.without_pageview_emailed ?? 0),
       withoutPageviewCompleted: Number(row?.without_pageview_completed ?? 0),
+      finished,
+      // Subtracted rather than counted separately: the two must add to
+      // `completed` on the page, and a second countIf could drift from it.
+      abandonedOnly: Math.max(0, completed - finished),
+      finishedEmailed,
+      finishedEmailedCorrected,
+      finishedEmailRate: rate(finishedEmailed, finished),
+      finishedEmailRateCorrected: rate(finishedEmailedCorrected, finished),
+      outageLostConversions: Number(row?.outage_lost ?? 0),
+      answeredShare: ANSWERED_SHARE,
     },
     computedAt,
   };
@@ -279,6 +332,11 @@ interface RawChannelRow {
   emailed_child: number;
   emailed_both: number;
   emailed_unknown: number;
+  finished: number;
+  finished_adult: number;
+  finished_child: number;
+  finished_both: number;
+  finished_unknown: number;
   last_activity: string;
 }
 
@@ -362,6 +420,11 @@ async function fetchChannels(
        countIf(${col("emailed")} = 1 AND ${col("took_child")} = 1) AS emailed_child,
        countIf(${col("emailed")} = 1 AND ${col("took_adult")} = 1 AND ${col("took_child")} = 1) AS emailed_both,
        countIf(${col("emailed")} = 1 AND ${col("took_adult")} = 0 AND ${col("took_child")} = 0) AS emailed_unknown,
+       sum(${col("finished")}) AS finished,
+       countIf(${col("emailed")} = 1 AND ${col("finished_adult")} = 1) AS finished_adult,
+       countIf(${col("emailed")} = 1 AND ${col("finished_child")} = 1) AS finished_child,
+       countIf(${col("emailed")} = 1 AND ${col("finished_adult")} = 1 AND ${col("finished_child")} = 1) AS finished_both,
+       countIf(${col("emailed")} = 1 AND ${col("finished_adult")} = 0 AND ${col("finished_child")} = 0) AS finished_unknown,
        toString(max(${col("last_seen")})) AS last_activity
      FROM (${arrivedSubquery()}) AS ${ARRIVED}
      WHERE ${POPULATION}
@@ -385,6 +448,7 @@ async function fetchChannels(
       wrong in the direction that makes a live channel look quiet.
     */
     const lastActivityMs = parseUtc(String(row.last_activity ?? ""));
+    const finished = Number(row.finished);
     return {
       channel: String(row.channel),
       paid: Number(row.paid) === 1,
@@ -396,6 +460,12 @@ async function fetchChannels(
       emailedChild: Number(row.emailed_child),
       emailedBoth: Number(row.emailed_both),
       emailedAudienceUnknown: Number(row.emailed_unknown),
+      finished,
+      abandonedOnly: Math.max(0, completed - finished),
+      finishedAdult: Number(row.finished_adult),
+      finishedChild: Number(row.finished_child),
+      finishedBoth: Number(row.finished_both),
+      finishedAudienceUnknown: Number(row.finished_unknown),
       startRate: rate(started, landed),
       signupRate: rate(emailed, landed),
       lastActivity: lastActivityMs === null ? "" : new Date(lastActivityMs).toISOString(),
@@ -441,11 +511,14 @@ function summariseSides(rows: GrowthChannelRow[]): GrowthSideTotals[] {
     const started = mine.reduce((acc, r) => acc + r.started, 0);
     const completed = mine.reduce((acc, r) => acc + r.completed, 0);
     const emailed = mine.reduce((acc, r) => acc + r.emailed, 0);
+    const finished = mine.reduce((acc, r) => acc + r.finished, 0);
     return {
       side,
       landed,
       started,
       completed,
+      finished,
+      abandonedOnly: mine.reduce((acc, r) => acc + r.abandonedOnly, 0),
       emailed,
       signupRate: rate(emailed, landed),
       shareOfTraffic: null,
@@ -488,17 +561,21 @@ const NAMED_AUDIENCE_SHARE = 0.03;
  * ratios do, and splitting every channel in two here would double the rows to
  * preserve a distinction the question does not ask about.
  */
-function summariseAudiences(rows: GrowthChannelRow[]): GrowthAudiences {
+function summariseAudiences(
+  rows: GrowthChannelRow[],
+  basis: AudienceBasis = "any",
+): GrowthAudiences {
+  const pick = AUDIENCE_COLUMNS[basis];
   const byChannel = new Map<string, { adult: number; child: number }>();
   for (const row of rows) {
     const acc = byChannel.get(row.channel) ?? { adult: 0, child: 0 };
-    acc.adult += row.emailedAdult;
-    acc.child += row.emailedChild;
+    acc.adult += row[pick.adult];
+    acc.child += row[pick.child];
     byChannel.set(row.channel, acc);
   }
 
-  const adultTotal = rows.reduce((acc, row) => acc + row.emailedAdult, 0);
-  const childTotal = rows.reduce((acc, row) => acc + row.emailedChild, 0);
+  const adultTotal = rows.reduce((acc, row) => acc + row[pick.adult], 0);
+  const childTotal = rows.reduce((acc, row) => acc + row[pick.child], 0);
 
   const reaches = (count: number, total: number): boolean =>
     total > 0 && count / total >= NAMED_AUDIENCE_SHARE;
@@ -552,11 +629,49 @@ function summariseAudiences(rows: GrowthChannelRow[]): GrowthAudiences {
   return {
     adult: split("adult", adultTotal),
     child: split("child", childTotal),
-    both: rows.reduce((acc, row) => acc + row.emailedBoth, 0),
-    neither: rows.reduce((acc, row) => acc + row.emailedAudienceUnknown, 0),
+    both: rows.reduce((acc, row) => acc + row[pick.both], 0),
+    neither: rows.reduce((acc, row) => acc + row[pick.unknown], 0),
     emailed: rows.reduce((acc, row) => acc + row.emailed, 0),
   };
 }
+
+/**
+ * Which decomposition of `emailed` the audience panel is reading.
+ *
+ * "any" counts somebody by whatever test they completed, abandonments
+ * included — the original question, and still a true one. "finished" counts
+ * them only by a test they genuinely finished, so the 44 people who left the
+ * test and gave an address anyway fall into `neither` instead of being
+ * attributed to an audience they did not really sit.
+ *
+ * Both are produced and both are carried. The panel is not being told which
+ * question to ask; it is being given the means to ask either without a second
+ * scan, and to show that the two differ.
+ */
+type AudienceBasis = "any" | "finished";
+
+/** The counting fields of a channel row, so a lookup cannot land on a string. */
+type NumericChannelKey = {
+  [K in keyof GrowthChannelRow]: GrowthChannelRow[K] extends number ? K : never;
+}[keyof GrowthChannelRow];
+
+const AUDIENCE_COLUMNS: Record<
+  AudienceBasis,
+  { adult: NumericChannelKey; child: NumericChannelKey; both: NumericChannelKey; unknown: NumericChannelKey }
+> = {
+  any: {
+    adult: "emailedAdult",
+    child: "emailedChild",
+    both: "emailedBoth",
+    unknown: "emailedAudienceUnknown",
+  },
+  finished: {
+    adult: "finishedAdult",
+    child: "finishedChild",
+    both: "finishedBoth",
+    unknown: "finishedAudienceUnknown",
+  },
+};
 
 /* --------------------------------------------------------------------------
  * The warehouse half
@@ -582,6 +697,27 @@ interface RawEmails {
   addresses: number;
   adult: number;
   child: number;
+  finished: number;
+  abandoned: number;
+  finished_email: number;
+  abandoned_email: number;
+  out_finished: number;
+  out_abandoned: number;
+  out_finished_email: number;
+  out_abandoned_email: number;
+  outage_finished: number;
+  outage_finished_email: number;
+  /*
+    Prefixed because the bare names would SHADOW the columns they are computed
+    from. HogQL resolves a later select item against an earlier OUTPUT alias,
+    so `countIf(timed_out AND ...)` after `countIf(...) AS timed_out` reads the
+    aggregate and fails with "aggregate function is found inside another
+    aggregate function" — which names neither the column nor the shadowing.
+    The same trap the `col()` helper at the top of this file exists to avoid.
+  */
+  rule_timed_out: number;
+  rule_sparse: number;
+  both_signals: number;
 }
 
 /**
@@ -607,13 +743,41 @@ interface RawEmails {
 async function fetchEmails(range: ResolvedRange): Promise<GrowthEmails> {
   const has = `notEmpty(trim(coalesce(toString(email), '')))`;
   const address = `lower(trim(toString(email)))`;
+  const finished = finishedExpr(WAREHOUSE_COLUMNS);
+  const abandoned = abandonedExpr(WAREHOUSE_COLUMNS);
+  const outage = inOutageExpr();
+  /*
+    Everything in one scan.
+
+    The split, the outage-corrected split and the two component measures are
+    all conditional aggregates over the same rows, so asking for them together
+    costs one query and — the part that matters — makes it impossible for the
+    corrected figure and the raw one to be computed off different row sets.
+  */
   const rows = await hogql<RawEmails>(`
     SELECT
       count() AS rows_total,
       countIf(${has}) AS rows_with_email,
       uniqExactIf(${address}, ${has}) AS addresses,
       uniqExactIf(${address}, ${has} AND toString(test_type) = 'adult') AS adult,
-      uniqExactIf(${address}, ${has} AND toString(test_type) = 'child') AS child
+      uniqExactIf(${address}, ${has} AND toString(test_type) = 'child') AS child,
+
+      countIf(${finished}) AS finished,
+      countIf(${abandoned}) AS abandoned,
+      countIf(${finished} AND ${has}) AS finished_email,
+      countIf(${abandoned} AND ${has}) AS abandoned_email,
+
+      countIf(${finished} AND NOT ${outage}) AS out_finished,
+      countIf(${abandoned} AND NOT ${outage}) AS out_abandoned,
+      countIf(${finished} AND ${has} AND NOT ${outage}) AS out_finished_email,
+      countIf(${abandoned} AND ${has} AND NOT ${outage}) AS out_abandoned_email,
+
+      countIf(${finished} AND ${outage}) AS outage_finished,
+      countIf(${finished} AND ${has} AND ${outage}) AS outage_finished_email,
+
+      countIf(${WAREHOUSE_COLUMNS.timedOut}) AS rule_timed_out,
+      countIf(${sparseExpr(WAREHOUSE_COLUMNS)}) AS rule_sparse,
+      countIf(${WAREHOUSE_COLUMNS.timedOut} AND ${sparseExpr(WAREHOUSE_COLUMNS)}) AS both_signals
     FROM test_results
     WHERE ${inWindow(range)}`);
 
@@ -621,6 +785,10 @@ async function fetchEmails(range: ResolvedRange): Promise<GrowthEmails> {
   const addresses = Number(row?.addresses ?? 0);
   const adult = Number(row?.adult ?? 0);
   const child = Number(row?.child ?? 0);
+  const timedOut = Number(row?.rule_timed_out ?? 0);
+  const sparse = Number(row?.rule_sparse ?? 0);
+  const bothSignals = Number(row?.both_signals ?? 0);
+
   return {
     finishedTests: Number(row?.rows_total ?? 0),
     rowsWithEmail: Number(row?.rows_with_email ?? 0),
@@ -629,6 +797,52 @@ async function fetchEmails(range: ResolvedRange): Promise<GrowthEmails> {
     child,
     // Inclusion-exclusion: anyone counted in both audiences was counted twice.
     both: Math.max(0, adult + child - addresses),
+    accounting: {
+      rule: {
+        answeredShare: ANSWERED_SHARE,
+        timedOut,
+        sparse,
+        both: bothSignals,
+        timedOutOnly: Math.max(0, timedOut - bothSignals),
+        sparseOnly: Math.max(0, sparse - bothSignals),
+      },
+      all: split(
+        Number(row?.finished ?? 0),
+        Number(row?.abandoned ?? 0),
+        Number(row?.finished_email ?? 0),
+        Number(row?.abandoned_email ?? 0),
+      ),
+      corrected: split(
+        Number(row?.out_finished ?? 0),
+        Number(row?.out_abandoned ?? 0),
+        Number(row?.out_finished_email ?? 0),
+        Number(row?.out_abandoned_email ?? 0),
+      ),
+      outage: {
+        from: OUTAGE_FROM,
+        to: OUTAGE_TO,
+        overlaps: rangeHitsOutage(range),
+        finished: Number(row?.outage_finished ?? 0),
+        finishedWithEmail: Number(row?.outage_finished_email ?? 0),
+      },
+    },
+  };
+}
+
+/** Four counts and the two rates they imply. */
+function split(
+  finished: number,
+  abandoned: number,
+  finishedWithEmail: number,
+  abandonedWithEmail: number,
+): CompletionSplit {
+  return {
+    finished,
+    abandoned,
+    finishedWithEmail,
+    abandonedWithEmail,
+    finishedEmailRate: rate(finishedWithEmail, finished),
+    abandonedEmailRate: rate(abandonedWithEmail, abandoned),
   };
 }
 
@@ -723,6 +937,15 @@ export interface GrowthPayload {
   channels: GrowthChannelRow[];
   sides: GrowthSideTotals[];
   audiences: GrowthAudiences;
+  /**
+   * The same panel counted over people who genuinely FINISHED a test.
+   *
+   * Carried beside `audiences` rather than replacing it so the panel can show
+   * both and name the difference — the people who left the test and gave an
+   * address anyway, who have a real audience on the events but did not sit the
+   * paper the column would credit them to.
+   */
+  audiencesFinished: GrowthAudiences;
   emails: GrowthEmails | null;
   /** Set when the warehouse half failed while the PostHog half succeeded. */
   warehouseError: string | null;
@@ -762,7 +985,8 @@ export async function fetchGrowth(
     funnel: funnelPart.funnel,
     channels,
     sides: summariseSides(channels),
-    audiences: summariseAudiences(channels),
+    audiences: summariseAudiences(channels, "any"),
+    audiencesFinished: summariseAudiences(channels, "finished"),
     emails: warehouse.emails,
     warehouseError: warehouse.error,
     freshness: {

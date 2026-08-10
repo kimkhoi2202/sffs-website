@@ -47,7 +47,16 @@ export function GrowthPanel({ data }: { data: GrowthResponse }) {
   const channels = data.channels ?? [];
   const sides = data.sides ?? [];
   const emails = data.emails ?? null;
-  const audiences = data.audiences ?? null;
+  /*
+    The finished-only basis, not `data.audiences`.
+
+    Both are on the payload. This one counts a person into an audience only
+    once they have FINISHED a test of it, so the people the countdown submitted
+    for — who carry an audience on the event but never sat the paper — fall
+    into the residual instead of being credited to a column. The channel table
+    above uses the same basis, so the two cannot disagree.
+  */
+  const audiences = data.audiencesFinished ?? data.audiences ?? null;
   const posthog = data.freshness?.posthog ?? null;
   const warehouse = data.freshness?.warehouse ?? null;
 
@@ -84,7 +93,7 @@ export function GrowthPanel({ data }: { data: GrowthResponse }) {
                   Stage
                 </th>
                 <Cell as="th">People</Cell>
-                <Cell as="th">From the stage above</Cell>
+                <Cell as="th">Conversion</Cell>
               </tr>
             </thead>
             <tbody>
@@ -94,22 +103,54 @@ export function GrowthPanel({ data }: { data: GrowthResponse }) {
                 hint="fired test_started"
                 people={funnel.started}
                 rate={funnel.startRate}
+                rateNote="of the people who landed"
+              />
+              {/*
+                THE STAGE THAT USED TO BE ONE ROW.
+
+                It read "Completed" and carried everybody with a
+                `test_completed`, which silently included the attempts the
+                countdown submitted for people who had already gone. Those are
+                not finishers, and dividing the address count by the two added
+                together is what made this page report that half of everyone
+                who takes the test refuses to give an address.
+
+                So the stage is the finishers, and the walk-aways branch out of
+                it. The branch is indented and tinted because it is an EXIT,
+                not a step: nothing below it descends from it.
+              */}
+              <FunnelRow
+                label="Finished the test"
+                hint="ended it themselves, or beat the clock to the end"
+                people={funnel.finished}
+                rate={rateOf(funnel.finished, funnel.started)}
+                rateNote="of the people who started"
               />
               <FunnelRow
-                label="Completed"
-                hint="people who finished a test, not tests finished"
-                people={funnel.completed}
-                rate={funnel.completionRate}
+                variant="branch"
+                label="Left; the clock submitted for them"
+                hint={`answered under ${Math.round(funnel.answeredShare * 100)}% and stopped`}
+                people={funnel.abandonedOnly}
+                rate={rateOf(funnel.abandonedOnly, funnel.started)}
+                rateNote="of the people who started"
               />
               <FunnelRow
                 label="Gave an email"
-                hint="at the results gate"
-                people={funnel.emailed}
-                rate={funnel.emailRate}
+                hint="of the people who finished, at the results gate"
+                people={funnel.finishedEmailedCorrected}
+                rate={funnel.finishedEmailRateCorrected}
+                rateNote="of the people who finished"
+                note={
+                  funnel.outageLostConversions > 0
+                    ? `includes ${count(funnel.outageLostConversions)} the 9 Aug outage lost`
+                    : undefined
+                }
               />
             </tbody>
           </table>
         </div>
+
+        <CompletionSplitNote funnel={funnel} />
 
         {/*
           The people the funnel cannot hold, named rather than dropped.
@@ -181,7 +222,7 @@ export function GrowthPanel({ data }: { data: GrowthResponse }) {
       {/* ---- 3. The same numbers, read by audience ------------------------- */}
       <Panel
         title="Where each audience comes from"
-        subtitle="The table above, read the other way round. Same people, regrouped — no second count."
+        subtitle="The table above, read the other way round. Same people, regrouped — no second count. Counted only once somebody finished the test, so a walk-away the clock submitted for is in neither column."
         right={posthog ? <Stamp freshness={posthog} /> : undefined}
       >
         {!audiences || audiences.emailed === 0 ? (
@@ -277,10 +318,148 @@ export function GrowthPanel({ data }: { data: GrowthResponse }) {
                 tone="yellow"
               />
             </div>
-            <FinishedTests emails={emails} peopleWhoCompleted={funnel.completed} />
+            <CompletionAccountingBlock accounting={emails.accounting} />
+            <FinishedTests emails={emails} peopleWhoFinished={funnel.finished} />
           </>
         )}
       </Panel>
+    </div>
+  );
+}
+
+/* --------------------------------------------------------------------------
+ * What counts as a completion, and the rate that follows from it
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The number this whole change exists to correct, and its working shown.
+ *
+ * ===========================================================================
+ * WHY THE RATE IS PRINTED WITH ITS TWO CORRECTIONS VISIBLE
+ * ===========================================================================
+ * The uncorrected figure — every result row divided into every address — read
+ * about 50% and was understood as "half the people who finish the test refuse
+ * to give us an email". It is not that number and never was. Two separate
+ * things were wrong with it, in the same direction, and each is worth roughly
+ * ten points:
+ *
+ *   THE CLOCK'S ROWS. A quarter of the rows were attempts the countdown
+ *   submitted for somebody who had already left, sitting in the denominator as
+ *   though they were finishers who declined.
+ *   THE OUTAGE. Six and a half hours on 9-10 August where every results email
+ *   failed, so the address never reached the row. A delivery failure counted
+ *   as a refusal.
+ *
+ * Printing only the corrected figure would be an improvement and still a bad
+ * idea: the owner has been reading ~50% for a week and a number that silently
+ * becomes 71% is a number nobody can trust either. So the page shows the old
+ * reading, both corrections and the result, and the reader can follow it.
+ *
+ * The threshold is on screen for the same reason. It is a choice somebody
+ * made, it changes what the headline says, and a reader is entitled to see it
+ * rather than to discover it in a source file.
+ */
+function CompletionAccountingBlock({
+  accounting,
+}: {
+  accounting: NonNullable<GrowthResponse["emails"]>["accounting"];
+}) {
+  const { rule, all, corrected, outage } = accounting;
+  const everyRow = all.finished + all.abandoned;
+  const everyAddress = all.finishedWithEmail + all.abandonedWithEmail;
+  const uncorrected = everyRow > 0 ? everyAddress / everyRow : null;
+  const share = Math.round(rule.answeredShare * 100);
+
+  if (everyRow === 0) return null;
+
+  return (
+    <div className="mt-5 space-y-2">
+      <div className="grid gap-2 sm:grid-cols-3">
+        <Stat
+          label="Finished the test"
+          value={count(corrected.finished)}
+          hint={outage.overlaps ? "outside the outage hours" : "results the person ended"}
+          tone="mint"
+        />
+        <Stat
+          label="Gave an address"
+          value={rate(corrected.finishedEmailRate)}
+          hint={`${count(corrected.finishedWithEmail)} of ${count(corrected.finished)} finishers`}
+          tone="paper"
+        />
+        <Stat
+          label="Left mid-test"
+          value={count(all.abandoned)}
+          hint={`the clock submitted for them · ${rate(all.abandonedEmailRate)} still gave an address`}
+          tone="coral"
+        />
+      </div>
+
+      {/*
+        The arithmetic, in the order it happened. Every figure here is one of
+        the figures above, so a reader can check the sentence rather than
+        having to believe it.
+      */}
+      <p className="rounded-2xl border-2 border-dashed border-ink/30 px-4 py-3 text-xs font-semibold leading-relaxed text-ink/65">
+        <strong className="font-bold text-ink">
+          This page used to read {rate(uncorrected)} here
+        </strong>
+        , and it was wrong twice over in the same direction. It divided{" "}
+        {count(everyAddress)} addresses by all {count(everyRow)} result rows — but{" "}
+        <strong className="font-bold text-ink">
+          {count(all.abandoned)} of those rows were written by the countdown
+        </strong>{" "}
+        for people who had already left, so they sat in the denominator as though they were
+        finishers who had declined.
+        {outage.overlaps && outage.finished > 0 && (
+          <>
+            {" "}
+            And{" "}
+            <strong className="font-bold text-ink">
+              {count(outage.finished)} finished tests fall inside the 9 August delivery outage
+            </strong>{" "}
+            — 17:47 to 00:16 UTC, when every results email failed and only{" "}
+            {count(outage.finishedWithEmail)} address reached a row. Those hours are held out
+            of the rate above, and named here rather than quietly dropped: a range of hours
+            disappearing from a denominator with no note is its own kind of dishonesty.
+          </>
+        )}{" "}
+        Corrected for both,{" "}
+        <strong className="font-bold text-ink">
+          {count(corrected.finishedWithEmail)} of {count(corrected.finished)} people who
+          finished the test gave an address — {rate(corrected.finishedEmailRate)}
+        </strong>
+        .
+      </p>
+
+      {/* The rule, and where its two halves disagree. */}
+      <p className="rounded-2xl border-2 border-dashed border-ink/30 px-4 py-3 text-xs font-semibold leading-relaxed text-ink/65">
+        <strong className="font-bold text-ink">
+          A result counts as finished when the person ended it themselves, or when the clock
+          ended it after they had answered {share}% or more of the paper.
+        </strong>{" "}
+        Two facts decide it and neither is enough alone. The product writes no row at all for
+        somebody who quits or closes the tab, so the countdown is the only thing that can
+        produce a result nobody wanted — {count(rule.timedOut)} rows carry it.{" "}
+        {count(rule.sparse)} rows fall under {share}%. The{" "}
+        <strong className="font-bold text-ink">{count(rule.both)} that do both</strong> are the
+        abandonments.
+        {rule.timedOutOnly > 0 && (
+          <>
+            {" "}
+            The other {count(rule.timedOutOnly)} that ran out of time had worked through the
+            paper and are counted as finishers — somebody who answers 48 of 50 and hits the
+            limit engaged completely, which is what the Funnel tab has always said.
+          </>
+        )}
+        {rule.sparseOnly > 0 && (
+          <>
+            {" "}
+            The {count(rule.sparseOnly)} that stopped short but submitted deliberately are
+            finishers too: they finished and declined, which is a different thing from leaving.
+          </>
+        )}
+      </p>
     </div>
   );
 }
@@ -313,28 +492,30 @@ export function GrowthPanel({ data }: { data: GrowthResponse }) {
  */
 function FinishedTests({
   emails,
-  peopleWhoCompleted,
+  peopleWhoFinished,
 }: {
   emails: NonNullable<GrowthResponse["emails"]>;
-  peopleWhoCompleted: number;
+  peopleWhoFinished: number;
 }) {
   const anonymous = Math.max(0, emails.finishedTests - emails.rowsWithEmail);
   return (
     <>
       <p className="mt-4 text-xs font-semibold leading-relaxed text-ink/60">
         <strong className="font-bold text-ink">
-          {count(emails.finishedTests)} finished tests
+          {count(emails.finishedTests)} results were written
         </strong>{" "}
-        in this window — tests, not people. {count(emails.rowsWithEmail)} of them carry an
-        address and those deduplicate to {count(emails.addresses)} people
+        in this window — tests, not people, and{" "}
+        {count(emails.accounting.all.abandoned)} of them by the clock rather than by anybody.{" "}
+        {count(emails.rowsWithEmail)} carry an address and those deduplicate to{" "}
+        {count(emails.addresses)} people
         {anonymous > 0 && (
           <>
-            ; the other {count(anonymous)} finished without giving one, so the number of PEOPLE
-            behind this figure is somewhere between {count(emails.addresses)} and{" "}
+            ; the other {count(anonymous)} gave none, so the number of PEOPLE behind this figure
+            is somewhere between {count(emails.addresses)} and{" "}
             {count(emails.addresses + anonymous)} and cannot be pinned down from this table
           </>
         )}
-        . The funnel above counts people, and reads {count(peopleWhoCompleted)} at its Completed
+        . The funnel above counts people, and reads {count(peopleWhoFinished)} at its Finished
         row for exactly that reason.
       </p>
       <p className="mt-2 text-xs font-semibold leading-relaxed text-ink/60">
@@ -638,7 +819,8 @@ function AudiencePopulationNote({ audiences }: { audiences: GrowthAudiences }) {
               <strong className="font-bold text-ink">
                 {count(audiences.neither)} finished no test
               </strong>{" "}
-              and are in neither
+              and are in neither — including the ones who walked away mid-test and gave an
+              address at the gate the countdown raised for them
             </>
           )}
           .
@@ -738,7 +920,12 @@ function ChannelTable({ rows }: { rows: GrowthChannelRow[] }) {
               <Cell as="th">Landed</Cell>
               <Cell as="th">Started</Cell>
               <Cell as="th">Start rate</Cell>
-              <Cell as="th">Completed</Cell>
+              <Cell
+                as="th"
+                title="People who finished a test. Attempts the countdown submitted for somebody who had already left are counted underneath, not in this figure."
+              >
+                Finished
+              </Cell>
               <Cell as="th">Emailed</Cell>
               <Cell as="th" title="Of the emailed, how many finished the adult test.">
                 Adult
@@ -764,10 +951,10 @@ function ChannelTable({ rows }: { rows: GrowthChannelRow[] }) {
                 <Cell strong>{count(row.landed)}</Cell>
                 <Cell>{count(row.started)}</Cell>
                 <Cell muted>{rate(row.startRate)}</Cell>
-                <Cell>{count(row.completed)}</Cell>
+                <FinishedCell row={row} />
                 <EmailedCell row={row} />
-                <Cell>{count(row.emailedAdult)}</Cell>
-                <Cell>{count(row.emailedChild)}</Cell>
+                <Cell>{count(row.finishedAdult)}</Cell>
+                <Cell>{count(row.finishedChild)}</Cell>
                 <Cell strong>{rate(row.signupRate)}</Cell>
                 <td className="whitespace-nowrap py-2">
                   <LastActivity iso={row.lastActivity} seconds={row.lastActivityAgeSeconds} />
@@ -791,11 +978,37 @@ function ChannelTable({ rows }: { rows: GrowthChannelRow[] }) {
  * fourteen channels, and a reader doing the subtraction in their head on
  * TikTok's row needs the answer there and not four paragraphs later.
  */
+/**
+ * Finishers, and the walk-aways the countdown filed alongside them.
+ *
+ * The abandonments sit UNDER the figure rather than in a column of their own,
+ * for the same reason the emailed residual does: this table is already ten
+ * columns wide and the number is only interesting on the rows that have one.
+ * It is on the row rather than in the note below because the note cannot say
+ * which channel it means without listing all fourteen, and TikTok's row is
+ * where the reader is standing when the question occurs to them.
+ */
+function FinishedCell({ row }: { row: GrowthChannelRow }) {
+  return (
+    <td className="py-2 pr-3 text-right font-mono text-[0.78rem] tabular-nums">
+      {count(row.finished)}
+      {row.abandonedOnly > 0 && (
+        <span
+          title={`${count(row.abandonedOnly)} more attempts from this channel were submitted by the countdown after the person had left. They are a real loss, but they did not finish, so they are not in this figure or in the Adult and Child columns.`}
+          className="block font-sans text-[0.62rem] font-semibold leading-tight text-ink/50"
+        >
+          {count(row.abandonedOnly)} left mid-test
+        </span>
+      )}
+    </td>
+  );
+}
+
 function EmailedCell({ row }: { row: GrowthChannelRow }) {
   const parts: string[] = [];
-  if (row.emailedBoth > 0) parts.push(`${count(row.emailedBoth)} both`);
-  if (row.emailedAudienceUnknown > 0) {
-    parts.push(`${count(row.emailedAudienceUnknown)} no test`);
+  if (row.finishedBoth > 0) parts.push(`${count(row.finishedBoth)} both`);
+  if (row.finishedAudienceUnknown > 0) {
+    parts.push(`${count(row.finishedAudienceUnknown)} no finish`);
   }
   return (
     <td className="py-2 pr-3 text-right font-mono text-[0.78rem] tabular-nums">
@@ -814,14 +1027,14 @@ function EmailedCell({ row }: { row: GrowthChannelRow }) {
 
 function residualTitle(row: GrowthChannelRow): string {
   const said: string[] = [];
-  if (row.emailedBoth > 0) {
+  if (row.finishedBoth > 0) {
     said.push(
-      `${count(row.emailedBoth)} of these people finished both an adult test and a children's one, so they are counted in Adult AND in Child.`,
+      `${count(row.finishedBoth)} of these people finished both an adult test and a children's one, so they are counted in Adult AND in Child.`,
     );
   }
-  if (row.emailedAudienceUnknown > 0) {
+  if (row.finishedAudienceUnknown > 0) {
     said.push(
-      `${count(row.emailedAudienceUnknown)} gave an email without finishing a test in this window, so they are in neither column.`,
+      `${count(row.finishedAudienceUnknown)} gave an email without finishing a test in this window — some walked away mid-test and came back to the gate — so they are in neither column.`,
     );
   }
   return said.join(" ");
@@ -850,8 +1063,8 @@ function residualTitle(row: GrowthChannelRow): string {
 function AudienceSplitNote({ rows }: { rows: GrowthChannelRow[] }) {
   const total = (key: keyof GrowthChannelRow) =>
     rows.reduce((acc, row) => acc + (row[key] as number), 0);
-  const both = total("emailedBoth");
-  const unknown = total("emailedAudienceUnknown");
+  const both = total("finishedBoth");
+  const unknown = total("finishedAudienceUnknown");
   if (both === 0 && unknown === 0) return null;
 
   return (
@@ -877,12 +1090,14 @@ function AudienceSplitNote({ rows }: { rows: GrowthChannelRow[] }) {
           <strong className="font-bold text-ink">
             {count(unknown)} gave an email without finishing a test
           </strong>{" "}
-          in this window, so there is no audience to file them under. They are left in neither
-          column rather than picked for them or shared out across the channels that do resolve,
-          which would make the split add up by inventing an answer.
+          in this window, so there is no audience to file them under. Some of them walked away
+          mid-test and came back to the gate afterwards — a real address, but not from anybody
+          who sat the paper it would be credited to. They are left in neither column rather
+          than picked for them or shared out across the channels that do resolve, which would
+          make the split add up by inventing an answer.
         </>
       )}{" "}
-      Every row still reconciles exactly: Emailed = Adult + Child − both + no test.
+      Every row still reconciles exactly: Emailed = Adult + Child − both + no finish.
     </p>
   );
 }
@@ -943,22 +1158,145 @@ function FunnelRow({
   hint,
   people,
   rate: value,
+  rateNote,
+  note,
+  variant = "stage",
 }: {
   label: string;
   hint: string;
   people: number;
   rate: number | null;
+  /** What the percentage is measured against. Each row names its own base. */
+  rateNote?: string;
+  /** A qualification on the count itself, printed under it. */
+  note?: string;
+  /** A branch leaves the funnel; nothing below it descends from it. */
+  variant?: "stage" | "branch";
 }) {
+  const branch = variant === "branch";
   return (
-    <tr className="border-b-2 border-ink/15">
-      <th scope="row" className="py-2 pr-3 font-normal">
-        <span className="font-semibold">{label}</span>
+    <tr className={cn("border-b-2 border-ink/15", branch && "bg-coral/20")}>
+      <th scope="row" className={cn("py-2 pr-3 font-normal", branch && "pl-4")}>
+        <span className={cn("font-semibold", branch && "text-ink/80")}>
+          {branch && <span className="mr-1.5 text-ink/40">↳</span>}
+          {label}
+        </span>
         <span className="ml-2 text-[0.72rem] font-semibold text-ink/45">{hint}</span>
       </th>
-      <Cell strong>{count(people)}</Cell>
-      <Cell muted>{value === null ? "—" : rate(value)}</Cell>
+      <Cell strong>
+        {count(people)}
+        {note && (
+          <span className="block font-sans text-[0.62rem] font-semibold leading-tight text-ink/50">
+            {note}
+          </span>
+        )}
+      </Cell>
+      <Cell muted>
+        {value === null ? "—" : rate(value)}
+        {value !== null && rateNote && (
+          <span className="block font-sans text-[0.62rem] font-semibold leading-tight text-ink/40">
+            {rateNote}
+          </span>
+        )}
+      </Cell>
     </tr>
   );
+}
+
+/**
+ * What "finished" means, and what the row above it used to include.
+ *
+ * ===========================================================================
+ * THE DEFECT THIS PARAGRAPH IS THE FIX FOR
+ * ===========================================================================
+ * The test runs on a countdown. When it reaches zero the runner submits
+ * whatever is on screen, writes a result, fires `test_completed` and raises
+ * the email gate — on a tab whose owner left ten minutes ago. Roughly a
+ * quarter of everything this page called a completion was that.
+ *
+ * Added to the real finishers and divided into the address count, they made
+ * the page report that about half of everyone who finishes the test declines
+ * to give an address. The true figure among people who actually sat it is
+ * around seventy per cent. That is not a rounding difference; it is the
+ * difference between a broken funnel and a working one, and somebody could
+ * have spent a quarter trying to fix the wrong thing.
+ *
+ * THE ABANDONMENTS ARE NOT DELETED, AND MUST NOT BE. They are real people who
+ * started the test and walked away, which is a genuine and expensive loss —
+ * arguably the most expensive one on the page, since they cost an acquisition
+ * and returned nothing. They keep their own row, their own count and their own
+ * share. What changed is that they are no longer added to the finishers and
+ * the sum called a conversion rate.
+ *
+ * The rule is printed rather than kept in a constant, because a reader of a
+ * page that reports completions is entitled to know what the word means on it.
+ */
+function CompletionSplitNote({ funnel }: { funnel: NonNullable<GrowthResponse["funnel"]> }) {
+  const share = Math.round(funnel.answeredShare * 100);
+  const completions = funnel.finished + funnel.abandonedOnly;
+  const emailedWithoutFinishing = Math.max(0, funnel.emailed - funnel.finishedEmailed);
+
+  return (
+    <div className="mt-4 space-y-2">
+      {funnel.abandonedOnly > 0 && (
+        <p className="rounded-2xl border-2 border-dashed border-ink/30 px-4 py-3 text-xs font-semibold leading-relaxed text-ink/65">
+          <strong className="font-bold text-ink">
+            {count(funnel.abandonedOnly)} of the {count(completions)} completions in this window
+            were written by the clock
+          </strong>
+          , not by the person. The countdown reaches zero, the test submits whatever is on
+          screen and the email gate goes up on a tab nobody is looking at. This row used to be
+          a single &ldquo;Completed&rdquo; line of {count(completions)} with those two groups
+          added together, and dividing the address count by that sum is what made this page
+          report that about half of all finishers refuse to give an email. They do not.{" "}
+          <strong className="font-bold text-ink">
+            A completion counts as finished when the person ended it themselves, or when the
+            clock ended it after they had answered {share}% or more of the paper
+          </strong>{" "}
+          — so somebody who worked to the last question and ran out of time is a finisher,
+          which is what the Funnel tab has always said. The walk-aways keep their own row
+          above: they are a real loss and worth reading, they are simply not finishers.
+        </p>
+      )}
+      {(funnel.outageLostConversions > 0 || emailedWithoutFinishing > 0) && (
+        <p className="rounded-2xl border-2 border-dashed border-ink/30 px-4 py-3 text-xs font-semibold leading-relaxed text-ink/65">
+          {funnel.outageLostConversions > 0 && (
+            <>
+              <strong className="font-bold text-ink">
+                Gave an email is corrected for the 9 August outage
+              </strong>
+              . Between 17:47 and 00:16 UTC every results email failed, and the conversion is
+              only recorded when the address is genuinely stored — so{" "}
+              {count(funnel.outageLostConversions)}{" "}
+              {funnel.outageLostConversions === 1 ? "person who typed" : "people who typed"} in
+              a valid address in those hours{" "}
+              {funnel.outageLostConversions === 1 ? "was" : "were"} never counted as converted.
+              They are counted above. Leaving them out reads a mail failure as a refusal.{" "}
+            </>
+          )}
+          {emailedWithoutFinishing > 0 && (
+            <>
+              Separately,{" "}
+              <strong className="font-bold text-ink">
+                {count(emailedWithoutFinishing)}{" "}
+                {emailedWithoutFinishing === 1 ? "person gave" : "people gave"} an address
+                without finishing a test
+              </strong>{" "}
+              in this window — some of them walk-aways who came back to the gate, some who
+              signed up without sitting one. They are real addresses and they are in the
+              Signups tile, but they are not in the row above, because that row is finishers
+              and they did not finish.
+            </>
+          )}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/** A share, or null when the base is empty — never a silent 0%. */
+function rateOf(part: number, whole: number): number | null {
+  return whole > 0 ? part / whole : null;
 }
 
 /* --------------------------------------------------------------------------

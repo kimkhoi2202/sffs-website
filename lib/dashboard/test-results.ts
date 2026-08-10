@@ -1,8 +1,25 @@
 import "server-only";
 
+import {
+  ANSWERED_SHARE,
+  OUTAGE_FROM,
+  OUTAGE_TO,
+  WAREHOUSE_COLUMNS,
+  abandonedExpr,
+  finishedExpr,
+  inOutageExpr,
+  rangeHitsOutage,
+  sparseExpr,
+} from "./completion-rule";
 import { hogql, sqlString } from "./posthog-query";
 import type { ResolvedRange } from "./time-range";
-import type { TestCompletionRow, TestPlatformRow, TestResultTotals } from "./types";
+import type {
+  CompletionAccounting,
+  CompletionSplit,
+  TestCompletionRow,
+  TestPlatformRow,
+  TestResultTotals,
+} from "./types";
 
 /**
  * Real test completions, read from Aurora's `test_results` table as mirrored
@@ -76,6 +93,14 @@ export interface TestResultsPayload {
   platforms: TestPlatformRow[];
   completions: TestCompletionRow[];
   totals: TestResultTotals;
+  /**
+   * What this tab means by "completion", and the 9 August correction.
+   *
+   * `totals.completions` is unchanged and still counts every row in the
+   * mirror. This says how many of those the person actually finished. See
+   * lib/dashboard/completion-rule.ts.
+   */
+  accounting: CompletionAccounting;
 }
 
 interface RawPlatformRow {
@@ -84,6 +109,9 @@ interface RawPlatformRow {
   child: number;
   total: number;
   anonymous: number;
+  finished: number;
+  abandoned: number;
+  finished_email: number;
 }
 
 interface RawCompletionRow {
@@ -95,6 +123,32 @@ interface RawCompletionRow {
   max_score: number;
   platform: string;
   completed_at: string;
+  /*
+    Aliased away from the column names they are computed from. HogQL resolves
+    a later select item against an earlier OUTPUT alias, so `AS timed_out`
+    would make the `abandoned` expression below read its own output instead of
+    the column. See the note on `RawEmails` in growth.ts, where the same
+    shadowing produced a 400 that named neither the column nor the cause.
+  */
+  answered_count: number;
+  is_timed_out: boolean;
+  is_abandoned: boolean;
+}
+
+interface RawAccountingRow {
+  finished: number;
+  abandoned: number;
+  finished_email: number;
+  abandoned_email: number;
+  out_finished: number;
+  out_abandoned: number;
+  out_finished_email: number;
+  out_abandoned_email: number;
+  outage_finished: number;
+  outage_finished_email: number;
+  rule_timed_out: number;
+  rule_sparse: number;
+  both_signals: number;
 }
 
 /**
@@ -105,17 +159,53 @@ interface RawCompletionRow {
  * excluded, and showing it next to the total is what proves it has not.
  */
 async function fetchPlatforms(range: ResolvedRange): Promise<RawPlatformRow[]> {
+  const has = `notEmpty(trim(coalesce(toString(email), '')))`;
   return hogql<RawPlatformRow>(`
     SELECT
       ${PLATFORM} AS platform,
       countIf(toString(test_type) = 'adult') AS adult,
       countIf(toString(test_type) = 'child') AS child,
       count() AS total,
-      countIf(email IS NULL OR empty(toString(email))) AS anonymous
+      countIf(email IS NULL OR empty(toString(email))) AS anonymous,
+      countIf(${finishedExpr(WAREHOUSE_COLUMNS)}) AS finished,
+      countIf(${abandonedExpr(WAREHOUSE_COLUMNS)}) AS abandoned,
+      countIf(${finishedExpr(WAREHOUSE_COLUMNS)} AND ${has}) AS finished_email
     FROM test_results
     WHERE ${inWindow(range)}
     GROUP BY platform
     ORDER BY total DESC, platform`);
+}
+
+/**
+ * The accounting figures, in one scan over the same rows.
+ *
+ * Separate from `fetchPlatforms` because the outage hold-out cuts across
+ * platforms rather than within them, and summing a corrected figure out of
+ * per-platform rows would give the panel two ways to arrive at one number.
+ */
+async function fetchAccounting(range: ResolvedRange): Promise<RawAccountingRow[]> {
+  const has = `notEmpty(trim(coalesce(toString(email), '')))`;
+  const finished = finishedExpr(WAREHOUSE_COLUMNS);
+  const abandoned = abandonedExpr(WAREHOUSE_COLUMNS);
+  const outage = inOutageExpr();
+  const sparse = sparseExpr(WAREHOUSE_COLUMNS);
+  return hogql<RawAccountingRow>(`
+    SELECT
+      countIf(${finished}) AS finished,
+      countIf(${abandoned}) AS abandoned,
+      countIf(${finished} AND ${has}) AS finished_email,
+      countIf(${abandoned} AND ${has}) AS abandoned_email,
+      countIf(${finished} AND NOT ${outage}) AS out_finished,
+      countIf(${abandoned} AND NOT ${outage}) AS out_abandoned,
+      countIf(${finished} AND ${has} AND NOT ${outage}) AS out_finished_email,
+      countIf(${abandoned} AND ${has} AND NOT ${outage}) AS out_abandoned_email,
+      countIf(${finished} AND ${outage}) AS outage_finished,
+      countIf(${finished} AND ${has} AND ${outage}) AS outage_finished_email,
+      countIf(${WAREHOUSE_COLUMNS.timedOut}) AS rule_timed_out,
+      countIf(${sparse}) AS rule_sparse,
+      countIf(${WAREHOUSE_COLUMNS.timedOut} AND ${sparse}) AS both_signals
+    FROM test_results
+    WHERE ${inWindow(range)}`);
 }
 
 /**
@@ -135,7 +225,10 @@ async function fetchCompletions(range: ResolvedRange): Promise<RawCompletionRow[
       toInt(coalesce(score, 0)) AS score,
       toInt(coalesce(max_score, 0)) AS max_score,
       ${PLATFORM} AS platform,
-      toString(completed_at) AS completed_at
+      toString(completed_at) AS completed_at,
+      toInt(coalesce(answered, 0)) AS answered_count,
+      ${WAREHOUSE_COLUMNS.timedOut} AS is_timed_out,
+      ${abandonedExpr(WAREHOUSE_COLUMNS)} AS is_abandoned
     FROM test_results
     WHERE ${inWindow(range)}
     ORDER BY parseDateTimeBestEffort(toString(completed_at)) DESC
@@ -143,9 +236,10 @@ async function fetchCompletions(range: ResolvedRange): Promise<RawCompletionRow[
 }
 
 export async function fetchTestResults(range: ResolvedRange): Promise<TestResultsPayload> {
-  const [platformRows, completionRows] = await Promise.all([
+  const [platformRows, completionRows, accountingRows] = await Promise.all([
     fetchPlatforms(range),
     fetchCompletions(range),
+    fetchAccounting(range),
   ]);
 
   const platforms: TestPlatformRow[] = platformRows.map((row) => ({
@@ -154,6 +248,9 @@ export async function fetchTestResults(range: ResolvedRange): Promise<TestResult
     child: Number(row.child),
     total: Number(row.total),
     anonymous: Number(row.anonymous),
+    finished: Number(row.finished),
+    abandoned: Number(row.abandoned),
+    finishedWithEmail: Number(row.finished_email),
   }));
 
   // Unattributable is the absence of a platform rather than one of them, so it
@@ -174,6 +271,9 @@ export async function fetchTestResults(range: ResolvedRange): Promise<TestResult
     maxScore: Number(row.max_score),
     platform: String(row.platform),
     completedAt: String(row.completed_at),
+    answered: Number(row.answered_count),
+    timedOut: Boolean(row.is_timed_out),
+    abandoned: Boolean(row.is_abandoned),
   }));
 
   // Totalled from the platform rows rather than from `completions`, which is
@@ -190,7 +290,58 @@ export async function fetchTestResults(range: ResolvedRange): Promise<TestResult
     { completions: 0, adult: 0, child: 0, anonymous: 0, withEmail: 0 },
   );
 
-  return { platforms, completions, totals };
+  const acc = accountingRows[0];
+  const timedOut = Number(acc?.rule_timed_out ?? 0);
+  const sparse = Number(acc?.rule_sparse ?? 0);
+  const bothSignals = Number(acc?.both_signals ?? 0);
+  const accounting: CompletionAccounting = {
+    rule: {
+      answeredShare: ANSWERED_SHARE,
+      timedOut,
+      sparse,
+      both: bothSignals,
+      timedOutOnly: Math.max(0, timedOut - bothSignals),
+      sparseOnly: Math.max(0, sparse - bothSignals),
+    },
+    all: split(
+      Number(acc?.finished ?? 0),
+      Number(acc?.abandoned ?? 0),
+      Number(acc?.finished_email ?? 0),
+      Number(acc?.abandoned_email ?? 0),
+    ),
+    corrected: split(
+      Number(acc?.out_finished ?? 0),
+      Number(acc?.out_abandoned ?? 0),
+      Number(acc?.out_finished_email ?? 0),
+      Number(acc?.out_abandoned_email ?? 0),
+    ),
+    outage: {
+      from: OUTAGE_FROM,
+      to: OUTAGE_TO,
+      overlaps: rangeHitsOutage(range),
+      finished: Number(acc?.outage_finished ?? 0),
+      finishedWithEmail: Number(acc?.outage_finished_email ?? 0),
+    },
+  };
+
+  return { platforms, completions, totals, accounting };
+}
+
+/** Four counts and the two rates they imply. */
+function split(
+  finished: number,
+  abandoned: number,
+  finishedWithEmail: number,
+  abandonedWithEmail: number,
+): CompletionSplit {
+  return {
+    finished,
+    abandoned,
+    finishedWithEmail,
+    abandonedWithEmail,
+    finishedEmailRate: finished > 0 ? finishedWithEmail / finished : null,
+    abandonedEmailRate: abandoned > 0 ? abandonedWithEmail / abandoned : null,
+  };
 }
 
 export { UNATTRIBUTABLE };

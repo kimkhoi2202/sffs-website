@@ -1,5 +1,6 @@
 import type { AttributionRung } from "./attribution";
 import type {
+  CompletionAccounting,
   DeviceRow,
   GeoRow,
   GrowthAudiences,
@@ -149,6 +150,8 @@ export interface TestResultsResponse {
   platforms?: TestPlatformRow[];
   completions?: TestCompletionRow[];
   totals?: TestResultTotals;
+  /** What "completion" means here, and the 9 August delivery correction. */
+  accounting?: CompletionAccounting;
   error: string | null;
 }
 
@@ -160,6 +163,8 @@ export interface GrowthResponse {
   sides?: GrowthSideTotals[];
   /** The channel table inverted: each audience by the channels that bring it. */
   audiences?: GrowthAudiences;
+  /** The same panel over people who genuinely finished, not merely completed. */
+  audiencesFinished?: GrowthAudiences;
   /** Null when the warehouse half failed; `warehouseError` says why. */
   emails?: GrowthEmails | null;
   warehouseError?: string | null;

@@ -91,15 +91,27 @@ const utc = (msAgo) =>
  * naming threshold in the audience panel and into the pooled tail. A fixture
  * where every channel was big enough to name would never execute the pooling
  * branch at all, and that branch is the one that can silently lose people.
+ *
+ * THE FINISHED COLUMNS DIFFER FROM THE COMPLETED ONES ON EVERY ROW BUT ONE.
+ * `finished` is the people whose test was not written by the countdown, and
+ * the four `finished_*` columns decompose `emailed` a second time over just
+ * those people. A fixture where `finished` equalled `completed` would pass
+ * whether or not the split was plumbed through at all, so TikTok — the paid
+ * channel with the timer problem in real life — loses 90 of its 250, while
+ * Reddit organic loses one and Meta loses none. TikTok's `finished_unknown`
+ * is 12 against an `emailed_unknown` of 3: those nine are the people who left
+ * the test and gave an address anyway, and they must land in the residual
+ * rather than being credited to an audience they did not sit.
  */
 const CHANNELS = [
   // channel, paid, landed, started, completed, emailed,
-  //   adult, child, both, unknown, minutes since last event
-  ["TikTok", 1, 5591, 400, 250, 71, 22, 50, 4, 3, 4],
-  ["Reddit", 1, 641, 120, 90, 80, 77, 5, 2, 0, 9],
-  ["Reddit", 0, 44, 20, 14, 12, 11, 1, 0, 0, 130],
-  ["Google Search", 0, 70, 30, 20, 14, 10, 4, 0, 0, 47],
-  ["Meta", 1, 12, 1, 1, 1, 1, 0, 0, 0, 3 * 24 * 60],
+  //   adult, child, both, unknown,
+  //   finished, f_adult, f_child, f_both, f_unknown, minutes since last event
+  ["TikTok", 1, 5591, 400, 250, 71, 22, 50, 4, 3, 160, 20, 42, 3, 12, 4],
+  ["Reddit", 1, 641, 120, 90, 80, 77, 5, 2, 0, 78, 75, 5, 2, 2, 9],
+  ["Reddit", 0, 44, 20, 14, 12, 11, 1, 0, 0, 13, 11, 1, 0, 0, 130],
+  ["Google Search", 0, 70, 30, 20, 14, 10, 4, 0, 0, 18, 10, 3, 0, 1, 47],
+  ["Meta", 1, 12, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 3 * 24 * 60],
 ];
 
 const FUNNEL = {
@@ -112,6 +124,15 @@ const FUNNEL = {
   // Non-zero on purpose. Zero is the live value, and a fixture that agreed
   // with it would pass whether or not the number was plumbed through at all.
   without_pageview_completed: 3,
+  // Ties to the channel table's own `finished` sum, the same way `completed`
+  // does, because the two panels have to keep agreeing after the split.
+  finished: CHANNELS.reduce((a, c) => a + c[10], 0),
+  finished_emailed: 150,
+  // Higher than the line above by the finishers whose address the 9 August
+  // outage swallowed. If the correction were dropped the two would collapse
+  // into each other, so they are deliberately different numbers.
+  finished_emailed_corrected: 168,
+  outage_lost: 22,
 };
 
 const answer = (columns, results, extra = {}) =>
@@ -141,11 +162,41 @@ globalThis.fetch = async (url, init) => {
     if (scenario.emailsThrow) {
       return new Response(JSON.stringify({ detail: "table not found" }), { status: 400 });
     }
-    // 231 rows carry an address; they deduplicate to 215 people, of whom 152
-    // sat the adult test and 71 a child one — so eight households did both.
+    /*
+      231 rows carry an address; they deduplicate to 215 people, of whom 152
+      sat the adult test and 71 a child one — so eight households did both.
+
+      The accounting columns split those 377 rows into 280 the person finished
+      and 97 the countdown wrote, and then hold the 9 August outage out of
+      both: 37 of the 377 landed inside it, and exactly one of them recorded an
+      address, which is the whole reason the window is held out.
+
+      Every one of these is a different number from every other, on purpose.
+      Fixtures where the raw and corrected figures coincide cannot tell a
+      working correction from a missing one.
+    */
     return answer(
-      ["rows_total", "rows_with_email", "addresses", "adult", "child"],
-      [[377, 231, 215, 152, 71]],
+      [
+        "rows_total",
+        "rows_with_email",
+        "addresses",
+        "adult",
+        "child",
+        "finished",
+        "abandoned",
+        "finished_email",
+        "abandoned_email",
+        "out_finished",
+        "out_abandoned",
+        "out_finished_email",
+        "out_abandoned_email",
+        "outage_finished",
+        "outage_finished_email",
+        "rule_timed_out",
+        "rule_sparse",
+        "both_signals",
+      ],
+      [[377, 231, 215, 152, 71, 280, 97, 205, 26, 250, 90, 204, 26, 30, 1, 130, 115, 97]],
     );
   }
 
@@ -169,9 +220,14 @@ globalThis.fetch = async (url, init) => {
         "emailed_child",
         "emailed_both",
         "emailed_unknown",
+        "finished",
+        "finished_adult",
+        "finished_child",
+        "finished_both",
+        "finished_unknown",
         "last_activity",
       ],
-      CHANNELS.map((row) => [...row.slice(0, 10), utc(row[10] * MINUTE)]),
+      CHANNELS.map((row) => [...row.slice(0, 15), utc(row[15] * MINUTE)]),
     );
   }
 
@@ -187,10 +243,23 @@ const { resolveRange } = await load("lib/dashboard/time-range.ts");
 
 const RANGE = resolveRange({ preset: "since_launch" }, NOW);
 
-async function run(next = {}, { filtered = true } = {}) {
+/**
+ * A window that actually contains the 9 August delivery outage.
+ *
+ * The fixture clock is noon on 9 August, five hours before the sends started
+ * failing, so the default window genuinely does not reach the outage and the
+ * payload is right to say so. Exercising the correction needs a LATER clock,
+ * not merely a wider window: `resolveRange` clamps every window's upper bound
+ * to now, so asking for one that runs past the fixture's noon just gets noon
+ * back. This is the window the owner reads in practice, the morning after.
+ */
+const AFTER_OUTAGE = Date.parse("2026-08-10T06:00:00Z");
+const SPANNING_RANGE = resolveRange({ preset: "since_launch" }, AFTER_OUTAGE);
+
+async function run(next = {}, { filtered = true, range = RANGE, nowMs = NOW } = {}) {
   scenario = next;
   sent = [];
-  return fetchGrowth(RANGE, filtered, NOW);
+  return fetchGrowth(range, filtered, nowMs);
 }
 
 /* == the cases =========================================================== */
@@ -663,9 +732,256 @@ const near = (a, b) => a !== null && Math.abs(a - b) < 1e-9;
   );
 }
 
+/* -- 11. a test the clock wrote is not a test somebody finished ----------- */
+/*
+  The defect this guards: the countdown auto-submits an abandoned attempt,
+  which writes a row, fires `test_completed` and raises the email gate on a
+  screen nobody is looking at. Counted as completions, those rows were added to
+  the real finishers and divided into the address count, and the page reported
+  that half of all finishers decline to give an email.
+
+  Two properties have to hold together, and they pull in opposite directions:
+  the abandonments must come OUT of the completion rate, and they must STAY ON
+  the page as a funnel loss. Deleting them would trade one false story for
+  another — they are real people who started the test and left.
+*/
+{
+  const g = await run({}, { range: SPANNING_RANGE, nowMs: AFTER_OUTAGE });
+  const f = g.funnel;
+  const a = g.emails.accounting;
+
+  /* -- nothing that was already on the page has moved -------------------- */
+  check(
+    f.completed === 375 && f.emailed === 178 && near(f.emailRate, 178 / 375),
+    "the original completed figure and its rate are untouched, so phase two can show the before and after side by side",
+    `${f.completed} completed, ${f.emailRate}`,
+  );
+  check(
+    g.emails.finishedTests === 377 && g.emails.rowsWithEmail === 231,
+    "and so are the warehouse row counts",
+  );
+
+  /* -- the split, and the arithmetic that has to close ------------------- */
+  check(
+    f.finished === 270 && f.abandonedOnly === 105,
+    "the completion stage splits into people who finished and people the clock wrote off",
+    `${f.finished} finished, ${f.abandonedOnly} abandoned`,
+  );
+  check(
+    f.finished + f.abandonedOnly === f.completed,
+    "…and the two add back to the stage they came from, so nobody is invented or lost",
+  );
+  check(
+    a.all.finished + a.all.abandoned === g.emails.finishedTests,
+    "the warehouse split also adds back to every row in the mirror",
+    `${a.all.finished} + ${a.all.abandoned}`,
+  );
+  check(
+    a.all.finishedWithEmail + a.all.abandonedWithEmail === g.emails.rowsWithEmail,
+    "…and the two address counts add back to the rows carrying an address",
+  );
+
+  /* -- the abandonments are still people, and still on the page ---------- */
+  check(
+    a.all.abandoned === 97 && a.all.abandonedWithEmail === 26,
+    "abandonments keep their own counts rather than being dropped from the report",
+    `${a.all.abandoned} abandoned, ${a.all.abandonedWithEmail} of them gave an address anyway`,
+  );
+  check(
+    near(a.all.abandonedEmailRate, 26 / 97),
+    "…including their own conversion rate, because some of them come back to the gate",
+  );
+
+  /* -- the rule is on the payload, not hidden in a constant -------------- */
+  check(
+    a.rule.answeredShare === 0.9,
+    "the threshold travels with the numbers, so the page can say what completed means",
+    String(a.rule.answeredShare),
+  );
+  check(
+    a.rule.timedOut === 130 && a.rule.sparse === 115 && a.rule.both === 97,
+    "both component measures are carried, not just the one that was chosen",
+    `${a.rule.timedOut} timed out, ${a.rule.sparse} sparse, ${a.rule.both} both`,
+  );
+  check(
+    a.rule.both === a.all.abandoned,
+    "an abandonment is the CONJUNCTION: the clock ended it AND they had not worked the paper",
+  );
+  check(
+    a.rule.timedOutOnly === 33 && a.rule.sparseOnly === 18,
+    "…and the rows where the two measures disagree are counted, so the page can show where the cut is arguable",
+    `${a.rule.timedOutOnly} beaten by the clock at the end, ${a.rule.sparseOnly} submitted deliberately short`,
+  );
+  check(
+    a.rule.timedOutOnly > 0,
+    "somebody who answered nearly everything and ran out of time is a finisher, which is what the Funnel tab already tells the reader",
+  );
+
+  /* -- the 9 August outage, corrected and declared ----------------------- */
+  check(
+    a.outage.overlaps === true && a.outage.finished === 30 && a.outage.finishedWithEmail === 1,
+    "the outage window is reported with its counts rather than silently excluded",
+    `${a.outage.finished} finished, ${a.outage.finishedWithEmail} recorded an address`,
+  );
+  check(
+    a.outage.from === "2026-08-09T17:47:00Z" && a.outage.to === "2026-08-10T00:16:00Z",
+    "…and it names the hours, so a reader can check the correction rather than trust it",
+  );
+  check(
+    a.corrected.finished === 250 && a.all.finished - a.corrected.finished === a.outage.finished,
+    "the corrected figure is the raw one minus exactly the held-out window",
+    `${a.all.finished} − ${a.outage.finished} = ${a.corrected.finished}`,
+  );
+  check(
+    a.corrected.finishedEmailRate > a.all.finishedEmailRate,
+    "holding out six hours of total delivery failure raises the rate, because the failure was ours and not a refusal",
+    `${(a.all.finishedEmailRate * 100).toFixed(1)}% → ${(a.corrected.finishedEmailRate * 100).toFixed(1)}%`,
+  );
+
+  /*
+    A window that does not reach the outage must say so, or the panel would
+    print a correction note over a range the outage never touched — which is
+    its own kind of lie, and the more embarrassing one.
+  */
+  const narrow = await run({}, { range: RANGE });
+  check(
+    narrow.emails.accounting.outage.overlaps === false,
+    "a window ending before the outage reports no overlap, so the note stays off the page",
+  );
+
+  /*
+    No output alias may reuse a source column name.
+
+    HogQL resolves a later select item against an earlier OUTPUT alias, so
+    `countIf(...) AS timed_out` turns every subsequent mention of `timed_out`
+    into that aggregate, and the query dies with "aggregate function is found
+    inside another aggregate function" — an error naming neither the column
+    nor the shadowing. It cost this file a 400 on the live panel during the
+    change that added these columns, and the funnel query had already been
+    bitten by the identical trap before that. A fixture cannot catch it; the
+    shape of the emitted SQL can.
+  */
+  const warehouseSql = sent.find((r) => r.sql.includes("FROM test_results"))?.sql ?? "";
+  const columns = [
+    "timed_out",
+    "answered",
+    "max_score",
+    "completed_at",
+    "test_type",
+    "email",
+    "platform",
+    "grade_band",
+    "score",
+    "duration_secs",
+  ];
+  const shadowed = columns.filter((name) => new RegExp(`AS\\s+${name}\\b`).test(warehouseSql));
+  check(
+    shadowed.length === 0,
+    "no warehouse output alias shadows the column it is computed from",
+    shadowed.join(", "),
+  );
+
+  /*
+    The headline, end to end. The old reading divides every row by every
+    address; the new one divides finished tests by the addresses they earned,
+    outside the outage. The gap between them is the defect.
+  */
+  const before = g.emails.rowsWithEmail / g.emails.finishedTests;
+  check(
+    near(a.corrected.finishedEmailRate, 204 / 250) && before < 0.62,
+    "the completed-to-email rate stops being a blend of finishers, abandoners and a broken mailer",
+    `${(before * 100).toFixed(1)}% → ${(a.corrected.finishedEmailRate * 100).toFixed(1)}%`,
+  );
+
+  /* -- the events funnel carries its own correction ---------------------- */
+  check(
+    f.outageLostConversions === 22 && f.finishedEmailedCorrected === 168,
+    "the funnel recovers the people who typed in an address while the sends were failing",
+    `${f.outageLostConversions} recovered`,
+  );
+  check(
+    f.finishedEmailRateCorrected > f.finishedEmailRate &&
+      f.finishedEmailRateCorrected > f.emailRate,
+    "…so the finisher rate beats both the uncorrected one and the old blended one",
+    `${(f.emailRate * 100).toFixed(1)}% old, ${(f.finishedEmailRateCorrected * 100).toFixed(1)}% corrected`,
+  );
+
+  /* -- the ripple: every panel moves together ---------------------------- */
+  const sum = (key) => g.channels.reduce((acc, row) => acc + row[key], 0);
+  check(
+    sum("finished") === f.finished && sum("abandonedOnly") === f.abandonedOnly,
+    "the channel table's split adds up to the funnel's, the same way its completed column already does",
+    `${sum("finished")} vs ${f.finished}`,
+  );
+  check(
+    g.sides.reduce((acc, s) => acc + s.finished, 0) === f.finished,
+    "…and so does paid against organic",
+  );
+  for (const row of g.channels) {
+    check(
+      row.finishedAdult + row.finishedChild - row.finishedBoth + row.finishedAudienceUnknown ===
+        row.emailed,
+      `${row.channel} ${row.paid ? "paid" : "organic"}: the finished audience split still decomposes Emailed exactly`,
+      `${row.finishedAdult} + ${row.finishedChild} − ${row.finishedBoth} + ${row.finishedAudienceUnknown} ≠ ${row.emailed}`,
+    );
+    check(
+      row.finished <= row.completed,
+      `${row.channel} ${row.paid ? "paid" : "organic"}: finishers never outnumber completers`,
+    );
+  }
+}
+
+/* -- 12. the audience panel splits too, and costs no extra query ---------- */
+{
+  const g = await run();
+  const any = g.audiences;
+  const fin = g.audiencesFinished;
+
+  const events = sent.filter((r) => !r.sql.includes("test_results") && !r.sql.includes("system."));
+  check(
+    events.length === 2,
+    "the second audience panel is the same rows regrouped again, not a third query",
+    `${events.length} events queries`,
+  );
+
+  check(
+    any.adult.people === 121 && fin.adult.people === 117,
+    "the finished-only column is smaller, because some emailed people never finished the test they are otherwise credited with",
+    `${any.adult.people} → ${fin.adult.people}`,
+  );
+  check(
+    fin.emailed === any.emailed,
+    "both panels describe the same emailed population, so the two are comparable",
+  );
+  check(
+    fin.neither > any.neither,
+    "the people who left the test and gave an address anyway land in the residual rather than in an audience",
+    `${any.neither} → ${fin.neither}`,
+  );
+  check(
+    fin.adult.people + fin.child.people - fin.both + fin.neither === fin.emailed,
+    "…and the identity still closes, so nobody was reallocated to make it tidy",
+    `${fin.adult.people} + ${fin.child.people} − ${fin.both} + ${fin.neither} ≠ ${fin.emailed}`,
+  );
+
+  for (const split of [fin.adult, fin.child]) {
+    const sliced = split.slices.reduce((acc, s) => acc + s.people, 0);
+    check(
+      sliced === split.people,
+      `the finished ${split.audience} column's rows add up to its own total, tail included`,
+      `${sliced} of ${split.people}`,
+    );
+  }
+  check(
+    fin.adult.slices.map((s) => s.channel).join(" > ") ===
+      fin.child.slices.map((s) => s.channel).join(" > "),
+    "both finished columns keep one shared order, so a row can still be read across",
+  );
+}
+
 console.log(
   failures === 0
-    ? `\nverify-growth: OK. Four stages of people over one population, finished tests kept distinct from them, Reddit split in two, the audience split reconciling per row and regrouped without a second query, and neither clock lies.`
+    ? `\nverify-growth: OK. Four stages of people over one population, finished tests kept distinct from them and from the ones the clock wrote, the 9 August outage held out and declared, Reddit split in two, the audience split reconciling per row on both bases and regrouped without a second query, and neither clock lies.`
     : `\nverify-growth: ${failures} failure(s).`,
 );
 if (failures > 0) process.exit(1);
