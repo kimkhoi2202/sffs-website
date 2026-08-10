@@ -62,15 +62,31 @@ registerHooks({
 /* == the network, which is a fixture and a recorder ====================== */
 
 const MINUTE = 60 * 1000;
+const HOUR = 60 * MINUTE;
 const NOW = Date.parse("2026-08-09T12:00:00Z");
 
 /** Every request the module made, in order. */
 let sent = [];
-/** Flipped per case to steer the two warehouse answers. */
+/** Flipped per case to steer the warehouse and witness answers. */
 let scenario = {};
 
-const utc = (msAgo) =>
-  new Date(NOW - msAgo).toISOString().replace("T", " ").replace("Z", "").replace(/$/, "000");
+const utc = (msAgo, base = NOW) =>
+  new Date(base - msAgo).toISOString().replace("T", " ").replace("Z", "").replace(/$/, "000");
+
+/**
+ * The mirror's default posture: published 20 minutes ago, carrying a
+ * completion from 25 minutes ago, and PostHog has seen nothing since.
+ *
+ * A healthy steady state, so the dozen cases below that are not about
+ * freshness get one and can ignore it. The freshness cases override.
+ */
+const MIRROR_DEFAULTS = {
+  mirrorAgeMs: 20 * MINUTE,
+  newestRowAgeMs: 25 * MINUTE,
+  witnessAgesMs: [25 * MINUTE],
+};
+
+const mirror = (key) => scenario[key] ?? MIRROR_DEFAULTS[key];
 
 /**
  * The channel fixture.
@@ -150,12 +166,44 @@ globalThis.fetch = async (url, init) => {
     if (scenario.syncThrows) {
       return new Response(JSON.stringify({ detail: "warehouse source removed" }), { status: 400 });
     }
-    const rows = scenario.syncMissing
-      ? []
-      : [["test_results", utc(scenario.mirrorAgeMs ?? 20 * MINUTE)]];
+    const rows = scenario.syncMissing ? [] : [["test_results", utc(mirror("mirrorAgeMs"))]];
     return answer(["name", "synced_at"], rows, {
       lastRefresh: new Date(NOW).toISOString(),
     });
+  }
+
+  /*
+    The mirror's high-water mark — the newest completion it actually carries.
+
+    Matched before the address count because both read `FROM test_results`, and
+    this one is the narrower shape.
+  */
+  if (sql.includes("AS newest")) {
+    if (scenario.highWaterThrows) {
+      return new Response(JSON.stringify({ detail: "table not found" }), { status: 400 });
+    }
+    const age = mirror("newestRowAgeMs");
+    return answer(
+      ["rows_total", "newest"],
+      scenario.mirrorEmpty ? [[0, ""]] : [[377, utc(age)]],
+    );
+  }
+
+  /*
+    PostHog's independent record of the completions the export publishes.
+
+    The fixture carries only QUALIFYING completions, because the query itself
+    carries `answered > 0` — which is asserted on the emitted SQL rather than
+    modelled here, since a fixture cannot prove a WHERE clause exists.
+  */
+  if (sql.includes("toString(timestamp) AS at")) {
+    if (scenario.witnessThrows) {
+      return new Response(JSON.stringify({ detail: "query cluster busy" }), { status: 400 });
+    }
+    return answer(
+      ["at"],
+      mirror("witnessAgesMs").map((age) => [utc(age)]),
+    );
   }
 
   if (sql.includes("FROM test_results")) {
@@ -273,6 +321,26 @@ function check(ok, label, detail = "") {
 
 const near = (a, b) => a !== null && Math.abs(a - b) < 1e-9;
 
+/* -- how the outgoing requests are named ---------------------------------- */
+
+/** Everything that reached the events table. */
+const eventQueries = () =>
+  sent.filter((r) => !r.sql.includes("test_results") && !r.sql.includes("system."));
+
+/**
+ * The queries that scan the person population.
+ *
+ * Named by the subquery alias rather than counted as "the events queries",
+ * because the freshness witness is an events query too and the property these
+ * assertions are protecting is narrower: the funnel, the channel table and both
+ * audience panels are ONE scan of the population, regrouped, and a second scan
+ * is how two figures on one page start disagreeing by three people.
+ */
+const populationQueries = () => sent.filter((r) => r.sql.includes("AS arrived"));
+
+const witnessQuery = () => sent.find((r) => r.sql.includes("toString(timestamp) AS at"));
+const highWaterQuery = () => sent.find((r) => r.sql.includes("AS newest"));
+
 /* -- 1. the counting unit, and one population ----------------------------- */
 {
   const g = await run();
@@ -379,8 +447,13 @@ const near = (a, b) => a !== null && Math.abs(a - b) < 1e-9;
 /* -- 4. the exclusions come from PostHog, and reach every events query ---- */
 {
   await run();
-  const events = sent.filter((r) => !r.sql.includes("test_results") && !r.sql.includes("system."));
-  check(events.length === 2, "the events half is two queries", String(events.length));
+  const events = eventQueries();
+  check(events.length === 3, "the events half is three queries", String(events.length));
+  check(
+    populationQueries().length === 2,
+    "two of them scan the person population; the third is the mirror's freshness witness",
+    String(populationQueries().length),
+  );
   check(
     events.every((r) => r.sql.includes("{filters}")),
     "every events query carries the {filters} placeholder, which is how the crawler cohort is applied",
@@ -395,7 +468,11 @@ const near = (a, b) => a !== null && Math.abs(a - b) < 1e-9;
   );
 
   const warehouse = sent.filter((r) => r.sql.includes("FROM test_results"));
-  check(warehouse.length === 1, "the address count is one query");
+  check(
+    warehouse.length === 2,
+    "the warehouse half is the address count and the mirror's high-water mark",
+    String(warehouse.length),
+  );
   check(
     warehouse.every((r) => r.filters === undefined && !r.sql.includes("{filters}")),
     "the pre-filtered warehouse export is not filtered a second time",
@@ -403,51 +480,260 @@ const near = (a, b) => a !== null && Math.abs(a - b) < 1e-9;
 
   /* -- and the raw toggle still reaches PostHog -------------------------- */
   await run({}, { filtered: false });
-  const raw = sent.filter((r) => !r.sql.includes("test_results") && !r.sql.includes("system."));
   check(
-    raw.every((r) => r.filters?.filterTestAccounts === false),
+    populationQueries().every((r) => r.filters?.filterTestAccounts === false),
     "the internal-user toggle still turns the filter off, crawlers and all",
+  );
+  /*
+    But NOT for the witness. The toggle is a display choice about who appears
+    in the funnel; it does not change what the export put in the mirror, and
+    letting it through would show an operator reading raw traffic a stall that
+    does not exist.
+  */
+  check(
+    witnessQuery()?.filters?.filterTestAccounts === true,
+    "…while the freshness witness stays filtered regardless, because a display toggle cannot change what the export published",
+    String(witnessQuery()?.filters?.filterTestAccounts),
   );
 }
 
-/* -- 5. freshness, which may never overstate itself ----------------------- */
+/* -- 5. freshness: "nothing happened" is not "nothing is working" --------- */
+/*
+  The defect this guards, and the reason the whole state machine exists.
+
+  The mirror's timestamp advances only when the exported CONTENT changes: the
+  Lambda hashes the snapshot it built and skips the upload when it is identical
+  to the one already there. So an ageing timestamp means "nothing changed",
+  which is the same reading for a quiet evening and for a dead exporter — and
+  the old boolean called both of them stale.
+
+  On 10 August 2026 the runs at 17:37, 18:37 and 19:36 UTC all succeeded and all
+  correctly skipped, because the only two attempts since 16:18 had answered
+  nothing and the export drops those. The stamp sat at 16:37 going redder, two
+  agents read it as a stopped export, and the owner was told his pipeline had
+  failed.
+
+  Three states have to be distinguishable, and the middle one is the fix while
+  the third is the thing that must not regress in earning it.
+*/
 {
-  /* -- a mirror inside its hourly cadence is not nagged about ------------ */
-  const healthy = await run({ mirrorAgeMs: 20 * MINUTE });
-  check(!healthy.freshness.warehouse.stale, "a mirror 20 minutes behind is not called stale");
+  /* -- STATE 1: the pipeline is healthy and the data is changing --------- */
+  const changing = await run({
+    mirrorAgeMs: 20 * MINUTE,
+    newestRowAgeMs: 25 * MINUTE,
+    witnessAgesMs: [25 * MINUTE],
+  });
+  const live = changing.freshness.warehouse;
+  check(live.state === "current", "a mirror that published inside its cadence is current", live.state);
+  check(!live.stale, "…so it is not stale");
+  check(live.ageSeconds === 20 * 60, "and its age is reported", String(live.ageSeconds));
   check(
-    healthy.freshness.warehouse.ageSeconds === 20 * 60,
-    "and its age is reported",
-    `${healthy.freshness.warehouse.ageSeconds}`,
+    live.backlog.newestRowAt === new Date(NOW - 25 * MINUTE).toISOString(),
+    "the newest completion it carries is reported alongside, which is the figure the reader is actually asking about",
+    String(live.backlog.newestRowAt),
   );
-  check(!healthy.freshness.posthog.stale, "a live PostHog answer is not called stale");
+  check(!changing.freshness.posthog.stale, "a live PostHog answer is not called stale");
   check(
-    healthy.freshness.posthog.at !== healthy.freshness.warehouse.at,
+    changing.freshness.posthog.at !== live.at,
     "the two sources carry their own timestamps rather than one shared as-of",
   );
 
-  /* -- the case this was built for: Aurora down, mirror frozen ----------- */
-  const frozen = await run({ mirrorAgeMs: 5 * 60 * MINUTE });
-  check(frozen.freshness.warehouse.stale, "a mirror five hours behind is called stale");
+  /* -- STATE 2: the pipeline is healthy and the data is unchanged -------- *
+     The 10 August evening, to the minute. Content last changed at 16:37,
+     the newest completion it carries is 16:18, and nothing has qualified
+     since. This is the reading that was wrong.                            */
+  const EVENING = Date.parse("2026-08-10T20:01:00Z");
+  const quiet = await run(
+    {
+      mirrorAgeMs: EVENING - Date.parse("2026-08-10T16:37:05Z"),
+      newestRowAgeMs: EVENING - Date.parse("2026-08-10T16:17:53Z"),
+      witnessAgesMs: [EVENING - Date.parse("2026-08-10T16:17:53Z")],
+    },
+    { nowMs: EVENING, range: resolveRange({ preset: "since_launch" }, EVENING) },
+  );
+  const idle = quiet.freshness.warehouse;
+
   check(
-    /behind the visitor numbers/i.test(frozen.freshness.warehouse.note),
-    "and says plainly that it is behind the live numbers",
-    frozen.freshness.warehouse.note,
+    idle.state === "idle",
+    "a mirror whose content has not changed, with nothing outstanding, is idle rather than stale",
+    idle.state,
   );
   check(
-    !frozen.freshness.posthog.stale,
+    !idle.stale,
+    "THE DEFECT: three healthy runs that correctly skipped the upload no longer read as a stopped export",
+    `state=${idle.state} stale=${idle.stale}`,
+  );
+  check(
+    idle.ageSeconds > 3 * 3600,
+    "…and it is still honest about the age — the content really is three hours old",
+    `${idle.ageSeconds}s`,
+  );
+  check(
+    idle.backlog.witnessed && idle.backlog.outstanding === 0,
+    "the verdict rests on a witness that was actually consulted and found nothing outstanding",
+    `witnessed=${idle.backlog.witnessed} outstanding=${idle.backlog.outstanding}`,
+  );
+  check(
+    /unchanged/i.test(idle.note) && /nothing/i.test(idle.note),
+    "the note says the content is unchanged and nothing is missing",
+    idle.note,
+  );
+  check(
+    !/missed a run|is behind|failed/i.test(idle.note),
+    "and never claims a run was missed, which is the sentence that cost an evening",
+    idle.note,
+  );
+  /*
+    The other half of the honesty. An export that died an hour ago with no
+    traffic behind it looks EXACTLY like this, so the note may not claim the
+    exporter is healthy — only that nothing is missing from the figures. The
+    old note said "running normally" and could not have known.
+  */
+  check(
+    !/running normally|healthy|is up/i.test(idle.note),
+    "…and does not claim the exporter is running either, which nothing reachable from this page can establish",
+    idle.note,
+  );
+
+  /*
+    The pair that would otherwise be a permanent phantom.
+
+    Aurora truncates `completed_at` to the second and PostHog keeps the
+    milliseconds, so the single interaction behind 16:17:53.000 and
+    16:17:53.470 must not read as a completion outstanding against itself.
+  */
+  const skew = await run({
+    mirrorAgeMs: 4 * HOUR,
+    newestRowAgeMs: 4 * HOUR,
+    witnessAgesMs: [4 * HOUR - 470],
+  });
+  check(
+    skew.freshness.warehouse.backlog.outstanding === 0,
+    "the completion the mirror was BUILT FROM does not count as outstanding against itself",
+    `${skew.freshness.warehouse.backlog.outstanding} outstanding`,
+  );
+  check(skew.freshness.warehouse.state === "idle", "…so sub-second clock skew cannot manufacture a stall");
+
+  /* -- STATE 3: the pipeline is actually stalled ------------------------- *
+     The case the indicator exists for. It must still fire, and it must fire
+     on evidence rather than on an ageing clock.                            */
+  const stalled = await run({
+    mirrorAgeMs: 5 * HOUR,
+    newestRowAgeMs: 5 * HOUR + 20 * MINUTE,
+    witnessAgesMs: [2 * HOUR, 3 * HOUR, 4 * HOUR],
+  });
+  const dead = stalled.freshness.warehouse;
+
+  check(
+    dead.state === "stalled" && dead.stale,
+    "a mirror that has not carried completions PostHog recorded across a scheduled run is stalled",
+    `state=${dead.state} stale=${dead.stale}`,
+  );
+  check(
+    dead.backlog.outstanding === 3,
+    "…and it counts them rather than merely asserting a failure",
+    `${dead.backlog.outstanding} outstanding`,
+  );
+  check(
+    dead.backlog.oldestOutstandingAgeSeconds === 4 * 3600,
+    "the OLDEST outstanding completion is the one reported, because it is the one that has had the most chances to be collected",
+    `${dead.backlog.oldestOutstandingAgeSeconds}s`,
+  );
+  check(
+    /behind/i.test(dead.note) && /3 completions/.test(dead.note),
+    "and the note names what is missing, so the reader can check it rather than trust it",
+    dead.note,
+  );
+  check(
+    !stalled.freshness.posthog.stale,
     "while the PostHog half is still reported as current, because it is",
   );
   check(
-    frozen.funnel.landed === 6358 && frozen.channels.length === 5,
-    "a frozen mirror does not take the funnel or the channel table down with it",
+    stalled.funnel.landed === 6358 && stalled.channels.length === 5,
+    "a stalled mirror does not take the funnel or the channel table down with it",
   );
 
-  /* -- and the direction of the doubt ------------------------------------ */
+  /*
+    The singular. Both notes interpolate a count, and both are read by a human
+    at a glance — "1 completion recorded since 1 is not due" shipped for the
+    length of one probe and is exactly the kind of thing nobody re-reads.
+  */
+  const one = await run({
+    mirrorAgeMs: 5 * HOUR,
+    newestRowAgeMs: 5 * HOUR,
+    witnessAgesMs: [3 * HOUR],
+  });
+  check(
+    one.freshness.warehouse.state === "stalled" &&
+      !/\d+ completions|missing them/.test(one.freshness.warehouse.note),
+    "a single outstanding completion is described in the singular, because a stamp is read at a glance",
+    one.freshness.warehouse.note,
+  );
+
+  /* -- the threshold between "in flight" and "missed a run" -------------- */
+  const inFlight = await run({
+    mirrorAgeMs: 5 * HOUR,
+    newestRowAgeMs: 5 * HOUR,
+    witnessAgesMs: [30 * MINUTE],
+  });
+  check(
+    inFlight.freshness.warehouse.state === "idle" && !inFlight.freshness.warehouse.stale,
+    "a completion recorded half an hour ago is not yet due, so old content plus fresh work is not an alarm",
+    inFlight.freshness.warehouse.state,
+  );
+  check(
+    inFlight.freshness.warehouse.backlog.outstanding === 1,
+    "…though it is counted and said out loud rather than hidden",
+    inFlight.freshness.warehouse.note,
+  );
+
+  const justOverdue = await run({
+    mirrorAgeMs: 5 * HOUR,
+    newestRowAgeMs: 5 * HOUR,
+    witnessAgesMs: [91 * MINUTE],
+  });
+  check(
+    justOverdue.freshness.warehouse.state === "stalled",
+    "…and one that has waited past a scheduled hourly run is",
+    justOverdue.freshness.warehouse.state,
+  );
+
+  /* -- the direction of the doubt, which must not have softened ---------- */
+  const noWitness = await run({ mirrorAgeMs: 5 * HOUR, witnessThrows: true });
+  check(
+    noWitness.freshness.warehouse.state === "stalled" && noWitness.freshness.warehouse.stale,
+    "old content whose witness could not be read falls back to stale — an unreadable check may never talk the panel out of an alarm",
+    noWitness.freshness.warehouse.state,
+  );
+  check(
+    !noWitness.freshness.warehouse.backlog.witnessed,
+    "…and the payload admits the witness never answered rather than reporting zero outstanding",
+  );
+  check(
+    noWitness.funnel.landed === 6358,
+    "a failed witness does not take the page down with it",
+  );
+
+  const noHighWater = await run({ mirrorAgeMs: 5 * HOUR, highWaterThrows: true });
+  check(
+    noHighWater.freshness.warehouse.stale,
+    "…and so does old content with no high-water mark to compare against",
+    noHighWater.freshness.warehouse.state,
+  );
+
+  const emptyMirror = await run({ mirrorAgeMs: 5 * HOUR, mirrorEmpty: true });
+  check(
+    emptyMirror.freshness.warehouse.stale &&
+      emptyMirror.freshness.warehouse.backlog.witnessed === false,
+    "an empty mirror has no high-water mark, so `max()` over nothing cannot become an epoch that makes every event look outstanding",
+    emptyMirror.freshness.warehouse.state,
+  );
+
   const unknown = await run({ syncMissing: true });
   check(
-    unknown.freshness.warehouse.stale,
+    unknown.freshness.warehouse.stale && unknown.freshness.warehouse.state === "unknown",
     "a mirror whose age cannot be established is treated as stale, never as current",
+    unknown.freshness.warehouse.state,
   );
 
   const broken = await run({ syncThrows: true });
@@ -460,20 +746,115 @@ const near = (a, b) => a !== null && Math.abs(a - b) < 1e-9;
     noEmails.funnel.landed === 6358,
     "while the two things the owner reads every time still render",
   );
+
+  /*
+    `stale` and `state` may never disagree. Every consumer on the page reads
+    one or the other — the strip colours off `state`, older payloads and any
+    caller outside this file read `stale` — and a split between them would
+    paint a green badge over a red verdict.
+  */
+  for (const g of [changing, quiet, stalled, inFlight, noWitness, unknown]) {
+    for (const f of [g.freshness.warehouse, g.freshness.posthog]) {
+      check(
+        f.stale === (f.state === "stalled" || f.state === "unknown"),
+        `${f.source}: the boolean and the state agree`,
+        `state=${f.state} stale=${f.stale}`,
+      );
+    }
+  }
 }
 
-/* -- 6. the freshness query refuses PostHog's cache ----------------------- */
+/* -- 5b. the witness is the right question, asked the right way ----------- */
+/*
+  Three properties of the outgoing request are load-bearing, and none of them
+  can be modelled by a fixture — a stub that simply returns qualifying rows
+  would pass whether or not the query asked for them.
+*/
+{
+  await run();
+  const witness = witnessQuery();
+
+  check(
+    /properties\.answered[^)]*\)\s*>\s*0|properties\.answered.*>\s*0/.test(witness.sql),
+    "the witness applies the export's own `answered > 0` filter — the clause that makes 10 August's two unanswered attempts non-events rather than a missed run",
+    witness.sql.replace(/\s+/g, " ").slice(0, 160),
+  );
+  check(
+    witness.sql.includes("{filters}"),
+    "…and carries the {filters} placeholder, so it inherits the project's exclusions instead of hand-writing them",
+  );
+  check(
+    witness.sql.includes("event = 'test_completed'"),
+    "…and reads the event the export's rows come from",
+  );
+
+  /*
+    NOT the reporting window. The freshness question is about now: a reader who
+    selects last Tuesday has not moved the pipeline, and a stamp that went green
+    because they narrowed the range would be the original defect in a new hat.
+  */
+  const funnel = populationQueries()[0];
+  check(
+    witness.filters?.dateRange?.date_from !== funnel.filters?.dateRange?.date_from,
+    "the witness is bounded by its own lookback rather than by the reporting range",
+    `${witness.filters?.dateRange?.date_from} vs ${funnel.filters?.dateRange?.date_from}`,
+  );
+  check(
+    Date.parse(`${witness.filters?.dateRange?.date_from}Z`) < NOW - 7 * 24 * 3600 * 1000,
+    "…and that lookback comfortably outruns any plausible mirror lag",
+    String(witness.filters?.dateRange?.date_from),
+  );
+  check(
+    Date.parse(`${witness.filters?.dateRange?.date_to}Z`) >= NOW,
+    "…while reaching up to now, so a second-precision bound cannot clip the completion that would prove a stall",
+    String(witness.filters?.dateRange?.date_to),
+  );
+
+  /* -- the high-water mark is not windowed either ------------------------ */
+  const highWater = highWaterQuery();
+  check(
+    highWater.filters === undefined,
+    "the mirror's high-water mark is not windowed by the reporting range, for the same reason",
+  );
+  check(
+    !highWater.sql.includes("{filters}"),
+    "…and the pre-filtered export is not filtered a second time",
+  );
+}
+
+/* -- 6. every query the freshness verdict rests on refuses the cache ------ */
+/*
+  PostHog served the freshness statement out of its own result cache with a
+  six-hour target age. That was already fatal for the sync time; it would be
+  worse for the two queries added since. A cached high-water mark or a cached
+  witness would hide the completions that prove a stall and turn a real one
+  back into a quiet evening — the exact failure this panel exists to prevent,
+  reintroduced through the fix for it.
+*/
 {
   await run();
   const sync = sent.find((r) => r.sql.includes("system.data_warehouse_tables"));
+  const uncached = sent.filter((r) => r.refresh === "force_blocking");
+
   check(
     sync?.refresh === "force_blocking",
     "the sync-time query bypasses PostHog's result cache",
     String(sync?.refresh),
   );
   check(
-    sent.filter((r) => r.refresh === "force_blocking").length === 1,
-    "and it is the only one that pays for a cache miss",
+    highWaterQuery()?.refresh === "force_blocking",
+    "…and so does the mirror's high-water mark",
+    String(highWaterQuery()?.refresh),
+  );
+  check(
+    witnessQuery()?.refresh === "force_blocking",
+    "…and so does the witness, which is the one a cache would silence",
+    String(witnessQuery()?.refresh),
+  );
+  check(
+    uncached.length === 3,
+    "and nothing else pays for a cache miss — the funnel and the channel table are still served from it",
+    `${uncached.length} uncached`,
   );
 }
 
@@ -650,11 +1031,11 @@ const near = (a, b) => a !== null && Math.abs(a - b) < 1e-9;
   const g = await run();
   const a = g.audiences;
 
-  const events = sent.filter((r) => !r.sql.includes("test_results") && !r.sql.includes("system."));
+  const scans = populationQueries();
   check(
-    events.length === 2,
+    scans.length === 2,
     "the audience panel costs no extra query — it is the channel rows regrouped",
-    `${events.length} events queries`,
+    `${scans.length} population scans`,
   );
 
   const sum = (key) => g.channels.reduce((acc, row) => acc + row[key], 0);
@@ -937,11 +1318,11 @@ const near = (a, b) => a !== null && Math.abs(a - b) < 1e-9;
   const any = g.audiences;
   const fin = g.audiencesFinished;
 
-  const events = sent.filter((r) => !r.sql.includes("test_results") && !r.sql.includes("system."));
+  const scans = populationQueries();
   check(
-    events.length === 2,
-    "the second audience panel is the same rows regrouped again, not a third query",
-    `${events.length} events queries`,
+    scans.length === 2,
+    "the second audience panel is the same rows regrouped again, not a third scan",
+    `${scans.length} population scans`,
   );
 
   check(

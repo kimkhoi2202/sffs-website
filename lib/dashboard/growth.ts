@@ -25,6 +25,7 @@ import type {
   GrowthEmails,
   GrowthFunnel,
   GrowthSideTotals,
+  MirrorBacklog,
   SourceFreshness,
 } from "./types";
 
@@ -850,33 +851,119 @@ function split(
  * Freshness
  *
  * ===========================================================================
- * WHY THE MIRROR'S SYNC TIME AND NOT THE NEWEST ROW IN IT
+ * THE MIRROR'S TIMESTAMP IS NOT A LIVENESS SIGNAL, AND READING IT AS ONE COST
+ * AN EVENING
  * ===========================================================================
- * The obvious freshness signal for `test_results` is `max(completed_at)`. It is
- * the wrong one, and wrong in the direction that matters: it stops advancing
- * both when the mirror dies AND when nobody happens to finish a test for an
- * hour. A quiet Sunday morning would be indistinguishable from a frozen
- * pipeline, and the dashboard would cry stale at the reader until they learned
- * to ignore it.
+ * An earlier version of this comment claimed that "the mirror drops and
+ * recreates the table on every run, so that timestamp advances on every
+ * successful sync". That is false, and the code it justified reported a
+ * healthy pipeline as dead.
  *
- * `system.data_warehouse_tables.updated_at` is the moment PostHog last rebuilt
- * the table. The mirror drops and recreates it on every run, so that timestamp
- * advances on every successful sync whether or not any row changed, and stops
- * dead the moment the sync stops. That is a true liveness signal.
+ * `sffs-test-results-dw-export` builds the snapshot, hashes it, and compares
+ * the digest against the marker it wrote last time. If they match it SKIPS the
+ * upload entirely and returns `{"status": "unchanged"}` — no delete, no create,
+ * so `system.data_warehouse_tables.updated_at` does not move. That timestamp
+ * is the moment the CONTENT last changed, not the moment the export last ran,
+ * and the two only coincide on a busy hour.
  *
- * It is read with `force_blocking` because PostHog served it from its own
- * result cache with a six-hour target age, and a cached "last refreshed at" is
- * the precise failure this whole panel exists to prevent.
+ * On 10 August the runs at 17:37, 18:37 and 19:36 UTC all succeeded and all
+ * correctly skipped: Aurora had taken two more child attempts, both with
+ * `answered = 0`, which the export drops by design. The snapshot was
+ * byte-identical three times over, the stamp sat at 16:37 going redder, two
+ * agents read it as a stopped export, and the owner was told his pipeline had
+ * failed. It had not.
+ *
+ * ===========================================================================
+ * WHAT THE DASHBOARD CAN ACTUALLY REACH
+ * ===========================================================================
+ * The truest signal is the exporter's last successful invocation. It is not
+ * reachable from here and pretending otherwise would be the same mistake in a
+ * new coat: the Lambda's run history lives in CloudWatch, this app holds no AWS
+ * credentials and ships no AWS client, and `POSTHOG_PERSONAL_API_KEY` is scoped
+ * to `query:read` on one project. Everything below is built from the two things
+ * that ARE reachable, and the stamp claims nothing beyond them.
+ *
+ *   THE MIRROR ITSELF     `updated_at` (when its content last changed) and
+ *                         `max(completed_at)` (the newest completion it
+ *                         carries — its high-water mark).
+ *   POSTHOG'S EVENTS      `test_completed`, live within seconds, fired by the
+ *                         same interaction that writes the Aurora row.
+ *
+ * ===========================================================================
+ * THE SEPARATOR: A SECOND, INDEPENDENT WITNESS
+ * ===========================================================================
+ * Neither timestamp alone can tell a quiet hour from a dead exporter, because
+ * both are silent in both cases. What distinguishes them is whether there was
+ * anything to do. So the verdict is a COMPARISON rather than an age:
+ *
+ *   content changed inside the cadence            -> current
+ *   nothing outstanding, or nothing due yet       -> idle
+ *   outstanding work has missed a scheduled run   -> stalled
+ *   the age itself is unreadable                  -> unknown, and stale
+ *
+ * This is what makes the fix survive the case the indicator exists for. A
+ * genuinely broken exporter goes red the moment somebody finishes a test and
+ * the mirror does not carry it across a run — the alarm is not weakened, it is
+ * given a reason. And a broken exporter with no traffic behind it holds
+ * `idle`, which is the correct reading: there is nothing missing from the
+ * figures, and the note says only that, never that the export is healthy.
+ *
+ * THE WITNESS APPLIES THE ONE EXPORT FILTER IT CAN. `answered > 0` is not
+ * decoration — it is exactly what made both of 10 August's events non-events,
+ * and a witness without it would have manufactured a fresh false alarm out of
+ * the same evening. The rest of the export's filters key on markers written
+ * onto the Aurora row (`synthetic`, `internal`) which no event carries, so the
+ * closest reachable equivalent is PostHog's own test-account filters via
+ * `{filters}`. They are not the same rule set, so the panel reports what was
+ * measured — completions PostHog recorded that the mirror does not carry —
+ * rather than asserting what the exporter owes.
+ *
+ * EVERY QUERY THE VERDICT RESTS ON REFUSES THE CACHE. PostHog served the
+ * freshness statement from its own result cache with a six-hour target age. A
+ * cached "last refreshed at" is the precise failure this panel exists to
+ * prevent, and a cached witness would be worse: it would hide new completions
+ * and turn a real stall back into a quiet evening.
  * ------------------------------------------------------------------------ */
 
 /**
- * How old the hourly mirror may be before it is called stale.
+ * How old the hourly mirror's content may be before the witness is consulted —
+ * and, past it, how long an outstanding completion must have waited before it
+ * counts as a missed run.
  *
  * The Lambda runs hourly, so an hour of lag is the healthy steady state and
- * flagging it would be noise. Ninety minutes means a scheduled run has been
- * missed outright, which is the thing worth saying out loud.
+ * flagging it would be noise. Ninety minutes means a scheduled run has come and
+ * gone without collecting something it should have, which is the thing worth
+ * saying out loud.
+ *
+ * One constant for both because they are one question asked twice: has a
+ * scheduled run had its chance? Two constants would let the panel call the
+ * content stale while still calling the work not yet due, and print a
+ * contradiction.
  */
 const WAREHOUSE_STALE_AFTER_MS = 90 * 60 * 1000;
+
+/**
+ * How far back the witness looks for qualifying completions.
+ *
+ * It only has to comfortably outrun any plausible mirror lag, and the volume
+ * is tiny — under ten completions on a busy day. A mirror further behind than
+ * this still reads as stalled, because every event in the window is then newer
+ * than its high-water mark and the oldest of them is already a fortnight past
+ * the threshold; only the `outstanding` count would understate, and it would
+ * understate a table nobody is about to trust anyway.
+ */
+const WITNESS_LOOKBACK_MS = 14 * 24 * 60 * 60 * 1000;
+
+/**
+ * Slack when matching an Aurora completion time against a PostHog event time.
+ *
+ * They are written by different clocks on the same interaction and land within
+ * a second or two — the export's own matcher allows five seconds. The mirror
+ * additionally truncates to the second, so tonight's pair reads 16:17:53.000
+ * against 16:17:53.470. A minute is far more than the skew and far less than
+ * the ninety it would take to matter to the verdict.
+ */
+const WITNESS_CLOCK_SLACK_MS = 60 * 1000;
 
 /**
  * How old a PostHog answer may be before it is called stale.
@@ -887,6 +974,13 @@ const WAREHOUSE_STALE_AFTER_MS = 90 * 60 * 1000;
  */
 const POSTHOG_STALE_AFTER_MS = 15 * 60 * 1000;
 
+/**
+ * The PostHog stamp: one source, one age, and no mirror behind it.
+ *
+ * It needs no witness because its answer carries the moment it was computed.
+ * There is no equivalent of "the content did not change" here — PostHog
+ * recalculates or it does not.
+ */
 function freshness(
   source: SourceFreshness["source"],
   at: string | null,
@@ -898,7 +992,15 @@ function freshness(
   if (parsed === null) {
     // Unknown counts as stale. The one thing this panel may never do is imply
     // a number is current because it could not find out whether it was.
-    return { source, at: null, ageSeconds: null, stale: true, note: labels.unknown };
+    return {
+      source,
+      at: null,
+      ageSeconds: null,
+      stale: true,
+      state: "unknown",
+      note: labels.unknown,
+      backlog: null,
+    };
   }
   const ageMs = Math.max(0, nowMs - parsed);
   const stale = ageMs > staleAfterMs;
@@ -907,8 +1009,184 @@ function freshness(
     at: new Date(parsed).toISOString(),
     ageSeconds: Math.round(ageMs / 1000),
     stale,
+    state: stale ? "stalled" : "current",
     note: stale ? labels.stale : labels.live,
+    backlog: null,
   };
+}
+
+/**
+ * What the mirror is missing, by comparing its high-water mark against
+ * PostHog's own record of the same completions.
+ *
+ * `witnessed` is false whenever either input is missing, and every caller
+ * treats that as "cannot tell" rather than as "nothing outstanding". An
+ * unreadable witness must never be able to talk the panel out of an alarm.
+ */
+function mirrorBacklog(
+  newestRowAt: string | null,
+  witness: string[] | null,
+  nowMs: number,
+): MirrorBacklog {
+  const mark = parseUtc(newestRowAt);
+  if (mark === null || witness === null) {
+    return {
+      newestRowAt: mark === null ? null : new Date(mark).toISOString(),
+      outstanding: 0,
+      oldestOutstandingAt: null,
+      oldestOutstandingAgeSeconds: null,
+      witnessed: false,
+    };
+  }
+
+  /*
+    Strictly after the high-water mark, plus a minute of clock slack.
+
+    Without the slack the completion the mirror is BUILT FROM reads as
+    outstanding against itself: Aurora truncates `completed_at` to the second
+    and PostHog keeps the milliseconds, so the pair that describes one
+    interaction is 16:17:53.000 against 16:17:53.470.
+  */
+  const outstanding = witness
+    .map(parseUtc)
+    .filter((ms): ms is number => ms !== null && ms > mark + WITNESS_CLOCK_SLACK_MS);
+
+  if (outstanding.length === 0) {
+    return {
+      newestRowAt: new Date(mark).toISOString(),
+      outstanding: 0,
+      oldestOutstandingAt: null,
+      oldestOutstandingAgeSeconds: null,
+      witnessed: true,
+    };
+  }
+
+  // The OLDEST, not the newest: it is the one that has had the most chances to
+  // be collected, so it is the one that decides whether a run was missed.
+  const oldest = Math.min(...outstanding);
+  return {
+    newestRowAt: new Date(mark).toISOString(),
+    outstanding: outstanding.length,
+    oldestOutstandingAt: new Date(oldest).toISOString(),
+    oldestOutstandingAgeSeconds: Math.max(0, Math.round((nowMs - oldest) / 1000)),
+    witnessed: true,
+  };
+}
+
+/**
+ * The mirror stamp: an age, and what that age actually means.
+ *
+ * The four branches are the whole point of the change, so they are written out
+ * rather than compressed into a ternary. Each one says what was measured and
+ * stops there — none of them claims the exporter is healthy, because nothing
+ * reachable from here can establish that.
+ */
+function warehouseFreshness(
+  syncedAt: string | null,
+  backlog: MirrorBacklog,
+  nowMs: number,
+): SourceFreshness {
+  const parsed = parseUtc(syncedAt);
+  if (parsed === null) {
+    return {
+      source: "warehouse",
+      at: null,
+      ageSeconds: null,
+      stale: true,
+      state: "unknown",
+      note: "Could not establish when the mirror last published, so nothing below this line can be called current.",
+      backlog,
+    };
+  }
+
+  const ageMs = Math.max(0, nowMs - parsed);
+  const base = {
+    source: "warehouse" as const,
+    at: new Date(parsed).toISOString(),
+    ageSeconds: Math.round(ageMs / 1000),
+    backlog,
+  };
+  const carrying = backlog.newestRowAt
+    ? ` The newest completion it carries is ${clock(backlog.newestRowAt)} UTC.`
+    : "";
+
+  if (ageMs <= WAREHOUSE_STALE_AFTER_MS) {
+    return {
+      ...base,
+      stale: false,
+      state: "current",
+      note: `The hourly mirror published new completions inside its cadence.${carrying}`,
+    };
+  }
+
+  /*
+    Past the cadence with no witness. This is the ONLY branch that behaves the
+    way the old boolean did, and it is the branch where behaving that way is
+    correct: the content is old and we could not find out whether that is
+    because nothing happened. Doubt resolves towards the alarm.
+  */
+  if (!backlog.witnessed) {
+    return {
+      ...base,
+      stale: true,
+      state: "stalled",
+      note: `The mirror's content has not changed since ${clock(base.at)} UTC, and PostHog could not be asked whether any completion is outstanding — so nothing below this line can be called current.`,
+    };
+  }
+
+  const waited = backlog.oldestOutstandingAgeSeconds;
+  if (backlog.outstanding > 0 && waited !== null && waited * 1000 > WAREHOUSE_STALE_AFTER_MS) {
+    const missing =
+      backlog.outstanding === 1
+        ? `PostHog has recorded a completion the mirror does not carry, from ${ago(waited)} ago`
+        : `PostHog has recorded ${backlog.outstanding} completions the mirror does not carry, the oldest ${ago(waited)} ago`;
+    return {
+      ...base,
+      stale: true,
+      state: "stalled",
+      note: `The mirror is behind. ${missing} — past a scheduled hourly run.${carrying} Completions and addresses below this line are missing ${backlog.outstanding === 1 ? "it" : "them"}.`,
+    };
+  }
+
+  /*
+    Unchanged content, nothing overdue.
+
+    THE NOTE SAYS ONLY WHAT WAS MEASURED. It is tempting to write "the mirror
+    is running normally" here, and it would be the same class of lie the old
+    stamp told in the other direction — an export that died an hour ago with no
+    traffic behind it looks exactly like this. What IS true, and is all the
+    reader needs, is that nothing is missing from the figures below.
+  */
+  const pending =
+    backlog.outstanding > 0
+      ? ` ${plural(backlog.outstanding, "completion")} ${backlog.outstanding === 1 ? "has" : "have"} been recorded since, not yet due until the next hourly run.`
+      : " Nothing has qualified for export since, so there was nothing to publish.";
+  return {
+    ...base,
+    stale: false,
+    state: "idle",
+    note: `Content unchanged since ${clock(base.at)} UTC — the export skips the upload when the snapshot is identical.${carrying}${pending} Nothing PostHog has seen is missing from the figures below.`,
+  };
+}
+
+/** "4 completions", "1 completion" — a count that reads as a sentence. */
+function plural(n: number, one: string): string {
+  return `${n} ${one}${n === 1 ? "" : "s"}`;
+}
+
+/** HH:MM off an ISO instant, for a note that already says UTC. */
+function clock(iso: string): string {
+  return iso.slice(11, 16);
+}
+
+/** A compact age: 45s, 12m, 3h, 2d. Matches the panel's own formatting. */
+function ago(seconds: number): string {
+  if (seconds < 60) return `${seconds}s`;
+  const m = Math.floor(seconds / 60);
+  if (m < 60) return `${m}m`;
+  const h = Math.floor(m / 60);
+  if (h < 48) return `${h}h`;
+  return `${Math.floor(h / 24)}d`;
 }
 
 interface RawSync {
@@ -916,7 +1194,7 @@ interface RawSync {
   synced_at: string;
 }
 
-/** When PostHog last rebuilt each warehouse table. Never served from cache. */
+/** When the mirror's content last changed. Never served from cache. */
 async function fetchWarehouseSync(): Promise<Map<string, string>> {
   const { rows } = await hogqlWithMeta<RawSync>(
     `SELECT toString(name) AS name, toString(updated_at) AS synced_at
@@ -926,6 +1204,85 @@ async function fetchWarehouseSync(): Promise<Map<string, string>> {
     { refresh: "force_blocking" },
   );
   return new Map(rows.map((row) => [String(row.name), String(row.synced_at)]));
+}
+
+interface RawHighWater {
+  rows_total: number;
+  newest: string;
+}
+
+/**
+ * The newest completion the mirror actually carries.
+ *
+ * NOT windowed by the reporting range. The question is "how current is the
+ * mirror", which is a fact about now — a reader who selects last Tuesday has
+ * not moved the pipeline, and a stamp that went green because they narrowed
+ * the window would be the original defect wearing a different hat.
+ *
+ * The row count rides along so an empty table reads as "no high-water mark"
+ * rather than as `max()` over nothing, which parses to the epoch and would
+ * make every event since 1970 look outstanding.
+ */
+async function fetchMirrorHighWater(): Promise<string | null> {
+  const { rows } = await hogqlWithMeta<RawHighWater>(
+    `SELECT
+       count() AS rows_total,
+       toString(max(parseDateTimeBestEffort(toString(completed_at)))) AS newest
+     FROM test_results
+     WHERE notEmpty(toString(completed_at))`,
+    undefined,
+    { refresh: "force_blocking" },
+  );
+  const row = rows[0];
+  if (!row || Number(row.rows_total ?? 0) === 0) return null;
+  return row.newest ? String(row.newest) : null;
+}
+
+interface RawWitness {
+  at: string;
+}
+
+/**
+ * PostHog's independent record of the completions the mirror exports.
+ *
+ * ===========================================================================
+ * THREE THINGS ABOUT THIS QUERY ARE LOAD-BEARING
+ * ===========================================================================
+ * `answered > 0` MIRRORS THE EXPORT'S OWN FILTER. Both of 10 August's evening
+ * attempts answered nothing, so the export was right to drop them and the
+ * snapshot was right to be identical. A witness without this clause would have
+ * called those two a missed run and replaced one false alarm with another.
+ *
+ * IT IS ALWAYS FILTERED, WHATEVER THE RAW TOGGLE SAYS. The toggle is a display
+ * choice about who appears in the funnel; it does not change what the export
+ * put in the mirror. Letting it through would make an operator inspecting raw
+ * traffic see a stall that does not exist.
+ *
+ * IT IS BOUNDED BY ITS OWN LOOKBACK, NOT BY THE REPORTING RANGE. Same reason
+ * `fetchMirrorHighWater` is not windowed: the freshness question is about now.
+ * The bound is carried on the scope so it reaches PostHog through `{filters}`
+ * alongside the test-account rules, rather than as a second hand-written
+ * predicate that could disagree with it.
+ */
+async function fetchCompletionWitness(nowMs: number): Promise<string[]> {
+  const { rows } = await hogqlWithMeta<RawWitness>(
+    `SELECT toString(timestamp) AS at
+     FROM events
+     WHERE {filters}
+       AND event = 'test_completed'
+       AND ${EVENT_COLUMNS.answered} > 0
+     ORDER BY timestamp DESC
+     LIMIT 500`,
+    {
+      from: new Date(nowMs - WITNESS_LOOKBACK_MS).toISOString(),
+      // A shade past now, so the second-precision bound cannot clip the very
+      // completion that would prove the mirror is behind.
+      to: new Date(nowMs + WITNESS_CLOCK_SLACK_MS).toISOString(),
+      filtered: true,
+    },
+    { refresh: "force_blocking" },
+  );
+  return rows.map((row) => String(row.at));
 }
 
 /* --------------------------------------------------------------------------
@@ -975,10 +1332,20 @@ export async function fetchGrowth(
     credentials were restored, which is the hazard of writing an operational
     state into a comment at all. Read the stamp on the panel, not this.
   */
-  const [funnelPart, channels, warehouse] = await Promise.all([
+  /*
+    The witness settles on its own, beside both halves.
+
+    It is an events query, so it survives a removed warehouse source — which is
+    the case where the panel most needs to say something precise. And it fails
+    on its own: `settleWitness` answers null rather than throwing, because a
+    freshness check that could take down the funnel it annotates would be a
+    worse defect than the one it is here to fix.
+  */
+  const [funnelPart, channels, warehouse, witness] = await Promise.all([
     fetchFunnel(range, filtered),
     fetchChannels(range, filtered, nowMs),
     settleWarehouse(range),
+    settleWitness(nowMs),
   ]);
 
   return {
@@ -996,18 +1363,10 @@ export async function fetchGrowth(
           "This came out of PostHog's result cache rather than the event stream. Reload before acting on it.",
         unknown: "PostHog did not report when it calculated these. Treat them as of unknown age.",
       }),
-      warehouse: freshness(
-        "warehouse",
+      warehouse: warehouseFreshness(
         warehouse.syncedAt,
-        WAREHOUSE_STALE_AFTER_MS,
+        mirrorBacklog(warehouse.newestRowAt, witness, nowMs),
         nowMs,
-        {
-          live: "The hourly mirror of the product database is running normally.",
-          stale:
-            "The hourly mirror has missed a run, so completions and addresses are behind the visitor numbers above. Nothing below this line is current.",
-          unknown:
-            "Could not establish when the mirror last ran, so nothing below this line can be called current.",
-        },
       ),
     },
   };
@@ -1016,16 +1375,31 @@ export async function fetchGrowth(
 async function settleWarehouse(range: ResolvedRange): Promise<{
   emails: GrowthEmails | null;
   syncedAt: string | null;
+  newestRowAt: string | null;
   error: string | null;
 }> {
   try {
-    const [emails, sync] = await Promise.all([fetchEmails(range), fetchWarehouseSync()]);
-    return { emails, syncedAt: sync.get("test_results") ?? null, error: null };
+    const [emails, sync, newestRowAt] = await Promise.all([
+      fetchEmails(range),
+      fetchWarehouseSync(),
+      fetchMirrorHighWater(),
+    ]);
+    return { emails, syncedAt: sync.get("test_results") ?? null, newestRowAt, error: null };
   } catch (error) {
     return {
       emails: null,
       syncedAt: null,
+      newestRowAt: null,
       error: error instanceof Error ? error.message : "Unknown error",
     };
+  }
+}
+
+/** Null on any failure, which `mirrorBacklog` reads as "cannot tell". */
+async function settleWitness(nowMs: number): Promise<string[] | null> {
+  try {
+    return await fetchCompletionWitness(nowMs);
+  } catch {
+    return null;
   }
 }

@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { channelTint } from "@/lib/dashboard/attribution";
 import type {
+  FreshnessState,
   GrowthAudiences,
   GrowthAudienceSplit,
   GrowthChannelRow,
@@ -837,6 +838,22 @@ function AudiencePopulationNote({ audiences }: { audiences: GrowthAudiences }) {
 /**
  * The two clocks, at the top of the page where they are read before the
  * numbers rather than after them.
+ *
+ * ===========================================================================
+ * THREE TONES, BECAUSE TWO CANNOT SAY WHAT NEEDS SAYING
+ * ===========================================================================
+ * This was coral-or-mint off a boolean, and the boolean folded together two
+ * opposite conditions. The mirror publishes only when its content CHANGES, so
+ * on a quiet evening its timestamp ages while the pipeline is perfectly
+ * healthy — and the panel turned coral and said a run had been missed. It did
+ * that on 10 August across three runs that had all succeeded, and the owner was
+ * told his pipeline had failed.
+ *
+ * So an unchanged-but-caught-up mirror gets its own tone. Cream is deliberately
+ * not mint: nothing reachable from this page can prove the exporter ran, only
+ * that nothing is missing from the figures, and a green badge would be claiming
+ * the stronger fact. Coral is kept for exactly the case it was built for — work
+ * PostHog has seen that the mirror has not carried across a scheduled run.
  */
 function FreshnessStrip({
   posthog,
@@ -852,15 +869,12 @@ function FreshnessStrip({
       {items.map((f) => (
         <div
           key={f.source}
-          className={cn(
-            "rounded-2xl border-[2.5px] border-ink px-4 py-3",
-            f.stale ? "bg-coral" : "bg-mint",
-          )}
+          className={cn("rounded-2xl border-[2.5px] border-ink px-4 py-3", STATE_TINT[state(f)])}
         >
           <p className="flex flex-wrap items-baseline gap-x-2 font-sans text-[0.65rem] font-bold uppercase tracking-[0.12em] text-ink/70">
             {SOURCE_LABEL[f.source]}
             <span className="font-sans text-[0.62rem] tracking-[0.08em]">
-              {f.stale ? "· stale" : "· current"}
+              · {STATE_WORD[state(f)]}
             </span>
           </p>
           <p className="mt-1 font-display text-xl leading-none tracking-[-0.01em]">
@@ -878,22 +892,58 @@ function FreshnessStrip({
   );
 }
 
+/**
+ * The state, tolerating a payload written before it existed.
+ *
+ * A cached page or an in-flight deploy can hand this component the old shape,
+ * and falling back to the boolean keeps such a payload readable rather than
+ * blank. It cannot resurrect the defect: the old `stale` was only ever true on
+ * a mirror this version would also call stalled or unknown.
+ */
+function state(f: SourceFreshness): FreshnessState {
+  return f.state ?? (f.stale ? "stalled" : "current");
+}
+
+const STATE_TINT: Record<FreshnessState, string> = {
+  current: "bg-mint",
+  idle: "bg-cream",
+  stalled: "bg-coral",
+  unknown: "bg-coral",
+};
+
+const STATE_WORD: Record<FreshnessState, string> = {
+  current: "current",
+  idle: "unchanged",
+  stalled: "stale",
+  unknown: "unknown",
+};
+
 const SOURCE_LABEL: Record<SourceFreshness["source"], string> = {
   posthog: "Visitors, funnel & channels · PostHog",
   warehouse: "Completions & addresses · hourly mirror",
 };
 
-/** The same fact, small enough to sit in a panel header. */
+/**
+ * The same fact, small enough to sit in a panel header.
+ *
+ * The state word is printed for everything except a current source, where the
+ * bare timestamp already says it. An unchanged mirror is labelled rather than
+ * left to its colour alone: it is the reading most likely to be glanced at and
+ * misread as the alarm it used to be.
+ */
 function Stamp({ freshness }: { freshness: SourceFreshness }) {
+  const s = state(freshness);
   return (
     <span
       title={freshness.note}
       className={cn(
         "inline-flex shrink-0 items-center rounded-full border-2 border-ink px-2.5 py-0.5 font-sans text-[0.62rem] font-bold uppercase tracking-[0.06em]",
-        freshness.stale ? "bg-coral" : "bg-mint",
+        STATE_TINT[s],
       )}
     >
-      {freshness.at ? `${freshness.stale ? "stale · " : ""}${when(freshness.at)}` : "age unknown"}
+      {freshness.at
+        ? `${s === "current" ? "" : `${STATE_WORD[s]} · `}${when(freshness.at)}`
+        : "age unknown"}
     </span>
   );
 }

@@ -475,15 +475,111 @@ export interface GrowthEmails {
   accounting: CompletionAccounting;
 }
 
+/**
+ * How a source's age should be read.
+ *
+ * ===========================================================================
+ * "NOTHING HAPPENED" AND "NOTHING IS WORKING" ARE OPPOSITE CONDITIONS
+ * ===========================================================================
+ * This used to be a boolean, and the boolean could not tell them apart. The
+ * warehouse stamp reported an age and called anything past the cadence stale,
+ * which is right for a dead exporter and wrong for a quiet evening — and the
+ * quiet evening is the common case. It fired on 10 August over three runs that
+ * had all succeeded, and the owner was told his pipeline had failed. It had
+ * not. See the freshness section of lib/dashboard/growth.ts for the mechanism.
+ *
+ *   current   The source published something inside its own cadence. Nothing
+ *             to argue about: it demonstrably ran, and it demonstrably had
+ *             something to say.
+ *   idle      The source has published nothing for longer than its cadence,
+ *             and nothing is overdue — either nothing has qualified for
+ *             export, or what has is not yet due at the next scheduled run.
+ *             The figures carry everything the dashboard can see. This is NOT
+ *             stale, and colouring it as though it were is the defect above.
+ *   stalled   Work is outstanding and has missed a scheduled run, or the age
+ *             could be established but the outstanding work could not be. The
+ *             figures are behind and the reader must not act on them.
+ *   unknown   The age itself could not be established. Counts as stale: the
+ *             one thing this page may never do is imply a number is current
+ *             because it failed to find out whether it was.
+ */
+export type FreshnessState = "current" | "idle" | "stalled" | "unknown";
+
+/**
+ * What the hourly mirror has not carried across yet, and how long it has had.
+ *
+ * ===========================================================================
+ * WHY THIS EXISTS AT ALL
+ * ===========================================================================
+ * The mirror's timestamp only advances when the exported CONTENT changes — the
+ * export skips the upload when the snapshot it built is byte-identical to the
+ * one already there. So the timestamp alone cannot separate a stopped export
+ * from a quiet hour, and reading it as liveness is what produced a false alarm.
+ *
+ * The separator is a second, independent witness: PostHog's own event stream,
+ * which is live within seconds and records a `test_completed` for every
+ * completion Aurora receives. If PostHog has seen nothing the mirror lacks,
+ * the mirror is caught up whatever its timestamp says. If PostHog has seen
+ * completions the mirror has not carried across a full scheduled run, the
+ * export really is behind — and that is true no matter how recently it last
+ * managed to publish.
+ *
+ * IT IS A WITNESS, NOT A LEDGER. The export's filters live on the Aurora row
+ * (`synthetic`, `internal`) and PostHog's live in project settings; they are
+ * different rule sets over different systems and they do not pick out exactly
+ * the same humans. So `outstanding` is the count of completions PostHog
+ * recorded and the mirror does not carry — which is what the panel says, word
+ * for word — rather than a claim about what the exporter owes.
+ */
+export interface MirrorBacklog {
+  /**
+   * The newest completion the mirror actually carries.
+   *
+   * The mirror's high-water mark, and the honest anchor for "how current are
+   * the figures below" — the content-change time is only when the export last
+   * had something to write, which is always later and answers a different
+   * question.
+   */
+  newestRowAt: string | null;
+  /** Qualifying completions PostHog recorded after `newestRowAt`. */
+  outstanding: number;
+  /** The oldest of those: the one that has waited longest for a run. */
+  oldestOutstandingAt: string | null;
+  oldestOutstandingAgeSeconds: number | null;
+  /**
+   * Whether the witness could be consulted at all.
+   *
+   * False when the event stream or the high-water mark could not be read, and
+   * the verdict then falls back to treating unchanged content as stale. Doubt
+   * resolves towards the alarm, never away from it — a freshness indicator
+   * that goes quiet when its own inputs fail is worse than none.
+   */
+  witnessed: boolean;
+}
+
 /** When one of the two sources behind this page was last brought up to date. */
 export interface SourceFreshness {
   source: "posthog" | "warehouse";
   /** ISO-8601, or null when it could not be established. */
   at: string | null;
   ageSeconds: number | null;
-  /** Unknown counts as stale. Never imply currency that was not verified. */
+  /**
+   * Whether the reader must discount the figures this source feeds.
+   *
+   * Exactly `state === "stalled" || state === "unknown"`. Kept alongside
+   * `state` because it is the question every consumer actually asks, and
+   * because an `idle` source answering `true` here is the whole defect.
+   */
   stale: boolean;
+  state: FreshnessState;
   note: string;
+  /**
+   * The evidence behind an `idle` or `stalled` verdict.
+   *
+   * Null on the PostHog stamp, which has no mirror behind it and needs no
+   * witness: its own answer carries the moment it was computed.
+   */
+  backlog: MirrorBacklog | null;
 }
 
 /** A person as they appear in the list, before their journey is loaded. */
