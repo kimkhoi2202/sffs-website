@@ -33,20 +33,24 @@
  *   1. INTERCEPTION. Every event POST to /ingest is caught, decoded, asserted
  *      on, and answered with a local 200. The SDK believes it delivered.
  *
- *   2. THE INTERNAL STAMP. Layer 1 is not airtight and this file learned that
- *      the expensive way: the batch the SDK queues as a tab CLOSES leaves as a
- *      `sendBeacon` during unload, which a route handler on a closing page does
- *      not reliably see. An early version of this suite leaked six synthetic
- *      people into the production project that way — six humans who "chose a
- *      branch" and never started a test, landing squarely on the funnel step
- *      this whole feature is being measured by.
+ *   2. THE INTERNAL STAMP. Layer 1 is NOT airtight and cannot be made airtight,
+ *      which this file learned the expensive way. Whatever the SDK still has
+ *      queued when a page UNLOADS leaves as a `sendBeacon`, and a route handler
+ *      on an unloading page does not reliably see it. That is not only about
+ *      closing tabs: every `page.goto` to the next screen is an unload too, so
+ *      a suite that visits more than one URL leaks by construction. An early
+ *      version of this one put six synthetic people into the production
+ *      project that way — six humans who "chose a branch" and never started a
+ *      test, landing squarely on the funnel step this feature is measured by.
  *
  *      So the browser also marks itself internal before any page script runs
  *      (the same durable flag /internal sets), which stamps `is_internal: true`
  *      on every event including the ones that escape, and the project's
  *      test-account filter excludes them from every public number.
  *
- * Neither layer alone is enough. Do not remove either.
+ * LAYER 2 IS THE ONE THAT ACTUALLY HOLDS. Layer 1 is what makes the assertions
+ * possible and keeps the volume down; it is not the guarantee. Do not remove
+ * either, and do not weaken layer 2 on the theory that interception covers it.
  *
  * `/flags/` and `/static/` pass through untouched, because the SDK needs real
  * answers to those to boot at all.
@@ -265,6 +269,32 @@ await context.addInitScript(() => {
   } catch {
     /* storage blocked — interception is still in front of it */
   }
+  /*
+    EVERY LANDING IS A FRESH ARRIVAL, and this is where that is arranged.
+
+    The flow's saved state legitimately beats the URL — a visitor who
+    deep-linked to /adult and is now on question eleven must not be thrown back
+    to the intro by a reload (see components/test/test-flow.tsx). Correct
+    product behaviour, and it makes each screen in this suite contaminate the
+    next: /kids would restore /adult's intro and report no branch at all.
+
+    Clearing it from inside the page AFTER load was the first attempt and it is
+    a race — the flow's persist effect can write the restored state back before
+    the reload lands, so the suite failed about one run in three. Closing the
+    tab between landings was the second, and it is worse than a race: the batch
+    a closing tab flushes leaves as a `sendBeacon` during unload, which the
+    route interceptor does not reliably see, and that is exactly how six
+    synthetic people got into the production project.
+
+    An init script runs BEFORE the page's own scripts on every navigation, so
+    the flow simply never finds a saved state. No race, and no reason to ever
+    close a tab mid-run.
+  */
+  try {
+    sessionStorage.clear();
+  } catch {
+    /* storage blocked — the flow starts clean anyway */
+  }
 });
 
 /* -- the interceptor ------------------------------------------------------ */
@@ -309,31 +339,15 @@ await context.route("**/ingest/**", async (route) => {
   await route.fulfill({ status: 200, contentType: "application/json", body: '{"status":1}' });
 });
 
-let page = await context.newPage();
-
 /**
- * Land on a path with the full ad query string, as a brand new visitor.
- *
- * A NEW TAB EACH TIME, because sessionStorage is per-tab and the flow's saved
- * state legitimately beats the URL — a visitor who deep-linked to /adult and is
- * now on question eleven must not be thrown back to the intro by a reload (see
- * the restore note in components/test/test-flow.tsx). That is correct product
- * behaviour and it makes the previous screen in this suite contaminate the next
- * one: /kids would restore /adult's intro and report no branch at all.
- *
- * Clearing storage in the page was the first attempt and it is a RACE — the
- * flow's persist effect can write the restored state back after the clear and
- * before the reload, so the suite failed on roughly one run in three. A fresh
- * tab has empty sessionStorage by construction, with nothing to time.
+ * ONE TAB FOR THE WHOLE RUN, deliberately. Closing tabs is what leaked events
+ * past the interceptor; the init script above is what makes each landing a
+ * fresh arrival without needing to.
  */
+const page = await context.newPage();
+
+/** Land on a path with the full ad query string, as a brand new visitor. */
 async function land(path) {
-  if (page) {
-    // Closed BEFORE the capture buffer is reset, so the dying tab's unload
-    // events cannot land in the next screen's assertions.
-    await page.close();
-    await new Promise((resolve) => setTimeout(resolve, 400));
-  }
-  page = await context.newPage();
   captured = [];
   const url = `${BASE}${path}?${AD_QUERY}`;
   await page.goto(url, { waitUntil: "domcontentloaded" });
