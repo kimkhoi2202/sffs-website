@@ -43,6 +43,21 @@
  * EVERY LINE OF OUTPUT NAMES THE ONE IT BELONGS TO. A failure that does not
  * say which audience broke sends the next reader to the wrong component.
  *
+ * ===========================================================================
+ * IT ALSO PINS WHAT THE RESULTS SCREEN NO LONGER OFFERS
+ * ===========================================================================
+ * "Start over" was removed from the confirmation on 10 August. This file spent
+ * the morning asserting it was still there, in the same loop as the two exits
+ * that legitimately stayed, so a correct change made the suite permanently red
+ * on both audiences — and a suite that always fails is one nobody reads, which
+ * is exactly how six hours of email outage passed unnoticed the day before.
+ *
+ * The assertion is inverted rather than deleted, and part 7 adds the half that
+ * nothing guarded at all: that the two places restarting was DELIBERATELY KEPT
+ * still work. Removing a control is only correct if the thing it did is still
+ * reachable where it belongs, and a lock-out would otherwise have shipped with
+ * every suite green.
+ *
  * The two are given their own context rather than their own page because the
  * recovery section in part 6 reads `localStorage`: one shared context would
  * have the second audience find the first one's token and pass section 6
@@ -126,6 +141,16 @@ const AUDIENCES = [
     */
     pointsAtEmail: /link in it shows your results/i,
     bodyPattern: /Ask your parent[^.]*\./,
+    /*
+      A saved state that cannot resolve to a test, which is what the escape
+      hatch in components/test/test-flow.tsx exists for. The two audiences fail
+      in genuinely different ways and both are covered: a child state can name a
+      grade with no bank behind it, which is the case the hatch's own comment
+      cites, while `getTest("adult", …)` always resolves so the adult state has
+      to lose the audience itself.
+    */
+    brokenState: { step: "intro", audience: "child", grade: 99 },
+    brokenBecause: "a grade with no bank behind it",
   },
   {
     id: "adult",
@@ -139,6 +164,8 @@ const AUDIENCES = [
     sentHeadline: /check your email/i,
     pointsAtEmail: /open the link in the email to see them/i,
     bodyPattern: /Your results are on their way[^.]*\./,
+    brokenState: { step: "results", audience: null, grade: null },
+    brokenBecause: "a half-written state with no audience in it",
   },
 ];
 
@@ -384,12 +411,40 @@ async function runAudience(spec) {
       !PROMISES_A_REVEAL.test(text),
       text.match(PROMISES_A_REVEAL)?.[0] ?? "no such promise",
     );
-    for (const label of [/send it again/i, /use a different one/i, /start over/i]) {
+    /*
+      THE TWO EXITS THAT STAYED, AND THE THIRD THAT WENT.
+
+      "Start over" was removed from this card on 10 August: restarting the test
+      is not something a results screen should offer, and beside "tell us where
+      to send it" it read as an equal option — a grade-3 child pressed it five
+      seconds after scoring 15 out of 15. See the note at the foot of
+      components/test/email-gate.tsx.
+
+      THIS FILE ASSERTED THE OPPOSITE UNTIL NOW, and asserted it in the same
+      loop as the two exits that legitimately stayed, so one stale entry made
+      the suite permanently red on both audiences. A suite that always fails is
+      a suite nobody reads, which is the failure mode that let six hours of
+      email outage pass unnoticed on 9 August.
+
+      The check is inverted rather than deleted. An assertion that the removal
+      HELD is worth more than no assertion at all: this screen has regressed
+      before, and "Start over" specifically has been added, moved and removed
+      across three changes.
+    */
+    for (const [label, pattern] of [
+      ["Send it again", /send it again/i],
+      ["Wrong address? Use a different one", /use a different one/i],
+    ]) {
       check(
-        `"${String(label).slice(1, -2)}" is still offered`,
-        await page.getByRole("button", { name: label }).isVisible(),
+        `"${label}" is still offered`,
+        await page.getByRole("button", { name: pattern }).isVisible(),
       );
     }
+    check(
+      '"Start over" is gone from the confirmation, and stayed gone',
+      (await page.getByRole("button", { name: /start over/i }).count()) === 0,
+      `${await page.getByRole("button", { name: /start over/i }).count()} found`,
+    );
   }
 
   /* == 5. and nothing later takes the glass off =========================== */
@@ -497,6 +552,96 @@ async function runAudience(spec) {
     check(
       "and the share control is on this page",
       await page.getByRole("button", { name: /share my result/i }).isVisible(),
+    );
+  }
+
+  /* == 7. restarting is still possible, just not from the results ========= */
+  console.log(`\nRESTARTING STILL WORKS WHERE IT WAS KEPT  [${spec.id}]`);
+  console.log("-".repeat(72));
+  /*
+    THE OTHER HALF OF REMOVING "Start over", AND THE HALF WITH NO GUARD.
+
+    Taking a control away is only correct if the thing it did is still reachable
+    where it belongs. `reset` in components/test/test-flow.tsx still backs two
+    screens, and until now nothing asserted either of them — so the removal
+    could quietly have become a lock-out and every suite would have stayed
+    green.
+
+    Both are checked per audience. The adult and child flows have drifted apart
+    before: a revert once fixed the adult results screen and left the child one
+    still showing the score, which is why this file walks both at all.
+  */
+  {
+    /* -- a. mid-test, the quit control ------------------------------------ */
+    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.evaluate(() => sessionStorage.clear());
+    await page.reload({ waitUntil: "networkidle" });
+    await page.addStyleTag({ content: "nextjs-portal{display:none!important}" });
+    await spec.enter(page);
+    await page.getByRole("button", { name: /start the test/i }).click();
+    await page.waitForTimeout(700);
+
+    const quit = page.getByRole("button", { name: /^Quit the test$/i });
+    check("the quit control is still offered mid-test", await quit.isVisible());
+
+    await quit.click();
+    await page.waitForTimeout(300);
+    /*
+      THE CONFIRMATION IS PART OF THE BEHAVIOUR, not an obstacle to click past.
+      Quitting throws away answers and the clock does not stop, so a single
+      stray tap must not do it.
+    */
+    check(
+      "and it asks before throwing the attempt away",
+      await page.getByText(/quit the test\?/i).first().isVisible(),
+    );
+    await page.getByRole("button", { name: /^Quit$/ }).click();
+    await page.waitForTimeout(600);
+    check(
+      "confirming it lands back on the opening fork",
+      await page.getByRole("button", { name: /I'm a kid/i }).isVisible(),
+    );
+
+    /* -- b. the "Something went sideways" hatch --------------------------- */
+    /*
+      The one screen that would otherwise be a dead end: a saved state that
+      cannot resolve to a test renders neither the runner nor the gate, so
+      without this it is a blank page with no way out.
+    */
+    await page.evaluate((broken) => {
+      sessionStorage.setItem("sffs_test_v2", JSON.stringify(broken));
+    }, spec.brokenState);
+    await page.reload({ waitUntil: "networkidle" });
+    await page.addStyleTag({ content: "nextjs-portal{display:none!important}" });
+    await page.waitForTimeout(700);
+
+    check(
+      `the dead-end screen appears for ${spec.brokenBecause}`,
+      await page.getByText(/something went sideways/i).first().isVisible(),
+    );
+    const hatch = page.getByRole("button", { name: /start over/i });
+    check("and it still offers a way out", await hatch.isVisible());
+
+    await hatch.click();
+    await page.waitForTimeout(600);
+    check(
+      "which returns to the opening fork rather than the blank page",
+      await page.getByRole("button", { name: /I'm a kid/i }).isVisible(),
+    );
+    /*
+      AND IT DOES NOT COME BACK. `reset` clears the stored state, but the
+      persist effect immediately writes the fresh one over the top, so the
+      question is not whether the key is gone — it is whether what replaced it
+      still resolves. A reload is the only thing that actually answers that,
+      and a hatch that reappeared here would be a loop with no exit.
+    */
+    await page.reload({ waitUntil: "networkidle" });
+    await page.addStyleTag({ content: "nextjs-portal{display:none!important}" });
+    await page.waitForTimeout(700);
+    check(
+      "and the dead end does not come back on reload",
+      (await page.getByText(/something went sideways/i).count()) === 0 &&
+        (await page.getByRole("button", { name: /I'm a kid/i }).isVisible()),
     );
   }
 
