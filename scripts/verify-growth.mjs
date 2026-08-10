@@ -1360,9 +1360,73 @@ const highWaterQuery = () => sent.find((r) => r.sql.includes("AS newest"));
   );
 }
 
+/* -- 13. the completion split is drawn as siblings, not as a subset ------- */
+/*
+  The defect this guards: the two halves of the completion stage were drawn as
+  a stage and an indented row beneath it marked `↳`. Indent-plus-arrow is the
+  notation for "contained in the thing above", so the panel was saying the
+  walk-aways were part of the finishers. They are mutually exclusive halves
+  measured against one denominator.
+
+  The owner — who specified the rule — read the 194 as sitting inside the 601
+  and asked. That is as strong a signal as a layout ever gives that it is
+  lying.
+
+  This is a source check rather than a rendered one because the panel is a
+  client component with JSX, which the type-stripping loader these scripts run
+  under cannot execute. A grep is a weaker test than a render, but the thing it
+  is protecting against is precisely somebody reaching for the arrow again, and
+  it catches that.
+*/
+{
+  const { readFileSync } = await import("node:fs");
+  const source = readFileSync(join(ROOT, "app/dashboard/components/growth-panel.tsx"), "utf8");
+
+  const inMarkup = source
+    .split("\n")
+    .filter((line) => line.includes("↳"))
+    .filter((line) => {
+      const t = line.trim();
+      return !t.startsWith("*") && !t.startsWith("//") && !t.startsWith("/*");
+    });
+  check(
+    inMarkup.length === 0,
+    "the subset arrow appears nowhere in the panel's markup — only in the note recording why it was removed",
+    inMarkup.join(" / "),
+  );
+
+  /*
+    The arrow carried exactly one meaning on this page and nothing else used
+    it, so removing it cost no other row a signal. If a future row wants it
+    back for something genuinely nested, that is fine — but it may not share
+    the glyph with a split, because one mark meaning two things is worse than
+    either meaning alone.
+  */
+  check(
+    !/pl-\d/.test(source),
+    "and no row is indented, which was the other half of the containment reading",
+    (source.match(/pl-\d\S*/g) ?? []).join(", "),
+  );
+
+  /*
+    The split's arithmetic is derived from ONE base rather than passed in
+    twice. That is what makes the two rates provably share a denominator on
+    screen — 46.2% + 14.9% = 61.1% only holds if they do — so the panel cannot
+    print a total that fails to add up.
+  */
+  check(
+    /parts\.reduce\(\(acc, part\) => acc \+ part\.people, 0\)/.test(source),
+    "the split's total is summed from its own parts rather than taken from a separate figure",
+  );
+  check(
+    /rateOf\(part\.people, base\)/.test(source) && /rateOf\(total, base\)/.test(source),
+    "…and every rate in the split is measured against the one shared base",
+  );
+}
+
 console.log(
   failures === 0
-    ? `\nverify-growth: OK. Four stages of people over one population, finished tests kept distinct from them and from the ones the clock wrote, the 9 August outage held out and declared, Reddit split in two, the audience split reconciling per row on both bases and regrouped without a second query, and neither clock lies.`
+    ? `\nverify-growth: OK. Four stages of people over one population, finished tests kept distinct from them and from the ones the clock wrote, the completion split drawn as siblings that add up, the 9 August outage held out and declared, Reddit split in two, the audience split reconciling per row on both bases and regrouped without a second query, and neither clock lies.`
     : `\nverify-growth: ${failures} failure(s).`,
 );
 if (failures > 0) process.exit(1);

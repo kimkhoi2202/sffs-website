@@ -83,7 +83,14 @@ export function GrowthPanel({ data }: { data: GrowthResponse }) {
       >
         <div
           role="region"
-          aria-label="Four-stage funnel in distinct people"
+          /*
+            The split's geometry — the two-tone band, the missing divider, the
+            sum rule — is entirely visual, so the relationship it encodes is
+            said here for anyone who is not seeing it. Without this, a screen
+            reader gets five stage rows in sequence and the same subset reading
+            the arrow used to produce.
+          */
+          aria-label="Funnel in distinct people. Finished and Left are exclusive halves of the completions, measured against the same starters and totalled in the row beneath them."
           tabIndex={0}
           className="-mx-1 overflow-x-auto px-1 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-ink"
         >
@@ -116,24 +123,28 @@ export function GrowthPanel({ data }: { data: GrowthResponse }) {
                 together is what made this page report that half of everyone
                 who takes the test refuses to give an address.
 
-                So the stage is the finishers, and the walk-aways branch out of
-                it. The branch is indented and tinted because it is an EXIT,
-                not a step: nothing below it descends from it.
+                So the stage splits in two, and the two halves are SIBLINGS —
+                see the note on `FunnelSplit` for the geometry that has to
+                carry that, and the reading it cost when it did not.
               */}
-              <FunnelRow
-                label="Finished the test"
-                hint="ended it themselves, or beat the clock to the end"
-                people={funnel.finished}
-                rate={rateOf(funnel.finished, funnel.started)}
-                rateNote="of the people who started"
-              />
-              <FunnelRow
-                variant="branch"
-                label="Left; the clock submitted for them"
-                hint={`answered under ${Math.round(funnel.answeredShare * 100)}% and stopped`}
-                people={funnel.abandonedOnly}
-                rate={rateOf(funnel.abandonedOnly, funnel.started)}
-                rateNote="of the people who started"
+              <FunnelSplit
+                base={funnel.started}
+                baseNote="of the people who started"
+                totalLabel="Completed a test, either way"
+                parts={[
+                  {
+                    label: "Finished the test",
+                    hint: "ended it themselves, or beat the clock to the end",
+                    people: funnel.finished,
+                    tone: "mint",
+                  },
+                  {
+                    label: "Left; the clock submitted for them",
+                    hint: `answered under ${Math.round(funnel.answeredShare * 100)}% and stopped`,
+                    people: funnel.abandonedOnly,
+                    tone: "coral",
+                  },
+                ]}
               />
               <FunnelRow
                 label="Gave an email"
@@ -1210,7 +1221,6 @@ function FunnelRow({
   rate: value,
   rateNote,
   note,
-  variant = "stage",
 }: {
   label: string;
   hint: string;
@@ -1220,17 +1230,11 @@ function FunnelRow({
   rateNote?: string;
   /** A qualification on the count itself, printed under it. */
   note?: string;
-  /** A branch leaves the funnel; nothing below it descends from it. */
-  variant?: "stage" | "branch";
 }) {
-  const branch = variant === "branch";
   return (
-    <tr className={cn("border-b-2 border-ink/15", branch && "bg-coral/20")}>
-      <th scope="row" className={cn("py-2 pr-3 font-normal", branch && "pl-4")}>
-        <span className={cn("font-semibold", branch && "text-ink/80")}>
-          {branch && <span className="mr-1.5 text-ink/40">↳</span>}
-          {label}
-        </span>
+    <tr className="border-b-2 border-ink/15">
+      <th scope="row" className="py-2 pr-3 font-normal">
+        <span className="font-semibold">{label}</span>
         <span className="ml-2 text-[0.72rem] font-semibold text-ink/45">{hint}</span>
       </th>
       <Cell strong>
@@ -1252,6 +1256,126 @@ function FunnelRow({
     </tr>
   );
 }
+
+/**
+ * Two outcomes that split one population, and the arithmetic that proves it.
+ *
+ * ===========================================================================
+ * THE GEOMETRY THAT MISLED THE PERSON WHO COMMISSIONED THE PANEL
+ * ===========================================================================
+ * These two rows used to be a stage followed by an indented row marked `↳`.
+ * Indent-plus-arrow is the universal notation for "contained in the thing
+ * above", so the layout was telling the reader that the walk-aways were a
+ * subset of the finishers. They are the exact opposite: mutually exclusive
+ * halves that share one denominator.
+ *
+ * The owner knows the rule precisely — he asked for it — and he still read the
+ * 194 as sitting inside the 601. When the person who defined the split
+ * misreads the picture of it, the picture is wrong, and no amount of prose
+ * underneath repairs a layout that contradicts it. This panel already carries
+ * six paragraphs of explanation; a seventh apologising for the geometry would
+ * have been the wrong direction.
+ *
+ * ===========================================================================
+ * WHAT CARRIES THE CLAIM NOW
+ * ===========================================================================
+ * Nothing here is a new sentence. Four structural changes do the work:
+ *
+ *   NO ARROW, NO INDENT   Both halves start at the same offset as every other
+ *                         stage, so neither is subordinate to the other.
+ *   ONE BAND              No rule between them, and each takes a tint of its
+ *                         own — mint for the finish, coral for the loss. Two
+ *                         adjacent tinted rows with no divider read as one
+ *                         thing in two parts, which is what they are.
+ *   A SUM RULE            A total underneath, in the ordinary accounting
+ *                         notation for "these add up". A row above a sum rule
+ *                         cannot be read as containing the row beside it.
+ *   THE RATES ADD TOO     46.2% + 14.9% = 61.1% is only true if the two are
+ *                         exclusive AND measured against the same base, so the
+ *                         shared denominator is on screen as arithmetic rather
+ *                         than as a claim. Both figures are derived from one
+ *                         `base` here, so the sum cannot drift out of true.
+ *
+ * The per-row basis line is deliberately dropped from the two halves and
+ * stated once, on the total that owns them. Every other row in this table
+ * names its own base because every other row HAS its own; printing the same
+ * phrase twice under two adjacent percentages is part of what let them read as
+ * two independent measurements.
+ *
+ * ===========================================================================
+ * THE TOTAL IS A SUM, NOT A STAGE
+ * ===========================================================================
+ * It carries the 795 that this panel used to call "Completed" and lead with,
+ * which is why it is styled as a total and not as a row: muted, under a rule,
+ * with no hint of its own. The figure is not being restored to the funnel — it
+ * is being shown as what it always was, two different things added together.
+ */
+function FunnelSplit({
+  base,
+  baseNote,
+  totalLabel,
+  parts,
+}: {
+  /** The population BOTH halves are measured against. Never their own sum. */
+  base: number;
+  baseNote: string;
+  totalLabel: string;
+  parts: { label: string; hint: string; people: number; tone: "mint" | "coral" }[];
+}) {
+  const total = parts.reduce((acc, part) => acc + part.people, 0);
+  return (
+    <>
+      {parts.map((part) => (
+        <tr key={part.label} className={SPLIT_TINT[part.tone]}>
+          <th scope="row" className="py-2 pr-3 font-normal">
+            <span className="font-semibold">{part.label}</span>
+            <span className="ml-2 text-[0.72rem] font-semibold text-ink/45">{part.hint}</span>
+          </th>
+          <Cell strong>{count(part.people)}</Cell>
+          <Cell muted>{rate(rateOf(part.people, base))}</Cell>
+        </tr>
+      ))}
+      {/*
+        The label is deliberately lighter than a stage's.
+
+        Bold is what every other row in the first column uses, so a bold total
+        competes with the stages instead of closing them — and this row has
+        just been mistaken for a stage once already, in the other direction.
+        The rule above carries the "these add up"; the typography only has to
+        avoid arguing with it.
+      */}
+      <tr className="border-b-2 border-ink/15">
+        <th scope="row" className="border-t-2 border-ink py-2 pr-3 font-normal">
+          <span className="text-[0.78rem] text-ink/60">{totalLabel}</span>
+        </th>
+        <Cell as="td" strong className="border-t-2 border-ink text-ink/70">
+          {count(total)}
+        </Cell>
+        <Cell as="td" muted className="border-t-2 border-ink">
+          {rate(rateOf(total, base))}
+          <span className="block font-sans text-[0.62rem] font-semibold leading-tight text-ink/40">
+            {baseNote}
+          </span>
+        </Cell>
+      </tr>
+    </>
+  );
+}
+
+/**
+ * The two halves of the split, tinted as outcomes rather than as ranks.
+ *
+ * Both must land at the SAME APPARENT WEIGHT, which is why the two opacities
+ * differ. Coral is a saturated #fd7962 and mint a pale pastel #c6fcd0, so
+ * matching the numbers would leave the mint row looking untinted — and one
+ * tinted row beside one plain row is exactly the asymmetry that made the loss
+ * look like a footnote hanging off the finish. These two were matched by eye
+ * at normal zoom; if either colour changes, match them again.
+ */
+const SPLIT_TINT: Record<"mint" | "coral", string> = {
+  mint: "bg-mint/60",
+  coral: "bg-coral/30",
+};
 
 /**
  * What "finished" means, and what the row above it used to include.
@@ -1395,12 +1519,21 @@ function Cell({
   strong,
   muted,
   title,
+  className: extra,
 }: {
   children: ReactNode;
   as?: "td" | "th";
   strong?: boolean;
   muted?: boolean;
   title?: string;
+  /**
+   * Added to the shared cell classes, never instead of them.
+   *
+   * A caller that needs a rule above a total still has to line up on the same
+   * digit as the rows it totals, so the alignment stays here rather than being
+   * re-declared at the call site and drifting a pixel.
+   */
+  className?: string;
 }) {
   const className = cn(
     "py-2 pr-3 text-right tabular-nums",
@@ -1408,6 +1541,7 @@ function Cell({
     as === "td" && "font-mono text-[0.78rem]",
     strong && "font-bold",
     muted && "text-ink/50",
+    extra,
   );
   if (as === "th") {
     return (
