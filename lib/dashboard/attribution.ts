@@ -19,17 +19,46 @@
  * which one they are looking at.
  *
  *   1  utm      an explicit utm_source on the landing URL
+ *   1½ returner the entry path is /results/<token>. See below — this is the one
+ *               landing signal that outranks the referrer.
  *   2  referrer the HTTP referrer, including app referrers that look nothing
  *               like a web one (`android-app://com.reddit.frontpage/`)
- *   3  landing  the entry path itself — /results/<token> means they came back
- *               from their emailed results, /beat/<token> means a friend shared
- *               a challenge, /go/<id> is a per-post short link
+ *   3  landing  the rest of the entry path — /beat/<token> means a friend
+ *               shared a challenge, /go/<id> is a per-post short link
  *   4  survey   the post-signup "how did you find us?" answer: self-reported,
  *               but a real human's real answer
  *   5  unknown  and only now
  *
  * Rungs 2, 3 and 4 must never be quietly folded into rung 5. Making a weak but
  * real signal visible is the entire point.
+ *
+ * ===========================================================================
+ * WHY /results/ AND ONLY /results/ JUMPS THE REFERRER
+ * ===========================================================================
+ * The referrer sits above the landing path because for almost every entry the
+ * referrer is the stronger fact: it names the surface that sent the visit, and
+ * a path can be reached from anywhere. A `/beat/<token>` forwarded through
+ * WhatsApp really was acquired through WhatsApp, and `/go/<id>` really was
+ * clicked on whichever platform carried the post. Those stay below the
+ * referrer, deliberately.
+ *
+ * `/results/<token>` is the exception, because it is not evidence about a
+ * surface at all — it is evidence about the PERSON. You cannot hold a results
+ * token unless you already took the test and were already emailed the link, so
+ * the visit is a re-entry no matter which app happened to open it. Ranked
+ * below the referrer it was being filed as acquisition by whatever surface the
+ * link was tapped in, which on 10 August 2026 was 88 of 280 such sessions:
+ *
+ *   www.google.com          25  →  "Google Search", 40% of all organic search
+ *   com.google.android.gm   53  →  "Email"    (the Gmail Android app)
+ *   mail.google.com          6  →  "Email"
+ *   outlook.live.com         1  →  "Email"
+ *   temp-mail.org            1  →  "Email"
+ *   10minutemail.com         2  →  "10minutemail.com"
+ *
+ * Every one of them had already completed the test, so they were inflating
+ * every stage of an acquisition funnel, not merely mislabelling its first row.
+ * The whole "Email" channel turned out to be this and nothing else.
  */
 
 export type AttributionRung = "utm" | "referrer" | "landing" | "survey" | "unknown";
@@ -160,6 +189,20 @@ export function channelFromUtm(expr: string): string {
 }
 
 /**
+ * A results token on the entry path — the returner signal, and the only
+ * landing-path clause that is allowed above the referrer.
+ *
+ * Split out of `channelFromLanding` so that the predicate and the label exist
+ * once. It is still the first clause of that function, so the landing rung on
+ * its own remains complete; the ladder just consults this half of it earlier.
+ * See the note at the top of this file for why only this one is promoted.
+ */
+export function channelFromResultsToken(expr: string): string {
+  const p = `lower(coalesce(toString(${expr}), ''))`;
+  return `if(${p} LIKE '/results/%', 'Results email link', '')`;
+}
+
+/**
  * The entry path, mapped to a channel.
  *
  * The vanity routes (`/reddit`, `/x`, …) 307 to a UTM-tagged URL server-side,
@@ -168,14 +211,15 @@ export function channelFromUtm(expr: string): string {
  * stops matching is worse than a redundant clause.
  *
  * What DOES land here routinely is `/results/<token>`: someone opening the link
- * from their inbox in a fresh session with no referrer. A UTM-only report calls
- * that direct traffic. It is the single most engaged visit the site gets.
+ * from their inbox. A UTM-only report calls that direct traffic. It is the
+ * single most engaged visit the site gets.
  */
 export function channelFromLanding(expr: string): string {
   const p = `lower(coalesce(toString(${expr}), ''))`;
+  const returner = channelFromResultsToken(expr);
   return `multiIf(
     ${p} = '', '',
-    ${p} LIKE '/results/%', 'Results email link',
+    ${returner} != '', ${returner},
     ${p} LIKE '/beat/%', 'Shared challenge link',
     ${p} LIKE '/go/%', 'Short link',
     ${p} = '/reddit', 'Reddit',
@@ -217,10 +261,18 @@ export interface LadderColumns {
   surveySource: string;
 }
 
-/** `1`–`5`, as a rung name. */
+/**
+ * A rung name.
+ *
+ * The returner clause reports as `landing`, because that is what it is — the
+ * entry path resolved it. It is not a sixth rung: adding one would change the
+ * `AttributionRung` vocabulary, the strength shading and every panel that reads
+ * them, to say something the existing name already says truthfully.
+ */
 export function rungExpr(c: LadderColumns): string {
   return `multiIf(
     ${channelFromUtm(c.utmSource)} != '', 'utm',
+    ${channelFromResultsToken(c.entryPath)} != '', 'landing',
     ${channelFromDomain(c.refDomain)} != '', 'referrer',
     ${channelFromLanding(c.entryPath)} != '', 'landing',
     ${channelFromSurvey(c.surveySource)} != '', 'survey',
@@ -232,6 +284,7 @@ export function rungExpr(c: LadderColumns): string {
 export function channelExpr(c: LadderColumns): string {
   return `multiIf(
     ${channelFromUtm(c.utmSource)} != '', ${channelFromUtm(c.utmSource)},
+    ${channelFromResultsToken(c.entryPath)} != '', ${channelFromResultsToken(c.entryPath)},
     ${channelFromDomain(c.refDomain)} != '', ${channelFromDomain(c.refDomain)},
     ${channelFromLanding(c.entryPath)} != '', ${channelFromLanding(c.entryPath)},
     ${channelFromSurvey(c.surveySource)} != '', ${channelFromSurvey(c.surveySource)},
@@ -239,10 +292,24 @@ export function channelExpr(c: LadderColumns): string {
   )`;
 }
 
-/** The raw evidence the rung fired on, so a reader can audit the inference. */
+/**
+ * The raw evidence the rung fired on, so a reader can audit the inference.
+ *
+ * The returner clause names the referrer it outranked rather than hiding it.
+ * These are the rows most likely to be queried by someone who remembers the
+ * channel table before the fix, and "landed on /results/… (over referrer
+ * www.google.com)" answers that question where a bare path would prompt it.
+ */
 export function evidenceExpr(c: LadderColumns): string {
+  const overReferrer = `if(
+    ${channelFromDomain(c.refDomain)} != '',
+    concat(' (over referrer ', toString(${c.refDomain}), ')'),
+    ''
+  )`;
   return `multiIf(
     ${channelFromUtm(c.utmSource)} != '', concat('utm_source=', toString(${c.utmSource})),
+    ${channelFromResultsToken(c.entryPath)} != '',
+      concat('landed on ', toString(${c.entryPath}), ${overReferrer}),
     ${channelFromDomain(c.refDomain)} != '', concat('referrer ', toString(${c.refDomain})),
     ${channelFromLanding(c.entryPath)} != '', concat('landed on ', toString(${c.entryPath})),
     ${channelFromSurvey(c.surveySource)} != '', concat('survey answer: ', toString(${c.surveySource})),
