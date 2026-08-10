@@ -27,31 +27,46 @@ unzip -p /tmp/fn.zip lambda_function.py | diff - infra/lambda/sffs-email-proxy/l
 No output means the mirror is honest. **If you change a function, change it
 here in the same commit.**
 
-### Outstanding: `sffs-email-proxy` has an undeployed branch
+### Settled: `pending_sends` went live on 10 August 2026
 
-`sffs-email-proxy/lambda_function.py` currently carries one change that is
-**not** running in AWS: `kind="pending_sends"`, the read that backs
-`POST /api/test-results/drain`. Every other kind in that file is byte-identical
-to what is deployed, so the diff above will show exactly this and nothing else.
+`kind="pending_sends"` — the read that backs `POST /api/test-results/drain` —
+spent a week in this directory undeployed, because it was authored without
+credentials for the account. It is now deployed and the mirror matches; the
+diff above should be silent.
 
-It was authored without credentials for the account, so it needs somebody who
-has them to run the deploy below. Until then the live function answers
-`400 invalid_kind`, and the drain route reports `backlog_unavailable` with that
-remediation rather than reporting an empty queue — the one failure mode that
-would be worse than the outage it exists for.
+**It was broken as written, and only a real database said so.** The age filter
+called `make_interval(hours => :max_age_hours)`. The RDS Data API sends an
+integer parameter as `bigint`, `make_interval` takes `integer`, and Postgres
+could not resolve the overload — so every read answered
+`500 server_error` and the drain would have reported `backlog_error` on the one
+day it was needed. It passes a syntax check, it imports cleanly, it deploys
+without complaint, and it fails on the first row it is ever asked for. The fix
+is a `::int` cast, and the reason it is commented in place is that the next
+person to touch that line will not otherwise know why it is there.
 
-**The part that matters is already live without this.** The addresses are
-preserved by the website writing a `pending` row through the existing
-`kind="result"` branch, with the new fields riding inside `meta`, which the
-Lambda passes through verbatim. So no deploy is needed for an outage to end
-with a list of people to send to. This deploy is what lets that list be worked
-through with one HTTP call instead of a hand-written query.
+The lesson is the one this directory already records under known gaps: there is
+no test coverage on the Python, so **a change here is unverified until it has
+run against Aurora.** Doing that safely does not require writing anything —
+the read can be exercised inside an RDS Data API transaction that is rolled
+back, which is how the fixtures for the checks above were built:
+
+```sh
+aws rds-data begin-transaction  --resource-arn "$CLUSTER_ARN" --secret-arn "$SECRET_ARN" --database sffs
+# ...INSERT fixtures and run the query with --transaction-id...
+aws rds-data rollback-transaction --resource-arn "$CLUSTER_ARN" --secret-arn "$SECRET_ARN" --transaction-id "$TX"
+```
+
+**The part that matters never needed this deploy.** The addresses are preserved
+by the website writing a `pending` row through the existing `kind="result"`
+branch, with the recovery fields riding inside `meta`, which the Lambda passes
+through verbatim. This deploy is what lets that list be worked through with one
+HTTP call instead of a hand-written query.
 
 ## The functions
 
 | Function | Runtime | Invoked by | What it does |
 | --- | --- | --- | --- |
-| `sffs-email-proxy` | python3.12 | API Gateway (HTTP), from Vercel route handlers | The only write path into Aurora. Three write kinds on one endpoint: `email` → `email_signups`, `survey` → `survey_responses`, `result` → `test_results`. Plus one read, `pending_sends` — see the note above; not deployed yet. |
+| `sffs-email-proxy` | python3.12 | API Gateway (HTTP), from Vercel route handlers | The only write path into Aurora. Three write kinds on one endpoint: `email` → `email_signups`, `survey` → `survey_responses`, `result` → `test_results`. Plus one read, `pending_sends`, live since 10 August 2026. |
 | `sffs-email-dw-export` | python3.12 | EventBridge `sffs-email-dw-export-hourly`, `rate(1 hour)` | Snapshots `email_signups` to S3 as NDJSON and uploads it to PostHog as the standalone warehouse table `email_signups`. |
 | `sffs-test-results-dw-export` | python3.12 | EventBridge `sffs-test-results-dw-export-hourly`, `rate(1 hour)` | Same shape, for `test_results`. Also enriches each completion with an acquisition channel from PostHog events. |
 

@@ -25,15 +25,19 @@ import "server-only";
  * cannot read is not a queue.
  *
  * ===========================================================================
- * IT NEEDS A LAMBDA THAT MAY NOT BE DEPLOYED YET, AND IT SAYS SO
+ * IT NEEDS A LAMBDA BRANCH, AND IT SAYS SO WHEN THAT IS MISSING
  * ===========================================================================
- * `kind: "pending_sends"` is new. The deployed proxy answers unknown kinds
- * with `400 invalid_kind`, which this maps to a distinct `unavailable` rather
- * than folding into a generic error — the difference between "there is nothing
- * to drain" and "we cannot see whether there is anything to drain" is the
- * entire value of the report, and a drain that quietly returned "0 pending" on
- * a proxy that could not answer would be a worse version of the bug this whole
- * change is about.
+ * `kind: "pending_sends"` was deployed to the proxy on 10 August 2026, so the
+ * `unavailable` branch below should not fire in production. It is kept because
+ * the proxy is deployed by hand from a vendored mirror with nothing in CI
+ * watching it, so a rollback to an older zip would bring the gap straight back.
+ *
+ * A proxy that predates the read answers `400 invalid_kind`, which this maps to
+ * a distinct `unavailable` rather than folding into a generic error — the
+ * difference between "there is nothing to drain" and "we cannot see whether
+ * there is anything to drain" is the entire value of the report, and a drain
+ * that quietly returned "0 pending" on a proxy that could not answer would be a
+ * worse version of the bug this whole change is about.
  *
  * infra/lambda/sffs-email-proxy/lambda_function.py holds the branch and
  * infra/lambda/README.md holds the one command that ships it.

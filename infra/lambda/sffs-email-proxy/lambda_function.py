@@ -19,15 +19,18 @@ compatibility):
 PRIVACY: the survey's PostHog event carries NO PII; the email (when present) is
 stored ONLY here in Aurora, exactly like email_signups.
 
-!! NOT YET DEPLOYED AS OF THIS COMMIT !!
-------------------------------------------------------------------------------
-`kind="pending_sends"` is new and is the FIRST read this function has ever
-offered. The rest of this file matches what is running; that branch does not,
-because deploying it needs AWS credentials the change was authored without.
-Until somebody runs the one command in ../README.md, the live function answers
-`400 invalid_kind` for it and the drain route reports itself unavailable rather
-than pretending. Nothing else in this file changed, so the deployed write path
-and this mirror are still byte-identical for every existing kind.
+`kind="pending_sends"` is the FIRST read this function has ever offered, and it
+went live on 10 August 2026. It was authored a week earlier without credentials
+for the account and sat undeployed until somebody had them, so anything written
+before that date describing it as unavailable is describing the gap, not a
+design.
+
+IT DID NOT WORK AS FIRST WRITTEN, and the way it failed is worth keeping: the
+age filter called `make_interval(hours => :max_age_hours)`, and the RDS Data API
+sends an integer parameter as `bigint` while `make_interval` takes `integer`, so
+Postgres could not resolve the function and every read returned 500. Nothing in
+a syntax check or a deploy catches that -- only running it against a real
+database does. See the cast in PENDING_SENDS_SQL below.
 """
 
 import base64
@@ -321,7 +324,11 @@ WITH pending AS (
       AND meta->>'send_key' IS NOT NULL
       AND meta->>'token'    IS NOT NULL
       AND email IS NOT NULL AND email <> ''
-      AND created_at > now() - make_interval(hours => :max_age_hours)
+      -- The cast is load-bearing: the Data API sends longValue as bigint, and
+      -- make_interval only takes integer, so the uncast call fails to resolve
+      -- at runtime with "function make_interval(hours => bigint) does not
+      -- exist" -- a 500 on every read rather than anything visible at deploy.
+      AND created_at > now() - make_interval(hours => (:max_age_hours)::int)
     ORDER BY meta->>'send_key', created_at DESC
 ),
 settled AS (
