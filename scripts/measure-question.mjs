@@ -13,7 +13,15 @@ import { chromium } from "playwright-core";
 
 const W = Number(process.argv[2] ?? 360);
 const H = Number(process.argv[3] ?? 640);
-const BASE = "http://127.0.0.1:3000";
+/*
+  `localhost`, not `127.0.0.1`, and the difference is not cosmetic: `next dev`
+  binds the host by name, so the loopback address serves the page but its HMR
+  socket never connects, React never finishes booting, and every click lands on
+  markup with no handlers behind it. The failure looks exactly like a broken
+  button — this script sat timing out on the grade picker, having clicked a
+  fork that was never listening. Every verify:* script already defaults here.
+*/
+const BASE = "http://localhost:3000";
 const EXECUTABLE =
   process.env.CHROME_PATH ??
   "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
@@ -74,7 +82,19 @@ for (let i = 0; i < total; i++) {
     }`,
   );
 
-  if (i < total - 1) await page.getByRole("button", { name: /^(Next|Skip)$/ }).click();
+  /*
+    MEASURE FIRST, THEN ANSWER. The forward control will not move without a
+    selection on the question in front of it, so getting to the next screen
+    means picking something — but the measurement above has already been taken
+    against the unanswered screen, which is the one a player meets. Selecting
+    cannot perturb it either way: the option cards hold their border weight,
+    padding and box size across both states on purpose, so only the fill
+    colour changes. See the note on CARD_BASE in question/option-card.tsx.
+  */
+  if (i < total - 1) {
+    await page.locator("main label").first().click();
+    await page.getByRole("button", { name: /^Next$/ }).click();
+  }
 }
 
 console.log(

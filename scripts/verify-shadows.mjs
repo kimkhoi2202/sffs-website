@@ -121,6 +121,17 @@ await page.screenshot({ path: "/tmp/sh-intro.png" });
 /* -- in test --------------------------------------------------------------- */
 await page.getByRole("button", { name: /start the test/i }).click();
 await page.waitForTimeout(700);
+/*
+  THE FORWARD CONTROL IS PROBED IN BOTH OF ITS STATES, and the locked one is
+  the interesting half. It waits on an answer now, and a muted control is
+  exactly the kind of thing that quietly loses its shadow — either because
+  somebody reaches for a `shadow-none` while dimming it, or because
+  `btn-press`'s own hover and active rules get overridden with a heavier hand
+  than intended. It has to keep the resting shadow: a locked Next with no
+  shadow reads as a label rather than as something about to become pressable,
+  which is the difference between "a state" and "broken". See
+  `.locked-control` in app/globals.css.
+*/
 record(
   "test",
   await probe(page, [
@@ -128,17 +139,30 @@ record(
     { label: "option card", sel: "main label" },
     { label: "clock pill", sel: "[data-surface=clock]" },
     { label: "quit control", sel: "button[aria-label='Quit the test']" },
-    { label: "Next button", sel: "button:text-is('Next')" },
+    { label: "Next button (locked)", sel: "button:text-is('Next')" },
   ]),
   {
     "question stem card": "flat",
     "option card": "flat",
     "clock pill": "flat",
     "quit control": "shadow",
-    "Next button": "shadow",
+    "Next button (locked)": "shadow",
   },
 );
 await page.screenshot({ path: "/tmp/sh-test.png" });
+
+/* -- in test, once the question has been answered -------------------------- */
+await page.locator("main label").first().click();
+await page.waitForTimeout(250);
+record(
+  "test (answered)",
+  await probe(page, [
+    { label: "option card (selected)", sel: "main label:has(:checked)" },
+    { label: "Next button", sel: "button:text-is('Next')" },
+  ]),
+  { "option card (selected)": "flat", "Next button": "shadow" },
+);
+await page.screenshot({ path: "/tmp/sh-test-answered.png" });
 
 /* -- quit dialog ----------------------------------------------------------- */
 const quit = page.locator("button[aria-label='Quit the test']").first();

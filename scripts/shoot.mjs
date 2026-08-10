@@ -15,7 +15,10 @@ import { join } from "node:path";
 const W = Number(process.argv[2] ?? 360);
 const H = Number(process.argv[3] ?? 640);
 const LABEL = process.argv[4] ?? `${W}`;
-const BASE = "http://127.0.0.1:3000";
+/* `localhost` rather than the loopback address — see the note in
+   scripts/measure-question.mjs. `next dev` binds by name, and against
+   127.0.0.1 the HMR socket never connects, so nothing on the page responds. */
+const BASE = "http://localhost:3000";
 const OUT = join(process.cwd(), ".shots");
 mkdirSync(OUT, { recursive: true });
 
@@ -79,9 +82,21 @@ await firstOption.check({ force: true });
 await shot(page, "runner-answer-selected");
 
 /* 7. walk to a figure matrix and shoot it */
+/*
+  FOUND BY WHAT IS DRAWN, NOT BY A LABEL. This looked for a "FIGURE MATRIX"
+  tier pill, and that pill was removed from the runner some time ago — so the
+  loop never matched, always ran to its limit, and the frame written as
+  "runner-figure-matrix" was whichever question happened to be fifteenth. A
+  drawn stimulus is the actual property being looked for and cannot go stale
+  the same way: in this bank only the figural items put an SVG in the stem.
+
+  Each question on the way needs an answer before the forward control will
+  move; there is no Skip. The break happens BEFORE answering, so the frame is
+  of an untouched matrix, which is what it is for.
+*/
 for (let i = 0; i < 14; i++) {
-  const tier = await page.locator("span", { hasText: /^FIGURE MATRIX$/ }).count();
-  if (tier > 0) break;
+  if ((await page.locator("[data-surface=stem] svg").count()) > 0) break;
+  await page.locator("main label").first().click();
   await page.getByRole("button", { name: /^Next$/ }).click();
   await page.waitForTimeout(220);
 }
@@ -101,7 +116,14 @@ await page.waitForTimeout(400);
 await shot(page, "dev-tools-open");
 
 /* 10. blurred results behind the email gate, reached by forcing a score */
-await page.getByRole("button", { name: "65%", exact: true }).click({ force: true });
+/*
+  The dev panel builds these chips from VERDICT_BANDS, so moving the verdict
+  threshold renames them. This asked for "65%" long after the bar moved to 70,
+  and the walkthrough had been dying here — the same staleness, and the same
+  chip, that scripts/verify-shadows.mjs already carries a note about. 69% is
+  `min - 1`: one under the bar, so the frame lands on the losing verdict.
+*/
+await page.getByRole("button", { name: "69%", exact: true }).click({ force: true });
 await page.waitForTimeout(1400);
 await page.getByRole("button", { name: "Close dev tools" }).click({ force: true });
 await page.waitForTimeout(500);

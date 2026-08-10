@@ -20,7 +20,17 @@ const check = (name, pass, detail = "") => {
 
 const browser = await chromium.launch({ executablePath: EXE });
 
-/** Walk the adult test to a 1-based question number. */
+/**
+ * Walk the adult test to a 1-based question number.
+ *
+ * EVERY QUESTION ON THE WAY GETS AN ANSWER, because the forward control will
+ * not move without one — there is no Skip any more, and the button reports
+ * itself `aria-disabled` until the question on screen has a selection, which
+ * Playwright treats as not-actionable and waits out. The pick is arbitrary and
+ * nothing here reads a score; what matters is that question `n` is the one
+ * arrived at, and that it is arrived at UNANSWERED, which is the state the
+ * checks below inspect.
+ */
 async function goToQuestion(page, n) {
   await page.goto(BASE, { waitUntil: "networkidle" });
   await page.evaluate(() => {
@@ -34,7 +44,10 @@ async function goToQuestion(page, n) {
   await page.getByRole("button", { name: /start the test/i }).click();
   await page.waitForTimeout(700);
   for (let i = 1; i < n; i++) {
-    await page.getByRole("button", { name: /^(Next|Skip)$/ }).click();
+    const opts = page.locator("main label");
+    await opts.first().waitFor({ state: "visible", timeout: 15000 });
+    await opts.first().click();
+    await page.getByRole("button", { name: /^Next$/ }).click();
     await page.waitForTimeout(150);
   }
   await page.waitForTimeout(450);

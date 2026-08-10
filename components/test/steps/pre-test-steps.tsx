@@ -233,12 +233,21 @@ export function TestIntro({
     a full stop at the end of a centred one-liner reads like a typo. Periods
     BETWEEN sentences stay, because they are doing real work.
   */
+  /*
+    THE ANSWER RULE RIDES ON THE GOING-BACK BULLET RATHER THAN ADDING A FIFTH.
+    It belongs to somebody before the clock starts — a rule you discover by
+    pressing a button that will not move is the same bad surprise as a locked
+    answer you find out about at question two — but the note above about five
+    bullets looking like terms and conditions is right, and the adult column is
+    already four. The two statements are about the same act anyway: what
+    happens when you leave a question.
+  */
   const rules: string[] = [
     `${test.items.length} questions. ${minutes} minute${minutes === 1 ? "" : "s"} for all of them`,
     "One timer for the whole test, not one per question",
     test.allowBack
-      ? "You can go back and change an answer any time before you finish"
-      : "Once you move on, your answer locks. There is no going back",
+      ? "Every question needs an answer, and you can go back and change one any time before you finish"
+      : "Every question needs an answer, and once you move on it locks. There is no going back",
     ...(child
       ? []
       : [

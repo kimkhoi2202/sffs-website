@@ -46,7 +46,9 @@ for (let i = 0; i < test.items.length; i++) {
   await opts.nth(idx).click();
   const fin = p.getByRole("button", { name: /see my result/i });
   if (await fin.count()) { await fin.click(); break; }
-  await p.getByRole("button", { name: /^(Next|Skip)$/ }).click();
+  // `Next`, with no `Skip` alternative: an unanswered question has no way
+  // forward any more, and this loop answers each one before it asks for one.
+  await p.getByRole("button", { name: /^Next$/ }).click();
   await p.waitForTimeout(120);
 }
 await p.waitForTimeout(2500);

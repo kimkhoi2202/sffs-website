@@ -293,6 +293,88 @@
 }
 
 /*
+  ============================================================================
+  A CONTROL THAT IS PRESENT AND ANNOUNCED, BUT NOT USABLE YET
+  ============================================================================
+  For a control held back by something the person can undo in one action — the
+  test's Next button waiting on an answer being the case this was written for.
+  Such a control must stay focusable and must keep announcing itself, so it is
+  marked with `aria-disabled` rather than the real attribute, and it therefore
+  gets none of the browser's own disabled styling. This supplies it.
+
+  KEYED OFF THE ARIA STATE, not off the class alone, so the class can sit on
+  the button permanently and the state stays the single source of truth. A
+  component cannot get one of the two right and the other wrong.
+
+  `opacity: 0.5` is not a fresh invention: it is what `disabled:opacity-50` in
+  buttonVariants gives every genuinely disabled button in the product, so this
+  one reads as the same state rather than as a control that failed to paint.
+
+  THE PRESS INTERACTION HAS TO GO WITH IT, and it is the reason this is CSS
+  rather than two Tailwind variants. `btn-press` paints the resting shadow
+  unconditionally and grows it on hover, so left alone a locked button would
+  lift to the cursor and then collapse flat when pressed — the full animation
+  of a working control, on one that just refused. The resting shadow STAYS:
+  losing it would make the button look like a label rather than something that
+  is about to become pressable.
+
+  Specificity is (0,2,0) here and (0,3,0) on the interaction states, which is
+  what it takes to beat `.btn-press:hover` and `.btn-press:active`, the same
+  arithmetic `.flat-surface` above depends on.
+*/
+[aria-disabled="true"].locked-control {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+[aria-disabled="true"].locked-control:hover,
+[aria-disabled="true"].locked-control:active {
+  transform: none;
+  box-shadow: 4px 4px 0 0 var(--btn-shadow-color, var(--color-ink));
+}
+
+/*
+  ============================================================================
+  SOMEBODY PRESSED THE LOCKED CONTROL. POINT AT THE ANSWERS.
+  ============================================================================
+  The runner puts this on the question once a forward press has been refused,
+  and takes it off the moment an option is picked. It is the sighted half of
+  that reply; the spoken half is a live region in the runner, and focus moves
+  to the first option for both.
+
+  IT EXISTS BECAUSE FOCUS ALONE IS NOT A REPLY ON A PHONE. The option cards
+  paint their ring on `:focus-visible`, and Chrome does not match that on a
+  focus moved programmatically out of a pointer event — measured, not assumed:
+  after a mouse press the option's outline computes to `none` and after a
+  keyboard press to `solid 3px`. Touch is most of this traffic, so without this
+  rule the majority case is a press that does nothing at all, which is worse
+  than having no button there.
+
+  A RULE ON AN ANCESTOR RATHER THAN A PROP THREADED THROUGH THE RENDERERS. The
+  options fieldset is drawn by OptionGroup, three components below the runner,
+  through seven per-kind branches that have no opinion about this and should
+  not acquire one. `.flat-surface` above reaches into the same tree the same
+  way and for the same reason.
+
+  A BAND OF MARKER YELLOW INSIDE AN INK KEYLINE, which is the two-tone shape
+  the focus ring already uses, for the reason given on `buttonVariants`: the
+  brand colour is the signal and the ink keeps it at 3:1 on these pale
+  surfaces, where the yellow alone would wash out. Yellow specifically because
+  in STATE_COLORS it is the marker — the letter badges, and the cell of a
+  matrix you are being asked to fill in. Saying "this is the bit to fill in" is
+  exactly this ring's job. Blue would have been the wrong borrow: it means "the
+  option you picked", which is the one thing that has not happened here.
+
+  BOX-SHADOW RATHER THAN OUTLINE so it cannot lengthen the scrollable box of
+  the fit region and put a scrollbar on a question that fits.
+*/
+.awaiting-answer fieldset {
+  border-radius: 1rem;
+  box-shadow:
+    0 0 0 5px var(--color-yellow),
+    0 0 0 7px var(--color-ink);
+}
+
+/*
   The signature "press" interaction for buttons/cards.
   Element must set its own base box-shadow (e.g. shadow-hard-sm).
   On hover it nudges toward the shadow; on active it fully presses in.

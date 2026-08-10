@@ -318,7 +318,9 @@ async function runAudience(spec) {
       await finish.click();
       break;
     }
-    await page.getByRole("button", { name: /^(Next|Skip)$/ }).click();
+    // `Next`, with no `Skip` alternative: the control does not move without a
+    // selection now, and the click above supplies one on every question.
+    await page.getByRole("button", { name: /^Next$/ }).click();
     await page.waitForTimeout(120);
   }
   // The page POSTs the finished attempt the instant the test ends; the gate

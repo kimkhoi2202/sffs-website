@@ -28,6 +28,30 @@
  * restores the same clock rather than restarting it. See lib/test/session.ts.
  *
  * ===========================================================================
+ * YOU CANNOT LEAVE A QUESTION UNANSWERED
+ * ===========================================================================
+ * Moving on — and finishing — requires a selection on the question in front of
+ * you. There is no Skip. Note what this does to the shape of an attempt: the
+ * only way to reach question N is to have answered N-1, so the questions a
+ * finished paper leaves blank are exactly the ones the player never reached.
+ * A submitted paper is therefore complete, and a timed-out one is answered up
+ * to wherever the clock caught them.
+ *
+ * THE CLOCK IS UNAFFECTED, and that is what keeps this from being a trap. Time
+ * up still submits from wherever the player is, answered or not, so the guard
+ * can never leave somebody holding a question they cannot answer and a test
+ * they cannot end. Quitting is untouched too. The three ways out of this screen
+ * are: answer it, quit, or let the clock run.
+ *
+ * THE GUARD LIVES HERE, ON THE RUNNER, and not in any question renderer. Every
+ * one of the seven kinds reports its selection through the same `onPick` into
+ * the same answer map (see ./question/question-view.tsx, which switches on kind
+ * for the DRAWING and shares one option group for the INTERACTION), so one
+ * check covers every type that exists and every type anyone adds later. A guard
+ * per renderer would be seven copies of one rule, and the eighth renderer would
+ * ship without it.
+ *
+ * ===========================================================================
  * THE LAYOUT CONTRACT
  * ===========================================================================
  * A fixed, full-viewport, three-row shell: header, scrolling question, footer.
@@ -73,6 +97,13 @@ const nowMs = () => Date.now();
 const WARN_AT = 60;
 const URGENT_AT = 10;
 
+/**
+ * How a forward control looks while it is waiting for an answer. Defined in
+ * app/globals.css, because muting it means overriding `btn-press`'s hover and
+ * press states and that takes real specificity — see the note there.
+ */
+const LOCKED = "locked-control";
+
 export interface TestRunnerProps {
   test: Test;
   answers: AnswerMap;
@@ -101,6 +132,13 @@ export function TestRunner({
   const total = test.items.length;
   const isLast = index === total - 1;
   const answeredCount = Object.keys(answers).length;
+  /*
+   * Presence, not truthiness. Option ids are "A".."E" today (lib/test/types.ts)
+   * so `!answers[id]` would happen to work, but it would start silently letting
+   * people through the day an id is ever "" or "0". The rule being expressed is
+   * "is there a selection", so that is what is written.
+   */
+  const hasAnswer = answers[item.id] !== undefined;
 
   const [confirmQuit, setConfirmQuit] = useState(false);
 
@@ -249,6 +287,34 @@ export function TestRunner({
     [onIndexChange, total],
   );
 
+  /* -- pressing the unavailable control ------------------------------------
+   *
+   * The forward control is `aria-disabled` rather than `disabled`, so a press
+   * still reaches this. See the footer for why it is that way round; this is
+   * the other half of that decision. A control that swallows a press and does
+   * nothing is worse than no control, so a blocked press ANSWERS:
+   *
+   *   the option group is ringed, which is the reply a phone gets — see
+   *   `.awaiting-answer` in app/globals.css for why focus alone is not one;
+   *   focus lands on the first option, which is the useful part: from there the
+   *   answer is an arrow key away, which is exactly where somebody who just
+   *   pressed Next wants to be;
+   *   and the reason is announced, because neither of those two says anything
+   *   out loud.
+   *
+   * WHICH QUESTION was refused, rather than a flag plus an effect to clear it.
+   * The reply belongs to one question, and storing the index says so in a value
+   * the render can just compare — no second render, and nothing to remember to
+   * reset when the question changes.
+   */
+  const questionRef = useRef<HTMLDivElement>(null);
+  const [refusedAt, setRefusedAt] = useState<number | null>(null);
+  const refused = refusedAt === index && !hasAnswer;
+  const blocked = useCallback(() => {
+    setRefusedAt(index);
+    questionRef.current?.querySelector<HTMLInputElement>('input[type="radio"]')?.focus();
+  }, [index]);
+
   const urgent = timerEnabled && remaining <= URGENT_AT;
   const warning = timerEnabled && remaining <= WARN_AT && !urgent;
 
@@ -351,7 +417,13 @@ export function TestRunner({
         at full size, with no scaling needed at all.
       */}
       <FitToViewport contentKey={item.id} onOverflow={reportOverflow}>
-        <div className="mx-auto w-full max-w-2xl md:max-w-3xl lg:max-w-5xl">
+        <div
+          ref={questionRef}
+          className={cn(
+            "mx-auto w-full max-w-2xl md:max-w-3xl lg:max-w-5xl",
+            refused && "awaiting-answer",
+          )}
+        >
           <QuestionView
             item={item}
             picked={answers[item.id] ?? null}
@@ -384,28 +456,79 @@ export function TestRunner({
             </Button>
           ) : null}
 
+          {/*
+            THE FORWARD CONTROL. One button, two jobs, one guard: it needs a
+            selection on this question before it will do either.
+
+            THERE IS NO LONGER A "Skip" LABEL. It used to read Skip on the adult
+            test until something was picked, because moving on unanswered was a
+            real and irreversible act worth naming. It is not an act any more.
+
+            `aria-disabled`, NOT `disabled`, AND THE DIFFERENCE MATTERS HERE.
+            A real `disabled` attribute takes the button out of the tab order
+            and out of the accessibility tree's reach: a screen-reader user
+            tabbing this screen would find the options, then the end, and never
+            learn that there is a way forward or what unlocks it. The control
+            they cannot use yet is precisely the one they need told about. So it
+            stays focusable and announces itself as unavailable, carries the
+            reason on `aria-describedby`, and refuses the press in the handler —
+            see `blocked` above for what a refused press does instead.
+
+            Back is left on a real `disabled`, deliberately, and the two are not
+            inconsistent. Back at question one is unavailable because there is
+            nothing behind it and no action makes one appear; there is nothing
+            to tell anybody. Forward is unavailable because of something the
+            player can fix in one tap, right now, on this screen.
+          */}
           {isLast ? (
             <Button
               variant="green"
               size="lg"
-              onClick={() => onFinish(false)}
-              className="flex-1"
+              onClick={() => (hasAnswer ? onFinish(false) : blocked())}
+              aria-disabled={!hasAnswer || undefined}
+              aria-describedby={hasAnswer ? undefined : "answer-required"}
+              className={cn("flex-1", LOCKED)}
             >
               See my result
             </Button>
           ) : (
-            <Button variant="blue" size="lg" onClick={() => goto(index + 1)} className="flex-1">
-              {/*
-                On a one-way test, moving on with nothing selected is
-                irreversible, so the button says what it is about to do. Next
-                and Skip landing in the same place is fine; being told which one
-                you are pressing is not optional when you cannot undo it.
-              */}
-              {!test.allowBack && !answers[item.id] ? "Skip" : "Next"}
+            <Button
+              variant="blue"
+              size="lg"
+              onClick={() => (hasAnswer ? goto(index + 1) : blocked())}
+              aria-disabled={!hasAnswer || undefined}
+              aria-describedby={hasAnswer ? undefined : "answer-required"}
+              className={cn("flex-1", LOCKED)}
+            >
+              Next
               <ArrowRightIcon size={22} />
             </Button>
           )}
         </div>
+
+        {/*
+          The reason, for whoever needs it.
+
+          NOT A VISIBLE LINE OF TEXT, and that is a layout decision rather than
+          a shrug. A hint that appears while unanswered and goes when answered
+          changes the footer's height at the exact moment of tapping an option,
+          and the footer's height is what sets the region the question is scaled
+          into — so every first tap on a question would resize the question. The
+          layout contract at the top of this file exists to stop precisely that.
+          Reserving the line permanently instead would spend a row of a 360x640
+          screen on a sentence that is empty most of the time.
+
+          A sighted player does not need the sentence: four unanswered options
+          sit directly above a visibly muted button. A screen-reader user gets
+          it on focus through `aria-describedby`, and on a refused press through
+          the live region below, which is where it is actually load-bearing.
+        */}
+        <p id="answer-required" className="sr-only">
+          Pick an answer to {isLast ? "see your result" : "move on"}.
+        </p>
+        <p className="sr-only" role="status" aria-live="assertive">
+          {refused ? `Pick an answer to ${isLast ? "see your result" : "move on"}.` : ""}
+        </p>
       </footer>
 
       {/* -- quit confirmation ---------------------------------------------------- */}

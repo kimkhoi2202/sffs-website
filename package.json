@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit",
     "verify:no-devtools": "node scripts/verify-no-devtools.mjs",
     "verify:tests": "node --import ./scripts/ts-resolve-hook.mjs scripts/verify-tests.mjs",
+    "verify:answer-required": "node --import ./scripts/ts-resolve-hook.mjs scripts/verify-answer-required.mjs",
     "verify:entry-links": "node --import ./scripts/ts-resolve-hook.mjs scripts/verify-entry-links.mjs",
     "audit:content": "node --import ./scripts/ts-resolve-hook.mjs scripts/audit-content.mjs",
     "verify:email-store": "node --import ./scripts/ts-resolve-hook.mjs scripts/verify-email-store.mjs",
