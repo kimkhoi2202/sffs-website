@@ -49,6 +49,16 @@ export interface FunnelStage {
   droppedHumanIds: string[];
   /** Humans who reached this stage at all. */
   reachedHumanIds: string[];
+  /**
+   * How many of `count` arrived on a deep entry URL and never saw the fork.
+   *
+   * On the `cta` stage this is the difference between a rate that means
+   * something and one that does not — see the note on that stage below. It is
+   * computed for every stage because the same split is worth having further
+   * down (do deep-linked visitors finish at the same rate?), and because a
+   * field that exists only on one row is a field somebody will misread.
+   */
+  deepLinkedCount: number;
 }
 
 /** One human, possibly stitched from more than one PostHog person. */
@@ -60,6 +70,8 @@ export interface Human {
   /** Merged funnel facts across every member. */
   landed: boolean;
   ctaActivated: boolean;
+  /** Any member arrived on a deep entry URL rather than through the fork. */
+  deepLinked: boolean;
   startedTest: boolean;
   answeredAny: boolean;
   reachedGate: boolean;
@@ -137,6 +149,11 @@ function buildHuman(members: PersonRow[]): Human {
     links: members.flatMap((m) => m.links),
     landed: any((m) => m.landed),
     ctaActivated: any((m) => m.ctaActivated || m.startedTest),
+    // `any`, not "the primary member", because the deep link is a fact about
+    // how the human arrived and it belongs to whichever person id carried the
+    // landing session. The results-page person id, minted later on a different
+    // URL, will not have it.
+    deepLinked: any((m) => m.deepLinked),
     startedTest: any((m) => m.startedTest),
     answeredAny: maxOf((m) => m.questionsAnswered) > 0,
     reachedGate: any((m) => m.reachedGate),
@@ -189,11 +206,27 @@ const STAGES: {
     stays in the predicate only so that pre-cutover windows still read correctly;
     on any window since launch it contributes nothing, and naming it in the UI
     invited people to look for a button that no longer exists.
+
+    ------------------------------------------------------------------------
+    SINCE DEEP ENTRY, TWO POPULATIONS REACH THIS ROW AND ONLY ONE SAW THE FORK
+    ------------------------------------------------------------------------
+    Paid traffic can now land on /adult or /kids and open inside a branch. Those
+    visitors fire `test_fork_selected` with `method: "deep_link"` — they did
+    choose a branch, by choosing which ad to tap — so they belong on this row
+    and the funnel has no phantom gap. What they did NOT do is survive the fork
+    screen, because they were never shown it.
+
+    That makes "Landed -> Chose a branch" a BLEND the moment the ads start, and
+    a blend is exactly the shape of number that quietly improves while nothing
+    gets better. So `deepLinkedCount` travels with every stage and the panel
+    prints the split on this row. Do not delete it and leave the rate: the whole
+    reason the entry URLs exist is that 91.8% of paid traffic was dying here,
+    and that measurement has to survive its own fix.
   */
   {
     id: "cta",
     label: "Chose a branch",
-    hint: "test_fork_selected — the first deliberate act, not a page load",
+    hint: "test_fork_selected — a tap on the fork, or an ad that named the branch",
     reached: (h) => h.ctaActivated,
   },
   {
@@ -281,6 +314,7 @@ export function buildFunnel(humans: Human[]): FunnelStage[] {
       // people to go and read.
       droppedHumanIds: reached.filter((h) => !nextIds.has(h.id)).map((h) => h.id),
       reachedHumanIds: reached.map((h) => h.id),
+      deepLinkedCount: reached.filter((h) => h.deepLinked).length,
     };
   });
 }

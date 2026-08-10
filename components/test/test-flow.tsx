@@ -56,6 +56,7 @@ import {
   trackTestStarted,
   trackTestStepViewed,
 } from "@/lib/analytics/events";
+import { entryFlowState, type EntrySeed } from "@/lib/test/entry";
 import { loadSavedResult, rememberResult } from "@/lib/test/saved-result";
 import { scoreTest } from "@/lib/test/scoring";
 import {
@@ -104,8 +105,24 @@ export interface FlowDevApi {
  */
 const FLOW_VERSION = "v3";
 
-export function TestFlow() {
-  const [state, setState] = useState<FlowState>(INITIAL_STATE);
+export function TestFlow({
+  /**
+   * Set by the deep-entry routes (/adult, /kids, /kids/[grade]) to open the
+   * flow already inside a branch. Absent at `/`, which is the ordinary fork.
+   *
+   * It seeds the FIRST render, server and client alike, so an ad click paints
+   * the intro or the grade picker directly rather than painting the fork and
+   * then replacing it — the same reason the session restore below is a layout
+   * effect. A visitor who watched the screen they were promised get swapped out
+   * from under them has been shown the fork, which is the thing being deleted.
+   */
+  entry,
+}: {
+  entry?: EntrySeed;
+} = {}) {
+  const [state, setState] = useState<FlowState>(() =>
+    entry ? entryFlowState(entry) : INITIAL_STATE,
+  );
   const [hydrated, setHydrated] = useState(false);
   /**
    * The token of a result this BROWSER finished and emailed, if there is one.
@@ -147,19 +164,66 @@ export function TestFlow() {
     });
   }, [state.step, state.audience, state.grade, hydrated]);
 
-  /* -- restore, or seed from the hand-off link ----------------------------- */
+  /* -- restore, or seed from the hand-off link, or from a deep entry -------- */
+  /*
+   * Read once, on mount, and never as a dependency. The seed is a property of
+   * the ROUTE, so it cannot change under a mounted flow, and depending on it
+   * would let a re-render re-fire the arrival events below.
+   */
+  const entryRef = useRef(entry);
   useIsomorphicLayoutEffect(() => {
     // Ahead of the early return below, so it is read on every path in.
     setSavedToken(loadSavedResult()?.token ?? null);
 
     const saved = loadState();
     if (saved && saved.step !== "audience") {
+      /*
+       * A RESTORE BEATS THE URL, including on an entry route, and it has to.
+       * The case is somebody deep-linked to /adult who is now on question
+       * eleven and whose phone reloaded the tab: re-seeding from the path would
+       * throw away a timed attempt in progress and drop them back on the intro.
+       * The address bar still says /adult because the flow never navigates, so
+       * the path is not evidence of anything after the first paint.
+       *
+       * It also means the arrival events below fire once per arrival rather
+       * than once per reload, which is what makes them countable.
+       */
       // A tab that reloaded past its deadline goes straight to the results
       // rather than back to a question with an expired clock.
       if (saved.step === "test" && saved.deadlineAt && secondsLeft(saved.deadlineAt) <= 0) {
         setState({ ...saved, step: "results", timedOut: true, finishedAt: Date.now() });
       } else {
         setState(saved);
+      }
+      setHydrated(true);
+      return;
+    }
+
+    const seed = entryRef.current;
+    if (seed) {
+      /*
+       * The branch was chosen by choosing the ad. Reported as the same event a
+       * tap reports, marked `deep_link` so the fork's own abandonment rate
+       * stays readable — the full reasoning is on trackTestForkSelected.
+       *
+       * Fired here rather than in the route so it cannot fire twice on a
+       * restore, and so the order matches the tap path exactly: branch, then
+       * whichever later choices the URL also answered, then the step view that
+       * the `hydrated` flip below releases.
+       *
+       * The state itself was already seeded at first render; nothing is set
+       * here, because setting it again would repaint the screen the visitor is
+       * already looking at.
+       */
+      trackTestForkSelected(
+        seed.branch === "adult" ? "parent" : "child",
+        "deep_link",
+        seed.gradeRejected,
+      );
+      if (seed.branch === "adult") {
+        trackTestAudienceSelected("adult");
+      } else if (seed.grade !== null) {
+        trackTestGradeSelected(seed.grade);
       }
       setHydrated(true);
       return;

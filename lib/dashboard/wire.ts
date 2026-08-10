@@ -69,6 +69,8 @@ export interface WireHuman {
   questionTotal: number;
   landed: boolean;
   ctaActivated: boolean;
+  /** Arrived on a deep entry URL (/adult, /kids, …) and never saw the fork. */
+  deepLinked: boolean;
   startedTest: boolean;
   reachedGate: boolean;
   submittedEmail: boolean;
@@ -94,6 +96,8 @@ export interface WireFunnelStage {
   conversionFromPrevious: number | null;
   droppedHumanIds: string[];
   reachedHumanIds: string[];
+  /** Of `count`, how many arrived by deep link. See FunnelStage in ./funnel.ts. */
+  deepLinkedCount: number;
 }
 
 export interface WireAbandonSummary {

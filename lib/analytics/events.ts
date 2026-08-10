@@ -15,6 +15,7 @@ import posthog from "posthog-js";
 import type { CaptureResult } from "posthog-js";
 
 import type { EmailSource } from "../email-sources";
+import { entryBranchForPath } from "../test/entry";
 
 /* --------------------------------------------------------------------------
  * Shared property vocabulary (kept small + reused — see plan §2.0)
@@ -103,10 +104,70 @@ export function isTouchDevice(): boolean {
   return window.matchMedia?.("(pointer: coarse)").matches ?? false;
 }
 
+/* --------------------------------------------------------------------------
+ * WHERE THE VISIT CAME IN — the deep-link split
+ *
+ * Paid traffic can now land inside a branch instead of on the fork (see
+ * lib/test/entry.ts). Those two populations answer different questions and
+ * pooling them would break the one number this whole experiment is judged on:
+ * "91.8% leave at the fork" is only meaningful over people who were SHOWN the
+ * fork, and a deep-linked visitor was not.
+ *
+ * So every event carries where the visit entered, and every funnel, breakdown
+ * and saved insight can split on it without anyone instrumenting anything else.
+ *
+ * NAMES THE BRANCH, NOT THE PATH. `/grownup` and `/adult` are the same screen
+ * and both report `adult`; adding a third spelling later must not add a fourth
+ * value. "Deep-linked" is therefore `entry != 'fork'` rather than a list of
+ * paths, which is also how the dashboard reads it.
+ *
+ * IT DESCRIBES THE PAGE LOAD, NOT THE PERSON AND NOT THE SESSION. A later visit
+ * to /about in the same session reports `fork`, because that load did not come
+ * in through a branch, and that is the honest answer rather than a stale one.
+ *
+ * Registering it as a super-property was the other option and it is worse in
+ * both directions: `posthog.register` writes to localStorage and would still be
+ * calling somebody deep-linked in November because they clicked an ad in
+ * August, which is first-touch attribution smuggled in under a property that
+ * claims to describe this visit; `register_for_session` avoids that but has to
+ * be re-registered on every load anyway, so it ends up per-load while reading
+ * as per-session — the worst of both.
+ *
+ * So it is enriched in `scrubAndEnrich` and nowhere else, exactly as `platform`
+ * is, which also means it lands on the very first `$pageview` rather than
+ * whenever the SDK's `loaded` callback happens to run.
+ *
+ * The per-EVENT question "was this branch chosen by a tap or by an ad" is
+ * answered separately and authoritatively by `method` on `test_fork_selected`.
+ * ------------------------------------------------------------------------ */
+
+/** The event property carrying where the visit entered. */
+export const ENTRY_PROPERTY = "entry";
+
+/** `entry` when the visitor did NOT arrive inside a branch. */
+export const ENTRY_FORK = "fork";
+
+/**
+ * Which branch this page load entered, or `fork` for the ordinary front door.
+ * Reads the address bar, so it is correct for a visitor whose `$pageview` was
+ * eaten by an ad-blocker and whose only surviving event is a `$pageleave`.
+ */
+export function deriveEntry(): string {
+  if (typeof window === "undefined") return ENTRY_FORK;
+  try {
+    return entryBranchForPath(window.location.pathname) ?? ENTRY_FORK;
+  } catch {
+    return ENTRY_FORK;
+  }
+}
+
 /**
  * Register the derived super properties so every event + person carries them.
  * Called from the SDK `loaded` callback. `platform` is ALSO injected in
  * `scrubAndEnrich` as a fallback so even the very first `$pageview` has it.
+ *
+ * `entry` is deliberately NOT registered here — see the note above. It is
+ * enriched per event instead, which is the whole of its implementation.
  */
 export function registerLaunchSuperProperties(): void {
   posthog.register({ platform: derivePlatform(), is_touch: isTouchDevice() });
@@ -121,6 +182,18 @@ let cachedPlatform: string | null = null;
 function platformOnce(): string {
   if (cachedPlatform === null) cachedPlatform = derivePlatform();
   return cachedPlatform;
+}
+
+/**
+ * CACHED FOR THE LIFE OF THE PAGE LOAD, and the cache is load-bearing rather
+ * than a speed trick: it has to answer "where did this load come in", not "what
+ * is in the address bar right now". Reading live would be right for the first
+ * event and wrong for every one after a client-side navigation.
+ */
+let cachedEntry: string | null = null;
+function entryOnce(): string {
+  if (cachedEntry === null) cachedEntry = deriveEntry();
+  return cachedEntry;
 }
 
 /**
@@ -155,9 +228,9 @@ function isSilentRoute(): boolean {
  * Runs on EVERY outbound event. (0) drops everything from the reporting
  * surfaces that must not appear in their own numbers; (1) hard-strips
  * email/$ip from properties + the person `$set`/`$set_once` bags — a guarantee
- * no accidental PII ever leaves the browser; (2) guarantees `platform` is
- * present so the conversion funnel's platform breakdown is never blank
- * (including the first pageview).
+ * no accidental PII ever leaves the browser; (2) guarantees `platform` and
+ * `entry` are present so the conversion funnel's platform breakdown and its
+ * fork-vs-deep-link split are never blank (including the first pageview).
  */
 export function scrubAndEnrich(cr: CaptureResult | null): CaptureResult | null {
   if (!cr) return cr;
@@ -168,6 +241,9 @@ export function scrubAndEnrich(cr: CaptureResult | null): CaptureResult | null {
   }
   if (cr.properties && cr.properties.platform == null) {
     cr.properties.platform = platformOnce();
+  }
+  if (cr.properties && cr.properties[ENTRY_PROPERTY] == null) {
+    cr.properties[ENTRY_PROPERTY] = entryOnce();
   }
   // Stamp events from an internal browser so the project's "internal & test
   // users" filter can exclude them from the PUBLIC metrics. Events still record
@@ -433,8 +509,72 @@ export type TestFork = "parent" | "child";
 /** Which test is actually being sat. */
 export type TestAudience = "adult" | "child";
 
-export function trackTestForkSelected(fork: TestFork): void {
-  posthog.capture("test_fork_selected", { fork });
+/**
+ * HOW the branch was chosen. See `trackTestForkSelected`.
+ *
+ *   tap        pressed a card on the fork screen
+ *   deep_link  arrived on an entry URL already inside the branch
+ */
+export type ForkMethod = "tap" | "deep_link";
+
+/**
+ * A branch was chosen — and since deep entry shipped, that is no longer the
+ * same thing as a tap on the fork screen.
+ *
+ * ===========================================================================
+ * WHY A DEEP LINK FIRES THIS AT ALL
+ * ===========================================================================
+ * A visitor who lands on `/adult` never sees the fork, so the obvious reading
+ * is that they should not fire the event the fork fires. That is wrong, and
+ * expensively so: this event IS the dashboard's second funnel stage ("Chose a
+ * branch" — see lib/dashboard/funnel.ts), so staying silent would make every
+ * deep-linked visitor appear to skip a stage. The ones who went on to start a
+ * test would be back-filled and invisible; the ones who bounced off the intro
+ * would land in the same bucket as people who bounced off the fork, which is
+ * precisely the bucket this feature exists to empty. The improvement would read
+ * as a regression in the only chart anyone will look at.
+ *
+ * They did choose a branch. They chose it by choosing which ad to tap, which is
+ * a more deliberate act than picking one of two cards after arriving, not a
+ * less one. What changed is the mechanism, so the mechanism is a property.
+ *
+ * ===========================================================================
+ * `method` IS ALSO WHAT PROTECTS THE 91.8%
+ * ===========================================================================
+ * The fork's abandonment rate is only meaningful over people who were shown the
+ * fork. Blending deep-linked arrivals into it would improve the number without
+ * improving anything, and nobody reading it later could tell. Split on `method`
+ * (or on the `entry` super-property, which every event carries) and both
+ * populations stay readable.
+ *
+ * HISTORICAL EVENTS HAVE NO `method`. Everything before this shipped was a tap,
+ * so absent should be read as `tap`; it is left absent rather than backfilled
+ * because rewriting history to assert something is worse than a gap that has an
+ * explanation.
+ */
+export function trackTestForkSelected(
+  fork: TestFork,
+  method: ForkMethod = "tap",
+  /**
+   * Deep entry only: the URL named a grade that does not exist, so the visitor
+   * was dropped on the grade picker instead.
+   *
+   * THIS IS A BROKEN-AD-LINK ALARM, not a curiosity. `GRADES` is 3 to 8, so
+   * `/kids/9` is one keystroke from `/kids/8` and a creative that ships with it
+   * is indistinguishable from a correct `/kids` link by every other signal —
+   * same screen, same events, same conversion. Without this property the only
+   * way to find it is for somebody to reread the ad copy.
+   *
+   * Emitted ONLY when true, so the ordinary event keeps the shape it has always
+   * had and a breakdown on it is a list of exactly the links to go and fix.
+   */
+  gradeRejected = false,
+): void {
+  posthog.capture("test_fork_selected", {
+    fork,
+    method,
+    ...(gradeRejected ? { grade_rejected: true } : {}),
+  });
 }
 
 /** The parent branch's second fork: taking it themselves, or handing it over. */

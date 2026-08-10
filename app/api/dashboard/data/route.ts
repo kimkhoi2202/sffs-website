@@ -213,6 +213,7 @@ function publicHuman(human: ReturnType<typeof groupIntoHumans>[number]) {
     questionTotal: human.questionTotal,
     landed: human.landed,
     ctaActivated: human.ctaActivated,
+    deepLinked: human.deepLinked,
     startedTest: human.startedTest,
     reachedGate: human.reachedGate,
     submittedEmail: human.submittedEmail,

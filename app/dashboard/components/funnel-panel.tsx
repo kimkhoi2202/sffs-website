@@ -28,6 +28,26 @@ export function FunnelPanel({
 }) {
   const top = stages[0]?.count ?? 0;
 
+  /*
+    THE FORK'S OWN CONVERSION, RECOVERED FROM THE BLEND.
+
+    Since the deep entry URLs shipped, "Chose a branch" holds two populations:
+    people who were shown the fork and got past it, and people who arrived on
+    /adult or /kids and were never shown it. Both genuinely chose a branch, so
+    both belong on the row — but the RATE between the first two rows now
+    improves every time an ad runs, whether or not the fork got any better.
+
+    That is the number the entry URLs were built to move, so it is the one
+    number that must not become unreadable as they move it. Subtracting the
+    deep-linked humans from both rows leaves the fork measured against exactly
+    the people who saw it, which is what it always meant.
+  */
+  const landedStage = stages[0] ?? null;
+  const branchStage = stages.find((s) => s.id === "cta") ?? null;
+  const deepLinked = branchStage?.deepLinkedCount ?? 0;
+  const forkShown = (landedStage?.count ?? 0) - (landedStage?.deepLinkedCount ?? 0);
+  const forkChose = (branchStage?.count ?? 0) - deepLinked;
+
   return (
     <div className="space-y-5">
       <Panel
@@ -77,6 +97,33 @@ export function FunnelPanel({
             but at this size one person moves a step by about{" "}
             {Math.round((1 / top) * 100)} points — read the counts first and treat the rates
             as a shape, not a rate.
+          </p>
+        )}
+
+        {/*
+          Only rendered once deep-linked traffic actually exists, so the panel
+          does not carry an explanation of a split that has not happened yet.
+        */}
+        {deepLinked > 0 && (
+          <p className="mb-4 rounded-2xl border-[2.5px] border-ink bg-yellow px-4 py-3 text-[0.8rem] font-semibold leading-[1.55]">
+            <strong>
+              {deepLinked} of these never saw the fork — they landed inside a branch.
+            </strong>{" "}
+            Paid links go straight to <code className="font-mono text-[0.72rem]">/adult</code> and{" "}
+            <code className="font-mono text-[0.72rem]">/kids</code>, so those visitors chose their
+            branch by choosing the ad and are counted on step 2 without ever being shown step 1&apos;s
+            question. Read the step-2 rate below as a blend.{" "}
+            {forkShown > 0 ? (
+              <>
+                Measured only against the {forkShown} people who <em>were</em> shown the fork, it is{" "}
+                <strong>
+                  {forkChose} of {forkShown} · {Math.round((forkChose / forkShown) * 100)}%
+                </strong>
+                .
+              </>
+            ) : (
+              <>Every visitor in this window arrived by deep link, so the fork has no rate here.</>
+            )}
           </p>
         )}
 
@@ -145,6 +192,16 @@ export function FunnelPanel({
                         )}
                       >
                         {stage.count} of {top} overall · {Math.round((stage.count / top) * 100)}%
+                      </span>
+                    )}
+                    {stage.deepLinkedCount > 0 && (
+                      <span
+                        className={cn(
+                          "rounded-full border-2 border-ink px-2 py-0.5",
+                          isActive ? "bg-paper text-ink" : "bg-yellow",
+                        )}
+                      >
+                        {stage.deepLinkedCount} by deep link
                       </span>
                     )}
                     {dropped > 0 && (

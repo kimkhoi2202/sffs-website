@@ -96,6 +96,14 @@ export interface PersonRow {
   /** Funnel progress. */
   landed: boolean;
   ctaActivated: boolean;
+  /**
+   * They arrived on a deep entry URL and were never shown the fork.
+   *
+   * They still count at "Chose a branch" — choosing the ad chose the branch —
+   * so this is what keeps that stage's conversion rate readable rather than a
+   * blend of two populations. See ./funnel.ts.
+   */
+  deepLinked: boolean;
   startedTest: boolean;
   startedTestId: string | null;
   audience: string | null;
@@ -156,6 +164,9 @@ interface RawPersonRow {
   os: string;
   isInternal: number;
   ctaActivations: number;
+  entryDeepLink: number;
+  /** Computed in the outer SELECT from `entryDeepLink` and the landing path. */
+  deepLinked: number;
   starts: number;
   startedTestId: string;
   furthestQuestion: number | null;
@@ -223,6 +234,11 @@ async function fetchPersonRows(
 
         -- Funnel stages.
         countIf(event IN ('test_cta_activated', 'test_fork_selected')) AS ctaActivations,
+        -- Did this visit come in through a deep entry URL instead of the fork?
+        -- See the note on the cta stage in ./funnel.ts: both populations reach
+        -- "Chose a branch", and only one of them was ever shown the fork, so the
+        -- stage conversion is a blend unless the two can be told apart.
+        maxIf(1, coalesce(toString(properties.entry), '') NOT IN ('', 'fork')) AS entryDeepLink,
         countIf(event = 'test_started') AS starts,
         argMaxIf(coalesce(toString(properties.test_id), ''), timestamp, event = 'test_started') AS startedTestId,
         countIf(event = 'test_results_gate_viewed') AS gateViews,
@@ -280,7 +296,14 @@ async function fetchPersonRows(
       *,
       ${channelExpr(PERSON_LADDER)} AS channel,
       ${rungExpr(PERSON_LADDER)} AS rung,
-      ${evidenceExpr(PERSON_LADDER)} AS evidence
+      ${evidenceExpr(PERSON_LADDER)} AS evidence,
+      -- Two signals, because losing this one would silently un-split the
+      -- funnel. The entry property rides every event and is the primary; the
+      -- landing pathname is the fallback for a person whose events predate the
+      -- property or reached PostHog without it. Either one is proof.
+      (entryDeepLink > 0
+        OR f_path IN ('/adult', '/grownup', '/kids')
+        OR startsWith(f_path, '/kids/')) AS deepLinked
     FROM base
     ORDER BY firstSeen DESC
     LIMIT 500`, scopeFor(range, filtered));
@@ -642,6 +665,7 @@ function toPersonRow(raw: RawPersonRow): PersonRow {
     // filing an untagged Reddit visit under "direct".
     landed: Number(raw.events ?? 0) > 0,
     ctaActivated: Number(raw.ctaActivations ?? 0) > 0,
+    deepLinked: Number(raw.deepLinked ?? 0) > 0,
     // `test_started` fired, not merely "we know which test their results were
     // for" — a person who only ever opened an emailed results link inherits a
     // test id from the token and must not be counted as having taken it.
@@ -796,6 +820,11 @@ function untrackedPerson(signup: SignupRow): PersonRow {
     isInternal: false,
     landed: true,
     ctaActivated: true,
+    // Not "they used the fork" — "there is no evidence either way". Their whole
+    // footprint is one server-side event, which carries no entry property and
+    // no pathname. False is the reading that adds nothing to a count rather
+    // than the one that invents a deep link nobody can see.
+    deepLinked: false,
     // They demonstrably took the test — a results email was earned and
     // delivered. The events are missing, the engagement is not.
     startedTest: true,

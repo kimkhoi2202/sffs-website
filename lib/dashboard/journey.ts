@@ -53,6 +53,8 @@ interface RawEvent {
   reason: string;
   source: string;
   fork: string;
+  /** `test_fork_selected` only: "tap" or "deep_link". Absent before 2026-08-10. */
+  method: string;
   depth_pct: string;
   section_name: string;
   server_side: string;
@@ -110,6 +112,7 @@ async function fetchEvents(personIds: string[], fromIso: string): Promise<RawEve
       coalesce(toString(properties.reason), '') AS reason,
       coalesce(toString(properties.source), '') AS source,
       coalesce(toString(properties.fork), '') AS fork,
+      coalesce(toString(properties.method), '') AS method,
       coalesce(toString(properties.depth_pct), '') AS depth_pct,
       coalesce(toString(properties.section_name), '') AS section_name,
       coalesce(toString(properties.server_side), '') AS server_side
@@ -168,7 +171,13 @@ function summarise(e: RawEvent): string {
     case "test_cta_activated":
       return "Pressed the take-the-test call to action";
     case "test_fork_selected":
-      return `Chose the ${e.fork || "?"} path`;
+      // A deep-linked arrival fires the same event, and a timeline that said
+      // "Chose the child path" for somebody who never saw the fork would read
+      // as a tap that did not happen — on the one screen built for reading a
+      // single person's session in order.
+      return e.method === "deep_link"
+        ? `Landed straight in the ${e.fork || "?"} path (deep link, no fork shown)`
+        : `Chose the ${e.fork || "?"} path`;
     case "test_audience_selected":
       return `Picked the ${e.audience || "?"} test`;
     case "test_grade_selected":
