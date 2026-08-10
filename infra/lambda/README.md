@@ -108,6 +108,19 @@ visible in CloudWatch without anyone querying Aurora:
 census aurora_rows=347 excluded_synthetic=1 exported=346
 ```
 
+**A successful run often publishes nothing, and that is not a failure.** Both
+exports hash the snapshot they build and skip the upload when it is identical
+to the last one, returning `{"status": "unchanged"}`. PostHog's
+`data_warehouse_tables.updated_at` therefore records **when the content last
+changed, not when the export last ran**, and on a quiet evening it ages while
+the pipeline is perfectly healthy. Anything downstream that reads that
+timestamp as a heartbeat will eventually report a working export as a dead one
+— which it did, to the owner, on 10 August 2026. If you are writing such a
+consumer, read
+[docs/analytics/quiet-export-or-stopped-one.md](../../docs/analytics/quiet-export-or-stopped-one.md)
+first; it has the signal that separates the two conditions and the four ways of
+getting it wrong.
+
 ## Configuration
 
 Every value these functions need comes from Lambda environment variables. **No
