@@ -6,16 +6,28 @@ secret. The Lambda writes to Aurora (schema `sffs`) via the RDS Data API, so ALL
 AWS credentials stay on the AWS side (the Lambda execution role); Vercel holds
 only the shared secret -- no AWS keys.
 
-Two write kinds, discriminated by the body's `kind` field (default "email" for
-backward compatibility):
+Kinds, discriminated by the body's `kind` field (default "email" for backward
+compatibility):
 
-  * kind="email"  -> INSERT INTO email_signups   (email, source, meta)
-                     ON CONFLICT (email) DO NOTHING
-  * kind="survey" -> INSERT INTO survey_responses (survey, source, open_text,
-                     email, distinct_id, meta)
+  * kind="email"         -> INSERT INTO email_signups   (email, source, meta)
+                            ON CONFLICT (email) DO NOTHING
+  * kind="survey"        -> INSERT INTO survey_responses (survey, source,
+                            open_text, email, distinct_id, meta)
+  * kind="result"        -> INSERT INTO test_results (...)
+  * kind="pending_sends" -> SELECT results emails that were never delivered
 
 PRIVACY: the survey's PostHog event carries NO PII; the email (when present) is
 stored ONLY here in Aurora, exactly like email_signups.
+
+!! NOT YET DEPLOYED AS OF THIS COMMIT !!
+------------------------------------------------------------------------------
+`kind="pending_sends"` is new and is the FIRST read this function has ever
+offered. The rest of this file matches what is running; that branch does not,
+because deploying it needs AWS credentials the change was authored without.
+Until somebody runs the one command in ../README.md, the live function answers
+`400 invalid_kind` for it and the drain route reports itself unavailable rather
+than pretending. Nothing else in this file changed, so the deployed write path
+and this mirror are still byte-identical for every existing kind.
 """
 
 import base64
@@ -276,6 +288,113 @@ def _handle_result(body):
     return _resp(200, {"ok": True})
 
 
+MAX_PENDING_LIMIT = 200
+DEFAULT_PENDING_LIMIT = 50
+DEFAULT_PENDING_MAX_AGE_HOURS = 24 * 7
+
+# Results emails that were promised to somebody and never went out.
+#
+# A `pending` row is written by the website immediately BEFORE it calls Resend,
+# so the address survives a refusal, a timeout or the instance dying mid-send.
+# The endpoint cannot UPDATE, so "was this ever actually sent" is answered by
+# looking for a second row carrying the same `send_key` -- `emailed` when it
+# went, `dropped` when the drain gave up on it for good. Anything with neither
+# is still owed its results.
+#
+# DISTINCT ON collapses the repeat attempts: somebody who pressed the button
+# four times during the 9 August outage wrote four pending rows, and they share
+# one send_key because the key is derived from the result and the address
+# rather than from the attempt. One person, one entry, one email.
+#
+# Synthetic rows are excluded on the pending side, so a verification run can
+# never be drained into a real send.
+PENDING_SENDS_SQL = """
+WITH pending AS (
+    SELECT DISTINCT ON (meta->>'send_key')
+           meta->>'send_key' AS send_key,
+           email,
+           meta->>'token'    AS token,
+           created_at
+    FROM public.test_results
+    WHERE meta->>'stage' = 'pending'
+      AND meta->>'synthetic' IS NULL
+      AND meta->>'send_key' IS NOT NULL
+      AND meta->>'token'    IS NOT NULL
+      AND email IS NOT NULL AND email <> ''
+      AND created_at > now() - make_interval(hours => :max_age_hours)
+    ORDER BY meta->>'send_key', created_at DESC
+),
+settled AS (
+    SELECT DISTINCT meta->>'send_key' AS send_key
+    FROM public.test_results
+    WHERE meta->>'stage' IN ('emailed', 'dropped')
+      AND meta->>'send_key' IS NOT NULL
+)
+SELECT p.send_key,
+       p.email,
+       p.token,
+       to_char(p.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+FROM pending p
+LEFT JOIN settled s ON s.send_key = p.send_key
+WHERE s.send_key IS NULL
+ORDER BY p.created_at
+LIMIT :limit
+"""
+
+
+def _handle_pending_sends(body):
+    """Read back the results emails that are still owed.
+
+    THIS IS THE ONLY BRANCH THAT READS ANYTHING OUT, and it is the reason this
+    function stopped being write-only. That is a real widening: everything else
+    here can be abused into writing junk rows, whereas this one hands back
+    addresses and signed result tokens to whoever holds SHARED_SECRET.
+
+    Three things keep it proportionate. It returns ONLY rows the site itself
+    wrote and then failed to deliver -- never the signup list, never a general
+    query. It is bounded on both axes, by row count and by age, so it cannot be
+    turned into a dump of the table. And it is read-only: no branch below
+    mutates anything.
+    """
+    try:
+        limit = int(body.get("limit", DEFAULT_PENDING_LIMIT))
+    except (TypeError, ValueError):
+        return _resp(400, {"ok": False, "error": "invalid_limit"})
+    limit = max(1, min(limit, MAX_PENDING_LIMIT))
+
+    try:
+        max_age_hours = int(body.get("max_age_hours", DEFAULT_PENDING_MAX_AGE_HOURS))
+    except (TypeError, ValueError):
+        return _resp(400, {"ok": False, "error": "invalid_max_age_hours"})
+    max_age_hours = max(1, min(max_age_hours, DEFAULT_PENDING_MAX_AGE_HOURS))
+
+    try:
+        result = _execute(
+            PENDING_SENDS_SQL.replace(":limit", str(limit)),
+            [{"name": "max_age_hours", "value": {"longValue": max_age_hours}}],
+        )
+    except Exception as e:  # noqa: BLE001 - never leak DB internals to caller
+        print("pending_sends read failed:", repr(e))
+        return _resp(500, {"ok": False, "error": "server_error"})
+
+    sends = []
+    for record in result.get("records", []):
+        row = [
+            None if f.get("isNull") else f.get("stringValue")
+            for f in record
+        ]
+        sends.append(
+            {
+                "sendKey": row[0],
+                "email": row[1],
+                "token": row[2],
+                "pendingSince": row[3],
+            }
+        )
+
+    return _resp(200, {"ok": True, "sends": sends})
+
+
 def handler(event, context):
     # Function URL / API Gateway use payload format 2.0.
     method = (
@@ -314,6 +433,8 @@ def handler(event, context):
         return _handle_survey(body)
     if kind == "result":
         return _handle_result(body)
+    if kind == "pending_sends":
+        return _handle_pending_sends(body)
     if kind in ("", "email"):
         return _handle_email(body)
     return _resp(400, {"ok": False, "error": "invalid_kind"})

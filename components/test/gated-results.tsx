@@ -33,9 +33,10 @@
  * argument is that the results are locked — and put a restart control directly
  * under a person's thumb at the moment they are deciding whether to hand over
  * an address. Moving it inside the card made it quieter but left it on the
- * same screen as the ask, and people kept taking it; it is now gone from the
- * gate altogether and appears only once the send has succeeded. See the note
- * above `StartOver` in ./email-gate.tsx.
+ * same screen as the ask, and people kept taking it; it then moved again, to
+ * the confirmation. It is now gone from this flow entirely — a results screen
+ * does not offer to restart the test. See the note where `StartOver` used to
+ * be in ./email-gate.tsx.
  */
 "use client";
 
@@ -59,16 +60,9 @@ export interface GatedResultsProps {
    * return visit can be offered it back. See ./saved-result-offer.tsx.
    */
   onSent: () => void;
-  onRestart: () => void;
 }
 
-export function GatedResults({
-  test,
-  timedOut,
-  token,
-  onSent,
-  onRestart,
-}: GatedResultsProps) {
+export function GatedResults({ test, timedOut, token, onSent }: GatedResultsProps) {
   /*
    * THE REAL SCORE IS NOT ON THIS PAGE. Not blurred, not hidden, not present:
    * this component never receives it. Behind the blur is the SHAPE of the
@@ -156,7 +150,6 @@ export function GatedResults({
           source={source}
           token={token}
           onSent={onSent}
-          onRestart={onRestart}
         />
       </div>
     </>

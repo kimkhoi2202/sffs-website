@@ -171,9 +171,10 @@ record(
   await probe(page, [
     { label: "email gate card", sel: "form >> xpath=ancestor::div[contains(@class,'rounded')][1]" },
     { label: "Send my results button", sel: "button:has-text('Send my results')" },
-    // Deliberately not here. It only appears once the send has succeeded, so
-    // nothing competes with the address field while the result is worth the
-    // most. See the note above `StartOver` in components/test/email-gate.tsx.
+    // Deliberately not here, and no longer anywhere in this flow: it used to
+    // appear once the send had succeeded, and has since been removed from the
+    // confirmation too. See the note where `StartOver` used to be in
+    // components/test/email-gate.tsx.
     { label: "Start over", sel: "button:has-text('Start over')" },
     { label: "results score card", sel: "div.bg-yellow" },
   ]),

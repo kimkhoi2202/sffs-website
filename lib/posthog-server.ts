@@ -148,3 +148,62 @@ export async function captureEmailCapturedServer(
     // swallow — the signup already succeeded; analytics is best-effort
   }
 }
+
+/**
+ * Fire the operational alert for a results mailer that is failing.
+ *
+ * ===========================================================================
+ * THIS IS NOT AN ANALYTICS EVENT AND MUST NOT BE TREATED AS ONE
+ * ===========================================================================
+ * Everything else in this file measures visitors. This measures US, and it
+ * exists for one reason: on 9 August every results email failed for six hours
+ * and nothing said so. There WAS already a failure event — the client's
+ * `test_email_send_failed` — and it was useless for this, because it fires
+ * once per attempt whether the cause is one bad address or a dead provider.
+ * You cannot alert on it without alerting on Tuesday.
+ *
+ * This one fires only when lib/email/send-health.ts has decided the mailer is
+ * genuinely down (see the two rules there), which is what makes it something
+ * an alert can be pointed at without being muted within a week.
+ *
+ * CARRIES NO PII AND NO PROVIDER TEXT. Counts and a reason code only. A
+ * provider error message can name the recipient, which is exactly how an
+ * address ends up somewhere the privacy policy says it is not.
+ */
+export async function captureSendHealthAlert(
+  req: NextRequest,
+  alert: {
+    kind: string;
+    failures: number;
+    attempts: number;
+    failureRate: number;
+    windowMinutes: number;
+  },
+): Promise<void> {
+  if (!isProdRequest(req)) return;
+  const ph = getClient();
+  if (!ph) return;
+  try {
+    ph.capture({
+      // Deliberately not stitched to the visitor who happened to be unlucky
+      // enough to be holding the request when the threshold tipped. This is a
+      // fact about the system, and attaching it to a person would put it
+      // behind the project's person-level filters.
+      distinctId: "sffs-results-mailer",
+      event: "results_email_failing",
+      properties: {
+        alert_kind: alert.kind,
+        failures: alert.failures,
+        attempts: alert.attempts,
+        failure_rate: alert.failureRate,
+        window_minutes: alert.windowMinutes,
+        server_side: true,
+        $process_person_profile: false,
+      },
+    });
+    await ph.flush();
+  } catch {
+    // swallow — an alert that throws would take the request down with it, and
+    // the console line beside this call site is still in the log either way.
+  }
+}

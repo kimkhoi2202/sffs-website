@@ -223,10 +223,41 @@ export function recordSend(token: string): number | null {
  * components/test/email-gate.tsx), but a button nobody should have to resist
  * is not a guarantee, and this is.
  *
- * A minute, because that is the shortest interval over which "it never
- * arrived" can be a real observation. Mail takes tens of seconds to land, so
- * nobody inside this window has learned anything since the first send; they
- * are tapping, not deciding. Outside it, "Send it again" does what it says.
+ * ===========================================================================
+ * IT WAS A MINUTE. IT IS NOW FIFTEEN, AND THE REASON CHANGED.
+ * ===========================================================================
+ * A minute was the shortest interval over which "it never arrived" can be a
+ * real observation: mail takes tens of seconds to land, so nobody inside that
+ * window had learned anything since the first send. That reasoning was about
+ * the PERSON, and it is still true as far as it goes.
+ *
+ * What it did not price is that a send is not free. Twelve to fourteen per
+ * cent of everything this account sends is a second copy to an address that
+ * already has one — 81 sends to 70 addresses on 9 August, 200 to 176 the day
+ * before. Every one of those was more than sixty seconds after the first, so
+ * the minute caught none of them.
+ *
+ * That is a rounding error when quota is abundant. On 9 August it was not: the
+ * account hit `daily_quota_exceeded` at 17:52 and 77 people never got their
+ * results. The duplicates did not cause that outage, but they were paid for
+ * out of the same allowance, and roughly one send in eight going to somebody
+ * who already had it is a slice of a constrained resource bought back for the
+ * cost of one constant.
+ *
+ * FIFTEEN MINUTES, NOT AN HOUR. The window has to stay shorter than the moment
+ * "it never arrived" stops being impatience and starts being true. Delivery is
+ * usually seconds and occasionally several minutes; past a quarter of an hour,
+ * a missing message is a real observation and a deliberate resend should do
+ * what it says. An hour would have matched the per-address limiter and caught
+ * a few more duplicates, at the price of telling somebody genuinely waiting to
+ * keep waiting — and re-sending an identical message is not what fixes THAT
+ * case anyway, which is why the copy for it names spam folders.
+ *
+ * THE COPY MUST FOLLOW THIS NUMBER. The confirmation card explains the rule in
+ * words ("we do not send the same results twice in a minute"), so changing the
+ * constant without changing that string leaves the product lying about itself.
+ * See SEND_DEDUPE_WINDOW_MINUTES below and its use in
+ * components/test/email-gate.tsx.
  *
  * KEYED ON THE ADDRESS AS WELL AS THE RESULT, which is what keeps "Wrong
  * address? Use a different one" working. A typo correction goes to a different
@@ -240,7 +271,15 @@ export function recordSend(token: string): number | null {
  * tap seconds after the first lands on the warm instance that served the
  * first, and it is strictly more than the nothing that was here before.
  */
-export const SEND_DEDUPE_WINDOW_MS = 60_000;
+export const SEND_DEDUPE_WINDOW_MS = 15 * 60_000;
+
+/**
+ * The same window in minutes, for copy that has to state the rule.
+ *
+ * Derived rather than written down twice, because the string and the constant
+ * disagreeing is the specific failure this is here to prevent.
+ */
+export const SEND_DEDUPE_WINDOW_MINUTES = Math.round(SEND_DEDUPE_WINDOW_MS / 60_000);
 
 /** claim key -> epoch ms of the send that took it. */
 const claims = new Map<string, number>();

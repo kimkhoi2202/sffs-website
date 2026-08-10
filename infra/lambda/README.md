@@ -27,11 +27,31 @@ unzip -p /tmp/fn.zip lambda_function.py | diff - infra/lambda/sffs-email-proxy/l
 No output means the mirror is honest. **If you change a function, change it
 here in the same commit.**
 
+### Outstanding: `sffs-email-proxy` has an undeployed branch
+
+`sffs-email-proxy/lambda_function.py` currently carries one change that is
+**not** running in AWS: `kind="pending_sends"`, the read that backs
+`POST /api/test-results/drain`. Every other kind in that file is byte-identical
+to what is deployed, so the diff above will show exactly this and nothing else.
+
+It was authored without credentials for the account, so it needs somebody who
+has them to run the deploy below. Until then the live function answers
+`400 invalid_kind`, and the drain route reports `backlog_unavailable` with that
+remediation rather than reporting an empty queue — the one failure mode that
+would be worse than the outage it exists for.
+
+**The part that matters is already live without this.** The addresses are
+preserved by the website writing a `pending` row through the existing
+`kind="result"` branch, with the new fields riding inside `meta`, which the
+Lambda passes through verbatim. So no deploy is needed for an outage to end
+with a list of people to send to. This deploy is what lets that list be worked
+through with one HTTP call instead of a hand-written query.
+
 ## The functions
 
 | Function | Runtime | Invoked by | What it does |
 | --- | --- | --- | --- |
-| `sffs-email-proxy` | python3.12 | API Gateway (HTTP), from Vercel route handlers | The only write path into Aurora. Three write kinds on one endpoint: `email` → `email_signups`, `survey` → `survey_responses`, `result` → `test_results`. |
+| `sffs-email-proxy` | python3.12 | API Gateway (HTTP), from Vercel route handlers | The only write path into Aurora. Three write kinds on one endpoint: `email` → `email_signups`, `survey` → `survey_responses`, `result` → `test_results`. Plus one read, `pending_sends` — see the note above; not deployed yet. |
 | `sffs-email-dw-export` | python3.12 | EventBridge `sffs-email-dw-export-hourly`, `rate(1 hour)` | Snapshots `email_signups` to S3 as NDJSON and uploads it to PostHog as the standalone warehouse table `email_signups`. |
 | `sffs-test-results-dw-export` | python3.12 | EventBridge `sffs-test-results-dw-export-hourly`, `rate(1 hour)` | Same shape, for `test_results`. Also enriches each completion with an acquisition channel from PostHog events. |
 

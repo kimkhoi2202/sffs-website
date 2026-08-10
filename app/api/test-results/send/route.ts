@@ -55,6 +55,32 @@
  *
  * The send is only counted against the result AFTER the provider accepts it,
  * so a failed attempt does not burn one of the five.
+ *
+ * ===========================================================================
+ * AND A REPORTED FAILURE IS NOW A RECOVERABLE ONE
+ * ===========================================================================
+ * Reporting it was never enough. On 9 August the Resend account hit
+ * `daily_quota_exceeded` at 17:52 UTC and every send failed for six hours; 78
+ * people were affected, 77 never got their results, and NONE OF THEM COULD BE
+ * IDENTIFIED. This route sent first and wrote afterwards, so a 429 returned
+ * 502 having written nothing. The addresses had been typed into a form, held
+ * in memory for the length of one request, and discarded.
+ *
+ * Four things changed, and the first is the one that matters:
+ *
+ *   1. THE ADDRESS IS PERSISTED BEFORE THE PROVIDER IS CALLED, as a `pending`
+ *      row. An outage now ends with a list of people to send to instead of a
+ *      hole. That row is invisible to every existing count — see ResultStage
+ *      in lib/test/result-stats.ts, which is where the reasoning for that
+ *      lives, because getting it wrong would trade one lost number for three
+ *      wrong ones.
+ *   2. THOSE ROWS CAN BE DRAINED once quota allows. See
+ *      app/api/test-results/drain/route.ts.
+ *   3. A SUSTAINED FAILURE RATE IS ANNOUNCED. Six hours passed unnoticed
+ *      because the only trace was a console.error nobody was tailing. See
+ *      lib/email/send-health.ts.
+ *   4. QUOTA EXHAUSTION SAYS SO. It is no longer flattened into "try again in
+ *      a moment", which was false for six hours and which people obeyed.
  */
 import { createHash } from "node:crypto";
 
@@ -62,7 +88,8 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { insertEmailSignup, signupMeta } from "@/lib/email-store";
 import { sendEmail } from "@/lib/email/resend";
-import { captureEmailCapturedServer } from "@/lib/posthog-server";
+import { inQuotaOutage, noteSendAttempt } from "@/lib/email/send-health";
+import { captureEmailCapturedServer, captureSendHealthAlert } from "@/lib/posthog-server";
 import { clientIp, isRateLimited } from "@/lib/rate-limit";
 import { EMAIL_SOURCES } from "@/lib/email-sources";
 import {
@@ -73,7 +100,7 @@ import {
   releaseSend,
 } from "@/lib/test/result-store";
 import { verdictFor } from "@/lib/test/scoring";
-import { isSyntheticRequest, recordResultStats } from "@/lib/test/result-stats";
+import { isSyntheticRequest, recordResultStats, sendKeyFor } from "@/lib/test/result-stats";
 import { renderResultsEmail } from "@/lib/test/results-email";
 import { displayTestTitle, getTestById } from "@/lib/test/tests";
 import { resultsUrlFor } from "@/lib/test/results-url";
@@ -87,6 +114,36 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const IP_LIMIT = { windowMs: 60_000, max: 10 };
 const ADDRESS_LIMIT = { windowMs: 60 * 60_000, max: 3 };
+
+/**
+ * What we say when the account is out of quota for the day.
+ *
+ * ===========================================================================
+ * THE OLD MESSAGE WAS FALSE FOR SIX HOURS
+ * ===========================================================================
+ * Every failure used to answer "We could not send that just now. Try again in
+ * a moment." On 9 August that sentence was wrong from 17:52 UTC until the
+ * quota reset, and the people reading it did the reasonable thing: they tried
+ * again, an average of four times each, because we had told them to.
+ *
+ * Three things this has to do, in order of how much they matter.
+ *
+ *   1. STOP INVITING A RETRY THAT CANNOT WORK. "Trying again will not help" is
+ *      the single most useful fact we have, and the old copy asserted its
+ *      opposite.
+ *   2. SAY IT IS OURS. A person whose mail did not arrive assumes they typed
+ *      it wrong. They did not.
+ *   3. SAY WHAT SURVIVES. "Your results and your address are saved" is now a
+ *      true statement about a row that exists — see the `pending` write below.
+ *      It is deliberately phrased as the fact it is rather than as a promise
+ *      with a time on it, because the drain is operated (see
+ *      app/api/test-results/drain/route.ts) and this endpoint does not know
+ *      when it will next run.
+ */
+const QUOTA_MESSAGE =
+  "We have hit today's email limit, so trying again will not help — this one is " +
+  "on us, not you. Your results and your address are saved, and you are on the " +
+  "list to send as soon as the limit resets.";
 
 /**
  * Rate-limit key for a target address.
@@ -154,11 +211,30 @@ export async function POST(request: NextRequest) {
   // further down, so neither ever holds the address itself.
   const addressKey = hashEmail(email);
   if (isRateLimited("results-send-address", addressKey, ADDRESS_LIMIT)) {
+    /*
+     * THE WORST SENTENCE WE SAID ON 9 AUGUST, and it was this one rather than
+     * the failure copy.
+     *
+     * It used to read "That address has had a few of these already. Try again
+     * in an hour." During the outage people averaged four attempts each, so
+     * the fourth was met by this limiter — and "has had a few of these
+     * already" says, to somebody who has received nothing at all, that several
+     * were sent and their inbox is the problem. It sent them to look in a spam
+     * folder for mail that did not exist.
+     *
+     * Two changes. It now names what it is counting, which is attempts, not
+     * deliveries. And when the mailer is known to be out of quota it does not
+     * speak for itself at all: the quota is the real reason nothing arrived,
+     * so the honest answer wins over the technically-accurate one.
+     */
     return NextResponse.json(
       {
         ok: false,
-        code: "address_limited",
-        error: "That address has had a few of these already. Try again in an hour.",
+        code: inQuotaOutage() ? "send_quota" : "address_limited",
+        error: inQuotaOutage()
+          ? QUOTA_MESSAGE
+          : `${ADDRESS_LIMIT.max} attempts for one address in an hour is our limit. ` +
+            `That counts attempts, not deliveries. Try again in an hour.`,
       },
       { status: 429 },
     );
@@ -231,6 +307,69 @@ export async function POST(request: NextRequest) {
     });
   }
 
+  /*
+   * ===========================================================================
+   * THE ADDRESS IS WRITTEN DOWN BEFORE THE PROVIDER IS CALLED
+   * ===========================================================================
+   * This is the fix for 9 August. The order used to be send-then-persist, so a
+   * refusal returned 502 having written nothing at all: no `emailed` row, no
+   * signup, the address in no table anywhere. Seventy-eight people hit that in
+   * six hours and not one of them could be named afterwards — the PostHog
+   * event carries a code and no address by design, the field is masked in
+   * replay, and the server-side event runs with person profiles off. All that
+   * survived was 78 anonymous ids.
+   *
+   * Reordering two statements is the entire difference between a permanent
+   * loss and a recoverable one. Whatever happens on the next line — a
+   * rejection, a timeout, this instance being frozen mid-await and never
+   * resuming — the row is already in Aurora and says who to send to and what
+   * to send them. See ResultStage in lib/test/result-stats.ts for what a
+   * `pending` row carries and, just as important, why it counts as neither a
+   * signup nor a completion anywhere downstream.
+   *
+   * AWAITED, UNLIKE EVERY OTHER WRITE ON THIS PATH. A fire-and-forget write
+   * that has not landed yet is exactly as useful as no write at all in the
+   * crash case this exists for, and the whole claim being made here is about
+   * ordering. It costs one round trip on a request that is about to make a
+   * slower one.
+   *
+   * NOT FATAL, THOUGH. If the bookkeeping write fails we still try to send:
+   * refusing to mail somebody their results because our own record-keeping
+   * hiccuped would be punishing them for our problem, and a delivered email
+   * needs no recovery row.
+   */
+  const sendKey = sendKeyFor(record.token, email);
+  const stats = {
+    testId: record.testId,
+    audience: record.audience,
+    band: record.band,
+    grade: record.grade,
+    score: record.score,
+    maxScore: record.maxScore,
+    answered: record.answered,
+    elapsedSeconds: record.elapsedSeconds,
+    timedOut: record.timedOut,
+    completedAt: new Date(record.createdAt).toISOString(),
+    verdict: verdictFor(Math.round((record.score / record.maxScore) * 100), record.audience).id,
+    synthetic: isSyntheticRequest(request.headers),
+  };
+
+  const persisted = await recordResultStats({
+    ...stats,
+    stage: "pending",
+    email,
+    sendKey,
+    // The token is what makes the row actionable rather than a note that
+    // somebody was lost. `pending` rows are the only ones that carry it.
+    token: record.token,
+  });
+  if (!persisted) {
+    console.error(
+      "results-send: could not file the pending row; a failed send from here is " +
+        "unrecoverable, which is the exact hole this write exists to close",
+    );
+  }
+
   const sent = forcedFailure
     ? ({ ok: false, reason: "rejected", detail: "forced by dev tools" } as const)
     : await sendEmail({
@@ -240,13 +379,51 @@ export async function POST(request: NextRequest) {
         text: rendered.text,
       });
 
+  /*
+   * Every outcome is offered to the health tracker, successes included: a
+   * failure RATE needs both halves, and a detector fed only failures cannot
+   * tell an outage from a quiet afternoon. See lib/email/send-health.ts.
+   */
+  const alert = noteSendAttempt(sent.ok ? { ok: true } : { ok: false, reason: sent.reason });
+  if (alert) {
+    /*
+      Two channels because they reach different people. The log line is for
+      whoever is already looking; the event is for the alert that tells
+      somebody who is not. On 9 August there was only the first kind, and the
+      person who would have read it was asleep.
+    */
+    console.error(
+      `[send-health] ALERT ${alert.kind}: ${alert.failures}/${alert.attempts} results ` +
+        `emails failed in the last ${alert.windowMinutes} minutes (${alert.failureRate}%)`,
+    );
+    void captureSendHealthAlert(request, alert);
+  }
+
   if (!sent.ok) {
-    // Nothing left, so the claim goes back. The copy below invites a retry and
-    // has to mean it.
+    // Nothing left, so the claim goes back — the transient copy below invites a
+    // retry and has to mean it. Released on the quota path too: the message
+    // there does not invite one, but the quota can reset at any moment and a
+    // stale claim would then block the first attempt that would have worked.
     releaseSend(record.token, addressKey);
     // The provider's message is for our logs only: it can name the recipient,
-    // and the client gets a generic, retryable message instead.
+    // and the client gets copy chosen from the reason instead.
     console.error(`results-send failed (${sent.reason}):`, sent.detail);
+
+    /*
+      QUOTA IS ITS OWN ANSWER, with its own code and its own status.
+      `send_quota` rather than `send_failed` is what puts the cause into the
+      PostHog failure event, which until now carried "send_failed" for
+      everything and so could not tell anyone what had gone wrong. 503 rather
+      than 502 because this is our capacity, not the provider rejecting the
+      message.
+    */
+    if (sent.reason === "quota") {
+      return NextResponse.json(
+        { ok: false, code: "send_quota", error: QUOTA_MESSAGE },
+        { status: 503 },
+      );
+    }
+
     return NextResponse.json(
       {
         ok: false,
@@ -254,7 +431,9 @@ export async function POST(request: NextRequest) {
         error:
           sent.reason === "not_configured"
             ? "Email is not switched on yet. Nothing was sent."
-            : "We could not send that just now. Try again in a moment.",
+            : // True again now that the one failure it was false for has been
+              // split out above.
+              "We could not send that just now. Try again in a moment.",
       },
       { status: 502 },
     );
@@ -275,20 +454,17 @@ export async function POST(request: NextRequest) {
    * would be punishing them for our problem.
    */
   void recordResultStats({
-    testId: record.testId,
-    audience: record.audience,
-    band: record.band,
-    grade: record.grade,
-    score: record.score,
-    maxScore: record.maxScore,
-    answered: record.answered,
-    elapsedSeconds: record.elapsedSeconds,
-    timedOut: record.timedOut,
-    completedAt: new Date(record.createdAt).toISOString(),
-    verdict: verdictFor(Math.round((record.score / record.maxScore) * 100), record.audience).id,
+    ...stats,
     stage: "emailed",
     email,
-    synthetic: isSyntheticRequest(request.headers),
+    /*
+      THE SAME KEY THE `pending` ROW ABOVE CARRIES, and writing it here is what
+      closes the loop. The endpoint cannot update, so this row landing IS the
+      record that the pending one was satisfied; without a shared key the drain
+      would have no way to tell an address that never got its results from one
+      that did, and would post a second copy to everybody who retried.
+    */
+    sendKey,
   });
 
   /*

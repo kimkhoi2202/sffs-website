@@ -46,9 +46,53 @@ export interface SendEmailInput {
   text: string;
 }
 
+/**
+ * Why a send did not happen.
+ *
+ * ===========================================================================
+ * `quota` IS SPLIT OUT BECAUSE IT IS THE ONE THAT DOES NOT CLEAR
+ * ===========================================================================
+ * Every other reason here is either permanent (`not_configured`) or plausibly
+ * over by the time the person presses the button again. `quota` is neither: on
+ * 9 August the account exhausted its daily allowance at 17:52 UTC and every
+ * send failed for the next six hours. The route told all 78 of them to "try
+ * again in a moment", which was false every single time, and they averaged
+ * four attempts each finding that out.
+ *
+ * A caller cannot say anything honest about a failure it cannot name, so this
+ * is named. See `classifyFailure` for how it is told apart from the OTHER 429
+ * Resend sends, which genuinely is over in a second.
+ */
+export type SendFailureReason = "not_configured" | "quota" | "rejected" | "network";
+
 export type SendEmailResult =
   | { ok: true; id: string }
-  | { ok: false; reason: "not_configured" | "rejected" | "network"; detail: string };
+  | {
+      ok: false;
+      reason: SendFailureReason;
+      detail: string;
+      /** The provider's HTTP status, when there was one. Logs and metrics only. */
+      status?: number;
+    };
+
+/**
+ * Which kind of refusal this is.
+ *
+ * BOTH OF RESEND'S LIMITS ANSWER 429 AND THEY MEAN OPPOSITE THINGS.
+ * `rate_limit_exceeded` is the per-second cap: the next request a moment later
+ * succeeds, and "try again in a moment" is exactly right for it.
+ * `daily_quota_exceeded` is the daily allowance: nothing succeeds until it
+ * resets, and inviting a retry is inviting somebody to press a dead button.
+ *
+ * So the NAME decides, not the status. An unnamed 429 falls through to
+ * `rejected` — the retryable reading — deliberately: telling somebody their
+ * results are stuck until tomorrow when in fact the next attempt would have
+ * worked is the worse of the two mistakes, and the sustained-failure detector
+ * in ./send-health.ts catches a run of them regardless of what they are called.
+ */
+function classifyFailure(name: string): SendFailureReason {
+  return name.toLowerCase().includes("quota") ? "quota" : "rejected";
+}
 
 /** True when the sender is still the shared sandbox address. */
 export function usingSandboxSender(): boolean {
@@ -94,11 +138,13 @@ export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult>
     if (!res.ok) {
       // The message is for OUR logs. It is never returned to the browser: a
       // provider error string can name the recipient, and the caller turns this
-      // into a generic retryable failure.
+      // into copy of its own choosing.
+      const name = body?.name ?? "";
       return {
         ok: false,
-        reason: "rejected",
-        detail: `${res.status} ${body?.name ?? ""} ${body?.message ?? ""}`.trim(),
+        reason: classifyFailure(name),
+        detail: `${res.status} ${name} ${body?.message ?? ""}`.trim(),
+        status: res.status,
       };
     }
 

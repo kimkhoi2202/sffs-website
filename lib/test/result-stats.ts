@@ -1,5 +1,6 @@
 import "server-only";
 
+import { createHash } from "node:crypto";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 
@@ -62,7 +63,7 @@ import type { Audience, Grade, GradeBand } from "./types";
  * WHEN THE ROW WAS WRITTEN, and therefore what is on it.
  *
  * ===========================================================================
- * TWO ROWS PER EMAILED RESULT, AND WHY THAT IS NOT A BUG
+ * SEVERAL ROWS PER EMAILED RESULT, AND WHY THAT IS NOT A BUG
  * ===========================================================================
  * A result is finished minutes before an address is typed, and the endpoint
  * only inserts — there is no update, so a row written at completion can never
@@ -73,12 +74,64 @@ import type { Audience, Grade, GradeBand } from "./types";
  * reconstructed afterwards. A missing percentile can be recomputed from the
  * rows we have; a missing link is gone.
  *
- * SO ANYTHING COUNTING RESULTS MUST FILTER ON THIS. `completed` is one row per
- * finished test and is the population for a percentile. `emailed` is the
- * subset that converted, carrying the address. Counting both together
- * double-counts every conversion.
+ *   completed  one row per finished test, no address. The population a
+ *              percentile is computed against.
+ *   pending    an address we are ABOUT to send to, written before the provider
+ *              is called. See the block below — this is the whole recovery.
+ *   emailed    a message that actually left, carrying the address.
+ *   dropped    a pending send the drain gave up on for a reason retrying will
+ *              not fix. Exists to take it out of the backlog; see
+ *              lib/test/pending-sends.ts.
+ *
+ * SO ANYTHING COUNTING RESULTS MUST FILTER ON THIS. Counting stages together
+ * double-counts every conversion, and counting `pending` as either a
+ * completion or a conversion asserts something that has not happened.
+ *
+ * ===========================================================================
+ * `pending` IS WRITTEN BEFORE THE SEND, WHICH IS THE ENTIRE POINT
+ * ===========================================================================
+ * On 9 August the Resend account hit its daily quota at 17:52 UTC and every
+ * results email failed for six hours. Seventy-eight people were affected and
+ * seventy-seven never got their results — and not one of them could be
+ * identified afterwards, because the route sent first and wrote afterwards. A
+ * 429 returned 502 having written nothing: no `emailed` row, no signup, the
+ * address nowhere at all. What survived was 78 anonymous PostHog ids and a
+ * masked field in a replay.
+ *
+ * A `pending` row is written BEFORE the provider is called, so the address
+ * survives whatever happens next — a refusal, a timeout, the instance being
+ * frozen mid-await. It carries the signed token as well as the address, which
+ * is what makes it actionable rather than merely sad: the token is the whole
+ * result (see ./result-token.ts), so a `pending` row is a complete instruction
+ * to send that person their results later.
+ *
+ * ===========================================================================
+ * AND IT MUST NOT BECOME A SIGNUP OR A COMPLETION BY ACCIDENT
+ * ===========================================================================
+ * This is the part that is easy to get wrong, because "we now have the
+ * address" and "we sent them something" look the same from a distance and the
+ * dashboard means the second one everywhere it says either.
+ *
+ * Two things keep it honest, and NEITHER OF THEM IS A NEW FILTER SOMEBODY HAS
+ * TO REMEMBER:
+ *
+ *   1. `sffs-test-results-dw-export` pins the stage POSITIVELY on both sides —
+ *      `stage = 'completed'` for the completion population, `stage = 'emailed'`
+ *      for the address merged onto it. Its author wrote that a future third
+ *      stage "would silently leak into the count under a negated test", and
+ *      chose the form that does not. This is that third stage, arriving nine
+ *      days later, and the export needs no change to exclude it. Neither
+ *      export Lambda is touched by this work.
+ *
+ *   2. NOTHING IS WRITTEN TO `email_signups` UNTIL A MESSAGE ACTUALLY LEAVES.
+ *      That table has exactly one export filter (`meta->>'synthetic' IS NULL`),
+ *      so any row put there is a signup on the dashboard that hour. Persisting
+ *      an address pre-send therefore goes to `test_results` and ONLY to
+ *      `test_results`. The signup is still written after a successful send, on
+ *      the live path and again from the drain, so "signup" keeps meaning
+ *      exactly what it meant on 8 August.
  */
-export type ResultStage = "completed" | "emailed";
+export type ResultStage = "completed" | "pending" | "emailed" | "dropped";
 
 export interface ResultStatsRow {
   /** Which bank, e.g. "adult" or "grade-5". */
@@ -99,13 +152,65 @@ export interface ResultStatsRow {
   verdict: string;
   stage: ResultStage;
   /**
-   * The address the results were sent to. Present ONLY on an `emailed` row, and
-   * only because the person asked us to send them there — see the privacy page,
-   * which now describes this rather than promising the opposite.
+   * The address the results were sent to, or are owed to. Never present on a
+   * `completed` row; present on the other three, and only because the person
+   * asked us to send them there — see the privacy page, which describes this
+   * rather than promising the opposite.
    */
   email?: string;
+  /**
+   * Which attempt-to-send this row is about: an opaque digest of the result
+   * and the address together.
+   *
+   * The endpoint cannot update, so "did this pending send ever go out" has to
+   * be answerable by looking for a SECOND row rather than by reading a flag on
+   * the first. This is the key those rows are matched on.
+   *
+   * DERIVED FROM THE RESULT AND THE ADDRESS, NOT FROM THE ATTEMPT, which is
+   * what makes the match correct rather than merely present. Somebody who
+   * failed at 17:52 and succeeded on their fourth try at 17:56 produces four
+   * `pending` rows and one `emailed` row, all sharing one key — so the success
+   * clears all four and the drain does not post them a fifth copy of results
+   * they already have.
+   */
+  sendKey?: string;
+  /**
+   * The signed results token, on a `pending` row and nowhere else.
+   *
+   * It is what makes recovery possible at all: the token IS the result (see
+   * ./result-token.ts), so re-rendering the exact email hours later needs
+   * nothing but this and the address. Reconstructing it from the columns is
+   * not an option — they hold a score, not the answers, and the email is a
+   * link to the results page rather than the score itself.
+   *
+   * NOT WRITTEN ON AN `emailed` ROW. Once a message has gone the token has no
+   * further use here, and a copy of it sitting next to an address for every
+   * successful send is a widening of what a database leak would mean, bought
+   * for nothing. The `sendKey` above is the durable link, and it is one-way.
+   */
+  token?: string;
+  /** Why the drain gave up. `dropped` rows only. */
+  dropReason?: string;
   /** A machine took this test. See SYNTHETIC_HEADER. */
   synthetic?: boolean;
+}
+
+/**
+ * The opaque key that ties a pending send to its eventual outcome.
+ *
+ * The token's SIGNATURE stands in for the whole token — it is the same
+ * identity in a fraction of the bytes, and it is what lib/test/result-store.ts
+ * already keys its own counters on. Hashed with the address so the key cannot
+ * be read backwards into either one: this value is written to a column an
+ * export could one day pick up, and "which address" must not be recoverable
+ * from it.
+ */
+export function sendKeyFor(token: string, email: string): string {
+  const signature = token.slice(token.lastIndexOf(".") + 1);
+  return createHash("sha256")
+    .update(`${signature}:${email.trim().toLowerCase()}`)
+    .digest("hex")
+    .slice(0, 32);
 }
 
 /**
@@ -170,6 +275,24 @@ function toWireFormat(row: ResultStatsRow): Record<string, unknown> {
       timed_out: row.timedOut,
       completed_at: row.completedAt,
       stage: row.stage,
+      /*
+        THE RECOVERY FIELDS RIDE IN `meta`, AND THAT IS WHY NO LAMBDA HAD TO
+        CHANGE FOR THE PART THAT MATTERS.
+
+        `_handle_result` in the proxy takes `meta` as an opaque dict and hands
+        it to Postgres as JSONB without inspecting a single key. So a `pending`
+        row carrying an address, a token and a send key is written by the
+        Lambda that is deployed today, with no redeploy, no migration and no
+        column. The same convention `synthetic` and `internal` already use —
+        see docs/analytics/signup-internal-marker.md, which records that
+        schema changes here are made by adding keys to `meta`.
+
+        All three are omitted rather than sent as null when absent, so a
+        `completed` row is byte-for-byte what it was before this change.
+      */
+      ...(row.sendKey ? { send_key: row.sendKey } : {}),
+      ...(row.token ? { token: row.token } : {}),
+      ...(row.dropReason ? { drop_reason: row.dropReason } : {}),
       // Present only when true, so an ordinary row is unchanged and a query for
       // real results is `meta->>'synthetic' IS NULL`. The Lambda passes `meta`
       // through verbatim, so this needs nothing on the AWS side.
@@ -184,16 +307,23 @@ const FILE = join(process.cwd(), ".data", "test-results.local.json");
  * File a finished attempt. Never throws: every caller is on a path where the
  * visitor is about to be shown their score and can do nothing about a failure
  * here.
+ *
+ * RETURNS WHETHER THE ROW LANDED, which most callers correctly ignore — they
+ * are fire-and-forget and a lost statistic is not worth a word. The `pending`
+ * write is the exception: it is the only caller for which failing means an
+ * address is about to be lost, and it is the only one that says so in the log.
  */
-export async function recordResultStats(row: ResultStatsRow): Promise<void> {
+export async function recordResultStats(row: ResultStatsRow): Promise<boolean> {
   try {
     if (emailStoreMode() === "proxy") await writeRemote(row);
     else writeLocal(row);
+    return true;
   } catch (err) {
     console.error(
       "[result-stats] failed to file a result:",
       err instanceof Error ? err.message : err,
     );
+    return false;
   }
 }
 

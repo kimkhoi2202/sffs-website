@@ -113,22 +113,22 @@ const COPY = {
     cta: "Email me my results",
     sentTitle: "Check your email",
     sentBody: "Your results are on their way. Open the link in the email to see them.",
-    /*
-     * THE RECOVERY BLOCK, WHICH IS A MINORITY PATH AND NOW READS LIKE ONE.
-     *
-     * The prompt is what turns two controls into an offer: it names the
-     * situation they are for, so nobody has to work out from a bare button
-     * whether pressing it is the next step. It is also what stands between
-     * the eye and those controls, which is the point — see the note on the
-     * confirmation layout below.
-     */
-    resendPrompt: "Not in your inbox? Mail can take a minute to arrive.",
     resentNote: "Sent again. Check your inbox.",
-    // Names the actual rule rather than shrugging. Somebody who just pressed a
-    // button and got "ok!" has learned nothing; somebody told we will not send
-    // the same thing twice in a minute knows why, and knows what to do next.
+    /*
+     * Names the actual rule rather than shrugging. Somebody who just pressed a
+     * button and got "ok!" has learned nothing; somebody told we will not send
+     * the same thing twice inside a window knows why, and knows what to do next.
+     *
+     * THE NUMBER HERE IS A COPY OF SEND_DEDUPE_WINDOW_MS in
+     * lib/test/result-store.ts, and it cannot be imported: that module is
+     * `server-only`, and this is a client component. So the two are held
+     * together by scripts/verify-send-recovery.mjs, which fails if this string
+     * stops agreeing with the constant. A product that misstates its own rule
+     * is the failure being guarded against — the window moved from one minute
+     * to fifteen and these strings still said "a minute".
+     */
     alreadyNote:
-      "Already on its way. We do not send the same results twice in a minute, so give it a moment to land.",
+      "Already on its way. We do not send the same results twice within 15 minutes, so give it a moment to land.",
   },
   /*
    * PARENT, NOT GROWN-UP, ON THIS BRANCH.
@@ -169,10 +169,10 @@ const COPY = {
     sentTitle: "Sent!",
     sentBody:
       "Ask your parent to check their email. The link in it shows your results.",
-    resendPrompt: "Not there yet? Email can take a minute.",
     resentNote: "Sent again! Ask your parent to look.",
+    /** Same rule as the adult string above, and held to the same constant. */
     alreadyNote:
-      "It is already on its way. We only send it once a minute, so give it a moment.",
+      "It is already on its way. We only send it once every 15 minutes, so give it a moment.",
   },
 } as const;
 
@@ -194,18 +194,9 @@ export interface EmailGateProps {
    * a second address, which is harmless: it overwrites with the same token.
    */
   onSent: () => void;
-  /** Throw the attempt away and go back to the start. Rendered inside the card. */
-  onRestart: () => void;
 }
 
-export function EmailGate({
-  audience,
-  testId,
-  source,
-  token,
-  onSent,
-  onRestart,
-}: EmailGateProps) {
+export function EmailGate({ audience, testId, source, token, onSent }: EmailGateProps) {
   const inputId = useId();
   const errorId = useId();
   const copy = COPY[audience === "child" ? "child" : "adult"];
@@ -424,7 +415,7 @@ export function EmailGate({
 
         {/*
           ===================================================================
-          THE RECOVERY BLOCK, BELOW A RULE AND BELOW A REASON
+          THE RECOVERY BLOCK: TWO EXITS, AND NOTHING ELSE
           ===================================================================
           "Send it again" used to be a 331px full-width bordered button
           sitting directly under the confirmation, which made it the loudest
@@ -434,26 +425,26 @@ export function EmailGate({
           duplicate, and somebody duly pressed it two and a half seconds after
           their mail was already in flight.
 
-          It is 157px now: same 44px target, half the width, under a line that
-          says when to use it. The divider is doing real work rather than
-          decorating — it puts a band of nothing between where the eye lands
-          and anything that fires a request.
+          It is 157px now: same 44px target, half the width.
 
-          DO NOT REACH FOR GEOMETRY TO FIX A DUPLICATE SEND. The tempting
-          theory is that this button inherits the submit button's screen
-          position and catches a stray second tap. It was briefly true that
-          the layout ruled that out — while the in-place reveal existed the
-          page grew to several thousand pixels, the shell stopped centring and
-          the card jumped to the top. The reveal is gone, so that argument is
-          gone with it: this screen is one card again, centred, and the two
-          controls sit within a card-height of each other on any viewport.
+          WHAT USED TO SEPARATE IT AND WHAT DOES NOW. A dashed rule and a line
+          of prompt copy ("Not in your inbox? Mail can take a minute to
+          arrive.") used to sit between the confirmation and these controls,
+          putting a band of nothing between where the eye lands and anything
+          that fires a request. Both were removed at the owner's request. The
+          separation is now carried by spacing alone, and the gap the rule
+          occupied was closed rather than left behind as a hole — an empty
+          40px band is what a divider looks like after somebody deletes only
+          the border.
 
-          Which changes nothing about the fix, because position was never the
-          defence. A layout that clears one screen's danger band does not
-          clear another's, and the card moves with viewport height anyway. The
-          two things that actually hold are the server's dedupe claim (see
-          SEND_DEDUPE_WINDOW_MS in lib/test/result-store.ts) and the fact that
-          every press below answers in the slot the prompt occupies.
+          DO NOT REACH FOR GEOMETRY TO FIX A DUPLICATE SEND, which is why
+          losing the rule costs less than it looks. The tempting theory is
+          that this button inherits the submit button's screen position and
+          catches a stray second tap; position was never the defence. What
+          actually holds is the server's dedupe claim, and that claim got
+          fifteen times stronger in the same change that removed the rule —
+          see SEND_DEDUPE_WINDOW_MS in lib/test/result-store.ts, now fifteen
+          minutes rather than one.
 
           Both exits are still here and still labelled. Burying them would
           swap a duplicate email for somebody with a mistyped address and no
@@ -461,35 +452,40 @@ export function EmailGate({
 
           Typos are the whole reason the second one exists: someone who
           mistyped sees a confirmation for mail they will never get, and needs
-          a way out that is not "take the test again".
+          a way out that is not "take the test again". THERE IS NO LONGER A
+          THIRD EXIT: "Start over" is gone from this card entirely, because
+          restarting the test is not something a results screen should offer.
         */}
-        <div className="mt-5 border-t-[2.5px] border-dashed border-ink/15 pt-5">
+        <div className="mt-5">
           {/*
-            ONE SLOT, TWO JOBS, AND THE ANSWER LANDS WHERE THE QUESTION WAS.
+            THE ANSWER LANDS WHERE THE QUESTION WAS ASKED.
             ===================================================================
-            At rest this says when the controls below are for. After a press it
-            says what the press did, replacing the prompt rather than stacking
-            under the buttons — which is both why the card barely grows and why
-            the sentence cannot be misread as belonging to whichever control
-            happens to sit above it.
+            This slot is empty at rest. After a press it carries what the press
+            did, appearing above the control that caused it rather than
+            stacking underneath — so the sentence cannot be misread as
+            belonging to whichever button happens to sit above it.
 
-            The live region is the slot itself, present from first render and
-            never unmounted, so a replacement is announced. A region that
-            appears at the same instant as its content frequently is not, and
-            the entire point of this element is that somebody who is not
-            looking at the screen still learns what happened.
+            It used to hold prompt copy at rest, which also meant the card did
+            not change height when an outcome replaced it. With the prompt
+            removed the card grows by a line when something is announced; that
+            is the direct cost of the removal and is preferred to reserving an
+            empty band, which is the gap we were asked to close.
 
-            Three outcomes, three appearances. A suppressed ask is NOT tinted
-            like a failure: nothing went wrong, and colouring it red would tell
-            somebody their results are lost at the exact moment they are in
-            flight.
+            THE LIVE REGION IS THE SLOT, not the message. It is present from
+            first render and never unmounted, so content arriving into it is
+            announced. A region that appears at the same instant as its content
+            frequently is not, and the entire point of this element is that
+            somebody who is not looking at the screen still learns what
+            happened.
+
+            A suppressed ask is NOT tinted like a failure: nothing went wrong,
+            and colouring it red would tell somebody their results are lost at
+            the exact moment they are in flight. A genuine failure IS tinted,
+            and on this card that includes the honest quota message from the
+            send route — which is long, wraps to three lines, and is meant to.
           */}
           <div role="status" aria-live="polite">
-            {resendState.kind === "idle" || resendState.kind === "sending" ? (
-              <p className="text-pretty text-center text-xs font-semibold leading-snug text-ink/55">
-                {copy.resendPrompt}
-              </p>
-            ) : (
+            {resendState.kind === "idle" || resendState.kind === "sending" ? null : (
               <p
                 className={cn(
                   "text-pretty rounded-lg border-[2.5px] border-ink px-3 py-2 text-center text-xs font-semibold leading-snug",
@@ -505,13 +501,23 @@ export function EmailGate({
             )}
           </div>
 
-          <div className="mt-3 flex flex-col items-center gap-1">
+          {/*
+            The margin is on the controls and is conditional, so an empty slot
+            takes up no room at all. A fixed `mt-3` here would reintroduce a
+            smaller version of the gap that was just removed.
+          */}
+          <div
+            className={cn(
+              "flex flex-col items-center gap-1",
+              resendState.kind !== "idle" && resendState.kind !== "sending" && "mt-3",
+            )}
+          >
             {/*
               `md` rather than `sm`, and auto-width rather than `w-full`. The
               demotion this button needed was in WIDTH and weight, not in
-              height: `sm` is 36px, and the rule the rest of this card keeps —
-              see StartOver below — is that a quiet control is still a 44px
-              target. Fiddly is not the same as understated.
+              height: `sm` is 36px, and the rule this card keeps is that a
+              quiet control is still a 44px target. Fiddly is not the same as
+              understated.
             */}
             <Button
               variant="paper"
@@ -539,7 +545,6 @@ export function EmailGate({
         </div>
 
         <Footnote />
-        <StartOver onRestart={onRestart} />
       </Card>
     );
   }
@@ -638,42 +643,27 @@ export function EmailGate({
   );
 }
 
-/**
- * The way out, and deliberately the smallest thing on the card.
- *
+/*
  * ===========================================================================
- * IT ONLY EXISTS AFTER THE SEND HAS SUCCEEDED
+ * THERE IS NO "START OVER" ON THIS CARD, AND THE PROP IS GONE WITH IT
  * ===========================================================================
- * It used to render under the form as well, and a grade-3 child who had just
- * scored a perfect 15 out of 15 — the most shareable result this product can
- * produce — pressed it five seconds after the gate appeared. The control
- * worked. It was simply the one they chose, because it was sitting next to the
- * request for their parent's address at the exact moment the result was worth
- * the most. Offering "throw this away" beside "tell us where to send it" makes
- * the two read as a pair of equal options, and it costs conversions.
+ * It had already been pushed once. It used to render under the FORM as well,
+ * and a grade-3 child who had just scored a perfect 15 out of 15 — the most
+ * shareable result this product can produce — pressed it five seconds after
+ * the gate appeared. Offering "throw this away" beside "tell us where to send
+ * it" makes the two read as a pair of equal options, and it cost conversions.
+ * So it moved to the confirmation, where the attempt had already been banked.
  *
- * So the form now has one next step and no alternative to it. Retaking stays
- * possible, but on the confirmation below, where the attempt has already been
- * banked and starting again costs nothing.
+ * It is now removed from the confirmation too: restarting the test is not
+ * something a results screen should offer at all. The `onRestart` prop went
+ * with it rather than being left plumbed through three components to nothing,
+ * so ./gated-results.tsx and ./test-flow.tsx no longer pass one.
  *
- * It is a text button rather than a filled one because the confirmation already
- * has a paper secondary above it, and a second button-shaped object turns a
- * single obvious next step into a menu. Still a full 44px target: quiet is not
- * the same as fiddly.
+ * RESTARTING IS STILL POSSIBLE and this did not orphan anyone. `reset` in
+ * ./test-flow.tsx still backs the in-test quit control and the "Something went
+ * sideways" escape hatch, which is the one screen that would otherwise be a
+ * dead end.
  */
-function StartOver({ onRestart }: { onRestart: () => void }) {
-  return (
-    <div className="mt-1 flex justify-center">
-      <button
-        type="button"
-        onClick={onRestart}
-        className="min-h-11 cursor-pointer px-2 text-center text-xs font-bold uppercase tracking-wide text-ink/45 underline decoration-2 underline-offset-2 transition-colors hover:text-ink/70"
-      >
-        Start over
-      </button>
-    </div>
-  );
-}
 
 function Card({ children }: { children: React.ReactNode }) {
   return (

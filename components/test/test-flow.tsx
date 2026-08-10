@@ -513,7 +513,6 @@ export function TestFlow() {
             timedOut={state.timedOut}
             token={state.token}
             onSent={handleSent}
-            onRestart={reset}
           />
         ) : null}
 

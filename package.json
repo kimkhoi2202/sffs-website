@@ -16,6 +16,7 @@
     "verify:result-token": "node --import ./scripts/ts-resolve-hook.mjs scripts/verify-result-token.mjs",
     "verify:results-email": "node --import ./scripts/ts-resolve-hook.mjs scripts/verify-results-email.mjs",
     "verify:send-dedupe": "node --import ./scripts/ts-resolve-hook.mjs scripts/verify-send-dedupe.mjs",
+    "verify:send-recovery": "node --import ./scripts/ts-resolve-hook.mjs scripts/verify-send-recovery.mjs",
     "verify:gate-leak": "node --import ./scripts/ts-resolve-hook.mjs scripts/verify-gate-leak.mjs",
     "verify:growth": "node --import ./scripts/ts-resolve-hook.mjs scripts/verify-growth.mjs",
     "verify:tiles-window": "node --import ./scripts/ts-resolve-hook.mjs scripts/verify-tiles-window.mjs",
