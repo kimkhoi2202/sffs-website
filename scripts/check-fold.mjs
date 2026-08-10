@@ -166,7 +166,7 @@ for (const [W, H] of VIEWPORTS) {
 
   await step("1-fork", goHome);
   await step("2-parent-intent", async (p) => {
-    await p.getByRole("button", { name: /grown-up/i }).click();
+    await p.getByRole("button", { name: /I'm an adult/i }).click();
   });
   await step("3-grade-picker", async (p) => {
     await p.getByRole("button", { name: /^My kid/i }).click();
@@ -212,7 +212,7 @@ for (const [W, H] of VIEWPORTS) {
     await p.evaluate(() => sessionStorage.clear());
     await p.reload({ waitUntil: "networkidle" });
     await p.addStyleTag({ content: hide });
-    await p.getByRole("button", { name: /grown-up/i }).click();
+    await p.getByRole("button", { name: /I'm an adult/i }).click();
     await p.getByRole("button", { name: /cognitive aptitude test/i }).click();
   });
 

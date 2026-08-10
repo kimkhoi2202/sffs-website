@@ -57,7 +57,7 @@ await page.addStyleTag({ content: HIDE_NEXT_OVERLAY });
 await shot(page, "fork-parent-or-kid");
 
 /* 2. parent's second fork */
-await page.getByRole("button", { name: /grown-up/i }).click();
+await page.getByRole("button", { name: /I'm an adult/i }).click();
 await shot(page, "fork-me-or-my-kid");
 
 /* 3. grade picker (via the parent branch, so it says "your kid") */
@@ -137,7 +137,7 @@ await page.goto(BASE, { waitUntil: "networkidle", timeout: 120_000 });
 await page.evaluate(() => sessionStorage.clear());
 await page.reload({ waitUntil: "networkidle" });
 await page.addStyleTag({ content: HIDE_NEXT_OVERLAY });
-await page.getByRole("button", { name: /grown-up/i }).click();
+await page.getByRole("button", { name: /I'm an adult/i }).click();
 await page.getByRole("button", { name: /cognitive aptitude test/i }).click();
 await shot(page, "intro-adult");
 await page.getByRole("button", { name: /start the test/i }).click();

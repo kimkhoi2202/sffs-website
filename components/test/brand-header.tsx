@@ -206,7 +206,7 @@ export function BrandHeader({
 
       {/*
         THIS IS THE PAGE'S H1, and it has to be, because the fork screen's own
-        headline was removed: the two cards say "I'm a grown-up" and "I'm a kid"
+        headline was removed: the two cards say "I'm an adult" and "I'm a kid"
         and a heading above them was restating the question they already ask.
         Something still has to carry the document's heading, and the honest
         candidate is the thing that IS the page's title.

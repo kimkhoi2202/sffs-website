@@ -693,7 +693,7 @@ const SECTIONS: LegalSection[] = [
       <>
         <p>
           This website offers a free timed reasoning test. There is a version
-          for grown-ups and a shorter version for children, offered from Grade 3
+          for adults and a shorter version for children, offered from Grade 3
           upward. Children take it, usually because a parent handed them the
           phone, so this section says plainly what happens to their information.
           It is separate from the app described above.
@@ -702,7 +702,7 @@ const SECTIONS: LegalSection[] = [
           <strong>Nothing identifies the child.</strong> There is no sign-in and
           no account. We do not ask for a name, an age, a birthday, a school, or
           a child&rsquo;s own email address, and there is no free-text box for
-          one to be typed into. The one address involved is a grown-up&rsquo;s,
+          one to be typed into. The one address involved is an adult&rsquo;s,
           typed by them or with their say-so, and it is stored against the
           result. That is set out in full below.
         </p>
@@ -768,7 +768,7 @@ const SECTIONS: LegalSection[] = [
           joins the two, and we keep them joined.
         </p>
         <p>
-          <strong>On the children&rsquo;s version that means a grown-up&rsquo;s
+          <strong>On the children&rsquo;s version that means an adult&rsquo;s
           address stored against a child&rsquo;s test performance.</strong> We
           would rather say that plainly than leave you to work it out. The
           child&rsquo;s name is never asked for and there is nowhere to type
@@ -916,8 +916,8 @@ const SECTIONS: LegalSection[] = [
         </p>
         <p>
           <strong>
-            This includes children&rsquo;s tests, held against a
-            grown-up&rsquo;s address.
+            This includes children&rsquo;s tests, held against an
+            adult&rsquo;s address.
           </strong>{" "}
           The children&rsquo;s test asks for a parent or guardian&rsquo;s
           address, so where one was given, what can now be read together is an

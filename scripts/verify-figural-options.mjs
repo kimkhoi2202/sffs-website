@@ -29,7 +29,7 @@ async function goToQuestion(page, n) {
   });
   await page.reload({ waitUntil: "networkidle" });
   await page.addStyleTag({ content: "nextjs-portal{display:none!important}" });
-  await page.getByRole("button", { name: /I'm a grown-up/i }).click();
+  await page.getByRole("button", { name: /I'm an adult/i }).click();
   await page.getByRole("button", { name: /^Me/i }).click();
   await page.getByRole("button", { name: /start the test/i }).click();
   await page.waitForTimeout(700);

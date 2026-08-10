@@ -57,7 +57,7 @@ if (process.env.NODE_ENV === "production") {
 
 /** Adult first, then the child banks in gradient order. */
 const BAND_LABEL: Record<string, string> = {
-  adult: "Grown-ups · 50 items · 15 minutes",
+  adult: "Adults · 50 items · 15 minutes",
   "grade-3": "Grade 3 · 15 items · 5 minutes",
   "grade-4": "Grade 4 · 15 items · 5 minutes",
   "grade-5": "Grade 5 · 15 items · 5 minutes",

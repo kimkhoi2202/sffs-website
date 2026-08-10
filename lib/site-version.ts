@@ -118,6 +118,6 @@ export const VERSION_META: Record<SiteVersion, VersionMeta> = {
     // modelled on say plainly that they are not one.
     title: "Are you a Smart Fella or a Fart Smella? The Official Smart Fella Test",
     description:
-      "A cognitive aptitude test, 50 questions in 15 minutes, and a verdict you will not enjoy. Grown-ups take the long one. Kids get five minutes and their own grade.",
+      "A cognitive aptitude test, 50 questions in 15 minutes, and a verdict you will not enjoy. Adults take the long one. Kids get five minutes and their own grade.",
   },
 };

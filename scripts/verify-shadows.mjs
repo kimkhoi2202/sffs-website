@@ -76,7 +76,7 @@ await page.waitForTimeout(500);
 record(
   "fork",
   await probe(page, [
-    { label: "audience fork card", sel: "button:has-text('grown-up')" },
+    { label: "audience fork card", sel: "button:has-text('adult')" },
     // Shipped flat and stays flat: it is a caption, not a control, and the
     // correction did not put it on either list.
     { label: "brand header pill", sel: "span.bg-orange" },
@@ -85,7 +85,7 @@ record(
 );
 
 /* -- parent sub-fork ------------------------------------------------------- */
-await page.getByRole("button", { name: /grown-up/i }).click();
+await page.getByRole("button", { name: /I'm an adult/i }).click();
 await page.waitForTimeout(350);
 record(
   "parent-intent",

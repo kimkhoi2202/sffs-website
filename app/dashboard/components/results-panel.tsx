@@ -62,7 +62,7 @@ export function ResultsPanel({ data }: { data: TestResultsResponse }) {
           hint="finished tests, not people"
           tone="mint"
         />
-        <Stat label="Adult" value={totals.adult} hint="grown-up test" />
+        <Stat label="Adult" value={totals.adult} hint="adult test" />
         <Stat label="Child" value={totals.child} hint="grade 3 upward" tone="blue" />
         <Stat label="With an address" value={totals.withEmail} hint="asked for the result" />
         <Stat

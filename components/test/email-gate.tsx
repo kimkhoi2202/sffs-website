@@ -131,10 +131,10 @@ const COPY = {
       "Already on its way. We do not send the same results twice within 15 minutes, so give it a moment to land.",
   },
   /*
-   * PARENT, NOT GROWN-UP, ON THIS BRANCH.
+   * PARENT, NOT ADULT, ON THIS BRANCH.
    *
    * The reason we ask for an adult's address rather than the child's is the
-   * PARENTAL relationship specifically, and "a grown-up" is vague enough to
+   * PARENTAL relationship specifically, and "an adult" is vague enough to
    * mean any adult at all. "Parent" states who should actually be receiving a
    * child's test results, which is the posture /privacy takes too.
    *
@@ -143,11 +143,10 @@ const COPY = {
    * precision beats brevity. Headline and body stay at "parent", which an
    * eight-year-old reads without effort.
    *
-   * NOTE THE OPPOSITE RULE on the opening fork, which still says "I'm a
-   * grown-up" and should: that card is an adult self-identifying in order to
-   * take the test, and plenty of them have no children. Parent language for
-   * who RECEIVES a child's results; grown-up language for who is TAKING the
-   * test.
+   * NOTE THE OPPOSITE RULE on the opening fork, which says "I'm an adult" and
+   * should: that card is an adult self-identifying in order to take the test,
+   * and plenty of them have no children. Parent language for who RECEIVES a
+   * child's results; audience language for who is TAKING the test.
    */
   child: {
     title: "Ask a parent!",

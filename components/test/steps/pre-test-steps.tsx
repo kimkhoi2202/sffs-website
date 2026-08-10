@@ -78,7 +78,7 @@ export function AudienceFork({ onPick }: { onPick: (fork: "parent" | "child") =>
     /*
       NO HEADING ON THIS STEP, deliberately. It carried "First things first"
       over "Pick the one that sounds like you", and both were restating the
-      question the two cards already ask: a card that says "I'm a grown-up" and
+      question the two cards already ask: a card that says "I'm an adult" and
       a card that says "I'm a kid" do not need to be told apart for you. Two
       lines of instruction above two obvious choices is the kind of thing that
       reads as helpful and measures as friction.
@@ -90,7 +90,7 @@ export function AudienceFork({ onPick }: { onPick: (fork: "parent" | "child") =>
       <ChoiceCard
         tone="blue"
         onClick={() => onPick("parent")}
-        title="I'm a grown-up"
+        title="I'm an adult"
         subtitle="Take the 15-minute test yourself, or set one up for your kid."
       />
       <ChoiceCard

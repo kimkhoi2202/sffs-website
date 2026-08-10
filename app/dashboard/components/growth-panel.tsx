@@ -263,7 +263,7 @@ export function GrowthPanel({ data }: { data: GrowthResponse }) {
                 hint="distinct, deduplicated"
                 tone="mint"
               />
-              <Stat label="Adult" value={count(emails.adult)} hint="took the grown-up test" />
+              <Stat label="Adult" value={count(emails.adult)} hint="took the adult test" />
               <Stat
                 label="Child"
                 value={count(emails.child)}
@@ -448,7 +448,7 @@ function AudienceSplit({ audiences }: { audiences: GrowthAudiences }) {
         <AudienceColumn
           split={audiences.adult}
           title="Adults"
-          hint="finished the grown-up test"
+          hint="finished the adult test"
         />
         <AudienceColumn
           split={audiences.child}
@@ -585,7 +585,7 @@ function Inversion({ audiences }: { audiences: GrowthAudiences }) {
 
   return (
     <p className="mb-4 rounded-2xl border-[2.5px] border-ink bg-cream px-4 py-3 text-sm font-semibold leading-relaxed">
-      <strong className="font-bold">{mostAdult.channel}</strong> brings mostly grown-ups —{" "}
+      <strong className="font-bold">{mostAdult.channel}</strong> brings mostly adults —{" "}
       {rate(adultShare)} of the addresses it earned finished the adult test. Of the ones{" "}
       <strong className="font-bold">{mostChild.channel}</strong> earned, {rate(childShare)}{" "}
       finished a children&rsquo;s test. Same funnel, different households.
@@ -740,7 +740,7 @@ function ChannelTable({ rows }: { rows: GrowthChannelRow[] }) {
               <Cell as="th">Start rate</Cell>
               <Cell as="th">Completed</Cell>
               <Cell as="th">Emailed</Cell>
-              <Cell as="th" title="Of the emailed, how many finished the grown-up test.">
+              <Cell as="th" title="Of the emailed, how many finished the adult test.">
                 Adult
               </Cell>
               <Cell as="th" title="Of the emailed, how many finished a children's test.">
@@ -816,7 +816,7 @@ function residualTitle(row: GrowthChannelRow): string {
   const said: string[] = [];
   if (row.emailedBoth > 0) {
     said.push(
-      `${count(row.emailedBoth)} of these people finished both a grown-up test and a children's one, so they are counted in Adult AND in Child.`,
+      `${count(row.emailedBoth)} of these people finished both an adult test and a children's one, so they are counted in Adult AND in Child.`,
     );
   }
   if (row.emailedAudienceUnknown > 0) {
@@ -866,7 +866,7 @@ function AudienceSplitNote({ rows }: { rows: GrowthChannelRow[] }) {
           <strong className="font-bold text-ink">
             {count(both)} {both === 1 ? "person" : "people"} finished both
           </strong>{" "}
-          a grown-up test and a children&rsquo;s one, and are counted in each column — the same
+          an adult test and a children&rsquo;s one, and are counted in each column — the same
           overlap the addresses panel below reports for households, here broken out per channel.
           The two are measured off different systems and need not agree exactly.
         </>

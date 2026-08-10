@@ -155,9 +155,9 @@ const AUDIENCES = [
   {
     id: "adult",
     testId: "adult",
-    /** "I'm a grown-up", then "Me" rather than "My kid", then the intro. */
+    /** "I'm an adult", then "Me" rather than "My kid", then the intro. */
     enter: async (page) => {
-      await page.getByRole("button", { name: /^I'm a grown-up/i }).click();
+      await page.getByRole("button", { name: /^I'm an adult/i }).click();
       await page.getByRole("button", { name: /^Me\b/ }).click();
     },
     submit: /email me my results/i,
