@@ -16,6 +16,7 @@ import type { CaptureResult } from "posthog-js";
 
 import type { EmailSource } from "../email-sources";
 import { entryBranchForPath } from "../test/entry";
+import { gtagTrackFormCompletion, setGoogleSuppressed } from "./google-tag";
 
 /* --------------------------------------------------------------------------
  * Shared property vocabulary (kept small + reused — see plan §2.0)
@@ -314,6 +315,10 @@ export function isInternalUser(): boolean {
  */
 export function markInternalUser(): void {
   internalCache = true;
+  // Google gets no second chance at this. PostHog keeps internal events and
+  // tags them; an ad platform bids on whatever it receives, so this browser has
+  // to stop sending immediately rather than be filtered afterwards.
+  setGoogleSuppressed(true);
   try {
     window.localStorage.setItem(INTERNAL_STORAGE_KEY, "1");
     window.localStorage.removeItem(LEGACY_OPT_OUT_KEY);
@@ -336,6 +341,7 @@ export function markInternalUser(): void {
  */
 export function clearInternalUser(): void {
   internalCache = false;
+  setGoogleSuppressed(false);
   try {
     window.localStorage.removeItem(INTERNAL_STORAGE_KEY);
     window.localStorage.removeItem(LEGACY_OPT_OUT_KEY);
@@ -815,6 +821,13 @@ export function trackTestEmailSubmitted(p: {
   source: string;
 }): void {
   posthog.capture("test_email_submitted", p);
+  // PAID FUNNEL: this submit is "form completion" for the Google Ads tag — the
+  // one moment the ad account is asked to count. Deliberately the client-side
+  // ATTEMPT (matching this event), not the server-side `email_captured`: the ad
+  // platform is optimising delivery toward completed forms, and the verified
+  // signup remains PostHog's number, not Google's. Carries no PII — see
+  // gtagTrackFormCompletion().
+  gtagTrackFormCompletion();
 }
 
 /** The provider accepted the message. `resend` separates first sends from repeats. */

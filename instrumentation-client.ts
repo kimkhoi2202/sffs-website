@@ -22,6 +22,7 @@ import {
   registerLaunchSuperProperties,
   scrubAndEnrich,
 } from "@/lib/analytics/events";
+import { initGoogleTag } from "@/lib/analytics/google-tag";
 
 const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
 
@@ -94,3 +95,16 @@ if (isProdHost && key) {
     },
   });
 }
+
+/**
+ * The Google Ads tag (gtag.js), behind the SAME prod-host guard as PostHog.
+ *
+ * That guard matters more here than it does for analytics: every localhost run
+ * and every `*.vercel.app` preview that fired a conversion would be teaching a
+ * live ad set what a customer looks like using the developer. There is no
+ * equivalent of PostHog's "tag it and filter later" on an ad platform.
+ *
+ * Runs outside the `key &&` check above because the two vendors are configured
+ * independently — the tag should still boot on a deploy with no PostHog key.
+ */
+initGoogleTag({ enabled: isProdHost, isInternal });
