@@ -30,8 +30,10 @@
  * whoever picks it up is not re-deriving it.
  *
  * The PRIVACY INVARIANT above is true of what call sites PASS. It is not true
- * of what gtag SENDS. Every hit carries the page URL, and on /results/[token]
- * and /beat/[token] the URL is the result. See instrumentation-client.ts.
+ * of what gtag SENDS: every hit carries the page URL, and on /results/[token]
+ * and /beat/[token] that URL is the result. The tag no longer boots on those
+ * two prefixes, which closes it. See TOKEN_ROUTE_PREFIXES below and the note at
+ * the initGoogleTag call in instrumentation-client.ts.
  *
  * /privacy is accurate today only because this has never reached production. It
  * says website analytics is not used for advertising, lists Google as a
@@ -85,6 +87,31 @@ function browserOptedOut(): boolean {
   return nav.doNotTrack === "1" || legacy === "1";
 }
 
+/**
+ * Routes whose URL is itself the payload. The token is encoded rather than
+ * encrypted and decodes to the test taken, the grade, the answers and the
+ * timings, so on the children's version it is a child's test performance. gtag
+ * sends the page URL with its hits, which makes "do not send the URL" and "do
+ * not be on the page" the same requirement.
+ *
+ * Read live from `window.location` rather than captured at boot, because
+ * instrumentation-client.ts runs once per document and these routes are both
+ * entered and left by client-side navigation.
+ */
+const TOKEN_ROUTE_PREFIXES = ["/results/", "/beat/"] as const;
+
+function onTokenRoute(): boolean {
+  const path = window.location.pathname;
+  return TOKEN_ROUTE_PREFIXES.some((prefix) => path.startsWith(prefix));
+}
+
+/**
+ * The `enabled`/`isInternal` decision from the first call, retained so a
+ * deferred boot can resume without re-deriving PROD_HOSTS outside
+ * instrumentation-client.ts, which owns that list.
+ */
+let bootOpts: { enabled: boolean; isInternal: boolean } | null = null;
+
 /** Install Google's base snippet: the dataLayer, the gtag stub, and the loader. */
 function installTag(): void {
   const dataLayer = (window.dataLayer = window.dataLayer ?? []);
@@ -129,8 +156,18 @@ export function initGoogleTag(opts: {
   isInternal: boolean;
 }): void {
   if (started || typeof window === "undefined") return;
+  bootOpts = opts;
   if (!opts.enabled) return;
   if (browserOptedOut()) return;
+
+  // DEFERRED, NOT CANCELLED. `started` deliberately stays false so a later call
+  // can boot once the visitor leaves the token route. Both token routes carry a
+  // "Take the test" link back into the funnel, and that is a client-side
+  // navigation which does not re-run instrumentation-client.ts, so setting
+  // `started` here would leave the tag dead for the whole shared-link channel
+  // and silently drop its conversions. Resumed by
+  // components/analytics/google-tag-boot.tsx on route change.
+  if (onTokenRoute()) return;
 
   started = true;
   suppressed = opts.isInternal;
@@ -153,6 +190,18 @@ export function initGoogleTag(opts: {
 }
 
 /**
+ * Resume a boot that was deferred because the document opened on a token route.
+ * A no-op once the tag has started or if it never had a chance to run, so an
+ * ordinary route change costs one predicate.
+ *
+ * Kept here rather than in the component so the host and internal-user decision
+ * stays owned by instrumentation-client.ts and is not re-derived in two places.
+ */
+export function retryGoogleTagBoot(): void {
+  if (bootOpts) initGoogleTag(bootOpts);
+}
+
+/**
  * Follow the /internal toggle mid-session. Called from markInternalUser /
  * clearInternalUser in ./events.ts, which owns the durable flag; this module
  * only mirrors it, so the dependency runs one way and there is no import cycle.
@@ -172,6 +221,11 @@ export function setGoogleSuppressed(value: boolean): void {
  */
 export function gtagTrackFormCompletion(): void {
   if (suppressed || !started || typeof window === "undefined") return;
+  // The email gate is never on a token route: TestFlow renders on /, /adult,
+  // /grownup, /kids and /kids/[grade] only. This cannot suppress a real
+  // conversion, and is here so "no token URL reaches Google" holds structurally
+  // rather than by coincidence of where the gate happens to live today.
+  if (onTokenRoute()) return;
   // The payload really is `send_to` and nothing else: no email, no hash, no
   // user_data. What this repo cannot enforce is that it stays that way.
   // Enhanced conversions is an Ads console setting, and with automatic

@@ -7,6 +7,7 @@ import { PageShapes } from "@/components/quiz/page-shapes";
 import { PostHogProvider } from "@/components/analytics/posthog-provider";
 import { EngagementTracker } from "@/components/analytics/engagement-tracker";
 import { LinkTracker } from "@/components/analytics/link-tracker";
+import { GoogleTagBoot } from "@/components/analytics/google-tag-boot";
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -108,6 +109,10 @@ export default function RootLayout({
           <EngagementTracker />
           {/* Outbound + social link-click analytics (delegated listener). */}
           <LinkTracker />
+          {/* Resumes a Google tag boot deferred on /results/[token] and
+              /beat/[token]. Renders nothing; see the component for why the
+              route check cannot live in instrumentation-client.ts alone. */}
+          <GoogleTagBoot />
         </PostHogProvider>
       </body>
     </html>

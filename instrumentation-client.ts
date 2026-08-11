@@ -109,19 +109,28 @@ if (isProdHost && key) {
  */
 
 /*
- * SERIOUS, recorded and not fixed. This boots the tag on EVERY production page,
- * and `enabled` is the only scope it has. That includes /results/[token] and
- * /beat/[token].
+ * TOKEN ROUTES: found in review, and closed.
  *
- * gtag sends the full page URL with its hits. Those tokens are encoded rather
- * than encrypted and decode to the test taken, the grade, the answers and the
- * timings; /privacy says exactly that and tells readers to treat the link as
- * private. On the children's version this hands a child's test performance to
- * Google, readable by anyone holding the URL. No conversion has to fire for it:
- * loading the tag on the page is enough.
+ * This call is scope by HOST and nothing else, so it used to boot the tag on
+ * every production page, /results/[token] and /beat/[token] included. gtag
+ * sends the full page URL with its hits, and those tokens are encoded rather
+ * than encrypted: they decode to the test taken, the grade, the answers and the
+ * timings, which on the children's version is a child's test performance.
+ * /privacy says exactly that and tells readers to treat the link as private. No
+ * conversion had to fire for the exposure, because loading the tag on the page
+ * was enough.
  *
- * The prod-host gate is correct and load-bearing, but it is scope by HOST. What
- * is missing is scope by ROUTE: either do not boot on the token routes, or
- * override page_location so the token never leaves the page. Not applied.
+ * Scope by ROUTE now lives in lib/analytics/google-tag.ts, which will not boot
+ * while window.location sits on either prefix. That refusal is a DEFERRAL and
+ * not a cancellation, and the two halves are load-bearing together: both token
+ * routes link back into the funnel by client-side navigation, which never
+ * re-runs this file, so components/analytics/google-tag-boot.tsx resumes the
+ * boot on the first ordinary route. Remove the deferral and the exposure
+ * reopens; remove the resume and every conversion arriving from a shared result
+ * link disappears silently.
+ *
+ * The rest of the review stands unchanged and is still true: the cookie note at
+ * the `config` call, and the enhanced-conversions note at
+ * gtagTrackFormCompletion.
  */
 initGoogleTag({ enabled: isProdHost, isInternal });
