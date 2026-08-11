@@ -107,4 +107,21 @@ if (isProdHost && key) {
  * Runs outside the `key &&` check above because the two vendors are configured
  * independently — the tag should still boot on a deploy with no PostHog key.
  */
+
+/*
+ * SERIOUS, recorded and not fixed. This boots the tag on EVERY production page,
+ * and `enabled` is the only scope it has. That includes /results/[token] and
+ * /beat/[token].
+ *
+ * gtag sends the full page URL with its hits. Those tokens are encoded rather
+ * than encrypted and decode to the test taken, the grade, the answers and the
+ * timings; /privacy says exactly that and tells readers to treat the link as
+ * private. On the children's version this hands a child's test performance to
+ * Google, readable by anyone holding the URL. No conversion has to fire for it:
+ * loading the tag on the page is enough.
+ *
+ * The prod-host gate is correct and load-bearing, but it is scope by HOST. What
+ * is missing is scope by ROUTE: either do not boot on the token routes, or
+ * override page_location so the token never leaves the page. Not applied.
+ */
 initGoogleTag({ enabled: isProdHost, isInternal });

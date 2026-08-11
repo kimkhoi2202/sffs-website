@@ -827,6 +827,9 @@ export function trackTestEmailSubmitted(p: {
   // platform is optimising delivery toward completed forms, and the verified
   // signup remains PostHog's number, not Google's. Carries no PII — see
   // gtagTrackFormCompletion().
+  // That "no PII" is a property of this call, not of the integration: enhanced
+  // conversions can add the address from the DOM without touching this file.
+  // See gtagTrackFormCompletion().
   gtagTrackFormCompletion();
 }
 

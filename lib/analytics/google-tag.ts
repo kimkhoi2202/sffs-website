@@ -24,6 +24,28 @@
  * secret, so it lives here as a constant rather than behind an env var.
  */
 
+/*
+ * REVIEW, recorded and not fixed: behaviour is unchanged on purpose. Each
+ * finding sits at the line it applies to, with the fix named in a clause so
+ * whoever picks it up is not re-deriving it.
+ *
+ * The PRIVACY INVARIANT above is true of what call sites PASS. It is not true
+ * of what gtag SENDS. Every hit carries the page URL, and on /results/[token]
+ * and /beat/[token] the URL is the result. See instrumentation-client.ts.
+ *
+ * /privacy is accurate today only because this has never reached production. It
+ * says website analytics is not used for advertising, lists Google as a
+ * subprocessor for Android sign-in and payments only, and says there is no
+ * cookie banner. Shipping this makes all three wrong. Whether the policy moves
+ * or the tag does is the owner's call, not this file's.
+ *
+ * Worth keeping exactly as written: GPC and DNT are checked before the script
+ * element exists, `suppressed` starts true so an early call fails closed, the
+ * prod-host gate keeps previews out of the live ad account, internal browsers
+ * never load gtag.js at all, and the conversion really does send nothing but
+ * `send_to`.
+ */
+
 /** Google Ads account tag id ("Google tag" / gtag.js). Public, not a secret. */
 const TAG_ID = "AW-18380696275";
 
@@ -77,6 +99,14 @@ function installTag(): void {
   window.gtag = gtag;
 
   gtag("js", new Date());
+  // `config` with no options object inherits every Google default, including
+  // conversion_linker and ad personalization signals. conversion_linker writes
+  // the `_gcl_au` cookie (about 90 days) to hold click identifiers. /privacy
+  // enumerates browser storage exhaustively, "four things", three ours and one
+  // PostHog's, so `_gcl_au` is an undisclosed fifth and the count is wrong
+  // rather than merely incomplete. Fix is an options object here with
+  // conversion_linker false, at a real cost to attribution accuracy. Not
+  // applied.
   gtag("config", TAG_ID);
 
   const script = document.createElement("script");
@@ -142,5 +172,12 @@ export function setGoogleSuppressed(value: boolean): void {
  */
 export function gtagTrackFormCompletion(): void {
   if (suppressed || !started || typeof window === "undefined") return;
+  // The payload really is `send_to` and nothing else: no email, no hash, no
+  // user_data. What this repo cannot enforce is that it stays that way.
+  // Enhanced conversions is an Ads console setting, and with automatic
+  // collection gtag scrapes the DOM for email inputs. This fires at the email
+  // gate, so the address is on screen at exactly this moment. Switching it on
+  // changes no line here and passes no code review. Fix is to confirm it is off
+  // in the Ads account and keep it off, which is not checkable from here.
   window.gtag?.("event", "conversion", { send_to: TAG_ID });
 }
