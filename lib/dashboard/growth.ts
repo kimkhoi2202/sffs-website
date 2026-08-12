@@ -8,13 +8,13 @@ import {
   OUTAGE_TO,
   WAREHOUSE_COLUMNS,
   abandonedExpr,
-  eventInOutageExpr,
   finishedExpr,
   inOutageExpr,
   rangeHitsOutage,
   sparseExpr,
 } from "./completion-rule";
 import { hogql, hogqlWithMeta, sqlString, type QueryScope } from "./posthog-query";
+import { ADDRESS_DELIVERED, GAVE_ADDRESS } from "./signup-rule";
 import type { ResolvedRange } from "./time-range";
 import type {
   AudienceChannelSlice,
@@ -32,6 +32,26 @@ import type {
 /**
  * The four numbers the owner asks for by hand, and the two tables he reads
  * every time.
+ *
+ * ===========================================================================
+ * "EMAILED" ON THIS PAGE MEANS "GAVE US AN ADDRESS"
+ * ===========================================================================
+ * It does not mean a message arrived. The column name is older than the
+ * distinction and is kept because it is load-bearing in four places; the rule
+ * behind it lives in ./signup-rule.ts and the panel states it on screen.
+ *
+ * This is why the funnel no longer carries a 9 August outage correction. That
+ * correction added back people with a `test_email_submitted` inside a
+ * hardcoded window and no `email_captured` anywhere — which is now simply what
+ * the base metric counts, in every window, without a date in it. The hardcoded
+ * hours would have become a no-op OR against a superset: not a double count,
+ * because the union is per person, but machinery claiming to correct something
+ * it no longer touches. `emailedUndelivered` replaces it and generalises it:
+ * measured per window, no dates, and it covers the 11 August outage and every
+ * ordinary bounce too.
+ *
+ * The WAREHOUSE half of this file is a different story — see `fetchEmails`,
+ * which is still delivery-gated and says so.
  *
  * ===========================================================================
  * EVERY STAGE IS DISTINCT PEOPLE, OVER ONE POPULATION
@@ -197,7 +217,14 @@ function arrivedSubquery(): string {
       countIf(event = '$pageview') AS pageviews,
       maxIf(1, event = 'test_started') AS started,
       maxIf(1, event = 'test_completed') AS completed,
-      maxIf(1, event = 'email_captured') AS emailed,
+
+      -- Gave us an address. NOT "was successfully mailed" — see
+      -- ./signup-rule.ts for the whole argument and for why the union of the
+      -- two events is idempotent per person.
+      maxIf(1, ${GAVE_ADDRESS}) AS emailed,
+      -- The same people, send-gated, so the panel can print the shortfall
+      -- rather than leaving a reader to wonder what changed.
+      maxIf(1, ${ADDRESS_DELIVERED}) AS emailed_delivered,
       maxIf(1, event = 'test_completed' AND toString(properties.audience) = 'adult') AS took_adult,
       maxIf(1, event = 'test_completed' AND toString(properties.audience) = 'child') AS took_child,
 
@@ -208,10 +235,6 @@ function arrivedSubquery(): string {
             AND toString(properties.audience) = 'adult') AS finished_adult,
       maxIf(1, event = 'test_completed' AND ${FINISHED_EVENT}
             AND toString(properties.audience) = 'child') AS finished_child,
-
-      -- Typed in an address while the sends were failing. Paired with the
-      -- emailed flag above, this recovers a conversion the outage swallowed.
-      maxIf(1, event = 'test_email_submitted' AND ${eventInOutageExpr()}) AS outage_submit,
 
       max(timestamp) AS last_seen
     FROM events
@@ -229,8 +252,8 @@ interface RawFunnel {
   without_pageview_completed: number;
   finished: number;
   finished_emailed: number;
-  finished_emailed_corrected: number;
-  outage_lost: number;
+  finished_emailed_delivered: number;
+  emailed_delivered: number;
 }
 
 /**
@@ -258,9 +281,8 @@ async function fetchFunnel(
        countIf(${POPULATION} AND ${col("finished")} = 1) AS finished,
        countIf(${POPULATION} AND ${col("finished")} = 1 AND ${col("emailed")} = 1) AS finished_emailed,
        countIf(${POPULATION} AND ${col("finished")} = 1
-               AND (${col("emailed")} = 1 OR ${col("outage_submit")} = 1)) AS finished_emailed_corrected,
-       countIf(${POPULATION} AND ${col("emailed")} = 0
-               AND ${col("outage_submit")} = 1) AS outage_lost
+               AND ${col("emailed_delivered")} = 1) AS finished_emailed_delivered,
+       countIf(${POPULATION} AND ${col("emailed_delivered")} = 1) AS emailed_delivered
      FROM (${arrivedSubquery()}) AS ${ARRIVED}`,
     scopeFor(range, filtered),
   );
@@ -272,7 +294,8 @@ async function fetchFunnel(
   const emailed = Number(row?.emailed ?? 0);
   const finished = Number(row?.finished ?? 0);
   const finishedEmailed = Number(row?.finished_emailed ?? 0);
-  const finishedEmailedCorrected = Number(row?.finished_emailed_corrected ?? 0);
+  const finishedEmailedDelivered = Number(row?.finished_emailed_delivered ?? 0);
+  const emailedDelivered = Number(row?.emailed_delivered ?? 0);
 
   return {
     funnel: {
@@ -280,6 +303,7 @@ async function fetchFunnel(
       started,
       completed,
       emailed,
+      emailedDelivered,
       startRate: rate(started, landed),
       completionRate: rate(completed, started),
       emailRate: rate(emailed, completed),
@@ -291,10 +315,12 @@ async function fetchFunnel(
       // `completed` on the page, and a second countIf could drift from it.
       abandonedOnly: Math.max(0, completed - finished),
       finishedEmailed,
-      finishedEmailedCorrected,
+      finishedEmailedDelivered,
       finishedEmailRate: rate(finishedEmailed, finished),
-      finishedEmailRateCorrected: rate(finishedEmailedCorrected, finished),
-      outageLostConversions: Number(row?.outage_lost ?? 0),
+      finishedEmailRateDelivered: rate(finishedEmailedDelivered, finished),
+      // Subtracted rather than counted separately, for the same reason
+      // `abandonedOnly` is: the two have to add back to `emailed` on the page.
+      emailedUndelivered: Math.max(0, emailed - emailedDelivered),
       answeredShare: ANSWERED_SHARE,
     },
     computedAt,

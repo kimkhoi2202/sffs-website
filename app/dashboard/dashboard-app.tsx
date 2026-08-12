@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
 import { DEFAULT_RANGE, resolveRange, type TimeRangeInput } from "@/lib/dashboard/time-range";
+import { SIGNUP_BASIS_NOTE } from "@/lib/dashboard/signup-rule";
 import type {
   GrowthResponse,
   JourneyResponse,
@@ -373,8 +374,18 @@ export function DashboardApp({ queryKeyConfigured }: { queryKeyConfigured: boole
           hint="unique people"
           tone="mint"
         />
-        <Stat label="Signups" value={tiles?.signups ?? "—"} hint="unique people" tone="mint" />
+        {/* "Gave an address", not "was successfully mailed". The two were the
+            same number until a quota outage made them differ by a third, and
+            the tile now says which one it is rather than leaving the reader to
+            assume the flattering reading. See lib/dashboard/signup-rule.ts. */}
+        <Stat
+          label="Signups"
+          value={tiles?.signups ?? "—"}
+          hint="people who gave an address"
+          tone="mint"
+        />
       </div>
+      <SignupBasisNote tiles={tiles} />
 
       {/* ---- Tabs --------------------------------------------------------- */}
       <nav className="mt-4 flex flex-wrap gap-2">
@@ -480,5 +491,45 @@ export function DashboardApp({ queryKeyConfigured }: { queryKeyConfigured: boole
           ))}
       </div>
     </div>
+  );
+}
+
+/**
+ * What the Signups tile is counting, said on the page.
+ *
+ * ===========================================================================
+ * THE DISTINCTION THAT GETS MISREAD IF IT IS NOT WRITTEN DOWN
+ * ===========================================================================
+ * "Signups" is the tile the owner quotes. It used to mean "we successfully
+ * emailed them" and now means "they gave us an address", and those two agree
+ * on every ordinary day — which is exactly what makes the difference dangerous
+ * rather than obvious. They came apart by a third on 11 August, and a reader
+ * comparing this week's figure to a screenshot from last week has no way to
+ * know which definition either one is on unless the page says.
+ *
+ * So it says. And it prints the OLD reading next to it whenever they differ,
+ * because the honest way to change a headline number is to show your working,
+ * not to quietly restate it a third higher.
+ */
+function SignupBasisNote({ tiles }: { tiles: TilesResponse["tiles"] }) {
+  if (!tiles) return null;
+  const undelivered = Math.max(0, tiles.signups - tiles.signupsDelivered);
+
+  return (
+    <p className="mt-2 text-xs font-semibold leading-relaxed text-ink/55">
+      <strong className="font-bold text-ink/75">{SIGNUP_BASIS_NOTE}</strong>{" "}
+      {undelivered > 0 ? (
+        <>
+          In this window{" "}
+          <strong className="font-bold text-ink/75">
+            {undelivered} of the {tiles.signups} never received their results email
+          </strong>{" "}
+          — a quota outage, not a change in behaviour. Counted the old, send-gated way this
+          tile would read {tiles.signupsDelivered}.
+        </>
+      ) : (
+        <>Every address given in this window was also delivered to, so both readings agree.</>
+      )}
+    </p>
   );
 }

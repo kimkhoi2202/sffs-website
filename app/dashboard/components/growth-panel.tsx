@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 import { channelTint } from "@/lib/dashboard/attribution";
+import { SIGNUP_BASIS_NOTE } from "@/lib/dashboard/signup-rule";
 import type {
   FreshnessState,
   GrowthAudiences,
@@ -149,13 +150,13 @@ export function GrowthPanel({ data }: { data: GrowthResponse }) {
               <FunnelRow
                 label="Gave an email"
                 hint="of the people who finished, at the results gate"
-                people={funnel.finishedEmailedCorrected}
-                rate={funnel.finishedEmailRateCorrected}
+                people={funnel.finishedEmailed}
+                rate={funnel.finishedEmailRate}
                 rateNote="of the people who finished"
                 note={
-                  funnel.outageLostConversions > 0
-                    ? `includes ${count(funnel.outageLostConversions)} the 9 Aug outage lost`
-                    : undefined
+                  funnel.emailedUndelivered > 0
+                    ? `counted on submission; ${count(funnel.emailedUndelivered)} never reached an inbox`
+                    : "counted on submission, not on delivery"
                 }
               />
             </tbody>
@@ -370,6 +371,26 @@ export function GrowthPanel({ data }: { data: GrowthResponse }) {
  * The threshold is on screen for the same reason. It is a choice somebody
  * made, it changes what the headline says, and a reader is entitled to see it
  * rather than to discover it in a source file.
+ *
+ * ===========================================================================
+ * THIS BLOCK IS STILL DELIVERY-GATED, UNLIKE THE FUNNEL ABOVE IT
+ * ===========================================================================
+ * The funnel now counts an address when it is SUBMITTED. These figures cannot,
+ * and the reason is structural rather than an oversight.
+ *
+ * They come from the warehouse mirror of `test_results`, where the address is
+ * merged onto a completion from its `stage='emailed'` sibling row — and the
+ * export pins that stage positively, so the `pending` row written at
+ * submission never reaches the mirror at all. There is no join that recovers
+ * it either: a completion whose send failed carries no address, and events
+ * never carry one by design, so nothing exists to match on.
+ *
+ * Fixing it properly means changing `sffs-test-results-dw-export`, which is a
+ * hand-deployed Lambda with no test coverage and is not part of this change.
+ * Until then this block reports DELIVERED addresses against finished tests,
+ * the outage hold-out it has always had stays (it is the only correction
+ * available to it), and the note on screen says which of the two it is so
+ * nobody reads it as disagreeing with the funnel.
  */
 function CompletionAccountingBlock({
   accounting,
@@ -394,9 +415,9 @@ function CompletionAccountingBlock({
           tone="mint"
         />
         <Stat
-          label="Gave an address"
+          label="Address delivered to"
           value={rate(corrected.finishedEmailRate)}
-          hint={`${count(corrected.finishedWithEmail)} of ${count(corrected.finished)} finishers`}
+          hint={`${count(corrected.finishedWithEmail)} of ${count(corrected.finished)} finishers · delivered, not submitted`}
           tone="paper"
         />
         <Stat
@@ -442,6 +463,23 @@ function CompletionAccountingBlock({
           finished the test gave an address — {rate(corrected.finishedEmailRate)}
         </strong>
         .
+      </p>
+
+      {/*
+        The one place on this page where "gave an address" still means "was
+        mailed". Said out loud, because the funnel two panels up now counts the
+        submission and a reader comparing the two rates would otherwise assume
+        one of them is broken.
+      */}
+      <p className="rounded-2xl border-2 border-dashed border-ink/30 px-4 py-3 text-xs font-semibold leading-relaxed text-ink/65">
+        <strong className="font-bold text-ink">
+          These three figures count DELIVERED addresses, not submitted ones
+        </strong>
+        , which is why they read lower than the funnel above and why the outage hours are still
+        held out of them. They come from the hourly mirror, where an address only reaches a
+        completion once the results email has actually gone — the row written when somebody
+        submits is not exported, so there is nothing here to count it with. The funnel is the
+        figure to quote for signups; this one is the figure to quote for deliverability.
       </p>
 
       {/* The rule, and where its two halves disagree. */}
@@ -1432,36 +1470,41 @@ function CompletionSplitNote({ funnel }: { funnel: NonNullable<GrowthResponse["f
           above: they are a real loss and worth reading, they are simply not finishers.
         </p>
       )}
-      {(funnel.outageLostConversions > 0 || emailedWithoutFinishing > 0) && (
+      <p className="rounded-2xl border-2 border-dashed border-ink/30 px-4 py-3 text-xs font-semibold leading-relaxed text-ink/65">
+        <strong className="font-bold text-ink">{SIGNUP_BASIS_NOTE}</strong>{" "}
+        {funnel.emailedUndelivered > 0 ? (
+          <>
+            In this window{" "}
+            <strong className="font-bold text-ink">
+              {count(funnel.emailedUndelivered)}{" "}
+              {funnel.emailedUndelivered === 1 ? "person gave" : "people gave"} an address whose
+              results email never left
+            </strong>{" "}
+            — mostly the 11 August quota outage, which ran from 11:33 UTC to midnight and
+            failed every send in between. They are counted above. Counting only the deliveries
+            reads a mail failure as a refusal, which is what this page did until now: the
+            send-gated reading of the same row is{" "}
+            {count(funnel.finishedEmailedDelivered)} at {rate(funnel.finishedEmailRateDelivered)}
+            .
+          </>
+        ) : (
+          <>
+            Every address given in this window was also delivered to, so the two readings agree
+            here. They come apart whenever a send fails.
+          </>
+        )}
+      </p>
+      {emailedWithoutFinishing > 0 && (
         <p className="rounded-2xl border-2 border-dashed border-ink/30 px-4 py-3 text-xs font-semibold leading-relaxed text-ink/65">
-          {funnel.outageLostConversions > 0 && (
-            <>
-              <strong className="font-bold text-ink">
-                Gave an email is corrected for the 9 August outage
-              </strong>
-              . Between 17:47 and 00:16 UTC every results email failed, and the conversion is
-              only recorded when the address is genuinely stored — so{" "}
-              {count(funnel.outageLostConversions)}{" "}
-              {funnel.outageLostConversions === 1 ? "person who typed" : "people who typed"} in
-              a valid address in those hours{" "}
-              {funnel.outageLostConversions === 1 ? "was" : "were"} never counted as converted.
-              They are counted above. Leaving them out reads a mail failure as a refusal.{" "}
-            </>
-          )}
-          {emailedWithoutFinishing > 0 && (
-            <>
-              Separately,{" "}
-              <strong className="font-bold text-ink">
-                {count(emailedWithoutFinishing)}{" "}
-                {emailedWithoutFinishing === 1 ? "person gave" : "people gave"} an address
-                without finishing a test
-              </strong>{" "}
-              in this window — some of them walk-aways who came back to the gate, some who
-              signed up without sitting one. They are real addresses and they are in the
-              Signups tile, but they are not in the row above, because that row is finishers
-              and they did not finish.
-            </>
-          )}
+          Separately,{" "}
+          <strong className="font-bold text-ink">
+            {count(emailedWithoutFinishing)}{" "}
+            {emailedWithoutFinishing === 1 ? "person gave" : "people gave"} an address without
+            finishing a test
+          </strong>{" "}
+          in this window — some of them walk-aways who came back to the gate, some who signed
+          up without sitting one. They are real addresses and they are in the Signups tile, but
+          they are not in the row above, because that row is finishers and they did not finish.
         </p>
       )}
     </div>

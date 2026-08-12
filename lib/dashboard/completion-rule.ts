@@ -229,12 +229,24 @@ export function inOutageExpr(): string {
       AND parseDateTimeBestEffort(toString(completed_at)) < ${dt(OUTAGE_TO)})`;
 }
 
-/**
- * The event landed inside the delivery outage.
+/*
+ * There was an `eventInOutageExpr()` here, and its deletion is the point.
  *
- * The events side needs the bound on `timestamp` rather than on a string
- * column, so it cannot share the expression above.
+ * It fenced the events funnel's outage correction to these six and a half
+ * hours: count somebody who submitted an address inside the window and was
+ * never captured. That was the right shape and the wrong scope. It could only
+ * ever repair one named afternoon, so when the quota went again on 11 August
+ * for twelve and a half hours it repaired none of it, and nothing on the page
+ * said so.
+ *
+ * The events side now counts the submission everywhere, with no date in the
+ * rule at all — see ./signup-rule.ts. That subsumes what this did for
+ * 9 August, generalises it to 11 August and to every ordinary bounce, and
+ * leaves nothing for a hardcoded window to add.
+ *
+ * The constants above stay because the WAREHOUSE half still needs them:
+ * `inOutageExpr` below holds these hours out of the completion-to-email rates,
+ * which are computed from the mirror and cannot see an address that was never
+ * delivered. That is a real limitation, it is stated on the panel, and it is
+ * the only remaining reason this outage has a date in the codebase.
  */
-export function eventInOutageExpr(): string {
-  return `(timestamp >= ${dt(OUTAGE_FROM)} AND timestamp < ${dt(OUTAGE_TO)})`;
-}

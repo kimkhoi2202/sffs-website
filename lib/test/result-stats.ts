@@ -106,30 +106,31 @@ import type { Audience, Grade, GradeBand } from "./types";
  * to send that person their results later.
  *
  * ===========================================================================
- * AND IT MUST NOT BECOME A SIGNUP OR A COMPLETION BY ACCIDENT
+ * IT MUST NOT BECOME A COMPLETION BY ACCIDENT
  * ===========================================================================
- * This is the part that is easy to get wrong, because "we now have the
- * address" and "we sent them something" look the same from a distance and the
- * dashboard means the second one everywhere it says either.
+ * "We now have the address" and "they finished a test" are different facts and
+ * the mirror means the second one wherever it counts rows.
  *
- * Two things keep it honest, and NEITHER OF THEM IS A NEW FILTER SOMEBODY HAS
- * TO REMEMBER:
+ * `sffs-test-results-dw-export` pins the stage POSITIVELY on both sides —
+ * `stage = 'completed'` for the completion population, `stage = 'emailed'` for
+ * the address merged onto it. Its author wrote that a future third stage
+ * "would silently leak into the count under a negated test", and chose the
+ * form that does not. This is that third stage and the export needs no change
+ * to exclude it. Neither export Lambda is touched by this work.
  *
- *   1. `sffs-test-results-dw-export` pins the stage POSITIVELY on both sides —
- *      `stage = 'completed'` for the completion population, `stage = 'emailed'`
- *      for the address merged onto it. Its author wrote that a future third
- *      stage "would silently leak into the count under a negated test", and
- *      chose the form that does not. This is that third stage, arriving nine
- *      days later, and the export needs no change to exclude it. Neither
- *      export Lambda is touched by this work.
+ * ===========================================================================
+ * IT IS NOW A SIGNUP, THOUGH, AND THAT IS DELIBERATE
+ * ===========================================================================
+ * It was not, originally: the signup went to `email_signups` only after a
+ * message actually left, so "signup" meant "delivered". On 11 August that cost
+ * 148 people their place in the count when the daily quota went, and the
+ * definition changed rather than the excuse. The send route now writes the
+ * signup on the same boundary as this row — validated, stored, before the
+ * provider is called — so the two are filed together and mean the same thing.
  *
- *   2. NOTHING IS WRITTEN TO `email_signups` UNTIL A MESSAGE ACTUALLY LEAVES.
- *      That table has exactly one export filter (`meta->>'synthetic' IS NULL`),
- *      so any row put there is a signup on the dashboard that hour. Persisting
- *      an address pre-send therefore goes to `test_results` and ONLY to
- *      `test_results`. The signup is still written after a successful send, on
- *      the live path and again from the drain, so "signup" keeps meaning
- *      exactly what it meant on 8 August.
+ * The `pending` row remains the RECOVERY record and is still invisible to the
+ * completion count. What changed is only that its address is also filed to the
+ * list at the same moment. See lib/dashboard/signup-rule.ts.
  */
 export type ResultStage = "completed" | "pending" | "emailed" | "dropped";
 

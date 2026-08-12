@@ -70,10 +70,10 @@
  *
  *   1. THE ADDRESS IS PERSISTED BEFORE THE PROVIDER IS CALLED, as a `pending`
  *      row. An outage now ends with a list of people to send to instead of a
- *      hole. That row is invisible to every existing count — see ResultStage
- *      in lib/test/result-stats.ts, which is where the reasoning for that
- *      lives, because getting it wrong would trade one lost number for three
- *      wrong ones.
+ *      hole. That row is still invisible to every COMPLETION count — see
+ *      ResultStage in lib/test/result-stats.ts, which is where the reasoning
+ *      for that lives, because getting it wrong would trade one lost number
+ *      for three wrong ones.
  *   2. THOSE ROWS CAN BE DRAINED once quota allows. See
  *      app/api/test-results/drain/route.ts.
  *   3. A SUSTAINED FAILURE RATE IS ANNOUNCED. Six hours passed unnoticed
@@ -81,6 +81,22 @@
  *      lib/email/send-health.ts.
  *   4. QUOTA EXHAUSTION SAYS SO. It is no longer flattened into "try again in
  *      a moment", which was false for six hours and which people obeyed.
+ *
+ * ===========================================================================
+ * AND THE SIGNUP IS WRITTEN BEFORE THE PROVIDER IS CALLED TOO
+ * ===========================================================================
+ * The four above recovered the SEND. They did nothing for the NUMBER, and on
+ * 11 August the same failure took out the metric all over again: the quota
+ * went at 11:33 UTC, 148 people gave a valid address before midnight, and
+ * every one of them was recorded as a non-converter because the signup write
+ * sat behind the send.
+ *
+ * It no longer does. The list write and the server-side conversion happen next
+ * to the `pending` row, on the same boundary: validated, stored, counted. The
+ * consequence to be clear about is that the mailing list now contains
+ * addresses that were never successfully mailed, including any the provider
+ * refuses outright — that is a deliberate trade and lib/dashboard/signup-rule.ts
+ * argues it.
  */
 import { createHash } from "node:crypto";
 
@@ -370,6 +386,91 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  /*
+   * ===========================================================================
+   * AND SO IS THE SIGNUP. THE CONVERSION IS THE ADDRESS, NOT THE DELIVERY.
+   * ===========================================================================
+   * This used to sit after the send, which made every signup figure on the
+   * dashboard conditional on Resend having accepted the message. On 11 August
+   * the daily quota went at 11:33 UTC and did not return until midnight: 148
+   * people gave us a valid address in those hours, were told their results
+   * were coming, and were recorded as having refused. The number the owner
+   * presents from was a delivery statistic wearing a conversion's name.
+   *
+   * Moving it here is the whole fix. A person who types an address has
+   * converted; what our mail server does next is our problem and does not get
+   * a vote. See lib/dashboard/signup-rule.ts for the reasoning in full,
+   * including the deliberate choice to count an address the provider will
+   * never accept.
+   *
+   * THIS IS ALSO WHAT THE PRICING FORM ALREADY DOES. /api/access-signup
+   * inserts and fires the conversion with no send in the picture at all, so
+   * the two signup surfaces have been counting different things all along.
+   * They now agree.
+   *
+   * WHY THE SERVER EVENT AND NOT JUST THE CLIENT ONE. The dashboard also
+   * counts `test_email_submitted`, which is fired in the browser and is how
+   * 9 and 11 August are recovered retrospectively. But 21 of the last 820 gate
+   * signups produced no client event at all — ad blockers — and an outage
+   * would hide every one of them. `email_captured` is server-side precisely so
+   * a blocked client cannot lose a signup, and it has to fire on the same
+   * boundary the number claims to count.
+   *
+   * ORDERING. After the pending row, so the recovery record is filed first and
+   * a failure here cannot cost us the ability to send later. Before the
+   * provider call, which is the entire point. Awaited for the same reason the
+   * pending write is: a fire-and-forget insert that has not landed yet is
+   * worth nothing in the crash case this exists for.
+   *
+   * STILL NON-FATAL. Refusing to mail somebody their results because our own
+   * list write hiccuped would be punishing them for our problem.
+   */
+  const source =
+    record.audience === "child" ? EMAIL_SOURCES.testChild : EMAIL_SOURCES.testParent;
+  try {
+    const { inserted, submissions, mode } = await insertEmailSignup({
+      email,
+      source,
+      /*
+       * A RESEND IS NOT A SUBMISSION.
+       *
+       * Typing an address is an act of intent and is counted every time, even
+       * when the address is one already on the list — someone who comes back
+       * and enters the same address a second time has told us something. But
+       * "Send it again" is one person chasing one message that did not arrive,
+       * and counting it would inflate the number with impatience rather than
+       * interest.
+       */
+      countsAsSubmission: body.isResend !== true,
+      /*
+        The same builder the pricing form uses, so the synthetic marker reaches
+        both tables from one place. This route already tags its `test_results`
+        row via `isSyntheticRequest` a few lines above; before this, the signup
+        it writes from the SAME request went in untagged.
+      */
+      meta: signupMeta(request.headers),
+    });
+    if (process.env.NODE_ENV !== "production") {
+      console.info(
+        `results-send: filed source="${source}" via the ${mode} store ` +
+          `(submissions=${submissions ?? "unreported"})`,
+      );
+    }
+    /*
+      Only a genuinely new row is a conversion. A second submission of an
+      address already on the list is the same person signing up twice, and the
+      drain relies on this too: it re-inserts on a recovered send and the
+      conflict makes that a no-op, so a drained backlog cannot count anybody a
+      second time.
+    */
+    if (inserted) await captureEmailCapturedServer(request, source, body.isInternal === true);
+  } catch (err) {
+    console.error(
+      "results-send: could not file the signup; the send still goes ahead:",
+      err instanceof Error ? err.message : err,
+    );
+  }
+
   const sent = forcedFailure
     ? ({ ok: false, reason: "rejected", detail: "forced by dev tools" } as const)
     : await sendEmail({
@@ -466,59 +567,6 @@ export async function POST(request: NextRequest) {
     */
     sendKey,
   });
-
-  /*
-   * The address goes to Aurora through the SAME path the rest of the site uses,
-   * with a source that distinguishes this branch. This is deliberately after
-   * the send and deliberately non-fatal: the person has their email either way,
-   * and failing their request because our own list-write hiccuped would be
-   * punishing them for our problem.
-   */
-  const source =
-    record.audience === "child" ? EMAIL_SOURCES.testChild : EMAIL_SOURCES.testParent;
-  try {
-    const { inserted, submissions, mode } = await insertEmailSignup({
-      email,
-      source,
-      /*
-       * A RESEND IS NOT A SUBMISSION.
-       *
-       * Typing an address is an act of intent and is counted every time, even
-       * when the address is one already on the list — someone who comes back
-       * and enters the same address a second time has told us something. But
-       * "Send it again" is one person chasing one message that did not arrive,
-       * and counting it would inflate the number with impatience rather than
-       * interest.
-       *
-       * The write still happens on a resend, with counting suppressed, because
-       * the list write is best-effort and non-fatal: if the first attempt's
-       * write was the one that hiccuped, this is the second chance to record
-       * the address at all.
-       */
-      countsAsSubmission: body.isResend !== true,
-      /*
-        The same builder the pricing form uses, so the synthetic marker reaches
-        both tables from one place. This route already tags its `test_results`
-        row via `isSyntheticRequest` a few lines above; before this, the signup
-        it writes immediately afterwards from the SAME request went in untagged.
-      */
-      meta: signupMeta(request.headers),
-    });
-    if (process.env.NODE_ENV !== "production") {
-      console.info(
-        `results-send: filed source="${source}" via the ${mode} store ` +
-          `(submissions=${submissions ?? "unreported"})`,
-      );
-    }
-    // Only a genuinely new row is a conversion. A resend to the same address is
-    // not a second signup.
-    if (inserted) await captureEmailCapturedServer(request, source, body.isInternal === true);
-  } catch (err) {
-    console.error(
-      "results-send: email stored-send succeeded but the list write failed:",
-      err instanceof Error ? err.message : err,
-    );
-  }
 
   return NextResponse.json({
     ok: true,

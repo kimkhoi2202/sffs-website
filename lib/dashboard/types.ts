@@ -10,7 +10,17 @@ export interface Tiles {
   avgSessionSeconds: number;
   /** Mean of `sessions.$is_bounce`, 0–1, over sessions where PostHog set it. */
   bounceRate: number | null;
+  /**
+   * People who gave us an address — validated and stored, whatever the mail
+   * server did next. See lib/dashboard/signup-rule.ts.
+   */
   signups: number;
+  /**
+   * The same people, counted the old send-gated way: only those whose results
+   * email actually left. Always `<= signups`, and the gap is what a delivery
+   * failure costs. Carried so the tile can name the difference.
+   */
+  signupsDelivered: number;
   testsStarted: number;
   testsCompleted: number;
   resultsOpened: number;
@@ -220,7 +230,10 @@ export interface GrowthFunnel {
   landed: number;
   started: number;
   completed: number;
+  /** People who gave an address. See lib/dashboard/signup-rule.ts. */
   emailed: number;
+  /** Of those, the ones whose results email actually left. `<= emailed`. */
+  emailedDelivered: number;
   /** Fractions, 0–1. Null when the stage above them was empty. */
   startRate: number | null;
   completionRate: number | null;
@@ -260,23 +273,28 @@ export interface GrowthFunnel {
    * and then rolled up to the person by "did any attempt count".
    */
   abandonedOnly: number;
-  /** Finishers who gave an address. */
+  /** Finishers who gave an address. The one to lead with. */
   finishedEmailed: number;
-  /**
-   * Finishers who gave an address, plus those whose address the 9 August
-   * outage swallowed.
-   *
-   * Measured, not estimated: a person with a `test_email_submitted` inside the
-   * outage window and no `email_captured` anywhere in the range demonstrably
-   * typed in a valid address and was never recorded as converted. 77 people.
-   */
-  finishedEmailedCorrected: number;
-  /** `finishedEmailed / finished`. Before the outage correction. */
+  /** Of those, the ones whose results email actually left. */
+  finishedEmailedDelivered: number;
+  /** `finishedEmailed / finished`. The one to lead with. */
   finishedEmailRate: number | null;
-  /** `finishedEmailedCorrected / finished`. The one to lead with. */
-  finishedEmailRateCorrected: number | null;
-  /** The 77. Zero when the reporting window misses the outage. */
-  outageLostConversions: number;
+  /** `finishedEmailedDelivered / finished`. What this page used to report. */
+  finishedEmailRateDelivered: number | null;
+  /**
+   * People who gave an address and whose results email never left:
+   * `emailed - emailedDelivered`.
+   *
+   * This is the whole size of the change, measured per window rather than
+   * asserted for one hardcoded outage. It replaces the 9 August correction,
+   * which counted the same kind of person but only inside six and a half
+   * fixed hours — so it missed the twelve and a half hours of 11 August
+   * entirely, and every ordinary bounce always.
+   *
+   * Printed on the panel. A reader who wants the old send-gated headline can
+   * subtract it, which is the point of carrying it rather than absorbing it.
+   */
+  emailedUndelivered: number;
   /**
    * The share of items behind the split above, carried so the panel can print
    * it.

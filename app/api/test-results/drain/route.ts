@@ -46,10 +46,15 @@
  * ===========================================================================
  * A drained send writes exactly what a live one writes: an `emailed` row
  * carrying the same `send_key` as the pending row it satisfies, and a signup.
- * So a recovered person counts as a signup and as an emailed completion —
- * because the mail genuinely went — and the numbers keep meaning what they
- * meant on 8 August. Nothing here writes anything for a send that did not
- * happen.
+ * Nothing here writes anything for a send that did not happen.
+ *
+ * THE SIGNUP CANNOT DOUBLE-COUNT ANYBODY, which matters because this runs
+ * against the same numbers the dashboard is reporting. The person was already
+ * counted when they submitted; the insert conflicts on the address and does
+ * nothing; no conversion event is fired. What a drain moves is the DELIVERY
+ * figures — the warehouse mirror's addresses and the completion-to-email rates
+ * derived from them — and it moves them toward the signup count rather than
+ * past it. See `settle` below and lib/dashboard/signup-rule.ts.
  */
 import { timingSafeEqual } from "node:crypto";
 
@@ -280,23 +285,24 @@ async function settle(
   if (dropReason) return;
 
   /*
-    THE SIGNUP, WRITTEN HERE FOR THE FIRST TIME.
+    THE SIGNUP, WHICH IS NORMALLY ALREADY THERE.
 
-    The live route only writes it after a successful send, so somebody whose
-    send failed has no signup row at all — which is what kept the pending row
-    from inflating the signup count while it was still pending. The mail has
-    now gone, so the row is owed and is written on the same path with the same
-    source, and "signup" keeps meaning what it has always meant.
+    The live route now writes it BEFORE calling the provider, so anybody in
+    this backlog was counted as a signup the moment they typed their address —
+    see lib/dashboard/signup-rule.ts. The insert conflicts on the address and
+    does nothing, which is exactly what we want: a drain cannot count a person
+    a second time, however many rows it settles.
 
-    COUNTED AS A SUBMISSION. They typed the address; the outage is why it was
-    never recorded. Somebody who tried four times still produces one, because
-    the backlog is keyed on the result and the address rather than the attempt.
+    It is still called, for two cases it genuinely covers. A backlog entry
+    predating that change has no signup row yet. And the live write is
+    best-effort — if it was the thing that hiccuped, this is the second chance
+    to record the address at all.
 
     NO POSTHOG CONVERSION EVENT. `email_captured` is timestamped when it fires,
     and firing it now would date a conversion that happened hours ago to this
-    drain, quietly bending the funnel. Aurora carries the truth for recovered
-    sends; PostHog already runs slightly under it and this keeps the direction
-    of that gap the one everybody already knows about.
+    drain, quietly bending the funnel. The dashboard does not need it to: a
+    person in this backlog already carries a `test_email_submitted` from when
+    they typed the address, and the signup rule counts that.
   */
   try {
     await insertEmailSignup({

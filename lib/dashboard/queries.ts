@@ -1,6 +1,7 @@
 import "server-only";
 
 import { hogql, sqlString, webOverview, type QueryScope } from "./posthog-query";
+import { ADDRESS_DELIVERED, GAVE_ADDRESS } from "./signup-rule";
 import {
   channelExpr,
   evidenceExpr,
@@ -51,6 +52,11 @@ function scopeFor(range: ResolvedRange, filtered: boolean): QueryScope {
  * Not events. A person who opens their results three times is one person on
  * this tile and three rows on their own journey, which is where that detail
  * belongs.
+ *
+ * `signups` counts people who GAVE an address, not people whose results email
+ * arrived — see lib/dashboard/signup-rule.ts. `signups_delivered` is the old
+ * send-gated reading of the same population, carried so the tile can say how
+ * far apart the two are instead of quietly changing by a third.
  */
 export async function fetchTiles(range: ResolvedRange, filtered: boolean): Promise<Tiles> {
   const scope = scopeFor(range, filtered);
@@ -59,12 +65,14 @@ export async function fetchTiles(range: ResolvedRange, filtered: boolean): Promi
     webOverview(scope),
     hogql<{
       signups: number;
+      signups_delivered: number;
       tests_started: number;
       tests_completed: number;
       results_opened: number;
     }>(
       `SELECT
-         uniqIf(person_id, event = 'email_captured') AS signups,
+         uniqIf(person_id, ${GAVE_ADDRESS}) AS signups,
+         uniqIf(person_id, ${ADDRESS_DELIVERED}) AS signups_delivered,
          uniqIf(person_id, event = 'test_started') AS tests_started,
          uniqIf(person_id, event = 'test_completed') AS tests_completed,
          uniqIf(person_id, event = 'results_link_opened') AS results_opened
@@ -81,6 +89,7 @@ export async function fetchTiles(range: ResolvedRange, filtered: boolean): Promi
     avgSessionSeconds: Math.round(web.sessionDurationSeconds ?? 0),
     bounceRate: web.bounceRate,
     signups: Number(conv[0]?.signups ?? 0),
+    signupsDelivered: Number(conv[0]?.signups_delivered ?? 0),
     testsStarted: Number(conv[0]?.tests_started ?? 0),
     testsCompleted: Number(conv[0]?.tests_completed ?? 0),
     resultsOpened: Number(conv[0]?.results_opened ?? 0),

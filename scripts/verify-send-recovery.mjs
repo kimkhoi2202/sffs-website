@@ -235,15 +235,29 @@ function check(ok, label, detail = "") {
     "and it carries the token, so the results can actually be re-sent",
   );
 
-  /* -- and none of it counts as anything that happened ------------------- */
+  /* -- nothing claims a DELIVERY that did not happen ---------------------- */
   check(
     rowsWith("emailed", email).length === 0,
     "a failed send files NO emailed row",
     `${rowsWith("emailed", email).length}`,
   );
+
+  /*
+    -- but the SIGNUP is filed, because the conversion is the address --------
+
+    The inverse of this used to be asserted here, and it was the bug rather
+    than the guarantee: a signup count conditional on Resend meant that when
+    the quota went on 11 August, 148 people who typed a valid address were
+    recorded as having refused. The person converted; the mail server failed.
+    Those are two different facts and only one of them is theirs.
+
+    See lib/dashboard/signup-rule.ts. The delivery half is still measurable —
+    the missing `emailed` row above is exactly how — and the dashboard reports
+    both, so nothing is lost by counting this one honestly.
+  */
   check(
-    signupRows(email).length === 0,
-    "a failed send files NO signup — the count still means the mail went",
+    signupRows(email).length === 1,
+    "THE CONVERSION SURVIVES TOO: a failed send still files the signup",
     `${signupRows(email).length}`,
   );
 }
@@ -494,6 +508,48 @@ function check(ok, label, detail = "") {
   check(signupRows(email).length === 1, "and the signup, now that the mail genuinely went");
 }
 
+/* -- 11b. A DRAIN CANNOT COUNT THE SAME PERSON TWICE ---------------------- */
+{
+  /*
+    The live route and the drain both write a signup for the same address now
+    that the live one no longer waits for the send. Two writes, one person, and
+    the count has to survive it — which matters because a drain is run against
+    production while somebody is reading these numbers off the dashboard.
+
+    The address is the key, so the second write conflicts and does nothing.
+    Asserted rather than assumed because the whole point of moving the write
+    was to make the signup count independent of delivery, and a drain that
+    incremented it would put delivery straight back into the number.
+  */
+  resetSendHealth();
+  resendMode = "quota";
+  const token = mintToken();
+  const email = "drained-twice@example.invalid";
+
+  // The live attempt: fails to send, files the signup anyway.
+  await ask({ token, email, ip: "203.0.113.67" });
+  check(signupRows(email).length === 1, "the failed live send counted the person once");
+
+  // The drain then delivers the same one.
+  resendMode = "ok";
+  backlog = {
+    supported: true,
+    sends: [{ sendKey: sendKeyFor(token, email), email, token, pendingSince: "" }],
+  };
+  const { body } = await askDrain({ ip: "203.0.113.68", dryRun: false });
+
+  check(body.sent === 1, "the drain delivers it", JSON.stringify(body));
+  check(
+    signupRows(email).length === 1,
+    "and the person is STILL counted once — a recovered send is not a new signup",
+    `${signupRows(email).length}`,
+  );
+  check(
+    rowsWith("emailed", email).length === 1,
+    "while the delivery figure does move, which is the half that genuinely changed",
+  );
+}
+
 /* -- 12. a second outage stops the batch instead of burning it ----------- */
 {
   resetSendHealth();
@@ -535,7 +591,16 @@ function check(ok, label, detail = "") {
     rowsWith("emailed", email).length === 0,
     "and no emailed row, because nothing was delivered",
   );
-  check(signupRows(email).length === 0, "and no signup either");
+  /*
+    The DRAIN adds nothing for a giving-up. Note this is not the same claim as
+    "an undeliverable address is not a signup" — it is not one this codebase
+    makes any more. Somebody refused by the provider on the live path was
+    already counted when they submitted, deliberately, because the alternative
+    is letting Resend decide the conversion number. See
+    lib/dashboard/signup-rule.ts. This backlog entry has no live submit behind
+    it, so there is nothing to find.
+  */
+  check(signupRows(email).length === 0, "and the drain adds no signup for one it gave up on");
 }
 
 /* -- and nothing else went anywhere -------------------------------------- */

@@ -143,12 +143,14 @@ const FUNNEL = {
   // Ties to the channel table's own `finished` sum, the same way `completed`
   // does, because the two panels have to keep agreeing after the split.
   finished: CHANNELS.reduce((a, c) => a + c[10], 0),
-  finished_emailed: 150,
-  // Higher than the line above by the finishers whose address the 9 August
-  // outage swallowed. If the correction were dropped the two would collapse
-  // into each other, so they are deliberately different numbers.
-  finished_emailed_corrected: 168,
-  outage_lost: 22,
+  // Everyone who GAVE an address, which is what the funnel counts now.
+  finished_emailed: 168,
+  // The send-gated subset: of those, the ones whose mail actually left. Held
+  // deliberately apart from the line above — if the two coincided the fixture
+  // could not tell whether the delivery half was plumbed through at all, which
+  // is the same trap the outage fixture was built to avoid.
+  finished_emailed_delivered: 150,
+  emailed_delivered: CHANNELS.reduce((a, c) => a + c[5], 0) - 22,
 };
 
 const answer = (columns, results, extra = {}) =>
@@ -296,10 +298,15 @@ const RANGE = resolveRange({ preset: "since_launch" }, NOW);
  *
  * The fixture clock is noon on 9 August, five hours before the sends started
  * failing, so the default window genuinely does not reach the outage and the
- * payload is right to say so. Exercising the correction needs a LATER clock,
- * not merely a wider window: `resolveRange` clamps every window's upper bound
- * to now, so asking for one that runs past the fixture's noon just gets noon
+ * payload is right to say so. Exercising the hold-out needs a LATER clock, not
+ * merely a wider window: `resolveRange` clamps every window's upper bound to
+ * now, so asking for one that runs past the fixture's noon just gets noon
  * back. This is the window the owner reads in practice, the morning after.
+ *
+ * The hold-out this drives is the WAREHOUSE one, which is still delivery-gated
+ * and still needs it. The events funnel no longer has a windowed correction at
+ * all — it counts the submission everywhere, which is what made the hardcoded
+ * hours redundant. See lib/dashboard/signup-rule.ts.
  */
 const AFTER_OUTAGE = Date.parse("2026-08-10T06:00:00Z");
 const SPANNING_RANGE = resolveRange({ preset: "since_launch" }, AFTER_OUTAGE);
@@ -1274,17 +1281,41 @@ const highWaterQuery = () => sent.find((r) => r.sql.includes("AS newest"));
     `${(before * 100).toFixed(1)}% → ${(a.corrected.finishedEmailRate * 100).toFixed(1)}%`,
   );
 
-  /* -- the events funnel carries its own correction ---------------------- */
+  /* -- the events funnel counts the address, not the delivery ------------- */
   check(
-    f.outageLostConversions === 22 && f.finishedEmailedCorrected === 168,
-    "the funnel recovers the people who typed in an address while the sends were failing",
-    `${f.outageLostConversions} recovered`,
+    f.emailedUndelivered === 22 && f.finishedEmailed === 168,
+    "the funnel counts everyone who gave an address, and names how many never got mail",
+    `${f.finishedEmailed} gave an address, ${f.emailedUndelivered} undelivered`,
   );
   check(
-    f.finishedEmailRateCorrected > f.finishedEmailRate &&
-      f.finishedEmailRateCorrected > f.emailRate,
-    "…so the finisher rate beats both the uncorrected one and the old blended one",
-    `${(f.emailRate * 100).toFixed(1)}% old, ${(f.finishedEmailRateCorrected * 100).toFixed(1)}% corrected`,
+    f.finishedEmailRate > f.finishedEmailRateDelivered && f.finishedEmailRate > f.emailRate,
+    "…so the finisher rate beats both the send-gated reading and the old blended one",
+    `${(f.emailRate * 100).toFixed(1)}% old, ${(f.finishedEmailRateDelivered * 100).toFixed(1)}% send-gated, ${(f.finishedEmailRate * 100).toFixed(1)}% now`,
+  );
+  check(
+    f.emailedDelivered <= f.emailed && f.emailedUndelivered === f.emailed - f.emailedDelivered,
+    "the two readings of the same stage stay reconcilable — the gap is stated, not absorbed",
+    `${f.emailed} − ${f.emailedDelivered} = ${f.emailedUndelivered}`,
+  );
+
+  /*
+    -- and the rule has no date in it ------------------------------------
+
+    The 9 August correction this replaced was scoped to six and a half
+    hardcoded hours, which is why it did nothing at all for the twelve and a
+    half hours of 11 August. Re-windowing the signup rule would be a silent
+    regression to exactly that: the page would keep rendering, the number would
+    quietly shed every outage but one, and no other assertion here would
+    notice. So the SQL is read.
+  */
+  const funnelSql = sent.find((s) => s.sql.includes("AS finished_emailed"))?.sql ?? "";
+  check(
+    funnelSql.includes("test_email_submitted") && funnelSql.includes("email_captured"),
+    "the funnel counts both the submission and the stored signup",
+  );
+  check(
+    !/test_email_submitted[\s\S]{0,200}?toDateTime\('2026-08-09/.test(funnelSql),
+    "and it is not fenced to one hardcoded outage the way the correction it replaced was",
   );
 
   /* -- the ripple: every panel moves together ---------------------------- */
@@ -1426,7 +1457,7 @@ const highWaterQuery = () => sent.find((r) => r.sql.includes("AS newest"));
 
 console.log(
   failures === 0
-    ? `\nverify-growth: OK. Four stages of people over one population, finished tests kept distinct from them and from the ones the clock wrote, the completion split drawn as siblings that add up, the 9 August outage held out and declared, Reddit split in two, the audience split reconciling per row on both bases and regrouped without a second query, and neither clock lies.`
+    ? `\nverify-growth: OK. Four stages of people over one population, signups counted when the address is given rather than when the mail lands, the send-gated reading carried alongside so the gap is stated, finished tests kept distinct from them and from the ones the clock wrote, the completion split drawn as siblings that add up, the 9 August outage held out and declared on the warehouse half that still needs it, Reddit split in two, the audience split reconciling per row on both bases and regrouped without a second query, and neither clock lies.`
     : `\nverify-growth: ${failures} failure(s).`,
 );
 if (failures > 0) process.exit(1);
