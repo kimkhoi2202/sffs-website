@@ -339,6 +339,32 @@ await context.route("**/ingest/**", async (route) => {
   await route.fulfill({ status: 200, contentType: "application/json", body: '{"status":1}' });
 });
 
+/* -- and nothing reaches Aurora, or an inbox -----------------------------
+  Section 5 finishes real tests, and finishing one POSTs the attempt to
+  /api/test-results, which writes a row and mints a token. Against production
+  that is a synthetic result in the real store, so it is answered here with a
+  token of the shape the gate expects and never sent.
+
+  The send endpoint is aborted rather than fulfilled. Nothing in this suite
+  types an address, so it should never be reached at all — which is exactly why
+  it is worth failing loudly if it ever is, rather than discovering it from the
+  Resend quota.
+------------------------------------------------------------------------- */
+let dbWrites = 0;
+let sendAttempts = 0;
+await context.route("**/api/test-results", async (route) => {
+  dbWrites++;
+  await route.fulfill({
+    status: 200,
+    contentType: "application/json",
+    body: JSON.stringify({ token: "verify-entry-links-not-a-real-token" }),
+  });
+});
+await context.route("**/api/test-results/send**", async (route) => {
+  sendAttempts++;
+  await route.abort();
+});
+
 /**
  * ONE TAB FOR THE WHOLE RUN, deliberately. Closing tabs is what leaked events
  * past the interceptor; the init script above is what makes each landing a
@@ -368,6 +394,41 @@ async function land(path) {
 async function settle() {
   await page.waitForTimeout(4200);
   return captured;
+}
+
+/**
+ * Sit the whole test, first option every time, through to the results gate.
+ *
+ * TAPS THE LABEL, NOT THE RADIO. Each option is a real `<input type="radio">`
+ * that is `sr-only` and therefore off-viewport, so Playwright refuses to click
+ * it even with `force`. The `<label>` wrapping it is the row a player actually
+ * taps (see components/test/question/option-card.tsx), so it is both the thing
+ * that works and the thing under test.
+ *
+ * Nothing is asserted about the answers. Being RIGHT is irrelevant here — the
+ * point is to reach `test_completed` at all, and a wrong answer reaches it just
+ * as well as a right one.
+ */
+async function sitTheTest(label) {
+  for (let i = 0; i < 60; i++) {
+    const options = page.locator("label:has(input[type=radio])");
+    if ((await options.count()) === 0) break;
+    await options.first().click();
+    await page.waitForTimeout(120);
+
+    const finish = page.getByRole("button", { name: /see my result/i });
+    if (await finish.count()) {
+      await finish.first().click();
+      await page.waitForTimeout(1500);
+      return true;
+    }
+    const next = page.getByRole("button", { name: /^next$/i });
+    if ((await next.count()) === 0) break;
+    await next.first().click();
+    await page.waitForTimeout(120);
+  }
+  check(`${label} reached the end of the test`, false, "ran out of questions to answer");
+  return false;
 }
 
 /*
@@ -599,6 +660,83 @@ if (adultEvents.length === 0) {
     unstamped.length === 0,
     unstamped.map((e) => e.event).join(", ").slice(0, 100),
   );
+
+  /* ========================================================================
+   * 5. `entry` survives to the far end of the funnel.
+   *
+   * ======================================================================
+   * WHY THIS IS NOT COVERED BY SECTION 4
+   * ======================================================================
+   * Section 4 lands on a screen and asserts on what the arrival fires. Every
+   * event it sees comes from the first second of the visit, so "every /adult
+   * event carries entry=adult" is a claim about the intro screen and nothing
+   * past it. `test_started` and `test_completed` fire minutes later, after
+   * fifteen taps, and were never observed at all.
+   *
+   * That gap was not theoretical. `entry` is enriched from a value cached per
+   * PAGE LOAD (see `entryOnce` in lib/analytics/events.ts) and it is correct
+   * only because the flow is one client state machine that never navigates. A
+   * change that added a navigation — or that "fixed" the cache to read the
+   * live address bar — would leave section 4 fully green while quietly filing
+   * every deep-linked START under `fork`.
+   *
+   * And that is the one number the whole experiment is: the fork exists to be
+   * skipped, the deep links exist to raise the START rate, and a start rate
+   * that cannot be cut by entry point is an experiment that ran and cannot be
+   * read.
+   *
+   * ======================================================================
+   * BOTH PATHS, THE SAME TEST, ON PURPOSE
+   * ======================================================================
+   * The deep-linked run and the fork run both sit the grade-5 test, so the two
+   * populations differ by exactly one thing — how they arrived — which is the
+   * comparison the owner will be making. Grade 5 rather than the adult test
+   * because it is 15 items instead of 50 and proves the identical point.
+   * ====================================================================== */
+  section("5. `entry` survives to test_started and test_completed");
+
+  /** Assert every funnel stage of one attempt reports the same entry point. */
+  const stagesCarry = (label, events, want) => {
+    for (const stage of ["test_started", "test_completed", "test_results_gate_viewed"]) {
+      const hit = events.find((e) => e.event === stage);
+      check(`${label} fired ${stage}`, Boolean(hit));
+      if (hit) {
+        check(
+          `${label} ${stage} carries entry=${want}`,
+          hit.properties?.entry === want,
+          String(hit.properties?.entry),
+        );
+      }
+    }
+  };
+
+  /* -- arrived inside the branch ------------------------------------------ */
+  await land("/kids/5");
+  await page.getByRole("button", { name: /start the test/i }).click();
+  await page.waitForTimeout(700);
+  await sitTheTest("/kids/5");
+  stagesCarry("/kids/5", await settle(), "child");
+
+  /* -- arrived on the fork and tapped through ----------------------------- */
+  await land("/");
+  await page.getByRole("button", { name: /I'm a kid/i }).click();
+  await page.waitForTimeout(700);
+  await page.getByRole("button", { name: /^Grade 5$/ }).click();
+  await page.waitForTimeout(700);
+  await page.getByRole("button", { name: /start the test/i }).click();
+  await page.waitForTimeout(700);
+  await sitTheTest("fork");
+  stagesCarry("fork", await settle(), "fork");
+
+  /*
+    THE SUITE CHECKING ITSELF, AGAIN. Two finished tests means two attempts to
+    write a row; both must have been answered locally. A zero here would mean
+    the route stopped matching and this suite is now filling the real store
+    with synthetic results — the same class of mistake as the six synthetic
+    people, one table over.
+  */
+  check("both finished attempts were kept out of the database", dbWrites === 2, `${dbWrites} intercepted`);
+  check("nothing tried to send an email", sendAttempts === 0, `${sendAttempts} attempts`);
 }
 
 await browser.close();
