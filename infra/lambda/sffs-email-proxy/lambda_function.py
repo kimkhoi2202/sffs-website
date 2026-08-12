@@ -15,6 +15,8 @@ compatibility):
                             open_text, email, distinct_id, meta)
   * kind="result"        -> INSERT INTO test_results (...)
   * kind="pending_sends" -> SELECT results emails that were never delivered
+  * kind="unsubscribe"   -> UPSERT INTO email_suppressions (email, reason)
+  * kind="suppressed"    -> SELECT which of the given addresses are suppressed
 
 PRIVACY: the survey's PostHog event carries NO PII; the email (when present) is
 stored ONLY here in Aurora, exactly like email_signups.
@@ -402,6 +404,124 @@ def _handle_pending_sends(body):
     return _resp(200, {"ok": True, "sends": sends})
 
 
+ALLOWED_SUPPRESSION_REASONS = {"unsubscribe", "bounce", "complaint", "manual"}
+# One product send is capped well below this, and a caller asking about more
+# addresses than this in one request is not the send path.
+MAX_SUPPRESSION_CHECK = 500
+
+
+def _handle_unsubscribe(body):
+    """Record that an address does not want product email.
+
+    IDEMPOTENT BY CONSTRUCTION. The primary key turns a second click, a mail
+    scanner's pre-fetch, and a provider retry into the same UPDATE, so the
+    endpoint can be hit any number of times and the answer is always 200. That
+    matters more here than usual: this URL is handed to mail clients, and some
+    of them fetch it before a human has seen it.
+
+    The FIRST reason wins. Somebody who unsubscribed by hand and later hard
+    bounces is still, primarily, somebody who asked us to stop.
+    """
+    email = body.get("email")
+    email = email.strip().lower() if isinstance(email, str) else ""
+    if not email or len(email) > MAX_EMAIL_LENGTH or not EMAIL_RE.match(email):
+        return _resp(400, {"ok": False, "error": "invalid_email"})
+
+    reason = body.get("reason")
+    reason = reason.strip().lower() if isinstance(reason, str) else ""
+    if reason not in ALLOWED_SUPPRESSION_REASONS:
+        reason = "unsubscribe"
+
+    meta = body.get("meta")
+    if not isinstance(meta, dict):
+        meta = {}
+
+    try:
+        result = _execute(
+            "INSERT INTO email_suppressions (email, reason, meta) "
+            "VALUES (:email, :reason, :meta) "
+            "ON CONFLICT (email) DO UPDATE SET "
+            "  last_seen_at = now(), "
+            "  hits = email_suppressions.hits + 1 "
+            "RETURNING (xmax = 0) AS created, hits",
+            [
+                {"name": "email", "value": {"stringValue": email}},
+                {"name": "reason", "value": {"stringValue": reason}},
+                {
+                    "name": "meta",
+                    "value": {"stringValue": json.dumps(meta)},
+                    "typeHint": "JSON",
+                },
+            ],
+        )
+    except Exception as e:  # noqa: BLE001 - never leak DB internals to caller
+        print("email_suppressions upsert failed:", repr(e))
+        return _resp(500, {"ok": False, "error": "server_error"})
+
+    # `xmax = 0` is the standard Postgres trick for telling an INSERT from an
+    # ON CONFLICT UPDATE in one round trip. The caller uses it only to decide
+    # what to log; the page it renders is identical either way, because telling
+    # somebody "you were already unsubscribed" answers a question they did not
+    # ask and reveals list membership to anyone holding a token.
+    created = False
+    hits = None
+    records = result.get("records") or []
+    if records and len(records[0]) >= 2:
+        created = bool(records[0][0].get("booleanValue"))
+        hits = records[0][1].get("longValue")
+
+    return _resp(200, {"ok": True, "created": created, "hits": hits})
+
+
+def _handle_suppressed(body):
+    """Return which of the given addresses must not be mailed.
+
+    THE SEND PATH CALLS THIS BEFORE EVERY PRODUCT SEND. It returns the
+    SUPPRESSED subset rather than a yes/no per address so one round trip covers
+    a whole batch, and so the caller's default when something goes wrong is to
+    have no answer at all rather than a confident "nobody is suppressed".
+    """
+    emails = body.get("emails")
+    if not isinstance(emails, list) or not emails:
+        return _resp(400, {"ok": False, "error": "invalid_emails"})
+    if len(emails) > MAX_SUPPRESSION_CHECK:
+        return _resp(400, {"ok": False, "error": "too_many_emails"})
+
+    cleaned = []
+    for raw in emails:
+        if not isinstance(raw, str):
+            continue
+        candidate = raw.strip().lower()
+        if candidate and len(candidate) <= MAX_EMAIL_LENGTH and EMAIL_RE.match(candidate):
+            cleaned.append(candidate)
+    if not cleaned:
+        return _resp(400, {"ok": False, "error": "invalid_emails"})
+
+    # Named parameters rather than an interpolated IN list: the Data API binds
+    # them, so nothing here is built by string concatenation from caller input.
+    names = [f"e{i}" for i in range(len(cleaned))]
+    placeholders = ", ".join(f":{n}" for n in names)
+    params = [
+        {"name": n, "value": {"stringValue": v}} for n, v in zip(names, cleaned)
+    ]
+
+    try:
+        result = _execute(
+            f"SELECT email FROM email_suppressions WHERE email IN ({placeholders})",
+            params,
+        )
+    except Exception as e:  # noqa: BLE001 - never leak DB internals to caller
+        print("email_suppressions read failed:", repr(e))
+        return _resp(500, {"ok": False, "error": "server_error"})
+
+    suppressed = [
+        record[0].get("stringValue")
+        for record in result.get("records", [])
+        if record and not record[0].get("isNull")
+    ]
+    return _resp(200, {"ok": True, "suppressed": suppressed})
+
+
 def handler(event, context):
     # Function URL / API Gateway use payload format 2.0.
     method = (
@@ -442,6 +562,10 @@ def handler(event, context):
         return _handle_result(body)
     if kind == "pending_sends":
         return _handle_pending_sends(body)
+    if kind == "unsubscribe":
+        return _handle_unsubscribe(body)
+    if kind == "suppressed":
+        return _handle_suppressed(body)
     if kind in ("", "email"):
         return _handle_email(body)
     return _resp(400, {"ok": False, "error": "invalid_kind"})

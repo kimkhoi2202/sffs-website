@@ -186,9 +186,19 @@ export function Waitlist({
               {error}
             </p>
           ) : null}
-          {/* Honest trust line — the biggest lever against "this looks fake." */}
+          {/*
+            Honest trust line, and the biggest lever against "this looks fake."
+
+            It is also the NOTICE AT THE POINT OF COLLECTION, which is what
+            makes /privacy true rather than aspirational. The policy allows the
+            odd product note to addresses given from 12 August 2026 onward, and
+            a policy that permits something the form never mentions is a policy
+            describing a different product. If the sending habit ever changes,
+            this line changes with it, not after it.
+          */}
           <p className="mt-4 text-sm font-medium text-ink/70">
-            One email when it launches. No spam, no selling your info.
+            One email when it launches, then the odd note about what we are
+            building. No spam, no selling your info, and you can stop any time.
           </p>
         </>
       )}

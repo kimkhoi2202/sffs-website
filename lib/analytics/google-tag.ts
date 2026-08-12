@@ -88,17 +88,28 @@ function browserOptedOut(): boolean {
 }
 
 /**
- * Routes whose URL is itself the payload. The token is encoded rather than
- * encrypted and decodes to the test taken, the grade, the answers and the
- * timings, so on the children's version it is a child's test performance. gtag
- * sends the page URL with its hits, which makes "do not send the URL" and "do
- * not be on the page" the same requirement.
+ * Routes whose URL is itself the payload. gtag sends the page URL with its
+ * hits, which makes "do not send the URL" and "do not be on the page" the same
+ * requirement.
+ *
+ *   /results/ and /beat/  the token is encoded rather than encrypted and
+ *                         decodes to the test taken, the grade, the answers and
+ *                         the timings, so on the children's version it is a
+ *                         child's test performance.
+ *   /unsubscribe          the token decodes to an EMAIL ADDRESS. Same
+ *                         mechanism, more direct consequence. Note this one has
+ *                         no trailing slash: it must match the bare
+ *                         /unsubscribe as well as /unsubscribe/done.
  *
  * Read live from `window.location` rather than captured at boot, because
  * instrumentation-client.ts runs once per document and these routes are both
  * entered and left by client-side navigation.
+ *
+ * PostHog is handled separately and more strictly, in ../analytics/events.ts:
+ * the unsubscribe route is a silent route there, so no event is emitted at all
+ * rather than merely not being sent to Google.
  */
-const TOKEN_ROUTE_PREFIXES = ["/results/", "/beat/"] as const;
+const TOKEN_ROUTE_PREFIXES = ["/results/", "/beat/", "/unsubscribe"] as const;
 
 function onTokenRoute(): boolean {
   const path = window.location.pathname;

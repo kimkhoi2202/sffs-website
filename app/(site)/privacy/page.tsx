@@ -14,12 +14,26 @@ const EFFECTIVE_DATE = "July 25, 2026";
 /**
  * Kept separate from the effective date on purpose. The policy took effect in
  * July; the revisions since then describe the test on this website, which
- * children take, and the results of that test being mirrored into PostHog's
- * data warehouse alongside the address they were emailed to. A page that says
- * "last updated" and means "first published" is a page nobody can tell has
- * changed.
+ * children take, the results of that test being mirrored into PostHog's data
+ * warehouse alongside the address they were emailed to, and now the fact that
+ * we may email people about our own app. A page that says "last updated" and
+ * means "first published" is a page nobody can tell has changed.
  */
-const LAST_UPDATED = "August 6, 2026";
+const LAST_UPDATED = "August 12, 2026";
+/**
+ * The day product emails became something we may send, and the line this
+ * policy does not cross backwards.
+ *
+ * Every address given before this date was given under wording that said we
+ * would not use it to send anything the person did not ask for. That wording
+ * is still in this document, still in force for those addresses, and is not
+ * repealed by the section that follows it. Rewriting a promise and then acting
+ * as though the new version always applied is the version of this edit that
+ * would be worth being angry about, so the boundary is a named constant that
+ * every sentence about product email is pinned to, rather than a date buried
+ * in prose that a later edit could quietly soften.
+ */
+const PRODUCT_EMAIL_START_DATE = "August 12, 2026";
 const SUPPORT_EMAIL = "smartfellaorfartsmella123@gmail.com";
 
 export const metadata: Metadata = {
@@ -117,6 +131,19 @@ const SECTIONS: LegalSection[] = [
                 className="font-semibold text-ink underline decoration-2 underline-offset-2"
               >
                 the test on this website
+              </a>
+              .
+            </li>
+            <li>
+              We may send the odd note about our own app, but only to addresses
+              given on or after {PRODUCT_EMAIL_START_DATE}, and you can stop it
+              whenever you like. Older addresses keep the promise they were
+              given. See{" "}
+              <a
+                href="#email-we-send"
+                className="font-semibold text-ink underline decoration-2 underline-offset-2"
+              >
+                Email we send you
               </a>
               .
             </li>
@@ -314,7 +341,13 @@ const SECTIONS: LegalSection[] = [
           <li>
             understand how the app is used, in aggregate, so we can improve it;
           </li>
-          <li>respond to your support requests; and</li>
+          <li>respond to your support requests;</li>
+          <li>
+            tell you about our own app, but only if you gave us your address on
+            or after {PRODUCT_EMAIL_START_DATE}. What that covers and how to
+            stop it is set out in{" "}
+            <a href="#email-we-send">Email we send you</a>; and
+          </li>
           <li>meet our legal obligations.</li>
         </ul>
         <p>
@@ -322,6 +355,95 @@ const SECTIONS: LegalSection[] = [
             We do not use information for behavioral advertising, and we do not
             build advertising profiles.
           </strong>
+        </p>
+      </>
+    ),
+  },
+  {
+    id: "email-we-send",
+    heading: "Email we send you",
+    body: (
+      <>
+        <p>
+          Until now the only email this site has ever sent anybody is the one
+          carrying their test results, which they asked for by typing an
+          address in. From {PRODUCT_EMAIL_START_DATE} we may also send the
+          occasional note about our own app. This section says what that means,
+          and it says just as plainly who it does not apply to.
+        </p>
+        <Card color="cream" shadow="sm" padding="lg" className="not-prose">
+          <ul className="list-disc space-y-2.5 pl-6 text-[1.02rem] leading-relaxed marker:text-ink">
+            <li>
+              <strong>What we send.</strong> News that the app has launched or
+              changed in a way worth knowing about, and now and then a note
+              about what we are building next. That is the whole list.
+            </li>
+            <li>
+              <strong>How often.</strong> Rarely. We are thinking a few times a
+              year, and we would rather send nothing than send filler. If that
+              ever stops being true, this line changes before the sending
+              habit does.
+            </li>
+            <li>
+              <strong>Who it goes to.</strong> Only addresses given to us on or
+              after {PRODUCT_EMAIL_START_DATE}.
+            </li>
+            <li>
+              <strong>How to stop it.</strong> Ask us and we stop, for good.
+              Today that means one line to{" "}
+              <a
+                href={`mailto:${SUPPORT_EMAIL}`}
+                className="font-semibold text-ink underline decoration-2 underline-offset-2"
+              >
+                {SUPPORT_EMAIL}
+              </a>{" "}
+              or a message through our{" "}
+              <a
+                href="/support"
+                className="font-semibold text-ink underline decoration-2 underline-offset-2"
+              >
+                support page
+              </a>
+              . You never have to give a reason.
+            </li>
+          </ul>
+        </Card>
+        <p id="email-we-send-older">
+          <strong>
+            If you gave us your address before {PRODUCT_EMAIL_START_DATE}, none
+            of the above applies to you.
+          </strong>{" "}
+          When those addresses were given, this policy said the address would
+          not be used to send you anything you did not ask for, and it listed
+          what a results address would be used for and said nothing else. Those
+          sentences are still further down this page, in the same words, and
+          they still govern every address collected while they were the live
+          wording. A policy can only speak for what happens after it is
+          written. Changing one does not reach backwards, and we are not going
+          to pretend otherwise by quietly counting old addresses as new ones. If
+          we ever want to send those people something, we will ask them first
+          and they can say no.
+        </p>
+        <p>
+          <strong>
+            We are not sending any of this until there is a one-click way out of
+            it.
+          </strong>{" "}
+          Saying you can stop at any time is only honest if stopping is easy,
+          and writing to a human and waiting is not easy enough for mail you did
+          not go looking for. So no product email leaves here until every one of
+          them carries its own unsubscribe link and our postal address at the
+          bottom. This paragraph comes down when that is built, and not before.
+        </p>
+        <p>
+          <strong>What has not changed.</strong> We still do not sell your
+          address, we still do not share it with anyone outside the people who
+          run this site, and we still do not use it for advertising or to build
+          an advertising profile. Telling you about our own app is not the same
+          thing as either of those, and we would rather keep that distinction
+          than trade it for a wider permission we do not need. Everything else
+          this policy says about your address, including how to have it deleted,
+          is unchanged.
         </p>
       </>
     ),
@@ -792,6 +914,19 @@ const SECTIONS: LegalSection[] = [
           this site, and we do not use it to advertise to you.
         </p>
         <p>
+          <strong>
+            That paragraph is the promise these addresses were given under, and
+            it still holds for every one of them.
+          </strong>{" "}
+          On {PRODUCT_EMAIL_START_DATE} we began allowing ourselves to send the
+          occasional note about our own app, and only to addresses given on or
+          after that day. The paragraph above is left standing word for word
+          rather than rewritten, because it is what people were actually told at
+          the moment they typed an address in, and a promise you can no longer
+          find is one nobody can hold us to. See{" "}
+          <a href="#email-we-send">Email we send you</a>.
+        </p>
+        <p>
           <strong>How long, and deleting it.</strong> A result and any address
           stored with it are deleted twelve months after the test was taken.
           Before that, you can ask us to delete them at any time through our{" "}
@@ -861,6 +996,14 @@ const SECTIONS: LegalSection[] = [
                 className="font-semibold text-ink underline decoration-2 underline-offset-2"
               >
                 Test results in our analytics warehouse
+              </a>
+              . What the list may be used to send you, and the date that
+              changed, is in{" "}
+              <a
+                href="#email-we-send"
+                className="font-semibold text-ink underline decoration-2 underline-offset-2"
+              >
+                Email we send you
               </a>
               .
             </li>
@@ -944,6 +1087,16 @@ const SECTIONS: LegalSection[] = [
           advertising, it is not sold, it is not shared with anyone outside the
           people who run this site, and it is not used to send you anything you
           did not ask for.
+        </p>
+        <p>
+          The last of those four still stands for every address given before{" "}
+          {PRODUCT_EMAIL_START_DATE}, which is all of them at the time of
+          writing. From that date, an address given to us may also be used to
+          send the occasional note about our own app, and only if it was given
+          on or after that date. The first three do not change for anybody:
+          still no advertising, still not sold, still not shared outside the
+          people who run this site. See{" "}
+          <a href="#email-we-send">Email we send you</a>.
         </p>
         <p>
           <strong>Deleting it, and why that works here.</strong> The mirror

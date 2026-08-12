@@ -219,10 +219,36 @@ function entryOnce(): string {
  * one keeps events and tags them so a filter can exclude them; this route
  * should not be in the dataset at all, under any filter.
  */
+/**
+ * /unsubscribe joins /dashboard here, for a different reason and with the same
+ * remedy.
+ *
+ * The dashboard must not feed the numbers it reports. The unsubscribe route
+ * must not feed ANYTHING, because its URL carries a signed token that decodes
+ * to an email address. PostHog attaches `$current_url` to every event, so a
+ * single autocaptured click or pageview on that route ships the address, in
+ * recoverable form, into the analytics project. `property_denylist` does not
+ * help: the address is not in a property called `email`, it is inside a base64
+ * blob in the URL.
+ *
+ * This is the same shape as the failure found in August 2026, when the Google
+ * Ads tag was discovered shipping decodable child result tokens to Google
+ * merely by being loaded on /results/[token]. That one was closed by refusing
+ * to boot the tag; the equivalent here is refusing to emit the event.
+ *
+ * DROPPED, NOT SCRUBBED. Rewriting the URL would work only for the properties
+ * somebody remembered to rewrite, and would quietly stop working the day a new
+ * property carried the referrer instead. Returning null is the version that
+ * cannot be incomplete. Nothing on either unsubscribe screen is worth
+ * measuring, so there is no cost to weigh against it.
+ *
+ * Asserted in scripts/verify-unsubscribe.mjs.
+ */
 function isSilentRoute(): boolean {
   if (typeof window === "undefined") return false;
   const p = window.location.pathname;
-  return p === "/dashboard" || p.startsWith("/dashboard/");
+  if (p === "/dashboard" || p.startsWith("/dashboard/")) return true;
+  return p === "/unsubscribe" || p.startsWith("/unsubscribe/");
 }
 
 /**

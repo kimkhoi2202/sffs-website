@@ -637,8 +637,44 @@ export function EmailGate({ audience, testId, source, token, onSent }: EmailGate
         </Button>
       </form>
 
+      <CollectionNotice />
       <Footnote />
     </Card>
+  );
+}
+
+/**
+ * What this address will be used for, said where it is typed.
+ *
+ * ===========================================================================
+ * THIS IS WHAT MAKES /privacy TRUE RATHER THAN ASPIRATIONAL
+ * ===========================================================================
+ * The policy allows the occasional note about our own app to addresses given
+ * from 12 August 2026 onward. A permission granted in a document nobody opens,
+ * attached to a form that mentions only the results, describes a product we do
+ * not ship. Consent is given at the box, not on the legal page, so the box has
+ * to say it.
+ *
+ * IT RENDERS ONLY ON THE FORM, not on the confirmation. Notice given after the
+ * address has been handed over is not notice, and the confirmation card is
+ * already carrying the "we sent it to this address" job.
+ *
+ * ONE SENTENCE, AND THE RESULTS COME FIRST. The results are what the person is
+ * here for and what the address is chiefly for; the notes are the secondary
+ * thing being disclosed. Leading with the secondary thing would read as a
+ * newsletter signup wearing a results gate, which is both a worse description
+ * and a worse conversion.
+ *
+ * THE WORDING WORKS ON BOTH BRANCHES. On the child branch the reader is the
+ * parent whose address this is, so "you" is correct there without a second
+ * string to keep in sync.
+ */
+function CollectionNotice() {
+  return (
+    <p className="mt-3 text-center text-xs font-medium leading-snug text-ink/55">
+      We use this to send the results, and now and then to tell you about our
+      app. You can stop that any time.
+    </p>
   );
 }
 

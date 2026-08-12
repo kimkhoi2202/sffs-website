@@ -44,6 +44,23 @@ export interface SendEmailInput {
   subject: string;
   html: string;
   text: string;
+  /**
+   * Extra headers, merged over the transactional default below.
+   *
+   * This exists for the ONE-CLICK UNSUBSCRIBE pair that bulk mail needs
+   * (RFC 8058: `List-Unsubscribe` pointing at an https URL plus
+   * `List-Unsubscribe-Post: List-Unsubscribe=One-Click`). Gmail and Yahoo both
+   * expect it from anyone sending in volume, and mail without it is judged on
+   * that before it is judged on its contents.
+   *
+   * Resend passes `headers` through verbatim, so there is no SDK-specific
+   * option to find: the pair goes on the wire exactly as written here.
+   *
+   * lib/email/product-email.ts is the only caller, and it supplies a
+   * per-recipient URL. The results email deliberately does not, and keeps the
+   * mailto default below.
+   */
+  headers?: Record<string, string>;
 }
 
 /**
@@ -124,9 +141,18 @@ export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult>
         subject: input.subject,
         html: input.html,
         text: input.text,
-        // Every mailbox provider wants a machine-readable way out, and there is
-        // no preference centre to point at, so the mailbox IS the mechanism.
-        headers: { "List-Unsubscribe": `<mailto:${SUPPORT_EMAIL}?subject=unsubscribe>` },
+        // Every mailbox provider wants a machine-readable way out. The default
+        // is the mailbox itself, which is all a transactional message needs and
+        // all that was available before there was a suppression list.
+        //
+        // A PRODUCT send overrides this with the https one-click pair. A mailto
+        // is not enough for bulk mail: it asks a provider to trust that a human
+        // will read that inbox and act on it, which is exactly what Gmail's and
+        // Yahoo's bulk-sender rules stopped accepting.
+        headers: {
+          "List-Unsubscribe": `<mailto:${SUPPORT_EMAIL}?subject=unsubscribe>`,
+          ...input.headers,
+        },
       }),
       cache: "no-store",
     });
