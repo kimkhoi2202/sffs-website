@@ -161,6 +161,20 @@ check(
   /if \(onTokenRoute\(\)\) return;/.test(gtag),
 );
 
+/*
+  The URL must not ride out as a Referer either. Dropping the event is not
+  enough on its own: the PostHog SDK still boots and fetches its own assets and
+  /ingest/flags/, and because /ingest is a same-origin reverse proxy the browser
+  attaches the FULL url — token included — to those requests. Measured on the
+  live page; see the note in next.config.ts.
+*/
+const nextConfig = read("next.config.ts");
+check(
+  "the unsubscribe routes send no referrer",
+  /source:\s*"\/unsubscribe"[\s\S]{0,200}?Referrer-Policy[\s\S]{0,80}?no-referrer/.test(nextConfig) ||
+    /Referrer-Policy[\s\S]{0,200}?no-referrer/.test(nextConfig),
+);
+
 /* The pages themselves must not print the address or index the URL. */
 const page = read("app/unsubscribe/page.tsx");
 check("the page never renders the decoded address", !/\{decoded\.email\}/.test(page));

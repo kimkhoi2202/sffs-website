@@ -104,6 +104,44 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+
+  /**
+   * THE UNSUBSCRIBE URL MUST NOT RIDE OUT AS A REFERRER.
+   *
+   * Found by measuring the live page rather than by reading it, which is the
+   * only way this one shows up. /unsubscribe carries a token that decodes to an
+   * email address, and lib/analytics/events.ts already drops every EVENT fired
+   * there, so nothing enters the PostHog dataset. That guard is real and it
+   * holds — but it governs event payloads, and this leak is not one.
+   *
+   * The SDK still boots. It fetches its own assets and POSTs /ingest/flags/,
+   * and the reverse proxy above is what makes those SAME-ORIGIN: the browser
+   * therefore attaches the FULL current URL as `Referer`, query string and all,
+   * where a direct cross-origin call to us.i.posthog.com would have sent only
+   * the origin under the default policy. Vercel then forwards that header to
+   * PostHog. The address never becomes a property, but it does leave, in a
+   * header nobody reads until they are reading access logs.
+   *
+   * `no-referrer` is the fix rather than a narrower policy because the point is
+   * to hold for a vendor nobody has added yet. It costs nothing here: nothing
+   * on either unsubscribe screen wants to know where it came from.
+   */
+  async headers() {
+    return [
+      {
+        source: "/unsubscribe/:path*",
+        headers: [{ key: "Referrer-Policy", value: "no-referrer" }],
+      },
+      {
+        source: "/unsubscribe",
+        headers: [{ key: "Referrer-Policy", value: "no-referrer" }],
+      },
+      {
+        source: "/api/unsubscribe",
+        headers: [{ key: "Referrer-Policy", value: "no-referrer" }],
+      },
+    ];
+  },
 };
 
 export default nextConfig;
