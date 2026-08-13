@@ -44,6 +44,8 @@ const ROOT = resolvePath(dirname(fileURLToPath(import.meta.url)), "..");
 process.env.RESEND_API_KEY = "re_stub_key_not_a_real_credential";
 process.env.RESEND_FROM = "stub@example.invalid";
 process.env.RESULTS_DRAIN_SECRET = "stub-drain-secret";
+/* The platform half of the pair. See the GET handler in the drain route. */
+process.env.CRON_SECRET = "stub-cron-secret";
 /*
  * The proxy URL is set so the BACKLOG READ has somewhere to go, and the store
  * stays local anyway: `emailStoreMode` needs EMAIL_STORE=proxy or
@@ -82,6 +84,12 @@ registerHooks({
  */
 let resendMode = "ok";
 let sends = 0;
+/**
+ * How many more 429s `rate_limit_once` has left to give before it relents.
+ * The point of the mode is that the SAME message succeeds on a later attempt,
+ * which is the whole difference between a rate limit and a rejection.
+ */
+let rateLimitsRemaining = 0;
 /** What the stubbed proxy answers a `pending_sends` read with. */
 let backlog = { supported: false, sends: [] };
 let unexpectedCalls = [];
@@ -99,6 +107,34 @@ globalThis.fetch = async (input, init) => {
     }
     if (resendMode === "rejected") {
       return json(422, { name: "validation_error", message: "Invalid recipient" });
+    }
+    /*
+      THE OTHER 429. Same status as the quota refusal and the opposite meaning:
+      the team is over ten requests a second and the next attempt succeeds. The
+      `retry-after` is included because Resend sends one and the drain is
+      supposed to prefer it over its own guess.
+    */
+    if (resendMode === "rate_limit") {
+      return json(
+        429,
+        { name: "rate_limit_exceeded", message: "Too many requests." },
+        { "retry-after": "1" },
+      );
+    }
+    /*
+      A 429 THE PROVIDER DID NOT NAME. This is the regression that mattered:
+      the classifier keyed on the name alone, so an unnamed 429 fell through to
+      `rejected` and the drain deleted the person for it.
+    */
+    if (resendMode === "rate_limit_unnamed") {
+      return json(429, { message: "Too many requests." });
+    }
+    if (resendMode === "rate_limit_once") {
+      if (rateLimitsRemaining > 0) {
+        rateLimitsRemaining--;
+        return json(429, { name: "rate_limit_exceeded", message: "Too many requests." });
+      }
+      return json(200, { id: `stub-${sends}` });
     }
     return json(200, { id: `stub-${sends}` });
   }
@@ -119,10 +155,10 @@ globalThis.fetch = async (input, init) => {
   return json(200, {});
 };
 
-function json(status, body) {
+function json(status, body, extraHeaders = {}) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { "content-type": "application/json" },
+    headers: { "content-type": "application/json", ...extraHeaders },
   });
 }
 
@@ -131,7 +167,7 @@ function json(status, body) {
 const load = (rel) => import(pathToFileURL(join(ROOT, rel)).href);
 
 const { POST: send } = await load("app/api/test-results/send/route.ts");
-const { POST: drain } = await load("app/api/test-results/drain/route.ts");
+const { POST: drain, GET: cronDrain } = await load("app/api/test-results/drain/route.ts");
 const { NextRequest } = await import("next/server.js");
 const { encodeResultToken } = await load("lib/test/result-token.ts");
 const { getTest } = await load("lib/test/tests/index.ts");
@@ -601,6 +637,139 @@ function check(ok, label, detail = "") {
     it, so there is nothing to find.
   */
   check(signupRows(email).length === 0, "and the drain adds no signup for one it gave up on");
+}
+
+/* -- 14. A RATE LIMIT IS NOT A REJECTION. THE PERSON STAYS ON THE LIST ---- */
+/*
+  The one this file was extended for.
+
+  Both of Resend's limits answer 429. The classifier used to read only the
+  error NAME, so `rate_limit_exceeded` missed the quota branch, fell through to
+  `rejected`, and the drain wrote a `dropped` row — permanently removing a real
+  person from the backlog because we had sent too fast. Nobody was lost to it
+  only because the drain had never run unattended. Scheduling it would have
+  been the first time.
+
+  So the assertion that matters is an ABSENCE: no dropped row, and the person
+  still owed.
+*/
+{
+  resetSendHealth();
+  resendMode = "rate_limit";
+  const token = mintToken();
+  const email = "too-fast@example.invalid";
+  backlog = {
+    supported: true,
+    sends: [{ sendKey: sendKeyFor(token, email), email, token, pendingSince: "" }],
+  };
+
+  const before = sends;
+  const { body } = await askDrain({ ip: "203.0.113.70", dryRun: false });
+
+  check(
+    body.dropped === 0,
+    "A RATE LIMIT DROPS NOBODY: the backlog entry survives being sent too fast",
+    JSON.stringify(body),
+  );
+  check(
+    rowsWith("dropped", email).length === 0,
+    "and no dropped row is written, so nothing settles them as given up on",
+  );
+  check(
+    rowsWith("emailed", email).length === 0,
+    "and no emailed row either, because nothing was delivered",
+  );
+  check(body.stoppedBecause === "rate_limited", "the batch stops and says why", body.stoppedBecause);
+  check(body.leftPending === 1, "with the person counted as still owed", `${body.leftPending}`);
+  check(
+    sends - before === 1 + 3,
+    "after retrying with backoff rather than giving up on the first refusal",
+    `${sends - before} attempts`,
+  );
+}
+
+/* -- 15. an UNNAMED 429 is a rate limit too ------------------------------ */
+/*
+  The half of the bug that a name-only fix would have left behind. Resend does
+  not guarantee a name on every 429, and the old classifier sent anything
+  unnamed to the permanent bucket.
+*/
+{
+  resetSendHealth();
+  resendMode = "rate_limit_unnamed";
+  const token = mintToken();
+  const email = "unnamed-429@example.invalid";
+  backlog = {
+    supported: true,
+    sends: [{ sendKey: sendKeyFor(token, email), email, token, pendingSince: "" }],
+  };
+
+  const { body } = await askDrain({ ip: "203.0.113.71", dryRun: false });
+
+  check(
+    body.dropped === 0 && rowsWith("dropped", email).length === 0,
+    "a 429 with no name is still a rate limit, not a rejection",
+    JSON.stringify(body),
+  );
+  check(body.stoppedBecause === "rate_limited", "and stops the batch the same way");
+}
+
+/* -- 16. and the retry actually DELIVERS when the limit clears ----------- */
+/*
+  The positive half. Surviving a rate limit is only useful if the same message
+  then goes out; a fix that merely stopped dropping people would leave them in
+  the backlog forever.
+*/
+{
+  resetSendHealth();
+  resendMode = "rate_limit_once";
+  rateLimitsRemaining = 1;
+  const token = mintToken();
+  const email = "recovers@example.invalid";
+  backlog = {
+    supported: true,
+    sends: [{ sendKey: sendKeyFor(token, email), email, token, pendingSince: "" }],
+  };
+
+  const { body } = await askDrain({ ip: "203.0.113.72", dryRun: false });
+
+  check(body.sent === 1, "a rate limit that clears ends in a delivered email", JSON.stringify(body));
+  check(rowsWith("emailed", email).length === 1, "with the emailed row that settles it");
+  check(body.dropped === 0, "and nobody dropped along the way");
+  check(body.stoppedBecause === null, "and no reason to stop the batch");
+}
+
+/* -- 17. the schedule can let itself in, and nothing else can ------------ */
+/*
+  A cron that cannot authenticate fails closed and SILENTLY: the backlog simply
+  never drains and no error is raised anywhere. That is the same defect as
+  having no schedule at all, wearing a cron expression, so the door is asserted
+  from both sides.
+*/
+{
+  resetSendHealth();
+  resendMode = "ok";
+  backlog = { supported: true, sends: [] };
+
+  const cronReq = (headers) =>
+    cronDrain(
+      new NextRequest("https://www.example.invalid/api/test-results/drain", { method: "GET", headers }),
+    );
+
+  const noSecret = await cronReq({});
+  check(noSecret.status === 401, "a GET with no bearer is refused", `${noSecret.status}`);
+
+  const wrongSecret = await cronReq({ authorization: "Bearer not-the-cron-secret" });
+  check(wrongSecret.status === 401, "and a wrong one is refused", `${wrongSecret.status}`);
+
+  const right = await cronReq({ authorization: "Bearer stub-cron-secret" });
+  const rightBody = await right.json();
+  check(right.status === 200, "the real cron secret gets in", `${right.status}`);
+  check(
+    rightBody.dryRun === false,
+    "AND IT IS NOT A DRY RUN: a schedule that never sends is not a schedule",
+    JSON.stringify(rightBody),
+  );
 }
 
 /* -- and nothing else went anywhere -------------------------------------- */
