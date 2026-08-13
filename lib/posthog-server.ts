@@ -207,3 +207,72 @@ export async function captureSendHealthAlert(
     // the console line beside this call site is still in the log either way.
   }
 }
+
+/**
+ * Record what one run of the results drain did.
+ *
+ * ===========================================================================
+ * THE DRAIN USED TO BE SILENT AND THAT SILENCE WAS READ AS FAILURE
+ * ===========================================================================
+ * On 12 August the drain delivered 156 results emails that the 11 August quota
+ * outage had stalled. Analytics knew nothing about it, because the only
+ * delivery event is the live route's `test_email_sent`. So every one of those
+ * 156 people still answers "never received their results" to any query built on
+ * events, while Aurora says they were sent. An investigation started from the
+ * wrong one of those two answers and came within a step of mailing 155 people a
+ * duplicate.
+ *
+ * ===========================================================================
+ * WHY IT IS NOT `test_email_sent`, AND NOT ATTACHED TO A PERSON
+ * ===========================================================================
+ * Reusing the live event would date a conversion to the drain rather than to
+ * the moment the person asked, which quietly moves the funnel — the same
+ * reasoning that keeps `email_captured` out of the drain.
+ *
+ * And it is per RUN, not per recipient, because a pending row holds an address
+ * and a token and no distinct_id. There is no honest person to attach this to,
+ * and attaching it to an invented one would manufacture profiles that never
+ * visited. An operational fact about the mailer belongs to the mailer, which is
+ * the same identity `results_email_failing` above uses.
+ *
+ * The honest limitation, stated so nobody has to rediscover it: this makes the
+ * BATCH visible, not the individual. "Did the backlog go out, when, and how
+ * much of it" is answerable from events after this. "Did this particular person
+ * get theirs" is still an Aurora question, because that is the only place the
+ * address lives.
+ *
+ * CARRIES NO PII. Counts and a reason code, exactly like the alert above.
+ */
+export async function captureDrainRun(
+  req: NextRequest,
+  run: {
+    sent: number;
+    dropped: number;
+    leftPending: number;
+    pending: number;
+    stoppedBecause: string | null;
+  },
+): Promise<void> {
+  if (!isProdRequest(req)) return;
+  const ph = getClient();
+  if (!ph) return;
+  try {
+    ph.capture({
+      distinctId: "sffs-results-mailer",
+      event: "results_email_backfilled",
+      properties: {
+        sent: run.sent,
+        dropped: run.dropped,
+        left_pending: run.leftPending,
+        backlog_size: run.pending,
+        stopped_because: run.stoppedBecause,
+        server_side: true,
+        $process_person_profile: false,
+      },
+    });
+    await ph.flush();
+  } catch {
+    // swallow — same reasoning as the alert above. A reporting event must never
+    // be the reason a delivered email reports as a failed request.
+  }
+}

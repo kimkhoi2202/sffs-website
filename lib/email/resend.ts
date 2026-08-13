@@ -80,7 +80,12 @@ export interface SendEmailInput {
  * is named. See `classifyFailure` for how it is told apart from the OTHER 429
  * Resend sends, which genuinely is over in a second.
  */
-export type SendFailureReason = "not_configured" | "quota" | "rejected" | "network";
+export type SendFailureReason =
+  | "not_configured"
+  | "quota"
+  | "rate_limited"
+  | "rejected"
+  | "network";
 
 export type SendEmailResult =
   | { ok: true; id: string }
@@ -90,25 +95,63 @@ export type SendEmailResult =
       detail: string;
       /** The provider's HTTP status, when there was one. Logs and metrics only. */
       status?: number;
+      /**
+       * Seconds the provider asked us to wait, from its `Retry-After` header.
+       * Only ever set on `rate_limited`. Absent when the header was missing or
+       * unparseable, which is the common case and why callers need a backoff of
+       * their own rather than treating this as required.
+       */
+      retryAfterSeconds?: number;
     };
 
 /**
  * Which kind of refusal this is.
  *
  * BOTH OF RESEND'S LIMITS ANSWER 429 AND THEY MEAN OPPOSITE THINGS.
- * `rate_limit_exceeded` is the per-second cap: the next request a moment later
- * succeeds, and "try again in a moment" is exactly right for it.
- * `daily_quota_exceeded` is the daily allowance: nothing succeeds until it
+ * `rate_limit_exceeded` is the per-second cap, currently 10 requests a second
+ * across the whole team: the next request a moment later succeeds.
+ * `daily_quota_exceeded` is the plan allowance: nothing succeeds until it
  * resets, and inviting a retry is inviting somebody to press a dead button.
  *
- * So the NAME decides, not the status. An unnamed 429 falls through to
- * `rejected` — the retryable reading — deliberately: telling somebody their
- * results are stuck until tomorrow when in fact the next attempt would have
- * worked is the worse of the two mistakes, and the sustained-failure detector
- * in ./send-health.ts catches a run of them regardless of what they are called.
+ * ===========================================================================
+ * THE THIRD ANSWER EXISTS BECAUSE TWO CALLERS READ `rejected` DIFFERENTLY
+ * ===========================================================================
+ * An unnamed 429 used to fall through to `rejected` on the reasoning that
+ * `rejected` was "the retryable reading". That was true of the send route,
+ * which offers the person a retry, and FALSE of the drain, which treats
+ * `rejected` as permanent and writes a `dropped` row. So the one condition
+ * that is guaranteed to clear on its own was the one condition that could
+ * permanently delete somebody from the backlog, and a fast batch is exactly
+ * what provokes it. Nobody has been lost this way yet; scheduling the drain
+ * without this split is what would have started.
+ *
+ * A rate limit is therefore named in its own right, and it is decided by the
+ * STATUS as well as the name: any 429 that is not a quota refusal is a rate
+ * limit. Relying on the name alone would leave an unnamed 429 falling back
+ * into the permanent bucket, which is the bug being fixed.
+ *
+ * `rejected` now means only what the drain always assumed it meant: this
+ * specific message will never be accepted.
  */
-function classifyFailure(name: string): SendFailureReason {
-  return name.toLowerCase().includes("quota") ? "quota" : "rejected";
+function classifyFailure(name: string, status: number): SendFailureReason {
+  if (name.toLowerCase().includes("quota")) return "quota";
+  if (status === 429) return "rate_limited";
+  return "rejected";
+}
+
+/**
+ * Seconds from a `Retry-After` header, when it is present and sane.
+ *
+ * Only the delta-seconds form is honoured. The HTTP-date form is legal and
+ * Resend does not send it; parsing a date against our own clock would turn a
+ * skewed machine into a wait of arbitrary length, which is worse than the
+ * caller's own backoff. Anything absurd is discarded for the same reason.
+ */
+function retryAfterSeconds(header: string | null): number | undefined {
+  if (!header) return undefined;
+  const seconds = Number(header.trim());
+  if (!Number.isFinite(seconds) || seconds <= 0 || seconds > 300) return undefined;
+  return seconds;
 }
 
 /** True when the sender is still the shared sandbox address. */
@@ -166,11 +209,15 @@ export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult>
       // provider error string can name the recipient, and the caller turns this
       // into copy of its own choosing.
       const name = body?.name ?? "";
+      const reason = classifyFailure(name, res.status);
+      const after =
+        reason === "rate_limited" ? retryAfterSeconds(res.headers.get("retry-after")) : undefined;
       return {
         ok: false,
-        reason: classifyFailure(name),
+        reason,
         detail: `${res.status} ${name} ${body?.message ?? ""}`.trim(),
         status: res.status,
+        ...(after === undefined ? {} : { retryAfterSeconds: after }),
       };
     }
 
