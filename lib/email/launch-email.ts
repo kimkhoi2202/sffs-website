@@ -269,8 +269,12 @@ export function renderLaunchEmail(input: LaunchEmailInput): RenderedEmail {
 
       A promotional message needs a working opt-out and a physical postal
       address (CAN-SPAM 16 CFR 316). The results email has neither and does not
-      need them, because it is transactional. This one is not, so both are here,
-      and lib/email/product-email.ts refuses to send a body missing either.
+      need them, because it is transactional. This one is not.
+
+      The opt-out is here and product-email.ts refuses to send a body without
+      it. The address renders only when POSTAL_ADDRESS holds one; it is
+      currently empty by the owner's decision, and the note on that constant
+      says what filling it is for.
 
       The unsubscribe is a plain visible link rather than the grey four-point
       apology most senders use: somebody who wants out should find it in one
@@ -280,8 +284,14 @@ export function renderLaunchEmail(input: LaunchEmailInput): RenderedEmail {
     <tr><td style="padding:20px 8px 0 8px;font-family:${BODY_FONT};font-size:12px;line-height:1.7;color:${INK};text-align:center;">
       You are getting this because you gave us this address on smartfellaorfartsmella.com.<br>
       <a href="${escapeAttr(unsubscribeUrl)}" style="color:${INK};font-weight:bold;">Unsubscribe</a>
-      and we will stop, no questions asked.<br>
-      <span style="color:#5a5a5a;">${escapeHtml(POSTAL_ADDRESS)}</span>
+      and we will stop, no questions asked.${
+        // The line break belongs to the address, not to the sentence above it.
+        // Emitted together or not at all, so an empty address leaves the footer
+        // ending on the unsubscribe line rather than on a stray gap.
+        POSTAL_ADDRESS
+          ? `<br>\n      <span style="color:#5a5a5a;">${escapeHtml(POSTAL_ADDRESS)}</span>`
+          : ""
+      }
     </td></tr>
 
   </table>
@@ -303,7 +313,9 @@ export function renderLaunchEmail(input: LaunchEmailInput): RenderedEmail {
     "---",
     "You are getting this because you gave us this address on smartfellaorfartsmella.com.",
     `Unsubscribe: ${unsubscribeUrl}`,
-    POSTAL_ADDRESS,
+    // Dropped rather than joined as a blank, so the plain-text body does not
+    // end on an empty line when no address is configured.
+    ...(POSTAL_ADDRESS ? [POSTAL_ADDRESS] : []),
   ].join("\n");
 
   return { subject: copy.subject, html, text };

@@ -33,9 +33,11 @@ import { encodeUnsubscribeToken } from "./unsubscribe-token";
  *      it, so no call site can be written that misses it, and the check throws
  *      rather than guessing if the lookup fails.
  *   3. THE FOOTER. The message is rejected unless the rendered HTML and text
- *      both contain the postal address and the unsubscribe URL. A promotional
- *      message without those is the specific thing CAN-SPAM prohibits, and it
- *      is far easier to assert here than to remember in a template.
+ *      both contain the unsubscribe URL, and the postal address when one is
+ *      configured. Losing either from a template is easy and silent, and far
+ *      easier to assert here than to remember. The address is currently empty
+ *      by the owner's decision, so only the unsubscribe half is enforced; see
+ *      POSTAL_ADDRESS below.
  *
  * ===========================================================================
  * ONE RECIPIENT PER CALL, NEVER A BCC LIST
@@ -47,8 +49,19 @@ import { encodeUnsubscribeToken } from "./unsubscribe-token";
  * clever saving.
  */
 
-/** The postal address CAN-SPAM requires, and the one already published on the site. */
-export const POSTAL_ADDRESS = "Kim Khoi Lam, 1143 Sultana Spgs Ct, Houston, TX 77090";
+/**
+ * The postal address shown in the email footer. Empty by owner's decision.
+ *
+ * CAN-SPAM (15 U.S.C. 7704(a)(5)) requires a valid physical postal address in
+ * commercial email, so this will need a value before any commercial send. A PO
+ * Box or a commercial mail receiving agency box satisfies it; a home address is
+ * not required. Set PRODUCT_EMAIL_POSTAL_ADDRESS and both the launch and
+ * product footers pick it up with no template edit.
+ *
+ * While it is empty the footer simply omits the line. Nothing here blocks a
+ * send on account of it.
+ */
+export const POSTAL_ADDRESS = (process.env.PRODUCT_EMAIL_POSTAL_ADDRESS ?? "").trim();
 
 /** Where an unsubscribe link points. Absolute: an inbox has no page to resolve against. */
 export function unsubscribeUrlFor(email: string): string {
@@ -101,7 +114,15 @@ export async function sendProductEmail(
     burning a lookup per recipient across a whole batch.
   */
   for (const [label, body] of [["html", input.html], ["text", input.text]] as const) {
-    if (!body.includes(POSTAL_ADDRESS)) {
+    /*
+      Checked only when there is an address to check for. This is written out
+      rather than left to `includes`, which would return true for the empty
+      string and quietly report a passing check that examined nothing. Skipping
+      it explicitly says the same thing honestly, and deliberately does NOT
+      block the send: the footer line is the owner's call, and this gate's job
+      is catching a template that dropped a value that exists.
+    */
+    if (POSTAL_ADDRESS && !body.includes(POSTAL_ADDRESS)) {
       return {
         ok: false,
         reason: "missing_footer",

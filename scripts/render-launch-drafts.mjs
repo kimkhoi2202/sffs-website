@@ -15,12 +15,32 @@
  * means the drafts are worth opening in a browser: the link resolves.
  */
 import { mkdirSync, writeFileSync } from "node:fs";
+import { registerHooks } from "node:module";
 import { join } from "node:path";
+
+/*
+  `server-only` throws the moment plain Node loads it, and product-email.ts
+  imports it, so this script could not actually be run as written — it died on
+  the import before rendering a thing. Stubbed exactly as
+  scripts/verify-send-recovery.mjs stubs it.
+
+  Shimmed HERE rather than in scripts/ts-resolve-hook.mjs on purpose. That hook
+  is shared by every verify script, and a client component importing a
+  server-only module is a build error worth keeping for all of them.
+*/
+registerHooks({
+  resolve(specifier, context, next) {
+    if (specifier === "server-only") {
+      return { url: "data:text/javascript,export{}", shortCircuit: true };
+    }
+    return next(specifier, context);
+  },
+});
 
 process.env.UNSUBSCRIBE_TOKEN_SECRET ||= "draft-preview-only-secret";
 
 const { renderLaunchEmail } = await import("../lib/email/launch-email.ts");
-const { unsubscribeUrlFor } = await import("../lib/email/product-email.ts");
+const { unsubscribeUrlFor, POSTAL_ADDRESS } = await import("../lib/email/product-email.ts");
 
 const outDir = process.argv[2] ?? "/tmp/sffs-launch-drafts";
 mkdirSync(outDir, { recursive: true });
@@ -49,7 +69,12 @@ for (const variant of ["a", "b"]) {
   for (const [label, body] of [["html", html], ["text", text]]) {
     if (/[\u2014\u2013]/.test(body)) problems.push(`${label}: contains an em or en dash`);
     if (!body.includes(unsubscribeUrl)) problems.push(`${label}: no unsubscribe URL`);
-    if (!body.includes("1143 Sultana Spgs Ct")) problems.push(`${label}: no postal address`);
+    // Only when one is configured, and checked against the CONSTANT rather
+    // than a street literal. `includes("")` is true of everything, so the old
+    // literal check would have reported a pass while examining nothing.
+    if (POSTAL_ADDRESS && !body.includes(POSTAL_ADDRESS)) {
+      problems.push(`${label}: no postal address`);
+    }
   }
   // Strip the brand glyph before counting, exactly as the brand gate does, then
   // allow at most one other emoji.
