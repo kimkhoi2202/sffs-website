@@ -46,7 +46,7 @@ export function UnsubscribeShell({
         </div>
       </div>
       <p className="mt-6 max-w-md text-center text-xs font-medium leading-relaxed text-ink/60">
-        Kim Khoi Lam, 1143 Sultana Spgs Ct, Houston, TX 77090
+        Kim Khoi Lam
       </p>
     </main>
   );

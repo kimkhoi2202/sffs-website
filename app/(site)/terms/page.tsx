@@ -8,7 +8,6 @@ import { LegalPage, type LegalSection } from "@/components/sections/legal-page";
   The operator is an individual sole developer (Kim Khoi Lam), not a company.
 */
 const LEGAL_ENTITY = "Kim Khoi Lam";
-const BUSINESS_ADDRESS = "1143 Sultana Spgs Ct, Houston, TX 77090";
 const GOVERNING_LAW = "the State of Texas, USA";
 const EFFECTIVE_DATE = "July 25, 2026";
 const SUPPORT_EMAIL = "smartfellaorfartsmella123@gmail.com";
@@ -328,7 +327,6 @@ const SECTIONS: LegalSection[] = [
         <p>Questions about these Terms? Please reach out:</p>
         <ul>
           <li>{LEGAL_ENTITY}</li>
-          <li>{BUSINESS_ADDRESS}</li>
           <li>
             Email: <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>
           </li>

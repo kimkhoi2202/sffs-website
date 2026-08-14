@@ -9,7 +9,6 @@ import { Card } from "@/components/ui/card";
   The operator is an individual sole developer (Kim Khoi Lam), not a company.
 */
 const LEGAL_ENTITY = "Kim Khoi Lam";
-const BUSINESS_ADDRESS = "1143 Sultana Spgs Ct, Houston, TX 77090";
 const EFFECTIVE_DATE = "July 25, 2026";
 /**
  * Kept separate from the effective date on purpose. The policy took effect in
@@ -93,7 +92,7 @@ const SECTIONS: LegalSection[] = [
       <>
         <p>
           {LEGAL_ENTITY} makes and operates Smart Fella or Fart Smella. You can
-          reach us at {BUSINESS_ADDRESS}, or through the contact details in the{" "}
+          reach us through the contact details in the{" "}
           <a href="#contact">Contact us</a> section below.
         </p>
         <p>
@@ -795,7 +794,6 @@ const SECTIONS: LegalSection[] = [
         <p>Questions, requests, or privacy concerns? Please reach out:</p>
         <ul>
           <li>{LEGAL_ENTITY}</li>
-          <li>{BUSINESS_ADDRESS}</li>
           <li>
             Email: <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>
           </li>
