@@ -58,8 +58,8 @@ const DISPLAY_FONT =
 const BODY_FONT = "'Helvetica Neue', Helvetica, Arial, sans-serif";
 
 /**
- * A: THE ANNOUNCEMENT. Leads with the thing that happened.
- * B: THE ASK. Leads with wanting their verdict, and mentions the app second.
+ * A: THE INVITATION. Connects the test they took to the app they can try now.
+ * B: THE VERDICT. Announces the app and immediately asks them to judge it.
  *
  * They are not two tones of the same email. They make a different opening
  * claim on the reader's attention, which is the only part of an email most
@@ -88,32 +88,35 @@ interface Copy {
   headline: string;
   paragraphs: string[];
   cta: string;
+  /** Optional second beat between the button and the feedback copy. */
+  closingHeadline?: string;
   /** The beat after the button. This is where the feedback ask lands. */
   closing: string[];
 }
 
 const COPY: Record<LaunchVariant, Copy> = {
   /*
-    VARIANT A. The news first.
+    VARIANT A. The invitation first.
 
-    "We made the rest of it" is doing the work: it ties the app to the one
-    thing this reader actually did, which was sit the test. An announcement
-    that opens with the product rather than with their connection to it reads
-    like a mailing list they do not remember joining, which for most of this
-    audience would be a fair description.
+    The opening ties the app directly to the test this reader took, then gives
+    them one clear next step. The feedback ask gets its own second beat after
+    the button so the launch is unmistakable before we ask them to help.
   */
   a: {
-    subject: "We turned the test into a whole app",
-    preheader: "It is on the App Store today, and we want your verdict.",
-    headline: "The app is out",
+    subject: "You took the test. Now try the app.",
+    preheader: "Smart Fella is officially on the App Store.",
+    headline: "You took the test. Now try the app.",
     paragraphs: [
-      "You sat the Official Smart Fella Test. We went and built the rest of it.",
-      "Smart Fella or Fart Smella is on the App Store now. Quick logic, memory, focus and word games. Same stupid name, a lot more to do.",
+      "Smart Fella is officially on the App Store.",
+      "We built quick games for logic, memory, focus, and words. Since you took the Official Smart Fella Test, we want you to be one of the first to try it.",
     ],
-    cta: "Get the app",
+    cta: "Try the app",
+    closingHeadline: "Now roast us",
     closing: [
-      "One favour, and it is the reason we are writing. We are still building this out, and we would much rather hear from someone who has actually played it than guess.",
-      "Have a go, then hit reply and tell us what you think. Brutally honest is fine. We named the whole thing after being called a fart smella, so we can take it.",
+      "We're still building, and what you say actually shapes what comes next.",
+      "Play a few rounds, then hit reply and tell us what you think. What's fun? What sucks? Too easy? Too hard? What do you wish it did?",
+      "Brutally honest is encouraged. If it's a Fart Smella, tell us.",
+      "Smart Fella",
     ],
   },
   /*
@@ -158,6 +161,10 @@ export function renderLaunchEmail(input: LaunchEmailInput): RenderedEmail {
         `<tr><td style="padding:0 24px 16px 24px;font-family:${BODY_FONT};font-size:15px;line-height:1.55;color:${INK};">${escapeHtml(text)}</td></tr>`,
     )
     .join("\n        ");
+
+  const closingHeadline = copy.closingHeadline
+    ? `<tr><td style="padding:0 24px 12px 24px;font-family:${DISPLAY_FONT};font-size:22px;line-height:1.1;text-transform:uppercase;color:${INK};">${escapeHtml(copy.closingHeadline)}</td></tr>`
+    : "";
 
   const html = `<!doctype html>
 <html lang="en">
@@ -256,6 +263,8 @@ export function renderLaunchEmail(input: LaunchEmailInput): RenderedEmail {
           </a>
         </td></tr>
 
+        ${closingHeadline}
+
         ${closingParagraphs}
 
         <tr><td style="padding:0 24px 26px 24px;font-family:${BODY_FONT};font-size:12px;line-height:1.6;color:#5a5a5a;word-break:break-all;">
@@ -306,6 +315,7 @@ export function renderLaunchEmail(input: LaunchEmailInput): RenderedEmail {
     ...copy.paragraphs.flatMap((p) => [p, ""]),
     `${copy.cta.toUpperCase()}: ${ctaUrl}`,
     "",
+    ...(copy.closingHeadline ? [copy.closingHeadline.toUpperCase(), ""] : []),
     ...copy.closing.flatMap((p) => [p, ""]),
     "---",
     "You are getting this because you gave us this address on smartfellaorfartsmella.com.",
