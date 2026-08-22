@@ -44,6 +44,10 @@ export interface SendEmailInput {
   subject: string;
   html: string;
   text: string;
+  /** A monitored inbox for replies. Sending-only domains do not receive mail. */
+  replyTo?: string | string[];
+  /** Provider-level duplicate protection. Resend retains keys for 24 hours. */
+  idempotencyKey?: string;
   /**
    * Extra headers, merged over the transactional default below.
    *
@@ -179,10 +183,20 @@ export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult>
       headers: {
         authorization: `Bearer ${key}`,
         "content-type": "application/json",
+        ...(input.idempotencyKey
+          ? { "idempotency-key": input.idempotencyKey }
+          : {}),
       },
       body: JSON.stringify({
         from,
         to: [input.to],
+        ...(input.replyTo
+          ? {
+              reply_to: Array.isArray(input.replyTo)
+                ? input.replyTo
+                : [input.replyTo],
+            }
+          : {}),
         subject: input.subject,
         html: input.html,
         text: input.text,

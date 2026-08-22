@@ -112,6 +112,14 @@ check(
   /"List-Unsubscribe":\s*`<\$\{url\}>`/.test(product) &&
     /"List-Unsubscribe-Post":\s*"List-Unsubscribe=One-Click"/.test(product),
 );
+check(
+  "product replies go to the monitored support inbox",
+  /replyTo:\s*SUPPORT_EMAIL/.test(product),
+);
+check(
+  "product sends pass a provider idempotency key",
+  /idempotencyKey:\s*input\.idempotencyKey/.test(product),
+);
 
 /* The results email must NOT consult suppression: it is transactional. */
 const resultsSend = read("app/api/test-results/send/route.ts");

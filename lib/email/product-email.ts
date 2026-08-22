@@ -2,7 +2,7 @@ import "server-only";
 
 import { CANONICAL_ORIGIN } from "../site-url";
 import { POSTAL_ADDRESS } from "../postal-address";
-import { sendEmail, type SendEmailResult } from "./resend";
+import { sendEmail, SUPPORT_EMAIL, type SendEmailResult } from "./resend";
 import { filterSuppressed } from "./suppression";
 import { encodeUnsubscribeToken } from "./unsubscribe-token";
 
@@ -66,6 +66,8 @@ export interface ProductEmailInput {
   /** Must already contain the unsubscribe URL and the postal address. */
   html: string;
   text: string;
+  /** Stable per-message key so an interrupted runner can retry without duplication. */
+  idempotencyKey?: string;
   /**
    * Provider tags for the bounded launch experiment. These are deliberately
    * opaque: recipientId is not an email address and cannot be reversed to one.
@@ -140,6 +142,8 @@ export async function sendProductEmail(
 
   const sent: SendEmailResult = await sendEmail({
     to: address,
+    replyTo: SUPPORT_EMAIL,
+    idempotencyKey: input.idempotencyKey,
     subject: input.subject,
     html: input.html,
     text: input.text,
