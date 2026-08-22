@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { LegalPage, type LegalSection } from "@/components/sections/legal-page";
+import { POSTAL_ADDRESS } from "@/lib/postal-address";
 
 /*
   Deliverable 2: the Smart Fella or Fart Smella APP Terms of Service.
@@ -327,6 +328,7 @@ const SECTIONS: LegalSection[] = [
         <p>Questions about these Terms? Please reach out:</p>
         <ul>
           <li>{LEGAL_ENTITY}</li>
+          <li>Mailing address: {POSTAL_ADDRESS}</li>
           <li>
             Email: <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>
           </li>

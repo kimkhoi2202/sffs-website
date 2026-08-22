@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 
+import { POSTAL_ADDRESS } from "@/lib/postal-address";
+
 /**
  * The frame both unsubscribe screens sit in.
  *
@@ -46,7 +48,7 @@ export function UnsubscribeShell({
         </div>
       </div>
       <p className="mt-6 max-w-md text-center text-xs font-medium leading-relaxed text-ink/60">
-        Kim Khoi Lam
+        {POSTAL_ADDRESS}
       </p>
     </main>
   );

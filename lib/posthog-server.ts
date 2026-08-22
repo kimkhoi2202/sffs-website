@@ -276,3 +276,84 @@ export async function captureDrainRun(
     // be the reason a delivered email reports as a failed request.
   }
 }
+
+/**
+ * First-party CTA truth for the launch experiment. The distinct id is an
+ * opaque row id generated for the pilot export, not an address or a hash of an
+ * address. The token never exposes PII and no URL is captured because it would
+ * contain the signed token.
+ */
+export async function captureLaunchEmailClickServer(
+  req: NextRequest,
+  click: {
+    campaign: string;
+    variant: "a" | "b";
+    recipientId: string;
+    linkId: string;
+  },
+): Promise<void> {
+  if (!isProdRequest(req)) return;
+  const ph = getClient();
+  if (!ph) return;
+  try {
+    ph.capture({
+      distinctId: click.recipientId,
+      event: "launch_email_link_clicked",
+      properties: {
+        campaign: click.campaign,
+        variant: click.variant,
+        recipient_id: click.recipientId,
+        link_id: click.linkId,
+        server_side: true,
+        $process_person_profile: false,
+      },
+    });
+    await ph.flush();
+  } catch {
+    // Attribution is best-effort; a redirect must never fail because analytics did.
+  }
+}
+
+/**
+ * Verified provider events from Resend. `$insert_id` uses the signed Svix
+ * delivery id, giving PostHog a stable deduplication key when Resend retries an
+ * at-least-once webhook. No recipient address, subject, or clicked URL leaves
+ * the webhook handler.
+ */
+export async function captureLaunchEmailProviderEvent(
+  req: NextRequest,
+  event: {
+    webhookId: string;
+    type: string;
+    createdAt: string;
+    emailId: string;
+    campaign: string;
+    variant: "a" | "b";
+    recipientId: string;
+  },
+): Promise<void> {
+  if (!isProdRequest(req)) return;
+  const ph = getClient();
+  if (!ph) return;
+  try {
+    ph.capture({
+      distinctId: event.recipientId,
+      event: "launch_email_provider_event",
+      properties: {
+        $insert_id: event.webhookId,
+        provider: "resend",
+        provider_event: event.type,
+        provider_created_at: event.createdAt,
+        provider_email_id: event.emailId,
+        campaign: event.campaign,
+        variant: event.variant,
+        recipient_id: event.recipientId,
+        server_side: true,
+        $process_person_profile: false,
+      },
+    });
+    await ph.flush();
+  } catch {
+    // Provider delivery must receive 200 even if optional analytics is unavailable.
+  }
+}

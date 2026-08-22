@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { LegalPage, type LegalSection } from "@/components/sections/legal-page";
 import { Card } from "@/components/ui/card";
+import { POSTAL_ADDRESS } from "@/lib/postal-address";
 
 /*
   Deliverable 1: the Smart Fella or Fart Smella APP Privacy Policy.
@@ -18,7 +19,7 @@ const EFFECTIVE_DATE = "July 25, 2026";
  * we may email people about our own app. A page that says "last updated" and
  * means "first published" is a page nobody can tell has changed.
  */
-const LAST_UPDATED = "August 12, 2026";
+const LAST_UPDATED = "August 21, 2026";
 /**
  * The day product emails became something we may send, and the line this
  * policy does not cross backwards.
@@ -794,6 +795,7 @@ const SECTIONS: LegalSection[] = [
         <p>Questions, requests, or privacy concerns? Please reach out:</p>
         <ul>
           <li>{LEGAL_ENTITY}</li>
+          <li>Mailing address: {POSTAL_ADDRESS}</li>
           <li>
             Email: <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>
           </li>

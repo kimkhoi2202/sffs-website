@@ -61,6 +61,8 @@ export interface SendEmailInput {
    * mailto default below.
    */
   headers?: Record<string, string>;
+  /** Resend metadata returned on delivery/open/click webhook events. */
+  tags?: Array<{ name: string; value: string }>;
 }
 
 /**
@@ -196,6 +198,7 @@ export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult>
           "List-Unsubscribe": `<mailto:${SUPPORT_EMAIL}?subject=unsubscribe>`,
           ...input.headers,
         },
+        ...(input.tags ? { tags: input.tags } : {}),
       }),
       cache: "no-store",
     });

@@ -51,10 +51,15 @@ mkdirSync(outDir, { recursive: true });
 */
 const PREVIEW_ADDRESS = "you@example.com";
 const unsubscribeUrl = unsubscribeUrlFor(PREVIEW_ADDRESS);
+const previewCtaUrl = "https://www.smartfellaorfartsmella.com/go/app?t=preview-only";
 
 const written = [];
 for (const variant of ["a", "b"]) {
-  const { subject, html, text } = renderLaunchEmail({ variant, unsubscribeUrl });
+  const { subject, html, text } = renderLaunchEmail({
+    variant,
+    unsubscribeUrl,
+    ctaUrl: previewCtaUrl,
+  });
 
   const htmlPath = join(outDir, `launch-variant-${variant}.html`);
   const textPath = join(outDir, `launch-variant-${variant}.txt`);
@@ -69,10 +74,7 @@ for (const variant of ["a", "b"]) {
   for (const [label, body] of [["html", html], ["text", text]]) {
     if (/[\u2014\u2013]/.test(body)) problems.push(`${label}: contains an em or en dash`);
     if (!body.includes(unsubscribeUrl)) problems.push(`${label}: no unsubscribe URL`);
-    // Only when one is configured, and checked against the CONSTANT rather
-    // than a street literal. `includes("")` is true of everything, so the old
-    // literal check would have reported a pass while examining nothing.
-    if (POSTAL_ADDRESS && !body.includes(POSTAL_ADDRESS)) {
+    if (!body.includes(POSTAL_ADDRESS)) {
       problems.push(`${label}: no postal address`);
     }
   }

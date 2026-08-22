@@ -40,7 +40,7 @@
  * emoji, warm rather than corporate.
  */
 import { CANONICAL_ORIGIN } from "@/lib/site-url";
-import { POSTAL_ADDRESS } from "./product-email";
+import { POSTAL_ADDRESS } from "@/lib/postal-address";
 
 /** The live listing. */
 export const APP_STORE_URL =
@@ -69,6 +69,8 @@ export type LaunchVariant = "a" | "b";
 
 export interface LaunchEmailInput {
   variant: LaunchVariant;
+  /** Absolute, signed, per-recipient first-party attribution URL. */
+  ctaUrl: string;
   /** Absolute, per-recipient. Required: the footer will not render without it. */
   unsubscribeUrl: string;
 }
@@ -141,7 +143,7 @@ const COPY: Record<LaunchVariant, Copy> = {
 
 export function renderLaunchEmail(input: LaunchEmailInput): RenderedEmail {
   const copy = COPY[input.variant];
-  const { unsubscribeUrl } = input;
+  const { ctaUrl, unsubscribeUrl } = input;
 
   const bodyParagraphs = copy.paragraphs
     .map(
@@ -248,7 +250,7 @@ export function renderLaunchEmail(input: LaunchEmailInput): RenderedEmail {
 
         <!-- ONE button, and it is a real link so it works with images off. -->
         <tr><td align="center" style="padding:8px 24px 24px 24px;">
-          <a href="${escapeAttr(APP_STORE_URL)}"
+          <a href="${escapeAttr(ctaUrl)}"
              style="display:inline-block;background-color:${GREEN};border:3px solid ${INK};box-shadow:4px 4px 0 0 ${INK};color:${INK};font-family:${BODY_FONT};font-size:16px;font-weight:bold;letter-spacing:0.5px;text-transform:uppercase;text-decoration:none;padding:16px 30px;">
             ${escapeHtml(copy.cta)}
           </a>
@@ -258,7 +260,7 @@ export function renderLaunchEmail(input: LaunchEmailInput): RenderedEmail {
 
         <tr><td style="padding:0 24px 26px 24px;font-family:${BODY_FONT};font-size:12px;line-height:1.6;color:#5a5a5a;word-break:break-all;">
           Button not working? Paste this in:<br>
-          <a href="${escapeAttr(APP_STORE_URL)}" style="color:#5a5a5a;">${escapeHtml(APP_STORE_URL)}</a>
+          <a href="${escapeAttr(ctaUrl)}" style="color:#5a5a5a;">${escapeHtml(ctaUrl)}</a>
         </td></tr>
 
       </table>
@@ -272,9 +274,8 @@ export function renderLaunchEmail(input: LaunchEmailInput): RenderedEmail {
       need them, because it is transactional. This one is not.
 
       The opt-out is here and product-email.ts refuses to send a body without
-      it. The address renders only when POSTAL_ADDRESS holds one; it is
-      currently empty by the owner's decision, and the note on that constant
-      says what filling it is for.
+      it. The address comes from one shared product constant so this footer and
+      the public legal pages cannot drift apart.
 
       The unsubscribe is a plain visible link rather than the grey four-point
       apology most senders use: somebody who wants out should find it in one
@@ -286,11 +287,7 @@ export function renderLaunchEmail(input: LaunchEmailInput): RenderedEmail {
       <a href="${escapeAttr(unsubscribeUrl)}" style="color:${INK};font-weight:bold;">Unsubscribe</a>
       and we will stop, no questions asked.${
         // The line break belongs to the address, not to the sentence above it.
-        // Emitted together or not at all, so an empty address leaves the footer
-        // ending on the unsubscribe line rather than on a stray gap.
-        POSTAL_ADDRESS
-          ? `<br>\n      <span style="color:#5a5a5a;">${escapeHtml(POSTAL_ADDRESS)}</span>`
-          : ""
+        `<br>\n      <span style="color:#5a5a5a;">${escapeHtml(POSTAL_ADDRESS)}</span>`
       }
     </td></tr>
 
@@ -307,15 +304,13 @@ export function renderLaunchEmail(input: LaunchEmailInput): RenderedEmail {
     copy.headline.toUpperCase(),
     "",
     ...copy.paragraphs.flatMap((p) => [p, ""]),
-    `${copy.cta.toUpperCase()}: ${APP_STORE_URL}`,
+    `${copy.cta.toUpperCase()}: ${ctaUrl}`,
     "",
     ...copy.closing.flatMap((p) => [p, ""]),
     "---",
     "You are getting this because you gave us this address on smartfellaorfartsmella.com.",
     `Unsubscribe: ${unsubscribeUrl}`,
-    // Dropped rather than joined as a blank, so the plain-text body does not
-    // end on an empty line when no address is configured.
-    ...(POSTAL_ADDRESS ? [POSTAL_ADDRESS] : []),
+    POSTAL_ADDRESS,
   ].join("\n");
 
   return { subject: copy.subject, html, text };
