@@ -3,4 +3,4 @@
  * physical contact address. Keep one canonical value so the website, legal
  * pages, unsubscribe surface, and commercial-email footer cannot drift.
  */
-export const POSTAL_ADDRESS = "Kim Khoi Lam, 309 E 21st St, Austin, TX 78705";
+export const POSTAL_ADDRESS = "309 E 21st St, Austin, TX 78705";
