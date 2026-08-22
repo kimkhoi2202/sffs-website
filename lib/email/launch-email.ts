@@ -36,8 +36,9 @@
  * sentence would still be true if the app did not exist. Puffery about a PUZZLE
  * is fine; there are no puzzles in here, so there is no puffery in here either.
  *
- * House rules that also apply: no em dashes, kid-safe language, at most one
- * emoji, warm rather than corporate.
+ * House rules that also apply: no em dashes, no en dashes except the approved
+ * Variant A sign-off, kid-safe language, at most one emoji, warm rather than
+ * corporate.
  */
 import { CANONICAL_ORIGIN } from "@/lib/site-url";
 import { POSTAL_ADDRESS } from "@/lib/postal-address";
@@ -116,7 +117,7 @@ const COPY: Record<LaunchVariant, Copy> = {
       "We're still building, and what you say actually shapes what comes next.",
       "Play a few rounds, then hit reply and tell us what you think. What's fun? What sucks? Too easy? Too hard? What do you wish it did?",
       "Brutally honest is encouraged. If it's a Fart Smella, tell us.",
-      "Smart Fella",
+      "–Smart Fella",
     ],
   },
   /*
@@ -163,7 +164,7 @@ export function renderLaunchEmail(input: LaunchEmailInput): RenderedEmail {
     .join("\n        ");
 
   const closingHeadline = copy.closingHeadline
-    ? `<tr><td style="padding:0 24px 12px 24px;font-family:${DISPLAY_FONT};font-size:22px;line-height:1.1;text-transform:uppercase;color:${INK};">${escapeHtml(copy.closingHeadline)}</td></tr>`
+    ? `<tr><td align="center" style="padding:0 24px 12px 24px;font-family:${DISPLAY_FONT};font-size:22px;line-height:1.1;text-align:center;text-transform:uppercase;color:${INK};">${escapeHtml(copy.closingHeadline)}</td></tr>`
     : "";
 
   const html = `<!doctype html>

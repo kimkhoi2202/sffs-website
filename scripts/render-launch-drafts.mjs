@@ -72,7 +72,11 @@ for (const variant of ["a", "b"]) {
   /* House rules, checked rather than trusted. */
   const problems = [];
   for (const [label, body] of [["html", html], ["text", text]]) {
-    if (/[\u2014\u2013]/.test(body)) problems.push(`${label}: contains an em or en dash`);
+    // Variant A's sign-off intentionally uses the owner's approved en dash.
+    const bodyWithoutApprovedSignoff = body.replaceAll("–Smart Fella", "Smart Fella");
+    if (/[\u2014\u2013]/.test(bodyWithoutApprovedSignoff)) {
+      problems.push(`${label}: contains an unapproved em or en dash`);
+    }
     if (!body.includes(unsubscribeUrl)) problems.push(`${label}: no unsubscribe URL`);
     if (!body.includes(POSTAL_ADDRESS)) {
       problems.push(`${label}: no postal address`);
