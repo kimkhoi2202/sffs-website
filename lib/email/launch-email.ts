@@ -126,9 +126,9 @@ const COPY: Record<LaunchVariant, Copy> = {
     act on in ten seconds, which an announcement does not.
   */
   b: {
-    subject: "Would you tell us what you think?",
+    subject: "We made an app. Will you judge it?",
     preheader: "We built the app. You are the person we want to hear from.",
-    headline: "We want your verdict",
+    headline: "The app is out. Judge it.",
     paragraphs: [
       "You sat the Official Smart Fella Test, which makes you exactly the person we want to hear from.",
       "We turned it into an app. It is on the App Store now, with quick logic, memory, focus and word games in it.",
