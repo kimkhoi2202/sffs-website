@@ -34,6 +34,26 @@ interface Recipient {
   idempotencyKey: string;
 }
 
+async function providerSuppressions(): Promise<Set<string>> {
+  const apiKey = process.env.RESEND_API_KEY?.trim();
+  if (!apiKey) throw new Error("RESEND_API_KEY is not configured");
+  const response = await fetch("https://api.resend.com/suppressions", {
+    headers: { authorization: `Bearer ${apiKey}` },
+    cache: "no-store",
+  });
+  const data = (await response.json().catch(() => null)) as
+    | { data?: Array<{ email?: unknown }> }
+    | null;
+  if (!response.ok || !Array.isArray(data?.data)) {
+    throw new Error(`Resend suppression lookup failed with ${response.status}`);
+  }
+  return new Set(
+    data.data
+      .map((item) => (typeof item.email === "string" ? item.email.trim().toLowerCase() : ""))
+      .filter(Boolean),
+  );
+}
+
 function authorized(req: Request): boolean {
   const expected = process.env.FOLLOWUP_BATCH_SECRET?.trim();
   const supplied = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "").trim();
@@ -99,16 +119,26 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "invalid_manifest" }, { status: 400 });
   }
 
-  const { suppressed } = await filterSuppressed(recipients.map((r) => r.email));
+  // Both independent stop lists must be readable immediately before sending:
+  // our unsubscribe database and Resend's team-wide bounce/complaint list.
+  // Any lookup error throws and the route sends nothing.
+  const [local, provider] = await Promise.all([
+    filterSuppressed(recipients.map((r) => r.email)),
+    providerSuppressions(),
+  ]);
+  const suppressed = new Set([
+    ...local.suppressed,
+    ...recipients.map((r) => r.email).filter((email) => provider.has(email)),
+  ]);
   if (body?.action === "preflight") {
     return NextResponse.json(
-      { ok: suppressed.length === 0, count: recipients.length, suppressed: suppressed.length },
-      { status: suppressed.length === 0 ? 200 : 409, headers: { "cache-control": "no-store" } },
+      { ok: suppressed.size === 0, count: recipients.length, suppressed: suppressed.size },
+      { status: suppressed.size === 0 ? 200 : 409, headers: { "cache-control": "no-store" } },
     );
   }
-  if (suppressed.length > 0) {
+  if (suppressed.size > 0) {
     return NextResponse.json(
-      { ok: false, error: "recipient_suppressed", count: suppressed.length },
+      { ok: false, error: "recipient_suppressed", count: suppressed.size },
       { status: 409 },
     );
   }
