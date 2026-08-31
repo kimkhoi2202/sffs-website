@@ -14,9 +14,9 @@
  * footer in the draft is the footer that would ship, not a stand-in. That also
  * means the drafts are worth opening in a browser: the link resolves.
  */
-import { mkdirSync, writeFileSync } from "node:fs";
+import { copyFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { registerHooks } from "node:module";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 
 /*
   `server-only` throws the moment plain Node loads it, and product-email.ts
@@ -42,8 +42,12 @@ process.env.UNSUBSCRIBE_TOKEN_SECRET ||= "draft-preview-only-secret";
 const { renderLaunchEmail } = await import("../lib/email/launch-email.ts");
 const { unsubscribeUrlFor, POSTAL_ADDRESS } = await import("../lib/email/product-email.ts");
 
-const outDir = process.argv[2] ?? "/tmp/sffs-launch-drafts";
+const outDir = resolve(process.argv[2] ?? "/tmp/sffs-launch-drafts");
 mkdirSync(outDir, { recursive: true });
+copyFileSync(
+  join(process.cwd(), "public", "email", "app-games", "free-games-showcase.jpg"),
+  join(outDir, "free-games-showcase.jpg"),
+);
 
 /*
   A visibly fake address. Using a real one from the list would put a live
@@ -63,7 +67,14 @@ for (const variant of ["a", "b"]) {
 
   const htmlPath = join(outDir, `launch-variant-${variant}.html`);
   const textPath = join(outDir, `launch-variant-${variant}.txt`);
-  writeFileSync(htmlPath, html, "utf8");
+  writeFileSync(
+    htmlPath,
+    html.replace(
+      "https://www.smartfellaorfartsmella.com/email/app-games/free-games-showcase.jpg",
+      "./free-games-showcase.jpg",
+    ),
+    "utf8",
+  );
   // The subject rides at the top of the text file so the draft is complete:
   // a plain-text body with no subject is half an email.
   writeFileSync(textPath, `Subject: ${subject}\n\n${text}\n`, "utf8");

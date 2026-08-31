@@ -36,9 +36,8 @@
  * sentence would still be true if the app did not exist. Puffery about a PUZZLE
  * is fine; there are no puzzles in here, so there is no puffery in here either.
  *
- * House rules that also apply: no em dashes, no en dashes except the approved
- * Variant A sign-off, kid-safe language, at most one emoji, warm rather than
- * corporate.
+ * House rules that also apply: no em dashes, kid-safe language, at most one
+ * emoji, warm rather than corporate.
  */
 import { CANONICAL_ORIGIN } from "@/lib/site-url";
 import { POSTAL_ADDRESS } from "@/lib/postal-address";
@@ -48,6 +47,7 @@ export const APP_STORE_URL =
   "https://apps.apple.com/us/app/smart-fella-or-fart-smella/id6794045991";
 
 const LOGO_ORIGIN = CANONICAL_ORIGIN;
+const GAME_SHOWCASE_URL = `${CANONICAL_ORIGIN}/email/app-games/free-games-showcase.jpg`;
 
 const INK = "#000000";
 const PAPER = "#ffffff";
@@ -59,12 +59,9 @@ const DISPLAY_FONT =
 const BODY_FONT = "'Helvetica Neue', Helvetica, Arial, sans-serif";
 
 /**
- * A: THE INVITATION. Connects the test they took to the app they can try now.
- * B: THE VERDICT. Announces the app and immediately asks them to judge it.
- *
- * They are not two tones of the same email. They make a different opening
- * claim on the reader's attention, which is the only part of an email most
- * people ever read.
+ * A/B tests only the inbox subject. The message, art, CTA and recipient mix
+ * stay identical so an open-rate difference has one plausible cause instead
+ * of being confounded by two different creatives.
  */
 export type LaunchVariant = "a" | "b";
 
@@ -89,58 +86,42 @@ interface Copy {
   headline: string;
   paragraphs: string[];
   cta: string;
-  /** Optional second beat between the button and the feedback copy. */
-  closingHeadline?: string;
+  closingHeadline: string;
   /** The beat after the button. This is where the feedback ask lands. */
   closing: string[];
 }
 
 const COPY: Record<LaunchVariant, Copy> = {
-  /*
-    VARIANT A. The invitation first.
-
-    The opening ties the app directly to the test this reader took, then gives
-    them one clear next step. The feedback ask gets its own second beat after
-    the button so the launch is unmistakable before we ask them to help.
-  */
+  /* Variant A connects directly to the recipient's prior test. */
   a: {
-    subject: "You took the test. Now try the app.",
-    preheader: "Smart Fella is officially on the App Store.",
-    headline: "You took the test. Now try the app.",
+    subject: "You took the test. Now play the games.",
+    preheader: "8 quick games are free to play, with zero ads.",
+    headline: "We made 8 new games??!!",
     paragraphs: [
-      "Smart Fella is officially on the App Store.",
-      "We built quick games for logic, memory, focus, and words. Since you took the Official Smart Fella Test, we want you to be one of the first to try it.",
+      "Smart Fella or Fart Smella is now an app full of quick games for memory, attention, words, logic, math, and speed.",
+      "The first game in every category is free. No ads. Play one round on a break, or keep going and chase a high score.",
     ],
-    cta: "Try the app",
+    cta: "Play the free games",
     closingHeadline: "Now roast us",
     closing: [
-      "We're still building, and what you say actually shapes what comes next.",
-      "Play a few rounds, then hit reply and tell us what you think. What's fun? What sucks? Too easy? Too hard? What do you wish it did?",
-      "Brutally honest is encouraged. If it's a Fart Smella, tell us.",
-      "–Smart Fella",
+      "We are still building, and what you say shapes what comes next. Play a few rounds, then hit reply: What is fun? What sucks? Too easy? Too hard? What do you wish it did?",
+      "Brutally honest is encouraged. If it is a Fart Smella, tell us.",
     ],
   },
-  /*
-    VARIANT B. The ask first.
-
-    Opens by asking for something rather than announcing something, which is
-    both the more honest description of why this email exists and the better
-    match for the relationship: this reader took a free test, they did not sign
-    up for product news. It also gives the send a purpose the recipient can
-    act on in ten seconds, which an announcement does not.
-  */
+  /* Variant B leads with the concrete free-games offer. */
   b: {
-    subject: "We made an app. Will you judge it?",
-    preheader: "We built the app. You are the person we want to hear from.",
-    headline: "The app is out. Judge it.",
+    subject: "8 free games. Zero ads.",
+    preheader: "Quick games for memory, attention, words, logic, math, and speed.",
+    headline: "We made 8 new games??!!",
     paragraphs: [
-      "You sat the Official Smart Fella Test, which makes you exactly the person we want to hear from.",
-      "We turned it into an app. It is on the App Store now, with quick logic, memory, focus and word games in it.",
+      "Smart Fella or Fart Smella is now an app full of quick games for memory, attention, words, logic, math, and speed.",
+      "The first game in every category is free. No ads. Play one round on a break, or keep going and chase a high score.",
     ],
-    cta: "Try it and tell us",
+    cta: "Play the free games",
+    closingHeadline: "Now roast us",
     closing: [
-      "We are still building this out, and what you say shapes what goes in next. Play a couple of rounds, then hit reply and tell us what you actually think.",
-      "Good, bad, or a thing you wish it did. Brutally honest is fine. We named the whole thing after being called a fart smella, so we can take it.",
+      "We are still building, and what you say shapes what comes next. Play a few rounds, then hit reply: What is fun? What sucks? Too easy? Too hard? What do you wish it did?",
+      "Brutally honest is encouraged. If it is a Fart Smella, tell us.",
     ],
   },
 };
@@ -162,10 +143,6 @@ export function renderLaunchEmail(input: LaunchEmailInput): RenderedEmail {
         `<tr><td style="padding:0 24px 16px 24px;font-family:${BODY_FONT};font-size:15px;line-height:1.55;color:${INK};">${escapeHtml(text)}</td></tr>`,
     )
     .join("\n        ");
-
-  const closingHeadline = copy.closingHeadline
-    ? `<tr><td align="center" style="padding:0 24px 12px 24px;font-family:${DISPLAY_FONT};font-size:22px;line-height:1.1;text-align:center;text-transform:uppercase;color:${INK};">${escapeHtml(copy.closingHeadline)}</td></tr>`
-    : "";
 
   const html = `<!doctype html>
 <html lang="en">
@@ -256,6 +233,25 @@ export function renderLaunchEmail(input: LaunchEmailInput): RenderedEmail {
 
         ${bodyParagraphs}
 
+        <!-- One compressed, clickable showcase keeps the email lively without
+             turning it into an image-only message or making three remote
+             requests. The copy and CTA remain complete when images are off. -->
+        <tr><td align="center" style="padding:2px 24px 22px 24px;">
+          <a href="${escapeAttr(ctaUrl)}" style="text-decoration:none;">
+            <img src="${escapeAttr(GAME_SHOWCASE_URL)}"
+                 alt="Three free Smart Fella games: Explosive Block, Grid Lock, and Word Burst."
+                 width="472"
+                 style="display:block;width:100%;max-width:472px;height:auto;border:3px solid ${INK};outline:none;text-decoration:none;color:${INK};font-family:${BODY_FONT};font-size:14px;line-height:1.4;">
+          </a>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="padding-top:8px;table-layout:fixed;font-family:${BODY_FONT};font-size:12px;font-weight:bold;letter-spacing:0.5px;text-transform:uppercase;color:${INK};">
+            <tr>
+              <td width="33.33%" align="center" style="padding:0 3px;">Explosive Block</td>
+              <td width="33.33%" align="center" style="padding:0 3px;">Memory</td>
+              <td width="33.33%" align="center" style="padding:0 3px;">Words</td>
+            </tr>
+          </table>
+        </td></tr>
+
         <!-- ONE button, and it is a real link so it works with images off. -->
         <tr><td align="center" style="padding:8px 24px 24px 24px;">
           <a href="${escapeAttr(ctaUrl)}"
@@ -264,9 +260,15 @@ export function renderLaunchEmail(input: LaunchEmailInput): RenderedEmail {
           </a>
         </td></tr>
 
-        ${closingHeadline}
+        <tr><td align="center" style="padding:0 24px 14px 24px;font-family:${DISPLAY_FONT};font-size:21px;line-height:1.1;text-transform:uppercase;color:${INK};">
+          ${escapeHtml(copy.closingHeadline)}
+        </td></tr>
 
         ${closingParagraphs}
+
+        <tr><td style="padding:0 24px 20px 24px;font-family:${BODY_FONT};font-size:15px;line-height:1.5;color:${INK};">
+          –Smart Fella
+        </td></tr>
 
         <tr><td style="padding:0 24px 26px 24px;font-family:${BODY_FONT};font-size:12px;line-height:1.6;color:#5a5a5a;word-break:break-all;">
           Button not working? Paste this in:<br>
@@ -316,8 +318,11 @@ export function renderLaunchEmail(input: LaunchEmailInput): RenderedEmail {
     ...copy.paragraphs.flatMap((p) => [p, ""]),
     `${copy.cta.toUpperCase()}: ${ctaUrl}`,
     "",
-    ...(copy.closingHeadline ? [copy.closingHeadline.toUpperCase(), ""] : []),
+    copy.closingHeadline.toUpperCase(),
+    "",
     ...copy.closing.flatMap((p) => [p, ""]),
+    "–Smart Fella",
+    "",
     "---",
     "You are getting this because you gave us this address on smartfellaorfartsmella.com.",
     `Unsubscribe: ${unsubscribeUrl}`,
