@@ -30,3 +30,10 @@ xcrun simctl io booted screenshot "Generation Scripts/Raw Captures/block-blast.p
 ```
 
 Use the matching filename for the game being replaced, rebuild the showcase, render the email drafts, and inspect both the image-loaded and image-blocked states. The showcase order is Explosive Block, Memory, Words. All three screenshots intentionally focus on free games, and the final composite has an opaque background for more predictable email dark-mode behavior.
+
+## Social preview font compatibility
+
+Run `node "Generation Scripts/convert-og-fonts.mjs"` from this checkout to
+recreate `app/_fonts/DMSans-500.ttf` and `DMSans-700.ttf`.
+The script losslessly unpacks the existing WOFF fonts to TTF so the social
+preview renderer can read them. It does not change glyphs or the card design.

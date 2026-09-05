@@ -57,3 +57,5 @@ yarn-error.log*
 
 # Local screenshot output (verification only)
 /.shots/
+.vercel
+.env*

@@ -27,8 +27,8 @@ const TAGLINE = "A dumb little brain game that knows how smart you are.";
 
 // Literal, statically-scoped paths (read once at build time on the Node runtime).
 const anton = readFileSync(join(process.cwd(), "app/_fonts/Anton-Regular.ttf"));
-const dmSans700 = readFileSync(join(process.cwd(), "app/_fonts/DMSans-700.woff"));
-const dmSans500 = readFileSync(join(process.cwd(), "app/_fonts/DMSans-500.woff"));
+const dmSans700 = readFileSync(join(process.cwd(), "app/_fonts/DMSans-700.ttf"));
+const dmSans500 = readFileSync(join(process.cwd(), "app/_fonts/DMSans-500.ttf"));
 const logoSrc = `data:image/png;base64,${readFileSync(
   join(process.cwd(), "public/logo.png"),
 ).toString("base64")}`;
@@ -209,9 +209,9 @@ export function renderFellaOgImage() {
     {
       ...ogSize,
       fonts: [
-        { name: "Anton", data: anton, weight: 400, style: "normal" },
-        { name: "DM Sans", data: dmSans700, weight: 700, style: "normal" },
-        { name: "DM Sans", data: dmSans500, weight: 500, style: "normal" },
+        { name: "Anton", data: Uint8Array.from(anton).buffer, weight: 400, style: "normal" },
+        { name: "DM Sans", data: Uint8Array.from(dmSans700).buffer, weight: 700, style: "normal" },
+        { name: "DM Sans", data: Uint8Array.from(dmSans500).buffer, weight: 500, style: "normal" },
       ],
     },
   );

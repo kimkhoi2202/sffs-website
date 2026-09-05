@@ -24,3 +24,7 @@ dist/
 # Logs / OS cruft
 *.log
 .DS_Store
+.data/
+.cursor/
+Generation Scripts/
+AGENTS.md

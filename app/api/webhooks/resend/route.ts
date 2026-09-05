@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
   // They are acknowledged but ignored, keeping the launch dataset scoped.
   if (
     !TRACKED_EVENTS.has(type) ||
-    tags?.campaign !== LAUNCH_CAMPAIGN ||
+    (tags?.campaign !== LAUNCH_CAMPAIGN && tags?.campaign !== "app-launch-hybrid-2026-09-05") ||
     (variant !== "a" && variant !== "b") ||
     !recipientId ||
     !OPAQUE_ID.test(recipientId) ||
@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
     type,
     createdAt,
     emailId,
-    campaign: LAUNCH_CAMPAIGN,
+    campaign: tags.campaign,
     variant,
     recipientId,
   });

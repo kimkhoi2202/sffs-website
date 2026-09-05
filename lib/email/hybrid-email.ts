@@ -1,0 +1,381 @@
+/**
+ * The launch announcement. DRAFT: nothing sends this yet.
+ *
+ * ===========================================================================
+ * THIS IS NOT A RESULTS EMAIL, AND THE DIFFERENCE IS LEGAL, NOT STYLISTIC
+ * ===========================================================================
+ * lib/test/results-email.ts is transactional: somebody asked for a specific
+ * thing and it delivers exactly that, once, which is why it carries no
+ * unsubscribe footer and no postal address. The note at the top of that file
+ * says, in as many words, that the moment a message carries an app pitch it
+ * stops being transactional and both have to come back.
+ *
+ * This is that message. So it has both, and lib/email/product-email.ts refuses
+ * to send it if either is missing from the rendered body.
+ *
+ * ===========================================================================
+ * THE LAYOUT IS DELIBERATELY THE RESULTS EMAIL'S
+ * ===========================================================================
+ * Same yellow field, same flattened logo, same white card with a 3px ink border
+ * and a hard shadow where the client allows one, same green button. Somebody
+ * who got their results in August should recognise this as the same product
+ * before they have read a word, because the alternative is an unexpected email
+ * about an app they have to work out the provenance of.
+ *
+ * The constraints are the results email's too, and the reasoning is all in that
+ * file rather than repeated here: no web fonts, no flexbox or grid, no CSS
+ * variables, everything inline, tables for layout, and a real plain-text
+ * alternative rather than a stripped copy.
+ *
+ * ===========================================================================
+ * WHAT THE COPY MAY NOT DO
+ * ===========================================================================
+ * video/brand/brand-voice.md 3.1 forbids product and outcome claims outright:
+ * nothing may say the app makes anybody smarter, sharper, better at school, or
+ * anything else about what it does FOR the reader. The tell is whether the
+ * sentence would still be true if the app did not exist. Puffery about a PUZZLE
+ * is fine; there are no puzzles in here, so there is no puffery in here either.
+ *
+ * House rules that also apply: no em dashes, kid-safe language, at most one
+ * emoji, warm rather than corporate.
+ */
+import { CANONICAL_ORIGIN } from "@/lib/site-url";
+import { POSTAL_ADDRESS } from "@/lib/postal-address";
+
+/** The live listing. */
+export const APP_STORE_URL =
+  "https://apps.apple.com/us/app/smart-fella-or-fart-smella/id6794045991";
+
+const LOGO_ORIGIN = CANONICAL_ORIGIN;
+const GAME_SHOWCASE_URL = `${CANONICAL_ORIGIN}/email/app-games/free-games-showcase.jpg`;
+
+const INK = "#000000";
+const PAPER = "#ffffff";
+const YELLOW = "#fce552";
+const GREEN = "#63c088";
+
+const DISPLAY_FONT =
+  "'Arial Black', 'Helvetica Neue', Helvetica, Arial, sans-serif";
+const BODY_FONT = "'Helvetica Neue', Helvetica, Arial, sans-serif";
+
+/**
+ * A/B tests only the inbox subject. The message, art, CTA and recipient mix
+ * stay identical so an open-rate difference has one plausible cause instead
+ * of being confounded by two different creatives.
+ */
+export type LaunchVariant = "a" | "b";
+
+export interface LaunchEmailInput {
+  variant: LaunchVariant;
+  /** Absolute, per-recipient. Required: the footer will not render without it. */
+  unsubscribeUrl: string;
+  /** Absolute, signed, per-recipient CTA URL used for A/B click attribution. */
+  ctaUrl: string;
+}
+
+export interface NextLaunchEmailInput {
+  /** Absolute, per-recipient. Required: the footer will not render without it. */
+  unsubscribeUrl: string;
+  /** Absolute, signed, per-recipient CTA URL used for click attribution. */
+  ctaUrl: string;
+}
+
+export interface RenderedEmail {
+  subject: string;
+  html: string;
+  text: string;
+}
+
+interface Copy {
+  subject: string;
+  /** The grey line an inbox shows next to the subject. */
+  preheader: string;
+  headline: string;
+  paragraphs: string[];
+  cta: string;
+  closingHeadline: string;
+  /** The beat after the button. This is where the feedback ask lands. */
+  closing: string[];
+  hideClosing?: boolean;
+}
+
+const COPY: Record<LaunchVariant, Copy> = {
+  /* Variant A connects directly to the recipient's prior test. */
+  a: {
+    subject: "You took the test. Now play the games.",
+    preheader: "8 quick games are free to play, with zero ads.",
+    headline: "We made 8 new games??!!",
+    paragraphs: [
+      "Smart Fella or Fart Smella is now an app full of quick games for memory, attention, words, logic, math, and speed.",
+      "The first game in every category is free. No ads. Play one round on a break, or keep going and chase a high score.",
+    ],
+    cta: "Play the free games",
+    closingHeadline: "Now roast us",
+    closing: [
+      "We are still building, and what you say shapes what comes next. Play a few rounds, then hit reply: What is fun? What sucks? Too easy? Too hard? What do you wish it did?",
+      "Brutally honest is encouraged. If it is a Fart Smella, tell us.",
+    ],
+  },
+  /* Variant B leads with the concrete free-games offer. */
+  b: {
+    subject: "8 free games. Zero ads.",
+    preheader: "Quick games for memory, attention, words, logic, math, and speed.",
+    headline: "We made 8 new games??!!",
+    paragraphs: [
+      "Smart Fella or Fart Smella is now an app full of quick games for memory, attention, words, logic, math, and speed.",
+      "The first game in every category is free. No ads. Play one round on a break, or keep going and chase a high score.",
+    ],
+    cta: "Play the free games",
+    closingHeadline: "Now roast us",
+    closing: [
+      "We are still building, and what you say shapes what comes next. Play a few rounds, then hit reply: What is fun? What sucks? Too easy? Too hard? What do you wish it did?",
+      "Brutally honest is encouraged. If it is a Fart Smella, tell us.",
+    ],
+  },
+};
+
+/**
+ * The next creative candidate keeps the original test-recognition opening, the
+ * game showcase from the second campaign, and makes the product action more
+ * concrete. It is deliberately separate from COPY so rendering a review draft
+ * cannot silently change either already-tested A/B arm.
+ */
+const NEXT_ITERATION_COPY: Copy = {
+  subject: "You took the test. Now try the app.",
+  preheader: "8 free games. Zero ads. Here's what you can play.",
+  headline: "We made 8 new games??!!",
+  paragraphs: [
+    "You took the Official Smart Fella Test. We turned it into a mobile app with quick games you can play for free.",
+  ],
+  cta: "Play 8 free games",
+  closingHeadline: "",
+  closing: [],
+  hideClosing: true,
+};
+
+export function renderLaunchEmail(input: LaunchEmailInput): RenderedEmail {
+  return renderLaunchEmailCopy(input, COPY[input.variant]);
+}
+
+/** Render the review-only next iteration without replacing a tested A/B arm. */
+export function renderNextLaunchIteration(
+  input: NextLaunchEmailInput,
+): RenderedEmail {
+  return renderLaunchEmailCopy(input, NEXT_ITERATION_COPY);
+}
+
+function renderLaunchEmailCopy(
+  input: NextLaunchEmailInput,
+  copy: Copy,
+): RenderedEmail {
+  const { unsubscribeUrl, ctaUrl } = input;
+
+  const bodyParagraphs = copy.paragraphs
+    .map(
+      (text) =>
+        `<tr><td style="padding:0 24px 16px 24px;font-family:${BODY_FONT};font-size:16px;line-height:1.5;color:${INK};">${escapeHtml(text)}</td></tr>`,
+    )
+    .join("\n        ");
+
+  const closingParagraphs = copy.closing
+    .map(
+      (text) =>
+        `<tr><td style="padding:0 24px 16px 24px;font-family:${BODY_FONT};font-size:15px;line-height:1.55;color:${INK};">${escapeHtml(text)}</td></tr>`,
+    )
+    .join("\n        ");
+
+  const html = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!--
+  DARK MODE IS THE REAL RISK FOR THIS BRAND, NOT A POLISH ITEM.
+
+  The look is near-black ink and hard black shadows on cream and yellow. A
+  client that "helpfully" inverts it produces black-on-black: the borders, the
+  shadows and the text all disappear together, because they are all the same
+  ink. This is the same failure the transparent slide assets hit on a dark
+  ground, and the same cause.
+
+  Three defences, in the order clients honour them:
+
+    1. color-scheme: light only    Apple Mail, iOS Mail and Outlook for Mac
+                                   read this and leave the message alone. It is
+                                   the single highest-value line here.
+    2. supported-color-schemes     The older spelling, still what some Apple
+                                   builds look for. Cheap, so both ship.
+    3. EXPLICIT BACKGROUNDS ON EVERY CELL, below. Gmail's dark mode ignores
+       both meta tags and recolours anything it thinks is unset. A td with a
+       stated background-color is left alone; a td relying on inheritance is
+       fair game. That is why no cell in this template is transparent.
+
+  The LOGO needs no defence and that is not luck: scripts/build-email-logo.mjs
+  flattens it onto the header's own yellow, so it is an opaque rectangle rather
+  than a transparent PNG. An inverting client has nothing to invert. Any image
+  added here later must be flattened the same way.
+-->
+<meta name="color-scheme" content="light only">
+<meta name="supported-color-schemes" content="light">
+<title>${escapeHtml(copy.subject)}</title>
+<style>
+  :root { color-scheme: light only; supported-color-schemes: light; }
+  /*
+    Outlook on Windows renders through Word and ignores max-width on tables, so
+    the card would run the full window width on a maximised desktop client.
+    This conditional caps it. Everything else here is inline, because Word also
+    drops most of a <style> block.
+  */
+  @media only screen and (max-width: 480px) {
+    .sffs-card { width: 100% !important; }
+  }
+</style>
+</head>
+<body style="margin:0;padding:0;background-color:${YELLOW};">
+<!-- Preheader: hidden in the body, shown by the inbox next to the subject. -->
+<span style="display:none;font-size:1px;color:${YELLOW};line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">${escapeHtml(copy.preheader)}</span>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${YELLOW};">
+<tr><td align="center" style="padding:28px 16px;">
+
+    <table role="presentation" class="sffs-card" width="520" cellpadding="0" cellspacing="0" border="0" style="max-width:520px;width:100%;">
+
+    <!-- The same flattened logo the results email uses, for the same reasons:
+         one image with the overlap baked in, absolute URL, alt text styled so a
+         blocked image still reads as the brand, and width/height on the tag so
+         the box is reserved before it loads. -->
+    <tr><td align="center" style="padding-bottom:18px;">
+      <!--
+        NO FIXED HEIGHT, WHICH IS THE ONE PLACE THIS DIVERGES FROM THE RESULTS
+        EMAIL. That template pins width AND height so the box is reserved and
+        the button underneath cannot reflow as the image loads. Correct there.
+
+        Here it looked broken. With images blocked, a reserved 176px box holds
+        a 176px void of yellow above the card with two words of alt text
+        floating at the top of it, and images-off is not an edge case for a
+        promotional send: a good share of recipients will never see this image.
+        Dropping the height lets the box collapse to the alt text, so the
+        blocked state reads as a wordmark rather than as a failed asset. The
+        cost is a small reflow on load, which is the cheaper of the two.
+      -->
+      <img src="${escapeAttr(`${LOGO_ORIGIN}/email-logo.png`)}"
+           alt="Smart Fella or Fart Smella"
+           width="230"
+           style="display:block;width:230px;height:auto;max-width:100%;border:0;outline:none;text-decoration:none;font-family:${BODY_FONT};font-size:15px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;color:${INK};">
+    </td></tr>
+
+    <tr><td style="background-color:${PAPER};border:3px solid ${INK};box-shadow:6px 6px 0 0 ${INK};">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+
+        <tr><td style="padding:28px 24px 14px 24px;font-family:${DISPLAY_FONT};font-size:30px;line-height:1.05;letter-spacing:-0.5px;text-transform:uppercase;color:${INK};">
+          ${escapeHtml(copy.headline)}
+        </td></tr>
+
+        ${bodyParagraphs}
+
+        <!-- One compressed, clickable showcase keeps the email lively without
+             turning it into an image-only message or making three remote
+             requests. The copy and CTA remain complete when images are off. -->
+        <tr><td align="center" style="padding:2px 24px 22px 24px;">
+          <a href="${escapeAttr(ctaUrl)}" style="text-decoration:none;">
+            <img src="${escapeAttr(GAME_SHOWCASE_URL)}"
+                 alt="Three free Smart Fella games: Explosive Block, Grid Lock, and Word Burst."
+                 width="472"
+                 style="display:block;width:100%;max-width:472px;height:auto;border:3px solid ${INK};outline:none;text-decoration:none;color:${INK};font-family:${BODY_FONT};font-size:14px;line-height:1.4;">
+          </a>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="padding-top:8px;table-layout:fixed;font-family:${BODY_FONT};font-size:12px;font-weight:bold;letter-spacing:0.5px;text-transform:uppercase;color:${INK};">
+            <tr>
+              <td width="33.33%" align="center" style="padding:0 3px;">Explosive Block</td>
+              <td width="33.33%" align="center" style="padding:0 3px;">Memory</td>
+              <td width="33.33%" align="center" style="padding:0 3px;">Words</td>
+            </tr>
+          </table>
+        </td></tr>
+
+        <!-- ONE button, and it is a real link so it works with images off. -->
+        <tr><td align="center" style="padding:8px 24px 24px 24px;">
+          <a href="${escapeAttr(ctaUrl)}"
+             style="display:inline-block;background-color:${GREEN};border:3px solid ${INK};box-shadow:4px 4px 0 0 ${INK};color:${INK};font-family:${BODY_FONT};font-size:16px;font-weight:bold;letter-spacing:0.5px;text-transform:uppercase;text-decoration:none;padding:16px 30px;">
+            ${escapeHtml(copy.cta)}
+          </a>
+        </td></tr>
+
+        ${copy.hideClosing ? "" : `<tr><td align="center" style="padding:0 24px 14px 24px;font-family:${DISPLAY_FONT};font-size:21px;line-height:1.1;text-transform:uppercase;color:${INK};">
+          ${escapeHtml(copy.closingHeadline)}
+        </td></tr>
+
+        ${closingParagraphs}
+
+        <tr><td style="padding:0 24px 20px 24px;font-family:${BODY_FONT};font-size:15px;line-height:1.5;color:${INK};">
+          –Smart Fella
+        </td></tr>`}
+
+        <tr><td style="padding:0 24px 26px 24px;font-family:${BODY_FONT};font-size:12px;line-height:1.6;color:#5a5a5a;word-break:break-all;">
+          Button not working? Paste this in:<br>
+          <a href="${escapeAttr(ctaUrl)}" style="color:#5a5a5a;">${escapeHtml(ctaUrl)}</a>
+        </td></tr>
+
+      </table>
+    </td></tr>
+
+    <!--
+      THE FOOTER THAT MAKES THIS LEGAL TO SEND.
+
+      A promotional message needs a working opt-out and a physical postal
+      address (CAN-SPAM 16 CFR 316). The results email has neither and does not
+      need them, because it is transactional. This one is not, so both are here,
+      and lib/email/product-email.ts refuses to send a body missing either.
+
+      The unsubscribe is a plain visible link rather than the grey four-point
+      apology most senders use: somebody who wants out should find it in one
+      look, and burying it only trains people to hit the spam button instead,
+      which costs far more than an unsubscribe does.
+    -->
+    <tr><td style="padding:20px 8px 0 8px;font-family:${BODY_FONT};font-size:12px;line-height:1.7;color:${INK};text-align:center;">
+      You are getting this because you gave us this address on smartfellaorfartsmella.com.<br>
+      <a href="${escapeAttr(unsubscribeUrl)}" style="color:${INK};font-weight:bold;">Unsubscribe</a>
+      and we will stop, no questions asked.<br>
+      <span style="color:#5a5a5a;">${escapeHtml(POSTAL_ADDRESS)}</span>
+    </td></tr>
+
+  </table>
+
+</td></tr>
+</table>
+</body>
+</html>`;
+
+  const text = [
+    "SMART FELLA OR FART SMELLA",
+    "",
+    copy.headline.toUpperCase(),
+    "",
+    ...copy.paragraphs.flatMap((p) => [p, ""]),
+    `${copy.cta.toUpperCase()}: ${ctaUrl}`,
+    "",
+    ...(copy.hideClosing ? [] : [copy.closingHeadline.toUpperCase(),
+    "",
+    ...copy.closing.flatMap((p) => [p, ""]),
+    "–Smart Fella",
+    ""]),
+    "---",
+    "You are getting this because you gave us this address on smartfellaorfartsmella.com.",
+    `Unsubscribe: ${unsubscribeUrl}`,
+    POSTAL_ADDRESS,
+  ].join("\n");
+
+  return { subject: copy.subject, html, text };
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function escapeAttr(value: string): string {
+  return escapeHtml(value).replace(/'/g, "&#39;");
+}
+

@@ -56,6 +56,7 @@ function sign(body: string): string {
 }
 
 export function encodeLaunchClickToken(input: {
+  campaign?: string;
   variant: LaunchVariant;
   recipientId: string;
   linkId?: string;
@@ -72,7 +73,7 @@ export function encodeLaunchClickToken(input: {
   const payload: Payload = {
     v: VERSION,
     p: PURPOSE,
-    c: LAUNCH_CAMPAIGN,
+    c: input.campaign ?? LAUNCH_CAMPAIGN,
     x: input.variant,
     r: recipientId,
     l: linkId,
@@ -84,7 +85,7 @@ export function encodeLaunchClickToken(input: {
 export type LaunchClickDecodeResult =
   | {
       ok: true;
-      campaign: typeof LAUNCH_CAMPAIGN;
+      campaign: string;
       variant: LaunchVariant;
       recipientId: string;
       linkId: string;
@@ -115,7 +116,7 @@ export function decodeLaunchClickToken(token: string): LaunchClickDecodeResult {
   if (
     payload.v !== VERSION ||
     payload.p !== PURPOSE ||
-    payload.c !== LAUNCH_CAMPAIGN ||
+    (payload.c !== LAUNCH_CAMPAIGN && payload.c !== "app-launch-hybrid-2026-09-05") ||
     (payload.x !== "a" && payload.x !== "b") ||
     typeof payload.r !== "string" ||
     !OPAQUE_ID.test(payload.r) ||
@@ -127,7 +128,7 @@ export function decodeLaunchClickToken(token: string): LaunchClickDecodeResult {
 
   return {
     ok: true,
-    campaign: LAUNCH_CAMPAIGN,
+    campaign: payload.c,
     variant: payload.x,
     recipientId: payload.r,
     linkId: payload.l,
@@ -135,6 +136,7 @@ export function decodeLaunchClickToken(token: string): LaunchClickDecodeResult {
 }
 
 export function launchClickUrlFor(input: {
+  campaign?: string;
   variant: LaunchVariant;
   recipientId: string;
 }): string {

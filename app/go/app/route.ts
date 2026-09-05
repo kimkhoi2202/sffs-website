@@ -23,7 +23,10 @@ export async function GET(req: NextRequest) {
   }
 
   await captureLaunchEmailClickServer(req, decoded);
-  return NextResponse.redirect(APP_STORE_CAMPAIGN_URLS[decoded.variant], {
+  const destination = decoded.campaign === "app-launch-hybrid-2026-09-05"
+    ? "https://apps.apple.com/app/apple-store/id6794045991?pt=127639550&ct=SFFS%20Email%20Hybrid%20Sep%202026&mt=8"
+    : APP_STORE_CAMPAIGN_URLS[decoded.variant];
+  return NextResponse.redirect(destination, {
     status: 307,
     headers: PRIVATE_REDIRECT_HEADERS,
   });
